@@ -3,21 +3,38 @@
 Aplicación web moderna para la gestión inteligente del sueldo mensual, control de gastos fijos y variables, seguimiento de retiros en efectivo y asesoría financiera personalizada basada en patrones históricos.
 
 ## 🚀 Tecnologías Principales
-- **Frontend:** React + TypeScript + Vite
-- **Estilos:** Vanilla CSS (CSS Modules & Custom Properties)
+- **Frontend:** React 19 + TypeScript + Vite
+- **Estilos:** Vanilla CSS (CSS Variables, Flexbox, CSS Grid)
+- **Linter & Calidad:** ESLint 9
+- **Iconos:** Lucide React
 - **Control de Versiones:** Git & GitHub
 - **Despliegue:** Vercel
 
 ## 🎯 Estado del Proyecto
 - [x] **Fase 0:** Configuración de repositorio y convenciones Git.
-- [ ] **Fase 1:** Inicialización del proyecto con Vite + TypeScript.
-- [ ] **Fase 2:** Sistema de diseño y maquetación responsive.
+- [x] **Fase 1:** Inicialización del proyecto con Vite + TypeScript.
+- [ ] **Fase 2:** Sistema de diseño base y layout responsive.
 - [ ] **Fase 3:** Modelado de datos en TypeScript.
 - [ ] **Fase 4:** Módulo de gestión de ingresos multi-fuente.
 - [ ] **Fase 5:** Módulo de gastos y retiros en efectivo con Asesor.
 - [ ] **Fase 6:** Dashboard y balance financiero.
-- [ ] **Fase 7:** Persistencia desacoplada.
+- [ ] **Fase 7:** Persistencia desacoplada (LocalStorage / Repository Pattern).
 - [ ] **Fase 8:** Motor de análisis predictivo y asesoría financiera.
 - [ ] **Fase 9:** Calidad, Accesibilidad (a11y) y UX.
 - [ ] **Fase 10:** Testing unitario con Vitest.
 - [ ] **Fase 11:** Despliegue en producción (Vercel).
+
+## 🛠️ Instalación y Ejecución Local
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/Rosdevdr/manejo_finanzas.git
+
+# 2. Instalar dependencias
+npm install
+
+# 3. Iniciar servidor de desarrollo
+npm run dev
+
+# 4. Compilar para producción
+npm run build
+```
