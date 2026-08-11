@@ -1,0 +1,75 @@
+.incomes-view-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.income-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .income-summary-grid {
+        grid-template-columns: 1.4fr 1fr 1fr;
+    }
+}
+
+.summary-stat-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.summary-stat-card.primary {
+    border-color: rgba(16, 185, 129, 0.35);
+    background: linear-gradient(145deg, var(--bg-card) 0%, rgba(16, 185, 129, 0.06) 100%);
+}
+
+.stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon-wrapper.income {
+    background-color: var(--color-income-subtle);
+    color: var(--color-income);
+}
+
+.stat-icon-wrapper.salary {
+    background-color: var(--color-saving-subtle);
+    color: var(--color-saving);
+}
+
+.stat-icon-wrapper.extra {
+    background-color: var(--color-cash-subtle);
+    color: var(--color-cash);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    margin-top: 0.15rem;
+}
+
+.stat-value.highlight {
+    color: var(--color-income);
+}

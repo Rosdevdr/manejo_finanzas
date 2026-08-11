@@ -1,0 +1,177 @@
+.income-list-container {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.income-list-header h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.empty-incomes-card {
+    background-color: var(--bg-card);
+    border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.empty-icon {
+    color: var(--text-muted);
+}
+
+.empty-incomes-card h4 {
+    font-size: 1.05rem;
+    color: var(--text-primary);
+}
+
+.empty-incomes-card p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    max-width: 400px;
+}
+
+.income-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.income-item-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background-color: var(--bg-app);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    transition: border-color 0.2s ease, transform 0.1s ease;
+}
+
+@media (min-width: 640px) {
+    .income-item-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.income-item-card:hover {
+    border-color: var(--color-income);
+}
+
+.income-main-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.income-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.income-desc {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.income-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-full);
+}
+
+.badge-salary {
+    background-color: var(--color-income-subtle);
+    color: var(--color-income);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-freelance {
+    background-color: rgba(168, 85, 247, 0.12);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.badge-investment {
+    background-color: var(--color-saving-subtle);
+    color: var(--color-saving);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge-extra {
+    background-color: var(--color-cash-subtle);
+    color: var(--color-cash);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.income-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.income-actions-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+}
+
+.income-amount {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-income);
+}
+
+.item-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-icon {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background-color: var(--bg-card-hover);
+}
+
+.btn-edit:hover {
+    color: var(--color-saving);
+    border-color: var(--color-saving);
+}
+
+.btn-delete:hover {
+    color: var(--color-expense);
+    border-color: var(--color-expense);
+}
