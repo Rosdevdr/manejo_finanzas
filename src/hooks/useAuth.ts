@@ -70,7 +70,11 @@ export function useAuth(): AuthState {
     if (!supabase || !isSupabaseConfigured) {
       return { error: new Error('Supabase no está configurado aún. Usa el Modo Demo o agrega tus variables de entorno.') }
     }
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (!error && data.session) {
+      setIsDemoMode(false)
+      localStorage.removeItem('aureus_demo_mode')
+    }
     return { error }
   }
 
