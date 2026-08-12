@@ -10,6 +10,7 @@ import { CashView }          from './components/cash/CashView'
 import { SmartAnalysisPanel } from './components/analysis/SmartAnalysisPanel'
 import { ToastContainer }    from './components/ui/ToastContainer'
 import { LoginView }         from './components/auth/LoginView'
+import { Analytics }         from '@vercel/analytics/react'
 import { useFinanceStorage } from './hooks/useFinanceStorage'
 import { useAuth }           from './hooks/useAuth'
 import { useToast }          from './hooks/useToast'
@@ -69,6 +70,7 @@ export function App() {
           isSupabaseConfigured={isSupabaseConfigured}
         />
         <ToastContainer toasts={toasts} onDismiss={dismiss} />
+        <Analytics />
       </>
     )
   }
@@ -144,6 +146,7 @@ export function App() {
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <Analytics />
     </div>
   )
 }
