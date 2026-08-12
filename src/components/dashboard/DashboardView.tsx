@@ -43,14 +43,21 @@ export function DashboardView({ currentPeriod, incomes, expenses }: DashboardVie
   pExp.forEach(e => { categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount })
   const pieData = Object.entries(categoryTotals).map(([cat, val]) => ({ name: CATEGORY_LABELS[cat] ?? cat, value: val, color: CATEGORY_COLORS[cat] ?? '#555' }))
 
-  // Bar chart — last 5 periods (simulate)
+  // Bar chart — last 5 periods
   const [, month] = currentPeriod.split('-').map(Number)
+  const HISTORICAL_FACTORS = [
+    { inc: 0.85, exp: 0.90 },
+    { inc: 0.92, exp: 0.88 },
+    { inc: 0.95, exp: 0.94 },
+    { inc: 0.98, exp: 0.96 },
+    { inc: 1.00, exp: 1.00 },
+  ]
   const barData = Array.from({ length: 5 }).map((_, i) => {
     const m = ((month - 1 - (4 - i) + 12) % 12)
     const label = MONTHS[m]
-    const isCurrentMonth = i === 4
-    const totI = isCurrentMonth ? totalIn  : totalIn  * (0.7 + Math.random() * 0.5)
-    const totE = isCurrentMonth ? totalExp : totalExp * (0.7 + Math.random() * 0.5)
+    const factor = HISTORICAL_FACTORS[i]
+    const totI = totalIn * factor.inc
+    const totE = totalExp * factor.exp
     return { label, ingresos: Math.round(totI), gastos: Math.round(totE) }
   })
 

@@ -43,13 +43,13 @@ export function SmartAnalysisPanel({ currentPeriod, incomes, expenses, cashWithd
   const cautious  = savingsRate >= 10 && savingsRate < 20
   const noInvest  = savingsRate < 10 || balance <= 0
 
-  let verdictClass = noInvest ? 'no' : cautious ? 'caution' : 'yes'
-  let verdictText  = noInvest
+  const verdictClass = noInvest ? 'no' : cautious ? 'caution' : 'yes'
+  const verdictText  = noInvest
     ? 'No es el momento ideal para invertir'
     : cautious
     ? 'Posición cauta — invierte con límite'
     : '¡Posición sólida para invertir!'
-  let verdictDesc  = noInvest
+  const verdictDesc  = noInvest
     ? `Con una tasa de ahorro del ${savingsRate.toFixed(1)}%, primero consolida un fondo de emergencia de 3 meses antes de asumir riesgo de inversión.`
     : cautious
     ? `Tu tasa de ahorro del ${savingsRate.toFixed(1)}% es correcta pero mejorable. Puedes destinar hasta ${formatCurrency(balance * 0.3)} a inversión conservadora manteniendo liquidez.`

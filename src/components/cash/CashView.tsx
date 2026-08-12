@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Banknote, AlertTriangle, Plus, Trash2, Pencil } from 'lucide-react'
 import type { CashWithdrawal, CashReason, Expense } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
+import { evaluateCashWithdrawal } from '../../utils/cashAdvisor'
 
 interface CashViewProps {
   currentPeriod:    string
@@ -13,14 +14,14 @@ interface CashViewProps {
 }
 
 const REASON_MAP: Record<CashReason, { label: string; emoji: string; badge: string }> = {
-  pocket_money:     { label: 'Bolsillo',       emoji: '👛', badge: 'badge-bolsillo' },
-  specific_service: { label: 'Servicio',        emoji: '🔧', badge: 'badge-servicios' },
-  leisure_nightout: { label: 'Ocio / Salida',   emoji: '🎉', badge: 'badge-ocio'     },
-  emergency:        { label: 'Emergencia',       emoji: '🚨', badge: 'badge-salud'    },
-  unassigned:       { label: 'Sin destino',      emoji: '❓', badge: 'badge-fijo'     },
+  pocket_money:     { label: 'Bolsillo / Menudeo', emoji: '👛', badge: 'badge-bolsillo' },
+  specific_service: { label: 'Servicio Específico', emoji: '🔧', badge: 'badge-servicios' },
+  leisure_nightout: { label: 'Ocio / Salida',       emoji: '🎉', badge: 'badge-ocio'     },
+  emergency:        { label: 'Emergencia',          emoji: '🚨', badge: 'badge-salud'    },
+  unassigned:       { label: 'Sin destino claro',   emoji: '❓', badge: 'badge-fijo'     },
 }
 
-export function CashView({ currentPeriod, withdrawals, expenses, onAddWithdrawal, onDeleteWithdrawal }: CashViewProps) {
+export function CashView({ currentPeriod, withdrawals, expenses, availableBalance, onAddWithdrawal, onDeleteWithdrawal }: CashViewProps) {
   const pCash    = withdrawals.filter(c => c.period === currentPeriod)
   const totalCash = pCash.reduce((s, c) => s + c.amount, 0)
   const pExp     = expenses.filter(e => e.period === currentPeriod)
@@ -33,8 +34,11 @@ export function CashView({ currentPeriod, withdrawals, expenses, onAddWithdrawal
     note: '', date: new Date().toISOString().slice(0, 10),
   })
 
-  // No inline edit for cash (note + reason is sufficient via delete/re-add)
-  // but add pencil icon for note edit
+  // Live advisor advice
+  const parsedAmount = parseFloat(form.amount) || 0
+  const advice = parsedAmount > 0 ? evaluateCashWithdrawal(parsedAmount, form.reason, availableBalance) : null
+
+  // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editNote,  setEditNote]  = useState('')
   const [editReason, setEditReason] = useState<CashReason>('pocket_money')
@@ -42,8 +46,8 @@ export function CashView({ currentPeriod, withdrawals, expenses, onAddWithdrawal
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.amount) return
-    onAddWithdrawal({ ...form, amount: parseFloat(form.amount), period: currentPeriod })
+    if (!form.amount || parsedAmount <= 0) return
+    onAddWithdrawal({ ...form, amount: parsedAmount, period: currentPeriod })
     setForm({ amount: '', reason: 'pocket_money', note: '', date: new Date().toISOString().slice(0, 10) })
   }
 
@@ -54,7 +58,6 @@ export function CashView({ currentPeriod, withdrawals, expenses, onAddWithdrawal
     setEditAmount(String(c.amount))
   }
 
-  // Cash edit: delete old + add new (since no updateWithdrawal in props, simulate via delete+add)
   function saveEdit(c: CashWithdrawal) {
     onDeleteWithdrawal(c.id)
     onAddWithdrawal({ amount: parseFloat(editAmount), reason: editReason, note: editNote, date: c.date, period: c.period })
@@ -93,34 +96,81 @@ export function CashView({ currentPeriod, withdrawals, expenses, onAddWithdrawal
         <div className="section-title">Nuevo retiro de efectivo</div>
       </div>
       <form className="form-card" onSubmit={handleSubmit}>
-        <div className="form-row">
-          <div className="form-field" style={{ maxWidth: 180 }}>
-            <label className="field-label">Monto (RD$)</label>
-            <input type="number" className="field-input" placeholder="0.00" min={0} step="0.01" value={form.amount}
-              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} />
+        <div className="form-grid">
+          <div style={{ gridColumn: 'span 4' }}>
+            <label className="field-label">Monto a Retirar (RD$)</label>
+            <input
+              type="number"
+              className="field-input"
+              placeholder="0.00"
+              min={0.01}
+              step="0.01"
+              value={form.amount}
+              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+              required
+            />
           </div>
-          <div className="form-field">
-            <label className="field-label">Motivo</label>
-            <select className="field-select" value={form.reason}
-              onChange={e => setForm(p => ({ ...p, reason: e.target.value as CashReason }))}>
-              {Object.entries(REASON_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          <div style={{ gridColumn: 'span 4' }}>
+            <label className="field-label">Motivo del Retiro</label>
+            <select
+              className="field-select"
+              value={form.reason}
+              onChange={e => setForm(p => ({ ...p, reason: e.target.value as CashReason }))}
+            >
+              {Object.entries(REASON_MAP).map(([k, v]) => (
+                <option key={k} value={k}>{v.emoji} {v.label}</option>
+              ))}
             </select>
           </div>
-          <div className="form-field">
-            <label className="field-label">Fecha</label>
-            <input type="date" className="field-input" value={form.date}
-              onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
+          <div style={{ gridColumn: 'span 4' }}>
+            <label className="field-label">Fecha del Retiro</label>
+            <input
+              type="date"
+              className="field-input"
+              value={form.date}
+              onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+              required
+            />
+          </div>
+          <div style={{ gridColumn: 'span 12' }}>
+            <label className="field-label">Nota o Ubicación (Opcional)</label>
+            <input
+              className="field-input"
+              placeholder="Ej: Cajero Banreservas Plaza Central, pago directo plomero..."
+              value={form.note}
+              onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
+            />
           </div>
         </div>
-        <div className="form-row" style={{ alignItems: 'flex-end' }}>
-          <div className="form-field">
-            <label className="field-label">Nota (opcional)</label>
-            <input className="field-input" placeholder="Ej: Cajero Plaza Central…" value={form.note}
-              onChange={e => setForm(p => ({ ...p, note: e.target.value }))} />
+
+        {/* Live Advisor Advice Card */}
+        {advice && (
+          <div className={`alert-pill ${advice.level === 'danger' ? 'danger' : ''}`} style={{
+            marginTop: 4,
+            marginBottom: 14,
+            background: advice.level === 'danger' ? 'rgba(248,113,113,0.1)' : advice.level === 'warning' ? 'rgba(251,191,36,0.1)' : 'rgba(52,211,153,0.1)',
+            borderColor: advice.level === 'danger' ? 'rgba(248,113,113,0.3)' : advice.level === 'warning' ? 'rgba(251,191,36,0.3)' : 'rgba(52,211,153,0.3)',
+            borderRadius: 10,
+            padding: '12px 14px'
+          }}>
+            <span className="alert-icon" style={{ fontSize: 16 }}>
+              {advice.level === 'danger' ? '🚨' : advice.level === 'warning' ? '⚠️' : '💡'}
+            </span>
+            <div className="alert-text">
+              <strong style={{ color: advice.level === 'danger' ? '#F87171' : advice.level === 'warning' ? '#FBBF24' : '#34D399' }}>
+                {advice.title}
+              </strong>
+              <p style={{ margin: '3px 0', fontSize: 11, color: '#D0D0DC' }}>{advice.message}</p>
+              <p style={{ fontSize: 11, color: '#888898' }}>{advice.recommendation}</p>
+            </div>
           </div>
-          <div className="form-field" style={{ flexShrink: 0, flexGrow: 0 }}>
-            <button type="submit" className="btn-primary"><Plus size={14} /> Registrar</button>
-          </div>
+        )}
+
+        <div className="form-actions">
+          <button type="submit" className="btn-primary btn-cash">
+            <Plus size={16} />
+            <span>Registrar Retiro</span>
+          </button>
         </div>
       </form>
 

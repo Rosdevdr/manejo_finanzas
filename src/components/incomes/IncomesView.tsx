@@ -87,37 +87,59 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
         <div className="section-title">Nueva entrada de capital</div>
       </div>
       <form className="form-card" onSubmit={handleSubmit}>
-        <div className="form-row">
-          <div className="form-field">
-            <label className="field-label">Descripción</label>
-            <input className="field-input" placeholder="Ej: Sueldo principal…" value={form.description}
-              onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+        <div className="form-grid">
+          <div style={{ gridColumn: 'span 8' }}>
+            <label className="field-label">Descripción / Concepto</label>
+            <input
+              className="field-input"
+              placeholder="Ej: Sueldo mensual, Proyecto Web..."
+              value={form.description}
+              onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+              required
+            />
           </div>
-          <div className="form-field" style={{ maxWidth: 160 }}>
+          <div style={{ gridColumn: 'span 4' }}>
             <label className="field-label">Monto (RD$)</label>
-            <input type="number" className="field-input" placeholder="0.00" min={0} step="0.01" value={form.amount}
-              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} />
+            <input
+              type="number"
+              className="field-input"
+              placeholder="0.00"
+              min={0.01}
+              step="0.01"
+              value={form.amount}
+              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+              required
+            />
           </div>
-        </div>
-        <div className="form-row">
-          <div className="form-field">
-            <label className="field-label">Tipo</label>
-            <select className="field-select" value={form.type}
-              onChange={e => setForm(p => ({ ...p, type: e.target.value as IncomeType }))}>
-              <option value="salary">Salario</option>
-              <option value="freelance">Freelance</option>
-              <option value="investment">Inversión</option>
-              <option value="extra">Extra</option>
+          <div style={{ gridColumn: 'span 6' }}>
+            <label className="field-label">Tipo de Ingreso</label>
+            <select
+              className="field-select"
+              value={form.type}
+              onChange={e => setForm(p => ({ ...p, type: e.target.value as IncomeType }))}
+            >
+              <option value="salary">Sueldo / Salario Fijo</option>
+              <option value="freelance">Freelance / Honorarios</option>
+              <option value="investment">Inversiones / Dividendos</option>
+              <option value="extra">Extra / Ocasional</option>
             </select>
           </div>
-          <div className="form-field">
-            <label className="field-label">Fecha</label>
-            <input type="date" className="field-input" value={form.date}
-              onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
+          <div style={{ gridColumn: 'span 6' }}>
+            <label className="field-label">Fecha de Entrada</label>
+            <input
+              type="date"
+              className="field-input"
+              value={form.date}
+              onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+              required
+            />
           </div>
-          <div className="form-field" style={{ flexShrink: 0, flexGrow: 0, justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
-            <button type="submit" className="btn-primary"><Plus size={14} /> Registrar</button>
-          </div>
+        </div>
+        <div className="form-actions">
+          <button type="submit" className="btn-primary btn-income">
+            <Plus size={16} />
+            <span>Registrar Ingreso</span>
+          </button>
         </div>
       </form>
 

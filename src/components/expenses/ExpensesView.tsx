@@ -94,55 +94,85 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
       {/* Add form */}
       <div className="section-header" style={{ marginTop: 4 }}>
         <div className="section-label">REGISTRAR</div>
-        <div className="section-title">Nuevo gasto</div>
+        <div className="section-title">Nuevo egreso / gasto</div>
       </div>
       <form className="form-card" onSubmit={handleSubmit}>
-        <div className="form-row">
-          <div className="form-field">
-            <label className="field-label">Descripción</label>
-            <input className="field-input" placeholder="Ej: Alquiler apartamento…" value={form.description}
-              onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+        <div className="form-grid">
+          <div style={{ gridColumn: 'span 8' }}>
+            <label className="field-label">Descripción / Concepto</label>
+            <input
+              className="field-input"
+              placeholder="Ej: Supermercado mensual, Alquiler, Internet..."
+              value={form.description}
+              onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+              required
+            />
           </div>
-          <div className="form-field" style={{ maxWidth: 160 }}>
+          <div style={{ gridColumn: 'span 4' }}>
             <label className="field-label">Monto (RD$)</label>
-            <input type="number" className="field-input" placeholder="0.00" min={0} step="0.01" value={form.amount}
-              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} />
+            <input
+              type="number"
+              className="field-input"
+              placeholder="0.00"
+              min={0.01}
+              step="0.01"
+              value={form.amount}
+              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+              required
+            />
           </div>
-        </div>
-        <div className="form-row">
-          <div className="form-field">
+          <div style={{ gridColumn: 'span 3' }}>
             <label className="field-label">Categoría</label>
-            <select className="field-select" value={form.category}
-              onChange={e => setForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}>
-              {Object.entries(CATEGORY_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            <select
+              className="field-select"
+              value={form.category}
+              onChange={e => setForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}
+            >
+              {Object.entries(CATEGORY_MAP).map(([k, v]) => (
+                <option key={k} value={k}>{v.emoji} {v.label}</option>
+              ))}
             </select>
           </div>
-          <div className="form-field">
-            <label className="field-label">Tipo</label>
-            <select className="field-select" value={form.type}
-              onChange={e => setForm(p => ({ ...p, type: e.target.value as ExpenseType }))}>
-              <option value="fixed">Fijo</option>
-              <option value="variable">Variable</option>
+          <div style={{ gridColumn: 'span 3' }}>
+            <label className="field-label">Compromiso</label>
+            <select
+              className="field-select"
+              value={form.type}
+              onChange={e => setForm(p => ({ ...p, type: e.target.value as ExpenseType }))}
+            >
+              <option value="fixed">Gasto Fijo (Obligatorio)</option>
+              <option value="variable">Gasto Variable (Controlable)</option>
             </select>
           </div>
-          <div className="form-field">
-            <label className="field-label">Pago</label>
-            <select className="field-select" value={form.paymentMethod}
-              onChange={e => setForm(p => ({ ...p, paymentMethod: e.target.value as PaymentMethod }))}>
-              <option value="bank_transfer">Transferencia</option>
-              <option value="debit_card">Débito</option>
-              <option value="credit_card">Crédito</option>
+          <div style={{ gridColumn: 'span 3' }}>
+            <label className="field-label">Método de Pago</label>
+            <select
+              className="field-select"
+              value={form.paymentMethod}
+              onChange={e => setForm(p => ({ ...p, paymentMethod: e.target.value as PaymentMethod }))}
+            >
+              <option value="debit_card">Tarjeta de Débito</option>
+              <option value="credit_card">Tarjeta de Crédito</option>
+              <option value="bank_transfer">Transferencia Bancaria</option>
               <option value="cash">Efectivo</option>
             </select>
           </div>
-          <div className="form-field">
-            <label className="field-label">Fecha</label>
-            <input type="date" className="field-input" value={form.date}
-              onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
+          <div style={{ gridColumn: 'span 3' }}>
+            <label className="field-label">Fecha del Gasto</label>
+            <input
+              type="date"
+              className="field-input"
+              value={form.date}
+              onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+              required
+            />
           </div>
-          <div className="form-field" style={{ flexShrink: 0, flexGrow: 0, alignSelf: 'flex-end' }}>
-            <button type="submit" className="btn-primary"><Plus size={14} /> Registrar</button>
-          </div>
+        </div>
+        <div className="form-actions">
+          <button type="submit" className="btn-primary btn-expense">
+            <Plus size={16} />
+            <span>Registrar Gasto</span>
+          </button>
         </div>
       </form>
 

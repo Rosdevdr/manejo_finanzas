@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { PlusCircle, CheckCircle2, X } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { getTodayDateString } from '../../utils/formatters'
@@ -11,23 +11,21 @@ interface IncomeFormProps {
 }
 
 export function IncomeForm({ currentPeriod, incomeToEdit, onSave, onCancelEdit }: IncomeFormProps) {
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
-  const [type, setType] = useState<IncomeType>('salary')
-  const [date, setDate] = useState(getTodayDateString())
+  const [description, setDescription] = useState(incomeToEdit?.description ?? '')
+  const [amount, setAmount] = useState(incomeToEdit?.amount.toString() ?? '')
+  const [type, setType] = useState<IncomeType>(incomeToEdit?.type ?? 'salary')
+  const [date, setDate] = useState(incomeToEdit?.date ?? getTodayDateString())
   const [error, setError] = useState<string | null>(null)
+  const [prevEditId, setPrevEditId] = useState<string | null | undefined>(incomeToEdit?.id)
 
-  useEffect(() => {
-    if (incomeToEdit) {
-      setDescription(incomeToEdit.description)
-      setAmount(incomeToEdit.amount.toString())
-      setType(incomeToEdit.type)
-      setDate(incomeToEdit.date)
-      setError(null)
-    } else {
-      resetForm()
-    }
-  }, [incomeToEdit])
+  if (incomeToEdit?.id !== prevEditId) {
+    setPrevEditId(incomeToEdit?.id)
+    setDescription(incomeToEdit?.description ?? '')
+    setAmount(incomeToEdit?.amount.toString() ?? '')
+    setType(incomeToEdit?.type ?? 'salary')
+    setDate(incomeToEdit?.date ?? getTodayDateString())
+    setError(null)
+  }
 
   const resetForm = () => {
     setDescription('')

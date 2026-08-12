@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { TabType } from './types/navigation'
 import { Sidebar }           from './components/layout/Sidebar'
+import { BottomNav }          from './components/layout/BottomNav'
 import { AppHeader }         from './components/layout/AppHeader'
 import { DashboardView }     from './components/dashboard/DashboardView'
 import { IncomesView }       from './components/incomes/IncomesView'
@@ -107,6 +108,7 @@ export function App() {
       </div>
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { PlusCircle, CheckCircle2, X } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { CATEGORY_MAP } from '../../utils/categoryHelpers'
@@ -12,27 +12,25 @@ interface ExpenseFormProps {
 }
 
 export function ExpenseForm({ currentPeriod, expenseToEdit, onSave, onCancelEdit }: ExpenseFormProps) {
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState<ExpenseCategory>('food')
-  const [type, setType] = useState<ExpenseType>('variable')
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('debit_card')
-  const [date, setDate] = useState(getTodayDateString())
+  const [description, setDescription] = useState(expenseToEdit?.description ?? '')
+  const [amount, setAmount] = useState(expenseToEdit?.amount.toString() ?? '')
+  const [category, setCategory] = useState<ExpenseCategory>(expenseToEdit?.category ?? 'food')
+  const [type, setType] = useState<ExpenseType>(expenseToEdit?.type ?? 'variable')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(expenseToEdit?.paymentMethod ?? 'debit_card')
+  const [date, setDate] = useState(expenseToEdit?.date ?? getTodayDateString())
   const [error, setError] = useState<string | null>(null)
+  const [prevEditId, setPrevEditId] = useState<string | null | undefined>(expenseToEdit?.id)
 
-  useEffect(() => {
-    if (expenseToEdit) {
-      setDescription(expenseToEdit.description)
-      setAmount(expenseToEdit.amount.toString())
-      setCategory(expenseToEdit.category)
-      setType(expenseToEdit.type)
-      setPaymentMethod(expenseToEdit.paymentMethod)
-      setDate(expenseToEdit.date)
-      setError(null)
-    } else {
-      resetForm()
-    }
-  }, [expenseToEdit])
+  if (expenseToEdit?.id !== prevEditId) {
+    setPrevEditId(expenseToEdit?.id)
+    setDescription(expenseToEdit?.description ?? '')
+    setAmount(expenseToEdit?.amount.toString() ?? '')
+    setCategory(expenseToEdit?.category ?? 'food')
+    setType(expenseToEdit?.type ?? 'variable')
+    setPaymentMethod(expenseToEdit?.paymentMethod ?? 'debit_card')
+    setDate(expenseToEdit?.date ?? getTodayDateString())
+    setError(null)
+  }
 
   const resetForm = () => {
     setDescription('')
