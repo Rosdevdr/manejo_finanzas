@@ -114,18 +114,45 @@ export function useFinanceStorage(user?: User | null) {
 
     loadData()
 
-    // Suscripción Realtime vía WebSockets (IRT)
+    // Suscripción Realtime vía WebSockets (IRT) con soporte completo para eventos DELETE, INSERT y UPDATE
     const channel = supabase
       .channel(`realtime-finance-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes', filter: `user_id=eq.${userId}` }, () => {
-        loadData()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `user_id=eq.${userId}` }, () => {
-        loadData()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cash_withdrawals', filter: `user_id=eq.${userId}` }, () => {
-        loadData()
-      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'incomes' },
+        (payload) => {
+          if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
+            const deletedId = (payload.old as { id: string }).id
+            setIncomesState(prev => prev.filter(i => i.id !== deletedId))
+          } else {
+            loadData()
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'expenses' },
+        (payload) => {
+          if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
+            const deletedId = (payload.old as { id: string }).id
+            setExpensesState(prev => prev.filter(e => e.id !== deletedId))
+          } else {
+            loadData()
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'cash_withdrawals' },
+        (payload) => {
+          if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
+            const deletedId = (payload.old as { id: string }).id
+            setCashState(prev => prev.filter(c => c.id !== deletedId))
+          } else {
+            loadData()
+          }
+        }
+      )
       .subscribe()
 
     return () => {

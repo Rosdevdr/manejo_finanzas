@@ -1243,3 +1243,25 @@ select.field-select {
     height: 5px;
   }
 }
+
+/* ===================== IOS SAFARI AUTO-ZOOM PREVENTION ===================== */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea,
+  .form-input,
+  .form-select,
+  .auth-input,
+  .edit-input,
+  .edit-select {
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+
+  button,
+  a,
+  .nav-item,
+  .mobile-nav-item {
+    touch-action: manipulation;
+  }
+}

@@ -84,6 +84,11 @@ CREATE POLICY "Users can delete their own cash withdrawals" ON public.cash_withd
 -- ⚡ SINCRONIZACIÓN EN TIEMPO REAL (Realtime Publications)
 -- ==============================================================================
 
+-- Permitir que los eventos DELETE emitan la identidad completa en WebSockets
+ALTER TABLE public.incomes REPLICA IDENTITY FULL;
+ALTER TABLE public.expenses REPLICA IDENTITY FULL;
+ALTER TABLE public.cash_withdrawals REPLICA IDENTITY FULL;
+
 ALTER PUBLICATION supabase_realtime ADD TABLE public.incomes;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.cash_withdrawals;
