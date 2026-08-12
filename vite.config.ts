@@ -21,5 +21,22 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseAnonKey),
     },
+    build: {
+      sourcemap: false,
+      minify: true,
+      cssMinify: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            if (id.includes('node_modules')) {
+              if (id.includes('recharts')) return 'charts'
+              if (id.includes('@supabase')) return 'supabase'
+              if (id.includes('lucide-react')) return 'icons'
+              return 'vendor'
+            }
+          },
+        },
+      },
+    },
   }
 })

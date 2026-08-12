@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import {
   Mail,
   Lock,
@@ -6,11 +6,14 @@ import {
   BrainCircuit,
   TrendingUp,
   ShieldCheck,
+  ShieldAlert,
   PlayCircle,
   Sparkles,
   Zap,
 } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
+import { checkRateLimit, recordFailedAttempt, resetRateLimit } from '../../utils/rateLimiter'
+import { sanitizeString } from '../../utils/security'
 import './LoginView.css'
 
 interface LoginViewProps {
@@ -33,13 +36,39 @@ export function LoginView({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [lockSeconds, setLockSeconds] = useState(() => checkRateLimit('login_auth').remainingSeconds)
+
+  useEffect(() => {
+    if (lockSeconds <= 0) return
+
+    const timer = setInterval(() => {
+      const { isLocked, remainingSeconds } = checkRateLimit('login_auth')
+      if (isLocked && remainingSeconds > 0) {
+        setLockSeconds(remainingSeconds)
+      } else {
+        setLockSeconds(0)
+        clearInterval(timer)
+      }
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [lockSeconds])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
 
-    if (!email || !password) {
+    // Verificar Rate Limiting
+    const rateStatus = checkRateLimit('login_auth')
+    if (rateStatus.isLocked) {
+      setLockSeconds(rateStatus.remainingSeconds)
+      setError(`Protección activa: Demasiados intentos fallidos. Espera ${rateStatus.remainingSeconds} segundos.`)
+      return
+    }
+
+    const cleanEmail = sanitizeString(email)
+    if (!cleanEmail || !password) {
       setError('Por favor completa todos los campos.')
       return
     }
@@ -59,16 +88,25 @@ export function LoginView({
 
     try {
       if (tab === 'login') {
-        const { error: err } = await onSignIn(email, password)
+        const { error: err } = await onSignIn(cleanEmail, password)
         if (err) {
-          setError(err.message === 'Invalid login credentials' ? 'Credenciales incorrectas. Verifica tu correo y contraseña.' : err.message)
+          const limit = recordFailedAttempt('login_auth')
+          if (limit.isLocked) {
+            setLockSeconds(limit.remainingSeconds)
+            setError(`Cuenta bloqueada temporalmente por seguridad. Reintenta en ${limit.remainingSeconds} segundos.`)
+          } else {
+            setError(err.message === 'Invalid login credentials' ? 'Credenciales incorrectas. Verifica tu correo y contraseña.' : err.message)
+          }
+        } else {
+          resetRateLimit('login_auth')
         }
       } else {
-        const { error: err } = await onSignUp(email, password)
+        const { error: err } = await onSignUp(cleanEmail, password)
         if (err) {
           setError(err.message)
         } else {
-          setSuccess('¡Cuenta creada exitosamente! Revisa tu correo para confirmar o inicia sesión.')
+          resetRateLimit('login_auth')
+          setSuccess('¡Cuenta creada exitosamente! Ya puedes entrar.')
           setTab('login')
         }
       }
@@ -180,7 +218,29 @@ export function LoginView({
             </button>
           </div>
 
-          {error && <div className="auth-error-msg">{error}</div>}
+          {lockSeconds > 0 && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              borderRadius: 12,
+              padding: '12px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              color: '#F87171',
+              fontSize: 12,
+              fontWeight: 600,
+              marginBottom: 16,
+            }}>
+              <ShieldAlert size={18} style={{ flexShrink: 0 }} />
+              <span>
+                Protección contra fuerza bruta activa. Intenta de nuevo en{' '}
+                <strong style={{ color: '#FFFFFF', fontSize: 13 }}>{lockSeconds}s</strong>
+              </span>
+            </div>
+          )}
+
+          {error && !lockSeconds && <div className="auth-error-msg">{error}</div>}
           {success && <div className="auth-success-msg">{success}</div>}
 
           {!isSupabaseConfigured && (
@@ -210,6 +270,7 @@ export function LoginView({
                   onChange={(e) => setEmail(e.target.value)}
                   className="auth-input"
                   required
+                  disabled={lockSeconds > 0}
                 />
               </div>
             </div>
@@ -225,6 +286,7 @@ export function LoginView({
                   onChange={(e) => setPassword(e.target.value)}
                   className="auth-input"
                   required
+                  disabled={lockSeconds > 0}
                 />
               </div>
             </div>
@@ -241,6 +303,7 @@ export function LoginView({
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="auth-input"
                     required
+                    disabled={lockSeconds > 0}
                   />
                 </div>
               </div>
@@ -248,11 +311,13 @@ export function LoginView({
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || lockSeconds > 0}
               className="auth-submit-btn"
             >
               {loading ? (
                 <span>Procesando...</span>
+              ) : lockSeconds > 0 ? (
+                <span>Bloqueado ({lockSeconds}s)</span>
               ) : (
                 <>
                   <span>{tab === 'login' ? 'Entrar a Mi Panel' : 'Registrar Cuenta'}</span>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import type { User } from '@supabase/supabase-js'
 import type { Income, Expense, CashWithdrawal, IncomeType, ExpenseCategory, ExpenseType, PaymentMethod, CashReason } from '../types/finance'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { sanitizeString, sanitizeAmount } from '../utils/security'
 
 const KEYS = {
   incomes:  'aureus_incomes',
@@ -146,8 +147,10 @@ export function useFinanceStorage(user?: User | null) {
 
   // --- Acciones de Ingresos ---
   const addIncome = async (d: Omit<Income, 'id'>) => {
+    const cleanDesc = sanitizeString(d.description)
+    const cleanAmount = sanitizeAmount(d.amount)
     const newId = `inc-${Date.now()}`
-    const item: Income = { ...d, id: newId }
+    const item: Income = { ...d, description: cleanDesc, amount: cleanAmount, id: newId }
     setIncomesState(prev => [item, ...prev])
 
     if (supabase && isSupabaseConfigured && user) {
@@ -155,8 +158,8 @@ export function useFinanceStorage(user?: User | null) {
         id: newId,
         user_id: user.id,
         period: d.period,
-        description: d.description,
-        amount: d.amount,
+        description: cleanDesc,
+        amount: cleanAmount,
         type: d.type,
         date: d.date,
       })
@@ -164,12 +167,15 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const updateIncome = async (updated: Income) => {
-    setIncomesState(prev => prev.map(i => i.id === updated.id ? updated : i))
+    const cleanDesc = sanitizeString(updated.description)
+    const cleanAmount = sanitizeAmount(updated.amount)
+    const cleanItem: Income = { ...updated, description: cleanDesc, amount: cleanAmount }
+    setIncomesState(prev => prev.map(i => i.id === updated.id ? cleanItem : i))
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('incomes').update({
-        description: updated.description,
-        amount: updated.amount,
+        description: cleanDesc,
+        amount: cleanAmount,
         type: updated.type,
         date: updated.date,
         period: updated.period,
@@ -187,8 +193,10 @@ export function useFinanceStorage(user?: User | null) {
 
   // --- Acciones de Gastos ---
   const addExpense = async (d: Omit<Expense, 'id'>) => {
+    const cleanDesc = sanitizeString(d.description)
+    const cleanAmount = sanitizeAmount(d.amount)
     const newId = `exp-${Date.now()}`
-    const item: Expense = { ...d, id: newId }
+    const item: Expense = { ...d, description: cleanDesc, amount: cleanAmount, id: newId }
     setExpensesState(prev => [item, ...prev])
 
     if (supabase && isSupabaseConfigured && user) {
@@ -196,8 +204,8 @@ export function useFinanceStorage(user?: User | null) {
         id: newId,
         user_id: user.id,
         period: d.period,
-        description: d.description,
-        amount: d.amount,
+        description: cleanDesc,
+        amount: cleanAmount,
         category: d.category,
         type: d.type,
         payment_method: d.paymentMethod,
@@ -207,12 +215,15 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const updateExpense = async (updated: Expense) => {
-    setExpensesState(prev => prev.map(e => e.id === updated.id ? updated : e))
+    const cleanDesc = sanitizeString(updated.description)
+    const cleanAmount = sanitizeAmount(updated.amount)
+    const cleanItem: Expense = { ...updated, description: cleanDesc, amount: cleanAmount }
+    setExpensesState(prev => prev.map(e => e.id === updated.id ? cleanItem : e))
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('expenses').update({
-        description: updated.description,
-        amount: updated.amount,
+        description: cleanDesc,
+        amount: cleanAmount,
         category: updated.category,
         type: updated.type,
         payment_method: updated.paymentMethod,
@@ -232,8 +243,10 @@ export function useFinanceStorage(user?: User | null) {
 
   // --- Acciones de Retiros en Efectivo ---
   const addWithdrawal = async (d: Omit<CashWithdrawal, 'id'>) => {
+    const cleanNote = d.note ? sanitizeString(d.note) : undefined
+    const cleanAmount = sanitizeAmount(d.amount)
     const newId = `cash-${Date.now()}`
-    const item: CashWithdrawal = { ...d, id: newId }
+    const item: CashWithdrawal = { ...d, amount: cleanAmount, note: cleanNote, id: newId }
     setCashState(prev => [item, ...prev])
 
     if (supabase && isSupabaseConfigured && user) {
@@ -241,9 +254,9 @@ export function useFinanceStorage(user?: User | null) {
         id: newId,
         user_id: user.id,
         period: d.period,
-        amount: d.amount,
+        amount: cleanAmount,
         reason: d.reason,
-        note: d.note ?? null,
+        note: cleanNote ?? null,
         date: d.date,
       })
     }
