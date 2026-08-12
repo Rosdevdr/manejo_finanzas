@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, Banknote, BrainCircuit, LogOut, Cloud, HardDrive } from 'lucide-react'
+import { AureusLogo } from '../ui/AureusLogo'
 import type { TabType } from '../../types/navigation'
 
 interface SidebarProps {
@@ -32,7 +33,7 @@ export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignO
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="logo-mark">
-          <div className="logo-icon">A</div>
+          <AureusLogo size={34} />
           <div>
             <div className="logo-name">AUREUS</div>
             <div className="logo-sub">WEALTH ADVISOR</div>

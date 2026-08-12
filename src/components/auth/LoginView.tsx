@@ -11,6 +11,7 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react'
+import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
 import { checkRateLimit, recordFailedAttempt, resetRateLimit } from '../../utils/rateLimiter'
 import { sanitizeString } from '../../utils/security'
@@ -125,7 +126,7 @@ export function LoginView({
           <div>
             <div className="auth-hero-header">
               <div className="auth-logo-badge">
-                <div className="auth-logo-icon">A</div>
+                <AureusLogo size={42} />
                 <div>
                   <div className="auth-brand-name">AUREUS</div>
                   <div className="auth-brand-sub">WEALTH ADVISOR</div>
