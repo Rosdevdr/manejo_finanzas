@@ -9,7 +9,9 @@ import { ExpensesView }      from './components/expenses/ExpensesView'
 import { CashView }          from './components/cash/CashView'
 import { SmartAnalysisPanel } from './components/analysis/SmartAnalysisPanel'
 import { ToastContainer }    from './components/ui/ToastContainer'
+import { LoginView }         from './components/auth/LoginView'
 import { useFinanceStorage } from './hooks/useFinanceStorage'
+import { useAuth }           from './hooks/useAuth'
 import { useToast }          from './hooks/useToast'
 import { formatCurrency }    from './utils/formatters'
 
@@ -28,11 +30,22 @@ export function App() {
   const { toasts, show: showToast, dismiss } = useToast()
 
   const {
+    user,
+    loading: authLoading,
+    isDemoMode,
+    isSupabaseConfigured,
+    signIn,
+    signUp,
+    signOut,
+    enterDemoMode,
+  } = useAuth()
+
+  const {
     incomes, expenses, cash,
     addIncome, updateIncome, deleteIncome,
     addExpense, updateExpense, deleteExpense,
     addWithdrawal, deleteWithdrawal,
-  } = useFinanceStorage()
+  } = useFinanceStorage(user)
 
   const periodIncomes  = incomes.filter(i => i.period === currentPeriod)
   const periodExpenses = expenses.filter(e => e.period === currentPeriod)
@@ -45,9 +58,30 @@ export function App() {
   const nextPeriod  = () => { if (idx > 0) setCurrentPeriod(PERIODS[idx - 1].value) }
   const periodLabel = PERIODS[idx]?.label ?? currentPeriod
 
+  // Mostrar pantalla de Login si no hay usuario ni modo demo
+  if (!authLoading && !user && !isDemoMode) {
+    return (
+      <>
+        <LoginView
+          onSignIn={signIn}
+          onSignUp={signUp}
+          onEnterDemoMode={enterDemoMode}
+          isSupabaseConfigured={isSupabaseConfigured}
+        />
+        <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      </>
+    )
+  }
+
   return (
     <div className="app-shell">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        userEmail={user?.email}
+        isDemoMode={isDemoMode}
+        onSignOut={signOut}
+      />
 
       <div className="main">
         <AppHeader
@@ -58,6 +92,7 @@ export function App() {
           nextDisabled={idx <= 0}
           balanceLabel={formatCurrency(available)}
           balancePositive={available >= 0}
+          isDemoMode={isDemoMode}
         />
 
         <div className="content">

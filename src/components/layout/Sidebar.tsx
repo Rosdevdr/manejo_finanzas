@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react'
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, Banknote, BrainCircuit } from 'lucide-react'
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, Banknote, BrainCircuit, LogOut, Cloud, HardDrive } from 'lucide-react'
 import type { TabType } from '../../types/navigation'
 
 interface SidebarProps {
   activeTab: TabType
   onTabChange: (tab: TabType) => void
+  userEmail?: string | null
+  isDemoMode?: boolean
+  onSignOut?: () => void
 }
 
 const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
@@ -15,7 +18,15 @@ const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
   { id: 'advisor',   icon: <BrainCircuit    size={15} />, label: 'Asesor IA'   },
 ]
 
-export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignOut }: SidebarProps) {
+  const initials = userEmail
+    ? userEmail.slice(0, 2).toUpperCase()
+    : 'JR'
+
+  const displayName = userEmail
+    ? userEmail.split('@')[0]
+    : 'Jesús Rosario'
+
   return (
     <nav className="sidebar">
       {/* Logo */}
@@ -44,16 +55,42 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         ))}
       </div>
 
-      {/* Footer user */}
-      <div className="sidebar-footer">
-        <div className="avatar">JR</div>
-        <div>
-          <div className="user-name">Jesús Rosario</div>
-          <div className="user-status">
-            <span className="status-dot" />
-            Premium
+      {/* Footer user & Sync Status */}
+      <div className="sidebar-footer" style={{ justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <div className="avatar">{initials}</div>
+          <div style={{ minWidth: 0 }}>
+            <div className="user-name" title={userEmail || displayName}>{displayName}</div>
+            <div className="user-status" style={{ color: isDemoMode ? '#FBBF24' : '#34D399' }}>
+              {isDemoMode ? <HardDrive size={10} /> : <Cloud size={10} />}
+              <span>{isDemoMode ? 'Modo Local' : 'Sync IRT'}</span>
+            </div>
           </div>
         </div>
+
+        {onSignOut && (
+          <button
+            type="button"
+            onClick={onSignOut}
+            title="Cerrar Sesión"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#717182',
+              cursor: 'pointer',
+              padding: 6,
+              borderRadius: 6,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'color 0.15s ease'
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#F87171')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#717182')}
+          >
+            <LogOut size={14} />
+          </button>
+        )}
       </div>
     </nav>
   )
