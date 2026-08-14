@@ -12,6 +12,7 @@ import {
   Clock,
   ShieldCheck,
   Zap,
+  ArrowDownCircle,
 } from 'lucide-react'
 import type {
   CreditCard,
@@ -63,6 +64,10 @@ export function CreditCardsView({
   const [selectedCardId, setSelectedCardId] = useState<string | null>(creditCards[0]?.id || null)
   const [showCardModal, setShowCardModal] = useState(false)
   const [editingCard, setEditingCard] = useState<CreditCard | null>(null)
+
+  // Abono a deuda
+  const [abonoAmount, setAbonoAmount] = useState('')
+  const [abonoConfirmed, setAbonoConfirmed] = useState(false)
 
   // Card Form
   const [cardForm, setCardForm] = useState<{
@@ -239,6 +244,31 @@ export function CreditCardsView({
       installments: Number(editTxForm.installments),
     })
     setEditingTxId(null)
+  }
+
+  // Lógica de abono: marca transacciones pendientes como pagadas
+  // hasta cubrir el monto abonado (de mayor monto a menor)
+  function handleApplyAbono(e: React.FormEvent) {
+    e.preventDefault()
+    const abono = parseFloat(abonoAmount)
+    if (!abono || abono <= 0 || !activeCard) return
+
+    const pending = creditTransactions
+      .filter(t => t.cardId === activeCard.id && !t.isPaid)
+      .sort((a, b) => b.amount - a.amount) // mayor a menor para cubrir más rápido
+
+    let remaining = abono
+    for (const tx of pending) {
+      if (remaining <= 0) break
+      if (tx.amount <= remaining) {
+        remaining -= tx.amount
+        onTogglePaid(tx.id)
+      }
+    }
+
+    setAbonoAmount('')
+    setAbonoConfirmed(true)
+    setTimeout(() => setAbonoConfirmed(false), 3000)
   }
 
   return (
@@ -471,6 +501,122 @@ export function CreditCardsView({
             </div>
           )}
         </div>
+      )}
+
+      {/* ── PANEL DE ABONO A DEUDA ── */}
+      {activeCard && cardHealth && cardHealth.totalDebt > 0 && (
+        <>
+          <div className="section-header">
+            <div className="section-label">ABONAR A DEUDA</div>
+            <div className="section-title">Pago voluntario contra la deuda de {activeCard.name} ({activeCard.bank})</div>
+          </div>
+
+          <form
+            className="form-card"
+            onSubmit={handleApplyAbono}
+            style={{
+              background: 'linear-gradient(135deg, rgba(52,211,153,0.05) 0%, rgba(20,20,28,0.85) 100%)',
+              border: '1px solid rgba(52,211,153,0.2)',
+            }}
+          >
+            {/* Deuda consolidada de la tarjeta activa */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+              padding: '10px 14px',
+              borderRadius: 10,
+              background: 'rgba(0,0,0,0.25)',
+              marginBottom: 14,
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 11, color: '#888898', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Deuda Pendiente de {activeCard.name}</span>
+                <span style={{ fontSize: 22, fontWeight: 800, color: '#F87171' }}>{formatCurrency(cardHealth.totalDebt)}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'right' }}>
+                <span style={{ fontSize: 11, color: '#888898' }}>Cupo disponible post-abono estimado</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#34D399' }}>
+                  {formatCurrency(cardHealth.availableCredit + (parseFloat(abonoAmount) || 0))}
+                </span>
+              </div>
+            </div>
+
+            <div className="form-grid">
+              <div style={{ gridColumn: 'span 8' }}>
+                <label className="field-label">Monto a Abonar (RD$)</label>
+                <input
+                  type="number"
+                  className="field-input"
+                  placeholder={`Máx. ${formatCurrency(cardHealth.totalDebt)}`}
+                  min={0.01}
+                  max={cardHealth.totalDebt}
+                  step="0.01"
+                  value={abonoAmount}
+                  onChange={e => setAbonoAmount(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label className="field-label">Accesos rápidos</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => setAbonoAmount(String(cardHealth.totalDebt.toFixed(2)))}
+                    style={{
+                      padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                      background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)',
+                      color: '#34D399', cursor: 'pointer',
+                    }}
+                  >
+                    Deuda Total
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAbonoAmount(String((cardHealth.minPaymentEstimate).toFixed(2)))}
+                    style={{
+                      padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                      background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.3)',
+                      color: '#FBBF24', cursor: 'pointer',
+                    }}
+                  >
+                    Pago Mín.
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAbonoAmount(String((cardHealth.totalDebt * 0.5).toFixed(2)))}
+                    style={{
+                      padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                      background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.3)',
+                      color: '#60A5FA', cursor: 'pointer',
+                    }}
+                  >
+                    50%
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              {abonoConfirmed && (
+                <span style={{ fontSize: 12, color: '#34D399', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <CheckCircle2 size={14} /> ¡Abono aplicado correctamente!
+                </span>
+              )}
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={!abonoAmount || parseFloat(abonoAmount) <= 0}
+                style={{ background: 'linear-gradient(135deg, #34D399, #059669)' }}
+              >
+                <ArrowDownCircle size={15} />
+                <span>Aplicar Abono a la Deuda</span>
+              </button>
+            </div>
+          </form>
+        </>
       )}
 
       {/* Transaction Add Form */}
