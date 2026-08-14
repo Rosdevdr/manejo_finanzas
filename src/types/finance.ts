@@ -33,12 +33,14 @@ export type CashReason =
   | 'emergency'         // Emergencia médica o imprevisto
   | 'unassigned';       // Retiro sin destino claro (Dispara alerta de riesgo)
 
+export type CardThemeColor = 'gold' | 'emerald' | 'blue' | 'purple' | 'silver' | 'rose';
+
 // ==========================================
 // 2. ENTIDADES PRINCIPALES
 // ==========================================
 
 export interface Income {
-  id: string;              // Identificador único (ej: UUID generado o timestamp)
+  id: string;              // Identificador único (UUID generado o timestamp)
   period: string;          // Formato "YYYY-MM" (ej: "2026-08")
   description: string;     // Ej: "Sueldo Empresa X", "Proyecto Web Freelance"
   amount: number;          // Monto monetario (siempre positivo)
@@ -66,6 +68,31 @@ export interface CashWithdrawal {
   date: string;
 }
 
+export interface CreditCard {
+  id: string;
+  name: string;            // Ej: "Visa Infinite BHD", "Mastercard Black Reservas"
+  bank: string;            // Ej: "Banco BHD", "Banreservas", "Banco Popular"
+  lastFourDigits: string;  // Ej: "4821"
+  creditLimit: number;     // Límite total de crédito (ej: 150,000)
+  cutoffDay: number;       // Día del mes de corte (1-31, ej: 15)
+  paymentDueDay: number;   // Día del mes límite de pago (1-31, ej: 5)
+  interestRate?: number;   // Tasa de interés mensual % (opcional, ej: 4.5)
+  color: CardThemeColor;   // Color y estilo visual
+}
+
+export interface CreditCardTransaction {
+  id: string;
+  cardId: string;          // ID de la tarjeta asociada
+  period: string;          // Formato "YYYY-MM"
+  description: string;     // Concepto de la compra / cargo
+  amount: number;          // Monto total
+  category: ExpenseCategory;
+  date: string;            // Fecha "YYYY-MM-DD"
+  installments: number;    // Cuotas diferidas (1 = cargo directo, 3, 6, 12, etc.)
+  currentInstallment: number; // Cuota actual
+  isPaid: boolean;         // Si ya fue saldada
+}
+
 // ==========================================
 // 3. MODELOS DE RESUMEN Y CÁLCULO
 // ==========================================
@@ -78,9 +105,19 @@ export interface FinancialSummary {
   totalVariableExpenses: number;   // Gastos variables controlables
   totalExpenses: number;           // Gastos totales (Fijos + Variables)
   totalCashWithdrawn: number;      // Total retirado en efectivo
+  totalCreditDebt: number;         // Deuda total en tarjetas de crédito
   availableBalance: number;        // Dinero libre (Total Ingresos - Total Gastos)
   netSavings: number;              // Ahorro neto estimado
   savingsRate: number;             // Porcentaje de ahorro (ej: 25.5%)
+}
+
+export interface CreditCardSummary {
+  totalLimit: number;              // Límite consolidado de todas las tarjetas
+  totalDebt: number;               // Deuda acumulada en el periodo
+  availableCredit: number;         // Cupo disponible global
+  utilizationRate: number;         // Porcentaje de utilización global
+  cardsCount: number;              // Cantidad de tarjetas registradas
+  pendingPaymentsCount: number;    // Cantidad de compras pendientes
 }
 
 // Estructura completa de un mes para la persistencia
@@ -89,4 +126,6 @@ export interface MonthData {
   incomes: Income[];
   expenses: Expense[];
   cashWithdrawals: CashWithdrawal[];
+  creditTransactions?: CreditCardTransaction[];
 }
+

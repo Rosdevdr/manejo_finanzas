@@ -41,6 +41,37 @@ CREATE TABLE IF NOT EXISTS public.cash_withdrawals (
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 4. TABLA: TARJETAS DE CRÉDITO (credit_cards)
+CREATE TABLE IF NOT EXISTS public.credit_cards (
+  id TEXT PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  bank TEXT NOT NULL,
+  last_four_digits VARCHAR(4) NOT NULL DEFAULT '0000',
+  credit_limit NUMERIC(12, 2) NOT NULL CHECK (credit_limit > 0),
+  cutoff_day INTEGER NOT NULL CHECK (cutoff_day BETWEEN 1 AND 31),
+  payment_due_day INTEGER NOT NULL CHECK (payment_due_day BETWEEN 1 AND 31),
+  interest_rate NUMERIC(5, 2),
+  color TEXT NOT NULL DEFAULT 'gold',
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 5. TABLA: TRANSACCIONES / CARGOS DE TARJETA (credit_card_transactions)
+CREATE TABLE IF NOT EXISTS public.credit_card_transactions (
+  id TEXT PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  card_id TEXT NOT NULL REFERENCES public.credit_cards(id) ON DELETE CASCADE,
+  period TEXT NOT NULL,
+  description TEXT NOT NULL,
+  amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+  category TEXT NOT NULL CHECK (category IN ('housing', 'food', 'transport', 'utilities', 'health', 'entertainment', 'education', 'debt', 'other')),
+  date DATE NOT NULL,
+  installments INTEGER NOT NULL DEFAULT 1 CHECK (installments >= 1),
+  current_installment INTEGER NOT NULL DEFAULT 1 CHECK (current_installment >= 1),
+  is_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- ==============================================================================
 -- 🔒 POLÍTICAS DE SEGURIDAD (Row Level Security - RLS)
 -- Cada usuario solo puede ver, insertar, actualizar y borrar sus propios datos
@@ -49,6 +80,8 @@ CREATE TABLE IF NOT EXISTS public.cash_withdrawals (
 ALTER TABLE public.incomes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cash_withdrawals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.credit_cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.credit_card_transactions ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para Incomes
 CREATE POLICY "Users can view their own incomes" ON public.incomes
@@ -80,15 +113,38 @@ CREATE POLICY "Users can update their own cash withdrawals" ON public.cash_withd
 CREATE POLICY "Users can delete their own cash withdrawals" ON public.cash_withdrawals
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Políticas para Credit Cards
+CREATE POLICY "Users can view their own credit cards" ON public.credit_cards
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own credit cards" ON public.credit_cards
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own credit cards" ON public.credit_cards
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own credit cards" ON public.credit_cards
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Políticas para Credit Card Transactions
+CREATE POLICY "Users can view their own card transactions" ON public.credit_card_transactions
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own card transactions" ON public.credit_card_transactions
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own card transactions" ON public.credit_card_transactions
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own card transactions" ON public.credit_card_transactions
+  FOR DELETE USING (auth.uid() = user_id);
+
 -- ==============================================================================
 -- ⚡ SINCRONIZACIÓN EN TIEMPO REAL (Realtime Publications)
 -- ==============================================================================
 
--- Permitir que los eventos DELETE emitan la identidad completa en WebSockets
 ALTER TABLE public.incomes REPLICA IDENTITY FULL;
 ALTER TABLE public.expenses REPLICA IDENTITY FULL;
 ALTER TABLE public.cash_withdrawals REPLICA IDENTITY FULL;
+ALTER TABLE public.credit_cards REPLICA IDENTITY FULL;
+ALTER TABLE public.credit_card_transactions REPLICA IDENTITY FULL;
 
 ALTER PUBLICATION supabase_realtime ADD TABLE public.incomes;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.cash_withdrawals;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.credit_cards;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.credit_card_transactions;

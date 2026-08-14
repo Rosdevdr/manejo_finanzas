@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { TabType } from './types/navigation'
 import { Sidebar }           from './components/layout/Sidebar'
 import { BottomNav }          from './components/layout/BottomNav'
@@ -6,27 +6,28 @@ import { AppHeader }         from './components/layout/AppHeader'
 import { DashboardView }     from './components/dashboard/DashboardView'
 import { IncomesView }       from './components/incomes/IncomesView'
 import { ExpensesView }      from './components/expenses/ExpensesView'
+import { CreditCardsView }   from './components/credit/CreditCardsView'
 import { CashView }          from './components/cash/CashView'
 import { SmartAnalysisPanel } from './components/analysis/SmartAnalysisPanel'
 import { ToastContainer }    from './components/ui/ToastContainer'
 import { LoginView }         from './components/auth/LoginView'
+import { MitLicenseModal }   from './components/ui/MitLicenseModal'
 import { Analytics }         from '@vercel/analytics/react'
 import { useFinanceStorage } from './hooks/useFinanceStorage'
 import { useAuth }           from './hooks/useAuth'
 import { useToast }          from './hooks/useToast'
 import { formatCurrency }    from './utils/formatters'
-
-const PERIODS = [
-  { value: '2026-09', label: 'Septiembre 2026' },
-  { value: '2026-08', label: 'Agosto 2026' },
-  { value: '2026-07', label: 'Julio 2026' },
-  { value: '2026-06', label: 'Junio 2026' },
-  { value: '2026-05', label: 'Mayo 2026' },
-]
+import {
+  getPreviousPeriod,
+  getNextPeriod,
+  formatPeriodLabel,
+  getCurrentSystemPeriod,
+} from './utils/calendar'
 
 export function App() {
   const [activeTab, setActiveTab]         = useState<TabType>('dashboard')
-  const [currentPeriod, setCurrentPeriod] = useState('2026-08')
+  const [currentPeriod, setCurrentPeriod] = useState<string>(() => getCurrentSystemPeriod())
+  const [showLicenseModal, setShowLicenseModal] = useState(false)
 
   const { toasts, show: showToast, dismiss } = useToast()
 
@@ -42,10 +43,12 @@ export function App() {
   } = useAuth()
 
   const {
-    incomes, expenses, cash,
+    incomes, expenses, cash, creditCards, creditTransactions,
     addIncome, updateIncome, deleteIncome,
     addExpense, updateExpense, deleteExpense,
     addWithdrawal, deleteWithdrawal,
+    addCreditCard, updateCreditCard, deleteCreditCard,
+    addCreditTransaction, updateCreditTransaction, deleteCreditTransaction, toggleTransactionPaid,
   } = useFinanceStorage(user)
 
   const periodIncomes  = incomes.filter(i => i.period === currentPeriod)
@@ -54,10 +57,10 @@ export function App() {
   const totalExpense   = periodExpenses.reduce((s, e) => s + e.amount, 0)
   const available      = totalIncome - totalExpense
 
-  const idx = PERIODS.findIndex(p => p.value === currentPeriod)
-  const prevPeriod  = () => { if (idx < PERIODS.length - 1) setCurrentPeriod(PERIODS[idx + 1].value) }
-  const nextPeriod  = () => { if (idx > 0) setCurrentPeriod(PERIODS[idx - 1].value) }
-  const periodLabel = PERIODS[idx]?.label ?? currentPeriod
+  // Navegación matemática dinámica e ilimitada de meses (sin pérdida de datos)
+  const prevPeriod  = () => setCurrentPeriod(prev => getPreviousPeriod(prev))
+  const nextPeriod  = () => setCurrentPeriod(prev => getNextPeriod(prev))
+  const periodLabel = useMemo(() => formatPeriodLabel(currentPeriod), [currentPeriod])
 
   // Mostrar pantalla de Login si no hay usuario ni modo demo
   if (!authLoading && !user && !isDemoMode) {
@@ -90,11 +93,10 @@ export function App() {
           periodLabel={periodLabel}
           onPrev={prevPeriod}
           onNext={nextPeriod}
-          prevDisabled={idx >= PERIODS.length - 1}
-          nextDisabled={idx <= 0}
           balanceLabel={formatCurrency(available)}
           balancePositive={available >= 0}
           isDemoMode={isDemoMode}
+          onOpenLicense={() => setShowLicenseModal(true)}
         />
 
         <div className="content">
@@ -103,6 +105,9 @@ export function App() {
               currentPeriod={currentPeriod}
               incomes={incomes}
               expenses={expenses}
+              creditCards={creditCards}
+              creditTransactions={creditTransactions}
+              onNavigateTab={setActiveTab}
             />
           )}
           {activeTab === 'incomes' && (
@@ -123,6 +128,20 @@ export function App() {
               onDeleteExpense={id => { deleteExpense(id); showToast('Gasto eliminado',              'error')   }}
             />
           )}
+          {activeTab === 'credit' && (
+            <CreditCardsView
+              currentPeriod={currentPeriod}
+              creditCards={creditCards}
+              creditTransactions={creditTransactions}
+              onAddCard={c => { addCreditCard(c); showToast('Tarjeta de crédito agregada', 'success') }}
+              onUpdateCard={c => { updateCreditCard(c); showToast('Tarjeta actualizada', 'info') }}
+              onDeleteCard={id => { deleteCreditCard(id); showToast('Tarjeta eliminada', 'error') }}
+              onAddTransaction={t => { addCreditTransaction(t); showToast('Consumo en tarjeta registrado', 'success') }}
+              onUpdateTransaction={t => { updateCreditTransaction(t); showToast('Consumo actualizado', 'info') }}
+              onDeleteTransaction={id => { deleteCreditTransaction(id); showToast('Consumo eliminado', 'error') }}
+              onTogglePaid={id => { toggleTransactionPaid(id); showToast('Estado de pago actualizado', 'info') }}
+            />
+          )}
           {activeTab === 'cash' && (
             <CashView
               currentPeriod={currentPeriod}
@@ -139,6 +158,8 @@ export function App() {
               incomes={incomes}
               expenses={expenses}
               cashWithdrawals={cash}
+              creditCards={creditCards}
+              creditTransactions={creditTransactions}
             />
           )}
         </div>
@@ -146,9 +167,11 @@ export function App() {
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <MitLicenseModal isOpen={showLicenseModal} onClose={() => setShowLicenseModal(false)} />
       <Analytics />
     </div>
   )
 }
 
 export default App
+

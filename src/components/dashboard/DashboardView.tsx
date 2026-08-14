@@ -1,16 +1,31 @@
-import { TrendingUp, TrendingDown, Wallet, PiggyBank, Shuffle, Lock } from 'lucide-react'
+import {
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  PiggyBank,
+  Shuffle,
+  Lock,
+  CreditCard as CardIcon,
+  Calendar,
+  AlertCircle,
+  Sparkles,
+} from 'lucide-react'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell
 } from 'recharts'
-import type { Income, Expense } from '../../types/finance'
+import type { Income, Expense, CreditCard, CreditCardTransaction } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
 import { formatCurrency } from '../../utils/formatters'
+import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES } from '../../utils/calendar'
+import { getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
 
 interface DashboardViewProps {
   currentPeriod: string
   incomes: Income[]
   expenses: Expense[]
+  creditCards?: CreditCard[]
+  creditTransactions?: CreditCardTransaction[]
   onNavigateTab?: (t: TabType) => void
 }
 
@@ -26,9 +41,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   education: '#22D3EE', debt: '#F97316', other: '#9CA3AF',
 }
 
-const MONTHS = ['En', 'Fe', 'Ma', 'Ab', 'My', 'Jn', 'Jl', 'Ag', 'Se', 'Oc', 'No', 'Di']
-
-export function DashboardView({ currentPeriod, incomes, expenses }: DashboardViewProps) {
+export function DashboardView({
+  currentPeriod,
+  incomes,
+  expenses,
+  creditCards = [],
+  creditTransactions = [],
+  onNavigateTab,
+}: DashboardViewProps) {
+  // Datos del período actual
   const pInc  = incomes.filter(i  => i.period === currentPeriod)
   const pExp  = expenses.filter(e => e.period === currentPeriod)
   const totalIn  = pInc.reduce((s, i) => s + i.amount, 0)
@@ -38,72 +59,154 @@ export function DashboardView({ currentPeriod, incomes, expenses }: DashboardVie
   const fixedExp   = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
   const varExp     = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
 
+  // Datos del período anterior (Cálculo matemático con calendario)
+  const prevPeriod = getPreviousPeriod(currentPeriod)
+  const prevInc = incomes.filter(i => i.period === prevPeriod)
+  const prevExp = expenses.filter(e => e.period === prevPeriod)
+  const prevTotalIn = prevInc.reduce((s, i) => s + i.amount, 0)
+  const prevTotalExp = prevExp.reduce((s, e) => s + e.amount, 0)
+  const prevBalance = prevTotalIn - prevTotalExp
+  const prevSavingRate = prevTotalIn > 0 ? ((prevBalance / prevTotalIn) * 100) : 0
+
+  // Comparativas estadísticas Mes vs Mes Anterior
+  const incDiff = totalIn - prevTotalIn
+  const incPct = prevTotalIn > 0 ? (incDiff / prevTotalIn) * 100 : (totalIn > 0 ? 100 : 0)
+  const incTrend = prevTotalIn > 0 || totalIn > 0
+    ? `${incPct >= 0 ? '+' : ''}${incPct.toFixed(1)}% vs mes ant.`
+    : undefined
+  const incTrendDir = incPct >= 0 ? 'up' : 'down'
+
+  const expDiff = totalExp - prevTotalExp
+  const expPct = prevTotalExp > 0 ? (expDiff / prevTotalExp) * 100 : (totalExp > 0 ? 100 : 0)
+  const expTrend = prevTotalExp > 0 || totalExp > 0
+    ? `${expPct >= 0 ? '+' : ''}${expPct.toFixed(1)}% vs mes ant.`
+    : undefined
+  // En gastos: si baja es favorable (trend-up verde), si sube es desfavorable (trend-down rojo)
+  const expTrendDir = expPct <= 0 ? 'up' : 'down'
+
+  const balDiff = balance - prevBalance
+  const balTrend = prevTotalIn > 0 || totalIn > 0
+    ? `${balDiff >= 0 ? '+' : ''}${formatCurrency(balDiff)} vs mes ant.`
+    : undefined
+  const balTrendDir = balDiff >= 0 ? 'up' : 'down'
+
+  const rateDiff = savingRate - prevSavingRate
+  const rateTrend = prevTotalIn > 0 || totalIn > 0
+    ? `${rateDiff >= 0 ? '+' : ''}${rateDiff.toFixed(1)}% vs mes ant.`
+    : undefined
+  const rateTrendDir = rateDiff >= 0 ? 'up' : 'down'
+
+  // Resumen de Tarjetas de Crédito
+  const creditSummary = getConsolidatedCreditSummary(creditCards, creditTransactions)
+
+  // Diagnóstico de calendario del mes
+  const monthProgress = getMonthProgress(currentPeriod)
+
   // Pie chart data — by category
   const categoryTotals: Record<string, number> = {}
   pExp.forEach(e => { categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount })
-  const pieData = Object.entries(categoryTotals).map(([cat, val]) => ({ name: CATEGORY_LABELS[cat] ?? cat, value: val, color: CATEGORY_COLORS[cat] ?? '#555' }))
+  const pieData = Object.entries(categoryTotals).map(([cat, val]) => ({
+    name: CATEGORY_LABELS[cat] ?? cat,
+    value: val,
+    color: CATEGORY_COLORS[cat] ?? '#555'
+  }))
 
-  // Bar chart — last 5 periods
-  const [, month] = currentPeriod.split('-').map(Number)
-  const HISTORICAL_FACTORS = [
-    { inc: 0.85, exp: 0.90 },
-    { inc: 0.92, exp: 0.88 },
-    { inc: 0.95, exp: 0.94 },
-    { inc: 0.98, exp: 0.96 },
-    { inc: 1.00, exp: 1.00 },
-  ]
-  const barData = Array.from({ length: 5 }).map((_, i) => {
-    const m = ((month - 1 - (4 - i) + 12) % 12)
-    const label = MONTHS[m]
-    const factor = HISTORICAL_FACTORS[i]
-    const totI = totalIn * factor.inc
-    const totE = totalExp * factor.exp
-    return { label, ingresos: Math.round(totI), gastos: Math.round(totE) }
+  // Bar chart — 5 meses históricos reales desde el almacenamiento
+  const last5Periods: string[] = []
+  let cursor = currentPeriod
+  for (let i = 0; i < 5; i++) {
+    last5Periods.unshift(cursor)
+    cursor = getPreviousPeriod(cursor)
+  }
+
+  const barData = last5Periods.map(p => {
+    const [, monthStr] = p.split('-')
+    const mIdx = (parseInt(monthStr, 10) || 1) - 1
+    const pIncomes = incomes.filter(i => i.period === p)
+    const pExpenses = expenses.filter(e => e.period === p)
+    const totI = pIncomes.reduce((s, i) => s + i.amount, 0)
+    const totE = pExpenses.reduce((s, e) => s + e.amount, 0)
+    return {
+      label: MONTH_SHORT_NAMES[mIdx] || p,
+      period: p,
+      ingresos: Math.round(totI),
+      gastos: Math.round(totE),
+    }
   })
 
-  const recentTx = [...pInc.slice(0, 2).map(i => ({ ...i, kind: 'income' as const })),
-                    ...pExp.slice(0, 3).map(e => ({ ...e, kind: 'expense' as const }))]
+  const recentTx = [
+    ...pInc.slice(0, 3).map(i => ({ ...i, kind: 'income' as const })),
+    ...pExp.slice(0, 4).map(e => ({ ...e, kind: 'expense' as const })),
+  ]
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 5)
 
   const kpis = [
     {
-      label: 'Ingresos Totales', value: formatCurrency(totalIn),
+      label: 'Ingresos Totales',
+      value: formatCurrency(totalIn),
       sub: `${pInc.length} fuente${pInc.length !== 1 ? 's' : ''}`,
-      color: 'emerald', icon: <TrendingUp size={14} />,
-      trend: '+12%', trendDir: 'up',
+      color: 'emerald',
+      icon: <TrendingUp size={14} />,
+      trend: incTrend,
+      trendDir: incTrendDir,
     },
     {
-      label: 'Gastos Totales', value: formatCurrency(totalExp),
+      label: 'Gastos Totales',
+      value: formatCurrency(totalExp),
       sub: `${pExp.length} registro${pExp.length !== 1 ? 's' : ''}`,
-      color: 'red', icon: <TrendingDown size={14} />,
-      trend: '+4%', trendDir: 'down',
+      color: 'red',
+      icon: <TrendingDown size={14} />,
+      trend: expTrend,
+      trendDir: expTrendDir,
     },
     {
-      label: 'Balance Neto', value: formatCurrency(balance),
-      sub: balance >= 0 ? 'Saldo positivo' : 'Saldo negativo',
-      color: balance >= 0 ? 'emerald' : 'red', icon: <Wallet size={14} />,
-      trend: balance >= 0 ? 'Saludable' : 'Déficit', trendDir: balance >= 0 ? 'up' : 'down',
+      label: 'Balance Neto',
+      value: formatCurrency(balance),
+      sub: balance >= 0 ? 'Saldo superavitario' : 'Déficit presupuestario',
+      color: balance >= 0 ? 'emerald' : 'red',
+      icon: <Wallet size={14} />,
+      trend: balTrend,
+      trendDir: balTrendDir,
     },
     {
-      label: 'Tasa de Ahorro', value: `${savingRate.toFixed(1)}%`,
+      label: 'Tasa de Ahorro',
+      value: `${savingRate.toFixed(1)}%`,
       sub: 'Del ingreso total',
       color: savingRate >= 20 ? 'emerald' : savingRate >= 10 ? 'amber' : 'red',
-      icon: <PiggyBank size={14} />, trend: savingRate >= 20 ? 'Óptimo' : 'Mejorable', trendDir: 'up',
+      icon: <PiggyBank size={14} />,
+      trend: rateTrend,
+      trendDir: rateTrendDir,
     },
     {
-      label: 'Gastos Fijos', value: formatCurrency(fixedExp),
-      sub: totalIn > 0 ? `${((fixedExp / totalIn) * 100).toFixed(0)}% del ingreso` : '—',
-      color: 'gold', icon: <Lock size={14} />,
-      trend: undefined, trendDir: 'up',
+      label: 'Deuda Tarjetas',
+      value: formatCurrency(creditSummary.totalDebt),
+      sub: `${creditSummary.utilizationRate.toFixed(1)}% de cupo utilizado`,
+      color: creditSummary.utilizationRate > 50 ? 'red' : creditSummary.utilizationRate > 30 ? 'amber' : 'gold',
+      icon: <CardIcon size={14} />,
+      trend: creditSummary.cardsCount > 0 ? `${creditSummary.cardsCount} tarjeta${creditSummary.cardsCount > 1 ? 's' : ''}` : undefined,
+      trendDir: creditSummary.utilizationRate <= 30 ? 'up' : 'down',
     },
     {
-      label: 'Gastos Variables', value: formatCurrency(varExp),
+      label: 'Gastos Fijos',
+      value: formatCurrency(fixedExp),
+      sub: totalIn > 0 ? `${((fixedExp / totalIn) * 100).toFixed(0)}% del ingreso` : 'Compromisos',
+      color: 'gold',
+      icon: <Lock size={14} />,
+      trend: undefined,
+      trendDir: 'up',
+    },
+    {
+      label: 'Gastos Variables',
+      value: formatCurrency(varExp),
       sub: totalIn > 0 ? `${((varExp / totalIn) * 100).toFixed(0)}% del ingreso` : '—',
-      color: 'amber', icon: <Shuffle size={14} />,
-      trend: undefined, trendDir: 'up',
+      color: 'amber',
+      icon: <Shuffle size={14} />,
+      trend: undefined,
+      trendDir: 'up',
     },
   ]
+
 
   return (
     <div className="fade-in">
@@ -112,6 +215,62 @@ export function DashboardView({ currentPeriod, incomes, expenses }: DashboardVie
         <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Dashboard</span></div>
         <h1 className="page-title">Panorama Financiero</h1>
       </div>
+
+      {/* Calendar Progress & End of Month Alert Banner */}
+      {monthProgress.isCurrentMonth && (
+        <div style={{
+          background: monthProgress.isMonthEndingSoon
+            ? 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(20,20,28,0.8) 100%)'
+            : 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(20,20,28,0.8) 100%)',
+          border: `1px solid ${monthProgress.isMonthEndingSoon ? 'rgba(239,68,68,0.3)' : 'rgba(201,168,76,0.25)'}`,
+          borderRadius: 14,
+          padding: '12px 18px',
+          marginBottom: 18,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: monthProgress.isMonthEndingSoon ? 'rgba(239,68,68,0.15)' : 'rgba(201,168,76,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: monthProgress.isMonthEndingSoon ? '#F87171' : '#C9A84C',
+            }}>
+              {monthProgress.isMonthEndingSoon ? <AlertCircle size={16} /> : <Calendar size={16} />}
+            </div>
+            <div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#FFFFFF' }}>
+                {monthProgress.isMonthEndingSoon
+                  ? `⚡ ¡Cierre de Mes en Curso! Quedan solo ${monthProgress.daysRemaining} día${monthProgress.daysRemaining !== 1 ? 's' : ''} para finalizar el ciclo.`
+                  : `📅 Calendario Real: Día ${monthProgress.currentDay} de ${monthProgress.totalDays} (${monthProgress.percentPassed}% transcurrido).`}
+              </div>
+              <div style={{ fontSize: 11.5, color: '#888898', marginTop: 2 }}>
+                Quedan {monthProgress.daysRemaining} días calendario para cerrar este mes.
+                {creditCards.length > 0 && ` Recuerda revisar tus fechas de corte y límites de pago.`}
+              </div>
+            </div>
+          </div>
+
+          {onNavigateTab && (
+            <button
+              type="button"
+              onClick={() => onNavigateTab('advisor')}
+              className="btn-primary"
+              style={{ padding: '6px 14px', fontSize: 11.5 }}
+            >
+              <Sparkles size={13} />
+              <span>Ver Asesor IA</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* KPI Grid */}
       <div className="kpi-grid">
@@ -135,26 +294,26 @@ export function DashboardView({ currentPeriod, incomes, expenses }: DashboardVie
       {/* Charts */}
       <div className="charts-grid">
         <div className="chart-card">
-          <div className="chart-title">Ingresos vs Gastos</div>
-          <div className="chart-sub">Comparativa de los últimos 5 meses</div>
+          <div className="chart-title">Ingresos vs Gastos Históricos</div>
+          <div className="chart-sub">Datos reales de los últimos 5 meses</div>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={barData} barSize={14} barGap={4}>
               <XAxis dataKey="label" tick={{ fill: '#444454', fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis hide />
               <Tooltip
-                contentStyle={{ background: '#16161E', border: '1px solid #2A2A34', borderRadius: 8, fontSize: 12 }}
+                contentStyle={{ background: '#16161E', border: '1px solid #2A2A38', borderRadius: 8, fontSize: 12 }}
                 labelStyle={{ color: '#888898' }}
                 formatter={(v: unknown) => [formatCurrency(v as number), '']}
               />
-              <Bar dataKey="ingresos" fill="#34D399" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="gastos"   fill="#F87171" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="ingresos" fill="#34D399" radius={[3, 3, 0, 0]} name="Ingresos" />
+              <Bar dataKey="gastos"   fill="#F87171" radius={[3, 3, 0, 0]} name="Gastos" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="chart-card">
           <div className="chart-title">Distribución de Gastos</div>
-          <div className="chart-sub">Por categoría este período</div>
+          <div className="chart-sub">Por categoría en este período</div>
           {pieData.length > 0 ? (
             <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
               <ResponsiveContainer width={120} height={120}>
@@ -163,7 +322,7 @@ export function DashboardView({ currentPeriod, incomes, expenses }: DashboardVie
                     {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ background: '#16161E', border: '1px solid #2A2A34', borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{ background: '#16161E', border: '1px solid #2A2A38', borderRadius: 8, fontSize: 12 }}
                     formatter={(v: unknown) => [formatCurrency(v as number), '']}
                   />
                 </PieChart>
@@ -191,7 +350,7 @@ export function DashboardView({ currentPeriod, incomes, expenses }: DashboardVie
       {/* Recent Transactions */}
       <div className="section-header">
         <div className="section-label">ACTIVIDAD RECIENTE</div>
-        <div className="section-title">Últimos movimientos</div>
+        <div className="section-title">Últimos movimientos del período</div>
       </div>
       <div className="tx-list">
         <div className="tx-header">
@@ -226,3 +385,7 @@ export function DashboardView({ currentPeriod, incomes, expenses }: DashboardVie
     </div>
   )
 }
+
+
+
+

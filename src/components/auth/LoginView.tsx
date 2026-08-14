@@ -10,9 +10,11 @@ import {
   PlayCircle,
   Sparkles,
   Zap,
+  Scale,
 } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
+import { MitLicenseModal } from '../ui/MitLicenseModal'
 import { checkRateLimit, recordFailedAttempt, resetRateLimit } from '../../utils/rateLimiter'
 import { sanitizeString } from '../../utils/security'
 import './LoginView.css'
@@ -37,6 +39,7 @@ export function LoginView({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [showMitModal, setShowMitModal] = useState(false)
   const [lockSeconds, setLockSeconds] = useState(() => checkRateLimit('login_auth').remainingSeconds)
 
   useEffect(() => {
@@ -180,18 +183,31 @@ export function LoginView({
             </div>
           </div>
 
-          {/* Footer with GitHub and Status */}
+          {/* Footer with GitHub, MIT License, and Status */}
           <div className="auth-hero-footer">
-            <a
-              href="https://github.com/Rosdevdr/manejo_finanzas"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="auth-github-btn"
-              title="Ver repositorio en GitHub"
-            >
-              <GithubIcon size={16} />
-              <span>GitHub Repository</span>
-            </a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <a
+                href="https://github.com/Rosdevdr/manejo_finanzas"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="auth-github-btn"
+                title="Ver repositorio en GitHub"
+              >
+                <GithubIcon size={15} />
+                <span>GitHub</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setShowMitModal(true)}
+                className="auth-github-btn"
+                title="Ver Licencia MIT & Créditos"
+                style={{ cursor: 'pointer' }}
+              >
+                <Scale size={15} style={{ color: '#C9A84C' }} />
+                <span>Licencia MIT</span>
+              </button>
+            </div>
 
             <div className="auth-badge-stat">
               <ShieldCheck size={14} />
@@ -339,8 +355,37 @@ export function LoginView({
             <span>Continuar en Modo Demo (Local)</span>
             <Sparkles size={14} className="text-[#C9A84C]" />
           </button>
+
+          {/* Mobile MIT / GitHub link row */}
+          <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+            <button
+              type="button"
+              onClick={() => setShowMitModal(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#717182',
+                fontSize: 11,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '4px 8px',
+                borderRadius: 6,
+                transition: 'color 0.15s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#C9A84C')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#717182')}
+            >
+              <Scale size={13} />
+              <span>Licencia MIT · @Rosdevdr</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      <MitLicenseModal isOpen={showMitModal} onClose={() => setShowMitModal(false)} />
     </div>
   )
 }
+

@@ -1,5 +1,15 @@
 import type { ReactNode } from 'react'
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, Banknote, BrainCircuit, LogOut, Cloud, HardDrive } from 'lucide-react'
+import {
+  LayoutDashboard,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  CreditCard as CardIcon,
+  Banknote,
+  BrainCircuit,
+  LogOut,
+  Cloud,
+  HardDrive
+} from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import type { TabType } from '../../types/navigation'
 
@@ -12,21 +22,22 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
-  { id: 'dashboard', icon: <LayoutDashboard size={15} />, label: 'Dashboard'   },
-  { id: 'incomes',   icon: <ArrowDownCircle size={15} />, label: 'Ingresos'    },
-  { id: 'expenses',  icon: <ArrowUpCircle   size={15} />, label: 'Gastos'      },
-  { id: 'cash',      icon: <Banknote        size={15} />, label: 'Efectivo'    },
-  { id: 'advisor',   icon: <BrainCircuit    size={15} />, label: 'Asesor IA'   },
+  { id: 'dashboard', icon: <LayoutDashboard size={15} />, label: 'Dashboard' },
+  { id: 'incomes', icon: <ArrowDownCircle size={15} />, label: 'Ingresos' },
+  { id: 'expenses', icon: <ArrowUpCircle size={15} />, label: 'Gastos' },
+  { id: 'credit', icon: <CardIcon size={15} />, label: 'Tarjetas' },
+  { id: 'cash', icon: <Banknote size={15} />, label: 'Efectivo' },
+  { id: 'advisor', icon: <BrainCircuit size={15} />, label: 'Asesor IA' },
 ]
 
 export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignOut }: SidebarProps) {
   const initials = userEmail
     ? userEmail.slice(0, 2).toUpperCase()
-    : 'JR'
+    : 'JZ'
 
   const displayName = userEmail
     ? userEmail.split('@')[0]
-    : 'Jesús Rosario'
+    : 'José Zapata'
 
   return (
     <nav className="sidebar">

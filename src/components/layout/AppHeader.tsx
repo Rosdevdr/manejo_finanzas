@@ -1,19 +1,28 @@
-import { ChevronLeft, ChevronRight, Cloud, HardDrive } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Cloud, HardDrive, Scale } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 
 interface AppHeaderProps {
   periodLabel: string
   onPrev: () => void
   onNext: () => void
-  prevDisabled: boolean
-  nextDisabled: boolean
+  prevDisabled?: boolean
+  nextDisabled?: boolean
   balanceLabel: string
   balancePositive: boolean
   isDemoMode?: boolean
+  onOpenLicense?: () => void
 }
 
 export function AppHeader({
-  periodLabel, onPrev, onNext, prevDisabled, nextDisabled, balanceLabel, balancePositive, isDemoMode
+  periodLabel,
+  onPrev,
+  onNext,
+  prevDisabled = false,
+  nextDisabled = false,
+  balanceLabel,
+  balancePositive,
+  isDemoMode,
+  onOpenLicense,
 }: AppHeaderProps) {
   return (
     <header className="header">
@@ -46,12 +55,38 @@ export function AppHeader({
         <span>{isDemoMode ? 'Modo Local' : 'Sync IRT'}</span>
       </div>
 
+      {/* License modal trigger */}
+      {onOpenLicense && (
+        <button
+          type="button"
+          onClick={onOpenLicense}
+          title="Licencia MIT & Reglas de Uso (@Rosdevdr)"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            border: '1px solid #2A2A38',
+            background: '#16161E',
+            color: '#888898',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A84C'; e.currentTarget.style.borderColor = '#C9A84C' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = '#888898'; e.currentTarget.style.borderColor = '#2A2A38' }}
+        >
+          <Scale size={14} />
+        </button>
+      )}
+
       {/* GitHub shortcut */}
       <a
         href="https://github.com/Rosdevdr/manejo_finanzas"
         target="_blank"
         rel="noopener noreferrer"
-        title="Repositorio en GitHub"
+        title="Repositorio en GitHub (@Rosdevdr)"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -80,3 +115,4 @@ export function AppHeader({
     </header>
   )
 }
+
