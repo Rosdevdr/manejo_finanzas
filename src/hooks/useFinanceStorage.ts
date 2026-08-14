@@ -149,15 +149,24 @@ const DEFAULT_CARD_TRANSACTIONS: CreditCardTransaction[] = [
 ]
 
 export function useFinanceStorage(user?: User | null) {
-  const [incomes,            setIncomesState]            = useState<Income[]>(()                => loadLocal(KEYS.incomes,            DEFAULT_INCOMES))
-  const [expenses,           setExpensesState]           = useState<Expense[]>(()               => loadLocal(KEYS.expenses,           DEFAULT_EXPENSES))
-  const [cash,               setCashState]               = useState<CashWithdrawal[]>(()        => loadLocal(KEYS.cash,               DEFAULT_CASH))
-  const [creditCards,        setCreditCardsState]        = useState<CreditCard[]>(()            => loadLocal(KEYS.creditCards,        DEFAULT_CARDS))
-  const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => loadLocal(KEYS.creditTransactions, DEFAULT_CARD_TRANSACTIONS))
+  const [incomes,            setIncomesState]            = useState<Income[]>(() => !user ? loadLocal(KEYS.incomes, DEFAULT_INCOMES) : [])
+  const [expenses,           setExpensesState]           = useState<Expense[]>(() => !user ? loadLocal(KEYS.expenses, DEFAULT_EXPENSES) : [])
+  const [cash,               setCashState]               = useState<CashWithdrawal[]>(() => !user ? loadLocal(KEYS.cash, DEFAULT_CASH) : [])
+  const [creditCards,        setCreditCardsState]        = useState<CreditCard[]>(() => !user ? loadLocal(KEYS.creditCards, DEFAULT_CARDS) : [])
+  const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => !user ? loadLocal(KEYS.creditTransactions, DEFAULT_CARD_TRANSACTIONS) : [])
 
   // Sincronización inicial y Realtime con Supabase cuando el usuario está logueado
   useEffect(() => {
-    if (!supabase || !isSupabaseConfigured || !user) {
+    if (!user) {
+      setIncomesState(loadLocal(KEYS.incomes, DEFAULT_INCOMES))
+      setExpensesState(loadLocal(KEYS.expenses, DEFAULT_EXPENSES))
+      setCashState(loadLocal(KEYS.cash, DEFAULT_CASH))
+      setCreditCardsState(loadLocal(KEYS.creditCards, DEFAULT_CARDS))
+      setCreditTransactionsState(loadLocal(KEYS.creditTransactions, DEFAULT_CARD_TRANSACTIONS))
+      return
+    }
+
+    if (!supabase || !isSupabaseConfigured) {
       return
     }
 
@@ -177,75 +186,66 @@ export function useFinanceStorage(user?: User | null) {
 
         if (!isMounted) return
 
-        if (incRes.data) {
-          setIncomesState(incRes.data.map(row => ({
-            id: row.id,
-            period: row.period,
-            description: row.description,
-            amount: Number(row.amount),
-            type: row.type as IncomeType,
-            date: row.date,
-          })))
-        }
+        setIncomesState((incRes.data || []).map(row => ({
+          id: row.id,
+          period: row.period,
+          description: row.description,
+          amount: Number(row.amount),
+          type: row.type as IncomeType,
+          date: row.date,
+        })))
 
-        if (expRes.data) {
-          setExpensesState(expRes.data.map(row => ({
-            id: row.id,
-            period: row.period,
-            description: row.description,
-            amount: Number(row.amount),
-            category: row.category as ExpenseCategory,
-            type: row.type as ExpenseType,
-            paymentMethod: row.payment_method as PaymentMethod,
-            date: row.date,
-          })))
-        }
+        setExpensesState((expRes.data || []).map(row => ({
+          id: row.id,
+          period: row.period,
+          description: row.description,
+          amount: Number(row.amount),
+          category: row.category as ExpenseCategory,
+          type: row.type as ExpenseType,
+          paymentMethod: row.payment_method as PaymentMethod,
+          date: row.date,
+        })))
 
-        if (cashRes.data) {
-          setCashState(cashRes.data.map(row => ({
-            id: row.id,
-            period: row.period,
-            amount: Number(row.amount),
-            reason: row.reason as CashReason,
-            note: row.note ?? undefined,
-            date: row.date,
-          })))
-        }
+        setCashState((cashRes.data || []).map(row => ({
+          id: row.id,
+          period: row.period,
+          amount: Number(row.amount),
+          reason: row.reason as CashReason,
+          note: row.note ?? undefined,
+          date: row.date,
+        })))
 
-        if (cardRes.data && cardRes.data.length > 0) {
-          setCreditCardsState(cardRes.data.map(row => ({
-            id: row.id,
-            name: row.name,
-            bank: row.bank,
-            lastFourDigits: row.last_four_digits,
-            creditLimit: Number(row.credit_limit),
-            cutoffDay: Number(row.cutoff_day),
-            paymentDueDay: Number(row.payment_due_day),
-            interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
-            color: row.color as CardThemeColor,
-          })))
-        }
+        setCreditCardsState((cardRes.data || []).map(row => ({
+          id: row.id,
+          name: row.name,
+          bank: row.bank,
+          lastFourDigits: row.last_four_digits,
+          creditLimit: Number(row.credit_limit),
+          cutoffDay: Number(row.cutoff_day),
+          paymentDueDay: Number(row.payment_due_day),
+          interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
+          color: row.color as CardThemeColor,
+        })))
 
-        if (ctxRes.data) {
-          setCreditTransactionsState(ctxRes.data.map(row => ({
-            id: row.id,
-            cardId: row.card_id,
-            period: row.period,
-            description: row.description,
-            amount: Number(row.amount),
-            category: row.category as ExpenseCategory,
-            date: row.date,
-            installments: Number(row.installments || 1),
-            currentInstallment: Number(row.current_installment || 1),
-            isPaid: Boolean(row.is_paid),
-          })))
-        }
+        setCreditTransactionsState((ctxRes.data || []).map(row => ({
+          id: row.id,
+          cardId: row.card_id,
+          period: row.period,
+          description: row.description,
+          amount: Number(row.amount),
+          category: row.category as ExpenseCategory,
+          date: row.date,
+          installments: Number(row.installments || 1),
+          currentInstallment: Number(row.current_installment || 1),
+          isPaid: Boolean(row.is_paid),
+        })))
       } catch {
-        // Usar estado local si hay fallo de conexión
+        // Fallo de red
       }
     }
 
     loadData()
+
 
     // Suscripción Realtime vía WebSockets (IRT)
     const channel = supabase
