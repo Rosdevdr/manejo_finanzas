@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   CreditCard as CardIcon,
   Plus,
@@ -65,7 +65,7 @@ export function CreditCardsView({
   const [showCardModal, setShowCardModal] = useState(false)
   const [editingCard, setEditingCard] = useState<CreditCard | null>(null)
 
-  // Abono a deuda
+  // Abono a deuda — se pre-rellena automáticamente con la deuda total de la tarjeta activa
   const [abonoAmount, setAbonoAmount] = useState('')
   const [abonoConfirmed, setAbonoConfirmed] = useState(false)
 
@@ -127,6 +127,15 @@ export function CreditCardsView({
 
   const activeCard = creditCards.find(c => c.id === selectedCardId) || creditCards[0]
   const cardHealth = activeCard ? evaluateCardHealth(activeCard, creditTransactions) : null
+
+  // Auto-rellenar el campo de abono con la deuda total cuando cambia la tarjeta activa o su deuda
+  useEffect(() => {
+    if (cardHealth && cardHealth.totalDebt > 0) {
+      setAbonoAmount(cardHealth.totalDebt.toFixed(2))
+    } else {
+      setAbonoAmount('')
+    }
+  }, [selectedCardId, cardHealth?.totalDebt])
 
   const periodTransactions = creditTransactions.filter(t => {
     if (selectedCardId) {
