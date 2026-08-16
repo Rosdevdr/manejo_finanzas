@@ -95,7 +95,7 @@
 }
 
 .card-number {
-  font-family: 'Space Mono', monospace, monospace;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 16px;
   letter-spacing: 0.18em;
   color: #F0F0F8;
@@ -150,7 +150,7 @@
   font-size: 11px;
   font-weight: 700;
   color: #F1D97E;
-  font-family: monospace;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
 }
 
 /* Advisor Banner for Selected Card */
