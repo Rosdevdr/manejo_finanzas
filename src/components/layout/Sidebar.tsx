@@ -1,15 +1,5 @@
 import type { ReactNode } from 'react'
-import {
-  LayoutDashboard,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  CreditCard as CardIcon,
-  Banknote,
-  BrainCircuit,
-  LogOut,
-  Cloud,
-  HardDrive
-} from 'lucide-react'
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, CreditCard, Banknote, BrainCircuit, LogOut, Cloud, HardDrive, ShieldCheck } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import type { TabType } from '../../types/navigation'
 
@@ -19,25 +9,26 @@ interface SidebarProps {
   userEmail?: string | null
   isDemoMode?: boolean
   onSignOut?: () => void
+  onOpenSecurity?: () => void
 }
 
 const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
-  { id: 'dashboard', icon: <LayoutDashboard size={15} />, label: 'Dashboard' },
-  { id: 'incomes', icon: <ArrowDownCircle size={15} />, label: 'Ingresos' },
-  { id: 'expenses', icon: <ArrowUpCircle size={15} />, label: 'Gastos' },
-  { id: 'credit', icon: <CardIcon size={15} />, label: 'Tarjetas' },
-  { id: 'cash', icon: <Banknote size={15} />, label: 'Efectivo' },
-  { id: 'advisor', icon: <BrainCircuit size={15} />, label: 'Asesor IA' },
+  { id: 'dashboard', icon: <LayoutDashboard size={15} />, label: 'Dashboard'   },
+  { id: 'incomes',   icon: <ArrowDownCircle size={15} />, label: 'Ingresos'    },
+  { id: 'expenses',  icon: <ArrowUpCircle   size={15} />, label: 'Gastos'      },
+  { id: 'credit',    icon: <CreditCard      size={15} />, label: 'Tarjetas'    },
+  { id: 'cash',      icon: <Banknote        size={15} />, label: 'Efectivo'    },
+  { id: 'advisor',   icon: <BrainCircuit    size={15} />, label: 'Asesor IA'   },
 ]
 
-export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignOut }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignOut, onOpenSecurity }: SidebarProps) {
   const initials = userEmail
     ? userEmail.slice(0, 2).toUpperCase()
-    : 'JZ'
+    : 'JR'
 
   const displayName = userEmail
     ? userEmail.split('@')[0]
-    : 'José Zapata'
+    : 'Jesús Rosario'
 
   return (
     <nav className="sidebar">
@@ -80,29 +71,55 @@ export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignO
           </div>
         </div>
 
-        {onSignOut && (
-          <button
-            type="button"
-            onClick={onSignOut}
-            title="Cerrar Sesión"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#717182',
-              cursor: 'pointer',
-              padding: 6,
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'color 0.15s ease'
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#F87171')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#717182')}
-          >
-            <LogOut size={14} />
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {onOpenSecurity && (
+            <button
+              type="button"
+              onClick={onOpenSecurity}
+              title="Seguridad & 2FA"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#717182',
+                cursor: 'pointer',
+                padding: 6,
+                borderRadius: 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'color 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#F3CA65')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#717182')}
+            >
+              <ShieldCheck size={15} />
+            </button>
+          )}
+
+          {onSignOut && (
+            <button
+              type="button"
+              onClick={onSignOut}
+              title="Cerrar Sesión"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#717182',
+                cursor: 'pointer',
+                padding: 6,
+                borderRadius: 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'color 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#F87171')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#717182')}
+            >
+              <LogOut size={14} />
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   )

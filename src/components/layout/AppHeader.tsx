@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight, Cloud, HardDrive, Scale } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { ChevronLeft, ChevronRight, Cloud, HardDrive, LogOut, ShieldCheck } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 
 interface AppHeaderProps {
@@ -10,6 +11,9 @@ interface AppHeaderProps {
   balanceLabel: string
   balancePositive: boolean
   isDemoMode?: boolean
+  userEmail?: string | null
+  onSignOut?: () => void
+  onOpenSecurity?: () => void
   onOpenLicense?: () => void
 }
 
@@ -17,13 +21,38 @@ export function AppHeader({
   periodLabel,
   onPrev,
   onNext,
-  prevDisabled = false,
-  nextDisabled = false,
+  prevDisabled,
+  nextDisabled,
   balanceLabel,
   balancePositive,
   isDemoMode,
+  userEmail,
+  onSignOut,
+  onOpenSecurity,
   onOpenLicense,
 }: AppHeaderProps) {
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
+
+  const initials = userEmail
+    ? userEmail.slice(0, 2).toUpperCase()
+    : 'JR'
+
+  const displayName = userEmail
+    ? userEmail.split('@')[0]
+    : 'Jesús Rosario'
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   return (
     <header className="header">
       <div className="month-nav">
@@ -39,54 +68,32 @@ export function AppHeader({
       <div className="header-spacer" />
 
       {/* Sync indicator pill */}
-      <div style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        fontSize: 11,
-        fontWeight: 600,
-        color: isDemoMode ? '#FBBF24' : '#34D399',
-        background: isDemoMode ? 'rgba(251, 191, 36, 0.08)' : 'rgba(52, 211, 153, 0.08)',
-        border: `1px solid ${isDemoMode ? 'rgba(251, 191, 36, 0.2)' : 'rgba(52, 211, 153, 0.2)'}`,
-        padding: '4px 10px',
-        borderRadius: 20,
-      }}>
+      <div
+        className="header-sync-pill"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          fontSize: 11,
+          fontWeight: 600,
+          color: isDemoMode ? '#FBBF24' : '#34D399',
+          background: isDemoMode ? 'rgba(251, 191, 36, 0.08)' : 'rgba(52, 211, 153, 0.08)',
+          border: `1px solid ${isDemoMode ? 'rgba(251, 191, 36, 0.2)' : 'rgba(52, 211, 153, 0.2)'}`,
+          padding: '4px 10px',
+          borderRadius: 20,
+        }}
+      >
         {isDemoMode ? <HardDrive size={12} /> : <Cloud size={12} />}
         <span>{isDemoMode ? 'Modo Local' : 'Sync IRT'}</span>
       </div>
-
-      {/* License modal trigger */}
-      {onOpenLicense && (
-        <button
-          type="button"
-          onClick={onOpenLicense}
-          title="Licencia MIT & Reglas de Uso (@Rosdevdr)"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            border: '1px solid #2A2A38',
-            background: '#16161E',
-            color: '#888898',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A84C'; e.currentTarget.style.borderColor = '#C9A84C' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#888898'; e.currentTarget.style.borderColor = '#2A2A38' }}
-        >
-          <Scale size={14} />
-        </button>
-      )}
 
       {/* GitHub shortcut */}
       <a
         href="https://github.com/Rosdevdr/manejo_finanzas"
         target="_blank"
         rel="noopener noreferrer"
-        title="Repositorio en GitHub (@Rosdevdr)"
+        title="Repositorio en GitHub"
+        className="header-github-btn"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -98,7 +105,7 @@ export function AppHeader({
           background: '#16161E',
           color: '#888898',
           textDecoration: 'none',
-          transition: 'all 0.15s ease'
+          transition: 'all 0.15s ease',
         }}
         onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.borderColor = '#C9A84C' }}
         onMouseLeave={(e) => { e.currentTarget.style.color = '#888898'; e.currentTarget.style.borderColor = '#2A2A38' }}
@@ -107,12 +114,186 @@ export function AppHeader({
       </a>
 
       {/* Balance pill */}
-      <div className={`balance-pill${balancePositive ? '' : ' negative'}`}
-        style={!balancePositive ? { background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#F87171' } : {}}>
+      <div
+        className={`balance-pill${balancePositive ? '' : ' negative'}`}
+        style={!balancePositive ? { background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#F87171' } : {}}
+      >
         <span className="pill-dot" style={!balancePositive ? { background: '#F87171' } : {}} />
         Balance: {balanceLabel}
+      </div>
+
+      {/* User Profile Avatar & Dropdown (Mobile + Desktop) */}
+      <div className="header-profile-wrap" ref={profileRef} style={{ position: 'relative' }}>
+        <button
+          type="button"
+          onClick={() => setProfileOpen(!profileOpen)}
+          className="header-avatar-btn"
+          title={`Perfil: ${displayName}`}
+          aria-label="Abrir menú de perfil"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #F3CA65 0%, #C9A84C 100%)',
+            border: '2px solid rgba(201, 168, 76, 0.4)',
+            color: '#0A0A0C',
+            fontSize: 12,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+            transition: 'transform 0.15s ease',
+            touchAction: 'manipulation',
+          }}
+        >
+          {initials}
+        </button>
+
+        {profileOpen && (
+          <div
+            className="header-profile-dropdown fade-in"
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 8px)',
+              right: 0,
+              width: 220,
+              background: '#13131A',
+              border: '1px solid #262634',
+              borderRadius: 14,
+              boxShadow: '0 12px 36px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(201, 168, 76, 0.15)',
+              padding: '12px',
+              zIndex: 10001,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 8, borderBottom: '1px solid #1E1E28' }}>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #F3CA65 0%, #C9A84C 100%)',
+                  color: '#0A0A0C',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {initials}
+              </div>
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {displayName}
+                </div>
+                <div style={{ fontSize: 11, color: '#888898', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {userEmail || 'Modo Local'}
+                </div>
+              </div>
+            </div>
+
+            {onOpenSecurity && (
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOpen(false)
+                  onOpenSecurity()
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#D4D4E0',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 0.12s ease',
+                  width: '100%',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#1C1C26' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+              >
+                <ShieldCheck size={15} color="#F3CA65" />
+                <span>Seguridad & 2FA</span>
+              </button>
+            )}
+
+            {onOpenLicense && (
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOpen(false)
+                  onOpenLicense()
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#D4D4E0',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 0.12s ease',
+                  width: '100%',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#1C1C26' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+              >
+                <span style={{ fontSize: 13 }}>📜</span>
+                <span>Licencia MIT</span>
+              </button>
+            )}
+
+            {onSignOut && (
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOpen(false)
+                  onSignOut()
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  color: '#F87171',
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.12s ease',
+                  width: '100%',
+                  marginTop: 2,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.16)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)' }}
+              >
+                <LogOut size={15} />
+                <span>Cerrar Sesión</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </header>
   )
 }
-

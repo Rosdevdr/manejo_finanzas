@@ -157,16 +157,7 @@ export function useFinanceStorage(user?: User | null) {
 
   // Sincronización inicial y Realtime con Supabase cuando el usuario está logueado
   useEffect(() => {
-    if (!user) {
-      setIncomesState(loadLocal(KEYS.incomes, DEFAULT_INCOMES))
-      setExpensesState(loadLocal(KEYS.expenses, DEFAULT_EXPENSES))
-      setCashState(loadLocal(KEYS.cash, DEFAULT_CASH))
-      setCreditCardsState(loadLocal(KEYS.creditCards, DEFAULT_CARDS))
-      setCreditTransactionsState(loadLocal(KEYS.creditTransactions, DEFAULT_CARD_TRANSACTIONS))
-      return
-    }
-
-    if (!supabase || !isSupabaseConfigured) {
+    if (!user || !supabase || !isSupabaseConfigured) {
       return
     }
 

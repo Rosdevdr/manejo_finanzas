@@ -11,6 +11,7 @@ import { CashView }          from './components/cash/CashView'
 import { SmartAnalysisPanel } from './components/analysis/SmartAnalysisPanel'
 import { ToastContainer }    from './components/ui/ToastContainer'
 import { LoginView }         from './components/auth/LoginView'
+import { SecurityModal }     from './components/security/SecurityModal'
 import { MitLicenseModal }   from './components/ui/MitLicenseModal'
 import { Analytics }         from '@vercel/analytics/react'
 import { useFinanceStorage } from './hooks/useFinanceStorage'
@@ -25,9 +26,10 @@ import {
 } from './utils/calendar'
 
 export function App() {
-  const [activeTab, setActiveTab]         = useState<TabType>('dashboard')
-  const [currentPeriod, setCurrentPeriod] = useState<string>(() => getCurrentSystemPeriod())
+  const [activeTab, setActiveTab]               = useState<TabType>('dashboard')
+  const [currentPeriod, setCurrentPeriod]       = useState<string>(() => getCurrentSystemPeriod())
   const [showLicenseModal, setShowLicenseModal] = useState(false)
+  const [isSecurityOpen, setIsSecurityOpen]     = useState(false)
 
   const { toasts, show: showToast, dismiss } = useToast()
 
@@ -36,9 +38,13 @@ export function App() {
     loading: authLoading,
     isDemoMode,
     isSupabaseConfigured,
+    isPasswordRecovery,
+    clearPasswordRecovery,
     signIn,
     signUp,
     signOut,
+    sendPasswordReset,
+    updateUserPassword,
     enterDemoMode,
   } = useAuth()
 
@@ -62,15 +68,19 @@ export function App() {
   const nextPeriod  = () => setCurrentPeriod(prev => getNextPeriod(prev))
   const periodLabel = useMemo(() => formatPeriodLabel(currentPeriod), [currentPeriod])
 
-  // Mostrar pantalla de Login si no hay usuario ni modo demo
-  if (!authLoading && !user && !isDemoMode) {
+  // Mostrar pantalla de Login si no hay usuario ni modo demo (o si está en flujo de recuperación de contraseña)
+  if ((!authLoading && !user && !isDemoMode) || isPasswordRecovery) {
     return (
       <>
         <LoginView
           onSignIn={signIn}
           onSignUp={signUp}
+          onSendPasswordReset={sendPasswordReset}
+          onUpdateUserPassword={updateUserPassword}
           onEnterDemoMode={enterDemoMode}
           isSupabaseConfigured={isSupabaseConfigured}
+          isPasswordRecovery={isPasswordRecovery}
+          onClearPasswordRecovery={clearPasswordRecovery}
         />
         <ToastContainer toasts={toasts} onDismiss={dismiss} />
         <Analytics />
@@ -86,6 +96,7 @@ export function App() {
         userEmail={user?.email}
         isDemoMode={isDemoMode}
         onSignOut={signOut}
+        onOpenSecurity={() => setIsSecurityOpen(true)}
       />
 
       <div className="main">
@@ -96,6 +107,9 @@ export function App() {
           balanceLabel={formatCurrency(available)}
           balancePositive={available >= 0}
           isDemoMode={isDemoMode}
+          userEmail={user?.email}
+          onSignOut={signOut}
+          onOpenSecurity={() => setIsSecurityOpen(true)}
           onOpenLicense={() => setShowLicenseModal(true)}
         />
 
@@ -165,6 +179,13 @@ export function App() {
         </div>
       </div>
 
+      <SecurityModal
+        isOpen={isSecurityOpen}
+        onClose={() => setIsSecurityOpen(false)}
+        userEmail={user?.email}
+        onUpdatePassword={updateUserPassword}
+      />
+
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       <MitLicenseModal isOpen={showLicenseModal} onClose={() => setShowLicenseModal(false)} />
@@ -174,4 +195,3 @@ export function App() {
 }
 
 export default App
-

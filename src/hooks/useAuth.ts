@@ -8,9 +8,13 @@ export interface AuthState {
   loading: boolean
   isDemoMode: boolean
   isSupabaseConfigured: boolean
+  isPasswordRecovery: boolean
+  clearPasswordRecovery: () => void
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
+  sendPasswordReset: (email: string) => Promise<{ error: Error | null }>
+  updateUserPassword: (newPassword: string) => Promise<{ error: Error | null }>
   enterDemoMode: () => void
   exitDemoMode: () => void
 }
@@ -19,6 +23,9 @@ export function useAuth(): AuthState {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(isSupabaseConfigured)
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState<boolean>(() => {
+    return window.location.hash.includes('type=recovery')
+  })
   const [isDemoMode, setIsDemoMode] = useState<boolean>(() => {
     if (!isSupabaseConfigured) return true
     return localStorage.getItem('aureus_demo_mode') === 'true'
@@ -39,10 +46,13 @@ export function useAuth(): AuthState {
     })
 
     // Escuchar cambios de autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
-      if (session?.user) {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true)
+      }
+      if (session?.user && event !== 'PASSWORD_RECOVERY') {
         setIsDemoMode(false)
         localStorage.removeItem('aureus_demo_mode')
       }
@@ -78,6 +88,33 @@ export function useAuth(): AuthState {
     return { error }
   }
 
+  const sendPasswordReset = async (email: string) => {
+    if (!supabase || !isSupabaseConfigured) {
+      return { error: new Error('Supabase no está configurado aún.') }
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/`,
+    })
+    return { error }
+  }
+
+  const updateUserPassword = async (newPassword: string) => {
+    if (!supabase || !isSupabaseConfigured) {
+      return { error: new Error('Supabase no está configurado aún.') }
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (!error) {
+      setIsPasswordRecovery(false)
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+    return { error }
+  }
+
+  const clearPasswordRecovery = () => {
+    setIsPasswordRecovery(false)
+    window.history.replaceState(null, '', window.location.pathname)
+  }
+
   const signOut = async () => {
     if (supabase && isSupabaseConfigured) {
       await supabase.auth.signOut()
@@ -85,6 +122,7 @@ export function useAuth(): AuthState {
     setUser(null)
     setSession(null)
     setIsDemoMode(false)
+    setIsPasswordRecovery(false)
     localStorage.removeItem('aureus_demo_mode')
   }
 
@@ -104,9 +142,13 @@ export function useAuth(): AuthState {
     loading,
     isDemoMode,
     isSupabaseConfigured,
+    isPasswordRecovery,
+    clearPasswordRecovery,
     signIn,
     signUp,
     signOut,
+    sendPasswordReset,
+    updateUserPassword,
     enterDemoMode,
     exitDemoMode,
   }
