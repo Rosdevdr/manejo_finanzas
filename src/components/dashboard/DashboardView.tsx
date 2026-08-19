@@ -296,17 +296,35 @@ export function DashboardView({
         <div className="chart-card">
           <div className="chart-title">Ingresos vs Gastos Históricos</div>
           <div className="chart-sub">Datos reales de los últimos 5 meses</div>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={barData} barSize={14} barGap={4}>
-              <XAxis dataKey="label" tick={{ fill: '#444454', fontSize: 10 }} axisLine={false} tickLine={false} />
+          <ResponsiveContainer width="100%" height={165}>
+            <BarChart data={barData} barSize={14} barGap={5}>
+              <defs>
+                <linearGradient id="incBarGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#34D399" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#059669" stopOpacity={0.8} />
+                </linearGradient>
+                <linearGradient id="expBarGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#FB7185" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#E11D48" stopOpacity={0.8} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="label" tick={{ fill: '#717182', fontSize: 10, fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
               <YAxis hide />
               <Tooltip
-                contentStyle={{ background: '#16161E', border: '1px solid #2A2A38', borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: '#888898' }}
+                contentStyle={{
+                  background: 'rgba(19, 19, 26, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 10,
+                  fontSize: 12,
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  fontFamily: 'Space Mono',
+                }}
+                labelStyle={{ color: '#888898', fontFamily: 'Space Grotesk', fontWeight: 600 }}
                 formatter={(v: unknown) => [formatCurrency(v as number), '']}
               />
-              <Bar dataKey="ingresos" fill="#34D399" radius={[3, 3, 0, 0]} name="Ingresos" />
-              <Bar dataKey="gastos"   fill="#F87171" radius={[3, 3, 0, 0]} name="Gastos" />
+              <Bar dataKey="ingresos" fill="url(#incBarGrad)" radius={[4, 4, 0, 0]} name="Ingresos" />
+              <Bar dataKey="gastos"   fill="url(#expBarGrad)" radius={[4, 4, 0, 0]} name="Gastos" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -318,23 +336,31 @@ export function DashboardView({
             <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
               <ResponsiveContainer width={120} height={120}>
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={30} outerRadius={55} dataKey="value" strokeWidth={0}>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={32} outerRadius={56} dataKey="value" strokeWidth={0}>
                     {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ background: '#16161E', border: '1px solid #2A2A38', borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{
+                      background: 'rgba(19, 19, 26, 0.95)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: 10,
+                      fontSize: 12,
+                      backdropFilter: 'blur(12px)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                      fontFamily: 'Space Mono',
+                    }}
                     formatter={(v: unknown) => [formatCurrency(v as number), '']}
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 120, overflowY: 'auto' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 125, overflowY: 'auto' }}>
                 {pieData.slice(0, 5).map(d => (
-                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11 }}>
+                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
-                      <span style={{ color: '#888898' }}>{d.name}</span>
+                      <span style={{ color: '#888898', fontFamily: 'Space Grotesk' }}>{d.name}</span>
                     </div>
-                    <span style={{ color: '#D0D0DC', fontFamily: 'monospace', fontWeight: 600, fontSize: 11 }}>
+                    <span style={{ color: '#E0E0E8', fontFamily: 'Space Mono', fontWeight: 700, fontSize: 11 }}>
                       {formatCurrency(d.value)}
                     </span>
                   </div>
