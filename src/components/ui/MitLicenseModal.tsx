@@ -1,6 +1,7 @@
 import { Scale, X, ExternalLink, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react'
 import { AureusLogo } from './AureusLogo'
 import { GithubIcon } from './GithubIcon'
+import './MitLicenseModal.css'
 
 interface MitLicenseModalProps {
   isOpen: boolean
@@ -11,151 +12,59 @@ export function MitLicenseModal({ isOpen, onClose }: MitLicenseModalProps) {
   if (!isOpen) return null
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        background: 'rgba(5, 5, 8, 0.85)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="fade-in"
-        style={{
-          background: '#121218',
-          border: '1px solid #2A2A38',
-          borderRadius: 16,
-          maxWidth: 640,
-          width: '100%',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(201, 168, 76, 0.1)',
-          overflow: 'hidden',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="mit-modal-overlay" onClick={onClose}>
+      <div className="mit-modal-card" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div
-          style={{
-            padding: '20px 24px',
-            borderBottom: '1px solid #1E1E28',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'linear-gradient(180deg, rgba(201, 168, 76, 0.06) 0%, rgba(18, 18, 24, 0) 100%)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 10,
-                background: 'rgba(201, 168, 76, 0.12)',
-                border: '1px solid rgba(201, 168, 76, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#C9A84C',
-              }}
-            >
+        <div className="mit-modal-header">
+          <div className="mit-header-info">
+            <div className="mit-header-icon">
               <Scale size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: '#FFFFFF', margin: 0, letterSpacing: '-0.01em' }}>
-                Licencia MIT & Reglas de Uso
-              </h2>
-              <p style={{ fontSize: 12, color: '#888898', margin: '2px 0 0' }}>
-                AUREUS · Wealth Advisor & Financial Platform
-              </p>
+              <h2 className="mit-header-title">Licencia MIT & Reglas de Uso</h2>
+              <p className="mit-header-sub">AUREUS · Wealth Advisor & Financial Platform</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid #2A2A38',
-              color: '#888898',
-              borderRadius: 8,
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#FFFFFF'
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#888898'
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-            }}
+            className="mit-close-icon-btn"
+            aria-label="Cerrar modal"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Body */}
-        <div style={{ padding: 24, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div className="mit-modal-body">
           {/* Author Banner */}
-          <div
-            style={{
-              padding: 16,
-              borderRadius: 12,
-              background: 'rgba(201, 168, 76, 0.08)',
-              border: '1px solid rgba(201, 168, 76, 0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
-            }}
-          >
-            <AureusLogo size={36} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#F1D97E' }}>
-                Autor y Creador Original del Proyecto
-              </div>
-              <div style={{ fontSize: 12, color: '#D0D0DC', marginTop: 2 }}>
-                Desarrollado y mantenido por <strong>José Zapata</strong> (
-                <a
-                  href="https://github.com/Rosdevdr"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}
-                >
-                  @Rosdevdr
-                </a>
-                )
+          <div className="mit-author-banner">
+            <div className="mit-author-info">
+              <AureusLogo size={34} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#F1D97E' }}>
+                  Autor y Creador Original del Proyecto
+                </div>
+                <div style={{ fontSize: 12, color: '#D0D0DC', marginTop: 2 }}>
+                  Desarrollado y mantenido por <strong>José Zapata</strong> (
+                  <a
+                    href="https://github.com/Rosdevdr"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}
+                  >
+                    @Rosdevdr
+                  </a>
+                  )
+                </div>
               </div>
             </div>
             <a
               href="https://github.com/Rosdevdr/manejo_finanzas"
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '7px 12px',
-                borderRadius: 8,
-                background: '#16161E',
-                border: '1px solid #2A2A38',
-                color: '#FFFFFF',
-                fontSize: 12,
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
+              className="mit-repo-btn"
             >
               <GithubIcon size={14} />
               <span>Ver Repo</span>
@@ -164,20 +73,13 @@ export function MitLicenseModal({ isOpen, onClose }: MitLicenseModalProps) {
           </div>
 
           {/* Permitted & Conditions */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 10,
-                background: 'rgba(52, 211, 153, 0.06)',
-                border: '1px solid rgba(52, 211, 153, 0.2)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#34D399', fontWeight: 600, fontSize: 12, marginBottom: 8 }}>
+          <div className="mit-grid">
+            <div className="mit-card-box permissions">
+              <div className="mit-card-title">
                 <CheckCircle2 size={15} />
                 <span>Permisos Concedidos</span>
               </div>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 11.5, color: '#A0A0B0', lineHeight: 1.6 }}>
+              <ul className="mit-card-list">
                 <li>Uso comercial y personal libre</li>
                 <li>Modificación total del código</li>
                 <li>Distribución y creación de copias</li>
@@ -185,44 +87,21 @@ export function MitLicenseModal({ isOpen, onClose }: MitLicenseModalProps) {
               </ul>
             </div>
 
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 10,
-                background: 'rgba(251, 191, 36, 0.06)',
-                border: '1px solid rgba(251, 191, 36, 0.2)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#FBBF24', fontWeight: 600, fontSize: 12, marginBottom: 8 }}>
+            <div className="mit-card-box conditions">
+              <div className="mit-card-title">
                 <AlertCircle size={15} />
                 <span>Condición Obligatoria</span>
               </div>
-              <p style={{ margin: 0, fontSize: 11.5, color: '#A0A0B0', lineHeight: 1.5 }}>
+              <p className="mit-card-text">
                 Preservar el aviso de derechos de autor original y dar crédito a <strong>Rosdevdr (José Zapata)</strong> en cualquier redistribución o trabajo derivado.
               </p>
             </div>
           </div>
 
           {/* Official License Text */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#717182', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Texto Oficial de la Licencia
-            </div>
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 10,
-                background: '#0D0D12',
-                border: '1px solid #1E1E28',
-                fontFamily: 'monospace',
-                fontSize: 11,
-                color: '#888898',
-                lineHeight: 1.6,
-                maxHeight: 160,
-                overflowY: 'auto',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
+          <div className="mit-raw-text-container">
+            <div className="mit-raw-label">Texto Oficial de la Licencia</div>
+            <div className="mit-raw-box">
               {`MIT License
 
 Copyright (c) 2026 José Zapata (Rosdevdr)
@@ -238,17 +117,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         </div>
 
         {/* Footer */}
-        <div
-          style={{
-            padding: '14px 24px',
-            borderTop: '1px solid #1E1E28',
-            background: '#0E0E14',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#717182' }}>
+        <div className="mit-modal-footer">
+          <div className="mit-footer-badge">
             <ShieldCheck size={14} style={{ color: '#34D399' }} />
             <span>Open Source Community Initiative</span>
           </div>
@@ -256,8 +126,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           <button
             type="button"
             onClick={onClose}
-            className="btn-primary"
-            style={{ padding: '8px 20px', fontSize: 12 }}
+            className="mit-submit-btn"
           >
             Entendido
           </button>
