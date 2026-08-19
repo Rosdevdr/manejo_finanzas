@@ -105,6 +105,61 @@ export function SmartAnalysisPanel({
         <h1 className="page-title">Análisis Inteligente y Comparativas</h1>
       </div>
 
+      {/* AI Transparency & Regulatory Disclosure Banner (EU AI Act & Global Fintech Standard) */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(20, 20, 28, 0.85) 100%)',
+        border: '1px solid rgba(139, 92, 246, 0.25)',
+        borderRadius: 14,
+        padding: '12px 18px',
+        marginBottom: 16,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 12,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 260 }}>
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            background: 'rgba(139, 92, 246, 0.15)',
+            border: '1px solid rgba(139, 92, 246, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#A78BFA',
+            flexShrink: 0,
+          }}>
+            <BrainCircuit size={17} />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: '#FFFFFF', fontFamily: 'Space Grotesk' }}>
+                Sistema de Asesoría Asistido por IA & Algoritmos Financieros
+              </span>
+              <span style={{
+                fontSize: 9.5,
+                fontWeight: 700,
+                color: '#A78BFA',
+                background: 'rgba(139, 92, 246, 0.16)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                padding: '2px 7px',
+                borderRadius: 10,
+                fontFamily: 'Space Grotesk',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}>
+                Transparencia AI Act Art. 50
+              </span>
+            </div>
+            <p style={{ fontSize: 11, color: '#888898', margin: '3px 0 0', lineHeight: 1.45 }}>
+              Las recomendaciones y diagnósticos son generados mediante modelos predictivos con fines exclusivamente orientativos y educativos. Tus datos se analizan de manera privada y confidencial.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Month-over-Month Comparative Insight Card */}
       <div style={{
         background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.08) 0%, rgba(20, 20, 28, 0.8) 100%)',
