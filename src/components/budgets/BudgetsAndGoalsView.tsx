@@ -254,7 +254,7 @@ export function BudgetsAndGoalsView({
       {activeSubtab === 'budgets' ? (
         <>
           {/* Top KPI Metrics */}
-          <div className="kpis-grid">
+          <div className="kpi-grid">
             <div className="kpi-card gold">
               <div className="kpi-top">
                 <span className="kpi-label">Presupuesto Asignado</span>
@@ -429,7 +429,7 @@ export function BudgetsAndGoalsView({
       ) : (
         <>
           {/* Top KPI Metrics for Goals */}
-          <div className="kpis-grid">
+          <div className="kpi-grid">
             <div className="kpi-card emerald">
               <div className="kpi-top">
                 <span className="kpi-label">Total Ahorrado</span>

@@ -1,5 +1,16 @@
 /* src/components/budgets/BudgetsAndGoalsView.css */
 
+/* ==========================================================================
+   📏 ESPACIADOS Y MÁRGENES DE TARJETAS KPI PRINCIPALES (AJUSTA AQUÍ)
+   ========================================================================== */
+.budgets-container .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;            /* Espacio horizontal y vertical entre las 3 tarjetas */
+  margin-top: 6px;      /* Separación superior con el encabezado */
+  margin-bottom: 24px;  /* Separación inferior con el bloque de la regla 50/30/20 */
+}
+
 .budgets-container {
   display: flex;
   flex-direction: column;
