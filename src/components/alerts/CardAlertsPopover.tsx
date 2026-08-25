@@ -75,30 +75,34 @@ export function CardAlertsPopover({ creditCards, creditTransactions }: CardAlert
           display: 'inline-flex',
           alignItems: 'center',
           gap: 6,
+          justifyContent: 'center',
           fontSize: 11.5,
           fontWeight: 700,
           fontFamily: 'Space Grotesk',
           color: alertCount > 0 ? '#EF4444' : '#9CA3AF',
           background: alertCount > 0 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(255, 255, 255, 0.05)',
           border: `1px solid ${alertCount > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`,
-          padding: '5px 12px',
+          padding: '7px 9px',
           borderRadius: 10,
           cursor: 'pointer',
           transition: 'all 0.15s ease',
           position: 'relative',
         }}
       >
-        <Bell size={13} />
-        <span>Alertas</span>
+        <Bell size={15} />
         {alertCount > 0 && (
           <span style={{
+            position: 'absolute',
+            top: -4,
+            right: -4,
             background: '#EF4444',
             color: '#FFF',
-            fontSize: 10,
+            fontSize: 9,
             fontWeight: 800,
-            borderRadius: 8,
+            borderRadius: 10,
             padding: '1px 5px',
             lineHeight: 1,
+            boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)',
           }}>
             {alertCount}
           </span>

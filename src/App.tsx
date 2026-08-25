@@ -112,6 +112,8 @@ export function App() {
         onSignOut={signOut}
         onOpenSecurity={() => setIsSecurityOpen(true)}
         onOpenExport={() => setShowExportModal(true)}
+        onOpenFireCalculator={() => setShowFireModal(true)}
+        onOpenScenarioSimulator={() => setShowScenarioModal(true)}
         onOpenLicense={() => setShowLicenseModal(true)}
         isInstallable={isInstallable}
         onInstallApp={installApp}
@@ -131,9 +133,6 @@ export function App() {
           onSignOut={signOut}
           onOpenSecurity={() => setIsSecurityOpen(true)}
           onOpenLicense={() => setShowLicenseModal(true)}
-          onOpenExport={() => setShowExportModal(true)}
-          onOpenFireCalculator={() => setShowFireModal(true)}
-          onOpenScenarioSimulator={() => setShowScenarioModal(true)}
           isInstallable={isInstallable}
           onInstallApp={installApp}
           onOpenMenu={() => setIsMobileMenuOpen(true)}

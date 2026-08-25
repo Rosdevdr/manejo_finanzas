@@ -15,6 +15,8 @@ import {
   Smartphone,
   X,
   Bot,
+  Flame,
+  Sliders,
 } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
@@ -30,6 +32,8 @@ interface SidebarProps {
   onSignOut?: () => void
   onOpenSecurity?: () => void
   onOpenExport?: () => void
+  onOpenFireCalculator?: () => void
+  onOpenScenarioSimulator?: () => void
   onOpenLicense?: () => void
   isInstallable?: boolean
   onInstallApp?: () => void
@@ -56,6 +60,8 @@ export function Sidebar({
   onSignOut,
   onOpenSecurity,
   onOpenExport,
+  onOpenFireCalculator,
+  onOpenScenarioSimulator,
   onOpenLicense,
   isInstallable,
   onInstallApp,
@@ -121,9 +127,10 @@ export function Sidebar({
           ))}
         </div>
 
-        {/* Quick Tools & Shortcuts (Visible in Mobile Drawer) */}
-        <div className="nav-section mobile-only-section">
+        {/* Herramientas Permanentes */}
+        <div className="nav-section">
           <div className="nav-label">Herramientas</div>
+
           {onOpenExport && (
             <button
               type="button"
@@ -135,6 +142,34 @@ export function Sidebar({
             >
               <span className="nav-icon" style={{ color: '#F3CA65' }}><FileText size={16} /></span>
               <span>Exportar Reportes</span>
+            </button>
+          )}
+
+          {onOpenFireCalculator && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenFireCalculator()
+              }}
+            >
+              <span className="nav-icon" style={{ color: '#F59E0B' }}><Flame size={16} /></span>
+              <span>Calculadora FIRE</span>
+            </button>
+          )}
+
+          {onOpenScenarioSimulator && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenScenarioSimulator()
+              }}
+            >
+              <span className="nav-icon" style={{ color: '#F3CA65' }}><Sliders size={16} /></span>
+              <span>Simulador What-If</span>
             </button>
           )}
 
