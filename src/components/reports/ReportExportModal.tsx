@@ -100,7 +100,7 @@ export function ReportExportModal({
             <FileText size={18} style={{ color: '#F3CA65' }} />
             <h2 className="modal-title">Exportar Reportes Financieros</h2>
           </div>
-          <button className="modal-close" onClick={onClose}>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar modal">
             <X size={16} />
           </button>
         </div>

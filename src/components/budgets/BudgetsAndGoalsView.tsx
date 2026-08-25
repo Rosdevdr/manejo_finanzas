@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Calendar,
   Compass,
+  X,
 } from 'lucide-react'
 import type {
   Expense,
@@ -572,7 +573,9 @@ export function BudgetsAndGoalsView({
           <div className="modal-card" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">Fijar Límite Mensual</h2>
-              <button className="modal-close" onClick={() => setEditingCategory(null)}>✕</button>
+              <button type="button" className="modal-close" onClick={() => setEditingCategory(null)} aria-label="Cerrar modal">
+                <X size={16} />
+              </button>
             </div>
             <div style={{ fontSize: 12.5, color: '#888898', marginBottom: 16 }}>
               Categoría: <strong style={{ color: '#FFFFFF' }}>{CATEGORY_META[editingCategory].label}</strong>
@@ -591,10 +594,10 @@ export function BudgetsAndGoalsView({
             </div>
 
             <div className="modal-footer" style={{ marginTop: 20 }}>
-              <button className="btn btn-secondary" onClick={() => setEditingCategory(null)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setEditingCategory(null)}>
                 Cancelar
               </button>
-              <button className="btn btn-primary" onClick={handleSaveBudget}>
+              <button type="button" className="btn btn-primary" onClick={handleSaveBudget}>
                 Guardar Límite
               </button>
             </div>
@@ -608,7 +611,9 @@ export function BudgetsAndGoalsView({
           <div className="modal-card" style={{ maxWidth: 440 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">{goalEditing ? 'Editar Meta' : 'Nueva Meta de Ahorro'}</h2>
-              <button className="modal-close" onClick={() => setIsGoalModalOpen(false)}>✕</button>
+              <button type="button" className="modal-close" onClick={() => setIsGoalModalOpen(false)} aria-label="Cerrar modal">
+                <X size={16} />
+              </button>
             </div>
 
             <form onSubmit={handleSaveGoal}>
@@ -694,7 +699,9 @@ export function BudgetsAndGoalsView({
           <div className="modal-card" style={{ maxWidth: 360 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">Abonar a la Meta</h2>
-              <button className="modal-close" onClick={() => setDepositGoalId(null)}>✕</button>
+              <button type="button" className="modal-close" onClick={() => setDepositGoalId(null)} aria-label="Cerrar modal">
+                <X size={16} />
+              </button>
             </div>
 
             <div className="modal-form-group">
@@ -710,10 +717,10 @@ export function BudgetsAndGoalsView({
             </div>
 
             <div className="modal-footer" style={{ marginTop: 18 }}>
-              <button className="btn btn-secondary" onClick={() => setDepositGoalId(null)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setDepositGoalId(null)}>
                 Cancelar
               </button>
-              <button className="btn btn-primary" onClick={handleCustomDeposit}>
+              <button type="button" className="btn btn-primary" onClick={handleCustomDeposit}>
                 Confirmar Abono
               </button>
             </div>
