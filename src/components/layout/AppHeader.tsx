@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   FileText,
   Smartphone,
+  Menu,
 } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 
@@ -27,6 +28,7 @@ interface AppHeaderProps {
   onOpenExport?: () => void
   isInstallable?: boolean
   onInstallApp?: () => void
+  onOpenMenu?: () => void
 }
 
 export function AppHeader({
@@ -45,6 +47,7 @@ export function AppHeader({
   onOpenExport,
   isInstallable,
   onInstallApp,
+  onOpenMenu,
 }: AppHeaderProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
@@ -70,19 +73,34 @@ export function AppHeader({
 
   return (
     <header className="header">
-      <div className="month-nav">
-        <button className="month-btn" onClick={onPrev} disabled={prevDisabled} title="Mes anterior">
-          <ChevronLeft size={14} />
-        </button>
-        <div className="month-badge">{periodLabel}</div>
-        <button className="month-btn" onClick={onNext} disabled={nextDisabled} title="Mes siguiente">
-          <ChevronRight size={14} />
-        </button>
+      {/* Left side: Hamburger menu button (Mobile) + Month Navigator */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {onOpenMenu && (
+          <button
+            type="button"
+            className="header-menu-btn"
+            onClick={onOpenMenu}
+            title="Abrir menú de navegación"
+            aria-label="Abrir menú de navegación"
+          >
+            <Menu size={19} />
+          </button>
+        )}
+
+        <div className="month-nav">
+          <button className="month-btn" onClick={onPrev} disabled={prevDisabled} title="Mes anterior">
+            <ChevronLeft size={14} />
+          </button>
+          <div className="month-badge">{periodLabel}</div>
+          <button className="month-btn" onClick={onNext} disabled={nextDisabled} title="Mes siguiente">
+            <ChevronRight size={14} />
+          </button>
+        </div>
       </div>
 
       <div className="header-spacer" />
 
-      {/* Sync indicator pill */}
+      {/* Sync indicator pill (Desktop/Tablet) */}
       <div
         className="header-sync-pill"
         style={{
@@ -102,7 +120,7 @@ export function AppHeader({
         <span>{isDemoMode ? 'Modo Local' : 'Sync IRT'}</span>
       </div>
 
-      {/* PWA Install Button */}
+      {/* PWA Install Button (Desktop/Tablet) */}
       {isInstallable && onInstallApp && (
         <button
           type="button"
@@ -158,7 +176,7 @@ export function AppHeader({
         </button>
       )}
 
-      {/* GitHub shortcut */}
+      {/* GitHub shortcut (Desktop) */}
       <a
         href="https://github.com/Rosdevdr/manejo_finanzas"
         target="_blank"

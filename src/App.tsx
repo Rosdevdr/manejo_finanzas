@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { TabType } from './types/navigation'
 import { Sidebar }           from './components/layout/Sidebar'
-import { BottomNav }          from './components/layout/BottomNav'
 import { AppHeader }         from './components/layout/AppHeader'
 import { DashboardView }     from './components/dashboard/DashboardView'
 import { IncomesView }       from './components/incomes/IncomesView'
@@ -34,6 +33,7 @@ export function App() {
   const [showLicenseModal, setShowLicenseModal] = useState(false)
   const [isSecurityOpen, setIsSecurityOpen]     = useState(false)
   const [showExportModal, setShowExportModal]   = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const { toasts, show: showToast, dismiss } = useToast()
   const { isInstallable, installApp } = usePwaInstall()
@@ -102,8 +102,14 @@ export function App() {
         onTabChange={setActiveTab}
         userEmail={user?.email}
         isDemoMode={isDemoMode}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
         onSignOut={signOut}
         onOpenSecurity={() => setIsSecurityOpen(true)}
+        onOpenExport={() => setShowExportModal(true)}
+        onOpenLicense={() => setShowLicenseModal(true)}
+        isInstallable={isInstallable}
+        onInstallApp={installApp}
       />
 
       <div className="main">
@@ -121,6 +127,7 @@ export function App() {
           onOpenExport={() => setShowExportModal(true)}
           isInstallable={isInstallable}
           onInstallApp={installApp}
+          onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
 
         <div className="content">
@@ -228,7 +235,6 @@ export function App() {
       />
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       <MitLicenseModal isOpen={showLicenseModal} onClose={() => setShowLicenseModal(false)} />
       <Analytics />
     </div>

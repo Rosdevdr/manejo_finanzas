@@ -1310,8 +1310,21 @@ select.field-select {
   }
 }
 
-/* Desktop: Hide mobile bottom nav */
 .mobile-bottom-nav {
+  display: none !important;
+}
+
+/* Desktop: Sidebar default styles & helpers */
+.sidebar-mobile-close {
+  display: none;
+}
+.mobile-only-section {
+  display: none;
+}
+.sidebar-backdrop {
+  display: none;
+}
+.header-menu-btn {
   display: none;
 }
 
@@ -1321,10 +1334,96 @@ select.field-select {
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
+    position: relative;
   }
+
+  /* Slide-over Mobile Sidebar Drawer */
   .sidebar {
-    display: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 290px !important;
+    max-width: 85vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 10001 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #0E0E14 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 0 !important;
   }
+
+  .sidebar.mobile-open {
+    transform: translateX(0) !important;
+    box-shadow: 10px 0 50px rgba(0, 0, 0, 0.85) !important;
+  }
+
+  .sidebar-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 10000 !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    display: block !important;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .sidebar-mobile-close {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #888898;
+    cursor: pointer;
+    margin-left: auto;
+    transition: all 0.15s ease;
+  }
+
+  .sidebar-mobile-close:hover {
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .mobile-only-section {
+    display: flex !important;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Hamburger Menu Button */
+  .header-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #16161E;
+    border: 1px solid #2A2A38;
+    color: #D4D4E0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .header-menu-btn:hover {
+    color: #F3CA65;
+    border-color: #F3CA65;
+  }
+
   .main {
     flex: 1;
     height: 100%;
@@ -1333,86 +1432,38 @@ select.field-select {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
+
   .content {
-    padding: 16px 14px calc(76px + env(safe-area-inset-bottom, 16px)) !important;
+    padding: 16px 14px 28px !important;
   }
+
   .mobile-bottom-nav {
-    display: flex !important;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: calc(62px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: rgba(13, 13, 18, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7);
-    z-index: 1000;
-    justify-content: space-around;
-    align-items: center;
-    padding-left: 2px;
-    padding-right: 2px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+    display: none !important;
   }
-  .mobile-bottom-nav::-webkit-scrollbar {
-    display: none;
-  }
-  .mobile-nav-item {
-    flex: 1;
-    min-width: 44px;
-    max-width: 58px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    background: transparent;
-    border: none;
-    color: #8E8E9F;
-    font-size: 9px;
-    font-weight: 600;
-    padding: 5px 1px;
-    border-radius: 8px;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.18s ease;
-    touch-action: manipulation;
-    text-decoration: none;
-  }
-  .mobile-nav-item:active {
-    transform: scale(0.94);
-  }
-  .mobile-nav-item.active {
-    color: #F3CA65;
-  }
-  .mobile-nav-item.active svg {
-    color: #F3CA65;
-    filter: drop-shadow(0 0 10px rgba(243, 202, 101, 0.7));
-  }
-  .mobile-nav-label {
-    font-size: 8.5px;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    max-width: 100%;
-  }
+
   .header {
-    padding: 0 14px;
+    padding: 0 12px;
     height: 56px;
     gap: 8px;
   }
+
   .month-badge {
     font-size: 12px;
     padding: 4px 8px;
   }
+
   .balance-pill {
     font-size: 11px;
     padding: 4px 10px;
+    white-space: nowrap;
+  }
+
+  /* Hide overflowing secondary pills from the mobile header */
+  .header-sync-pill,
+  .header-install-btn,
+  .header-export-btn,
+  .header-github-btn {
+    display: none !important;
   }
   .page-title {
     font-size: 20px;
