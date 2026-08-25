@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { User } from '@supabase/supabase-js'
+import type { User, RealtimeChannel } from '@supabase/supabase-js'
 import type {
   Income,
   Expense,
@@ -194,8 +194,9 @@ export function useFinanceStorage(user?: User | null) {
   const [savingsGoals,       setSavingsGoalsState]       = useState<SavingsGoal[]>(() => !user ? loadLocal(KEYS.savingsGoals, DEFAULT_GOALS) : [])
 
   const isMountedRef = useRef(true)
+  const channelRef = useRef<RealtimeChannel | null>(null)
 
-  // Consulta directa completa e instantánea a Supabase
+  // Consulta directa a Supabase
   const loadData = useCallback(async () => {
     if (!user || !supabase || !isSupabaseConfigured) return
     const userId = user.id
@@ -318,7 +319,18 @@ export function useFinanceStorage(user?: User | null) {
     }
   }, [user])
 
-  // Inicialización y Realtime con Supabase
+  // Notificar a todos los demás dispositivos conectados vía Realtime Broadcast
+  const notifyMutation = useCallback((entityName: string) => {
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'finance_mutation',
+        payload: { entity: entityName, timestamp: Date.now() },
+      }).catch(() => {})
+    }
+  }, [])
+
+  // Inicialización y Realtime con Supabase (Broadcast + Postgres Changes)
   useEffect(() => {
     isMountedRef.current = true
     if (!user || !supabase || !isSupabaseConfigured) {
@@ -332,9 +344,16 @@ export function useFinanceStorage(user?: User | null) {
     }
     void initFetch()
 
-    // ⚡ Suscripción Realtime por WebSockets (Instant Real-time) sin filtros restrictivos
+    // ⚡ Suscripción Híbrida: Broadcast de cliente a cliente + Cambios de Postgres WAL
     const channel = supabase
-      .channel(`realtime-finance-stream-${userId}`)
+      .channel(`rt-aureus-${userId}`, {
+        config: {
+          broadcast: { self: false },
+        },
+      })
+      .on('broadcast', { event: 'finance_mutation' }, () => {
+        void loadData()
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes' }, () => {
         void loadData()
       })
@@ -362,7 +381,9 @@ export function useFinanceStorage(user?: User | null) {
         }
       })
 
-    // Sincronización automática al reactivar la pantalla del móvil / cambiar de pestaña
+    channelRef.current = channel
+
+    // Sincronización al volver a ver la app en móvil
     const handleReactivation = () => {
       if (document.visibilityState === 'visible') {
         void loadData()
@@ -375,6 +396,7 @@ export function useFinanceStorage(user?: User | null) {
 
     return () => {
       isMountedRef.current = false
+      channelRef.current = null
       window.removeEventListener('visibilitychange', handleReactivation)
       window.removeEventListener('focus', handleReactivation)
       window.removeEventListener('online', handleReactivation)
@@ -382,6 +404,19 @@ export function useFinanceStorage(user?: User | null) {
         supabase.removeChannel(channel)
       }
     }
+  }, [user, loadData])
+
+  // Heartbeat Polling: refetch de respaldo cada 4 segundos cuando la app está visible en pantalla
+  useEffect(() => {
+    if (!user || !supabase || !isSupabaseConfigured) return
+
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void loadData()
+      }
+    }, 4000)
+
+    return () => clearInterval(timer)
   }, [user, loadData])
 
   // --- Acciones de Ingresos ---
@@ -408,6 +443,7 @@ export function useFinanceStorage(user?: User | null) {
         type: d.type,
         date: d.date,
       })
+      notifyMutation('incomes')
       void loadData()
     }
   }
@@ -432,6 +468,7 @@ export function useFinanceStorage(user?: User | null) {
         date: updated.date,
         period: computedPeriod,
       }).eq('id', updated.id)
+      notifyMutation('incomes')
       void loadData()
     }
   }
@@ -444,6 +481,7 @@ export function useFinanceStorage(user?: User | null) {
     })
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('incomes').delete().eq('id', id)
+      notifyMutation('incomes')
       void loadData()
     }
   }
@@ -474,6 +512,7 @@ export function useFinanceStorage(user?: User | null) {
         payment_method: d.paymentMethod,
         date: d.date,
       })
+      notifyMutation('expenses')
       void loadData()
     }
   }
@@ -500,6 +539,7 @@ export function useFinanceStorage(user?: User | null) {
         date: updated.date,
         period: computedPeriod,
       }).eq('id', updated.id)
+      notifyMutation('expenses')
       void loadData()
     }
   }
@@ -512,6 +552,7 @@ export function useFinanceStorage(user?: User | null) {
     })
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('expenses').delete().eq('id', id)
+      notifyMutation('expenses')
       void loadData()
     }
   }
@@ -540,6 +581,7 @@ export function useFinanceStorage(user?: User | null) {
         note: cleanNote,
         date: d.date,
       })
+      notifyMutation('cash')
       void loadData()
     }
   }
@@ -552,6 +594,7 @@ export function useFinanceStorage(user?: User | null) {
     })
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('cash_withdrawals').delete().eq('id', id)
+      notifyMutation('cash')
       void loadData()
     }
   }
@@ -591,6 +634,7 @@ export function useFinanceStorage(user?: User | null) {
         interest_rate: d.interestRate ?? null,
         color: d.color,
       })
+      notifyMutation('credit_cards')
       void loadData()
     }
   }
@@ -627,6 +671,7 @@ export function useFinanceStorage(user?: User | null) {
         interest_rate: updated.interestRate ?? null,
         color: updated.color,
       }).eq('id', updated.id)
+      notifyMutation('credit_cards')
       void loadData()
     }
   }
@@ -646,6 +691,7 @@ export function useFinanceStorage(user?: User | null) {
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_cards').delete().eq('id', id)
       await supabase.from('credit_card_transactions').delete().eq('card_id', id)
+      notifyMutation('credit_cards')
       void loadData()
     }
   }
@@ -678,6 +724,7 @@ export function useFinanceStorage(user?: User | null) {
         current_installment: d.currentInstallment,
         is_paid: d.isPaid,
       })
+      notifyMutation('credit_transactions')
       void loadData()
     }
   }
@@ -706,6 +753,7 @@ export function useFinanceStorage(user?: User | null) {
         current_installment: updated.currentInstallment,
         is_paid: updated.isPaid,
       }).eq('id', updated.id)
+      notifyMutation('credit_transactions')
       void loadData()
     }
   }
@@ -719,6 +767,7 @@ export function useFinanceStorage(user?: User | null) {
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_card_transactions').delete().eq('id', id)
+      notifyMutation('credit_transactions')
       void loadData()
     }
   }
@@ -751,6 +800,7 @@ export function useFinanceStorage(user?: User | null) {
           category,
           limit_amount: cleanLimit,
         })
+        notifyMutation('category_budgets')
         void loadData()
       }
     } else {
@@ -770,6 +820,7 @@ export function useFinanceStorage(user?: User | null) {
           category,
           limit_amount: cleanLimit,
         })
+        notifyMutation('category_budgets')
         void loadData()
       }
     }
@@ -798,6 +849,7 @@ export function useFinanceStorage(user?: User | null) {
         limit_amount: b.limitAmount,
       }))
       await supabase.from('category_budgets').upsert(rows)
+      notifyMutation('category_budgets')
       void loadData()
     }
   }
@@ -839,6 +891,7 @@ export function useFinanceStorage(user?: User | null) {
         color: g.color || '#34D399',
         is_completed: item.isCompleted,
       })
+      notifyMutation('savings_goals')
       void loadData()
     }
   }
@@ -876,6 +929,7 @@ export function useFinanceStorage(user?: User | null) {
         color: updated.color || '#34D399',
         is_completed: isCompleted,
       }).eq('id', updated.id)
+      notifyMutation('savings_goals')
       void loadData()
     }
   }
@@ -897,6 +951,7 @@ export function useFinanceStorage(user?: User | null) {
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('savings_goals').delete().eq('id', goalId)
+      notifyMutation('savings_goals')
       void loadData()
     }
   }
