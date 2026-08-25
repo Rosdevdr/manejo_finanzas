@@ -49,26 +49,26 @@ const CATEGORIES: ExpenseCategory[] = [
 ]
 
 const CATEGORY_META: Record<ExpenseCategory, { label: string; icon: string }> = {
-  housing:       { label: 'Vivienda & Renta',      icon: '🏠' },
-  food:          { label: 'Alimentación & Súper',  icon: '🛒' },
-  transport:     { label: 'Transporte & Gasolina', icon: '🚗' },
-  utilities:     { label: 'Servicios Básicos',     icon: '💡' },
-  health:        { label: 'Salud & Medicina',      icon: '🩺' },
-  entertainment: { label: 'Ocio & Salidas',        icon: '🍿' },
-  education:     { label: 'Educación & Cursos',    icon: '📚' },
-  debt:          { label: 'Pago de Deudas',        icon: '💳' },
-  other:         { label: 'Otros Gastos',          icon: '📦' },
+  housing: { label: 'Vivienda & Renta', icon: '🏠' },
+  food: { label: 'Alimentación & Súper', icon: '🛒' },
+  transport: { label: 'Transporte & Gasolina', icon: '🚗' },
+  utilities: { label: 'Servicios Básicos', icon: '💡' },
+  health: { label: 'Salud & Medicina', icon: '🩺' },
+  entertainment: { label: 'Ocio & Salidas', icon: '🍿' },
+  education: { label: 'Educación & Cursos', icon: '📚' },
+  debt: { label: 'Pago de Deudas', icon: '💳' },
+  other: { label: 'Otros Gastos', icon: '📦' },
 }
 
 const GOAL_META: Record<GoalCategory, { label: string; icon: string }> = {
-  emergency:  { label: 'Fondo de Emergencia', icon: '🛡️' },
-  vacation:   { label: 'Vacaciones & Viajes',  icon: '✈️' },
-  car:        { label: 'Vehículo',             icon: '🚘' },
-  home:       { label: 'Vivienda / Hogar',     icon: '🏡' },
-  investment: { label: 'Inversión / Negocio',  icon: '📈' },
-  education:  { label: 'Educación',            icon: '🎓' },
-  tech:       { label: 'Tecnología & Equipos', icon: '💻' },
-  other:      { label: 'Meta Personal',        icon: '🎯' },
+  emergency: { label: 'Fondo de Emergencia', icon: '🛡️' },
+  vacation: { label: 'Vacaciones & Viajes', icon: '✈️' },
+  car: { label: 'Vehículo', icon: '🚘' },
+  home: { label: 'Vivienda / Hogar', icon: '🏡' },
+  investment: { label: 'Inversión / Negocio', icon: '📈' },
+  education: { label: 'Educación', icon: '🎓' },
+  tech: { label: 'Tecnología & Equipos', icon: '💻' },
+  other: { label: 'Meta Personal', icon: '🎯' },
 }
 
 export function BudgetsAndGoalsView({
@@ -234,7 +234,7 @@ export function BudgetsAndGoalsView({
         <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Presupuestos & Metas</span></div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <h1 className="page-title">Control Presupuestario y Metas</h1>
-          
+
           <div className="subtabs-nav">
             <button
               className={`subtab-btn ${activeSubtab === 'budgets' ? 'active' : ''}`}
@@ -298,7 +298,7 @@ export function BudgetsAndGoalsView({
                 onClick={handleAutoSuggestBudgets}
                 style={{ fontSize: 11.5, padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                <Sparkles size={14} style={{ color: '#F3CA65' }} /> Auto-calcular límites inteligentes
+                <Sparkles size={14} style={{ color: '#F3CA65' }} /> Cálculo automático de límites inteligentes
               </button>
             </div>
 
@@ -413,10 +413,10 @@ export function BudgetsAndGoalsView({
                       {status.status === 'exceeded'
                         ? 'Sobregiro'
                         : status.status === 'danger'
-                        ? 'Al Límite (90%+)'
-                        : status.status === 'warning'
-                        ? 'Atención (70%+)'
-                        : 'Bajo Control'}
+                          ? 'Al Límite (90%+)'
+                          : status.status === 'warning'
+                            ? 'Atención (70%+)'
+                            : 'Bajo Control'}
                     </span>
                     <span style={{ fontFamily: 'Space Mono', color: '#717182' }}>
                       {status.limit > 0 ? `${status.percentUsed}% (${formatCurrency(status.remaining)} libre)` : '0%'}
