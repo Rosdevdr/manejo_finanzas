@@ -68,28 +68,11 @@ export function CardAlertsPopover({ creditCards, creditTransactions }: CardAlert
     <div ref={popoverRef} style={{ position: 'relative', display: 'inline-block' }}>
       <button
         type="button"
-        className="header-export-btn"
+        className={`bell-btn ${alertCount > 0 ? 'has-alerts' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         title="Alertas de Tarjetas de Crédito"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          justifyContent: 'center',
-          fontSize: 11.5,
-          fontWeight: 700,
-          fontFamily: 'Space Grotesk',
-          color: alertCount > 0 ? '#EF4444' : '#9CA3AF',
-          background: alertCount > 0 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(255, 255, 255, 0.05)',
-          border: `1px solid ${alertCount > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`,
-          padding: '7px 9px',
-          borderRadius: 10,
-          cursor: 'pointer',
-          transition: 'all 0.15s ease',
-          position: 'relative',
-        }}
       >
-        <Bell size={15} />
+        <Bell size={15} className="bell-icon-anim" />
         {alertCount > 0 && (
           <span style={{
             position: 'absolute',
