@@ -204,15 +204,57 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ===================== HEADER ===================== */
-.header {
-  height: 52px;
+.app-header {
+  height: 54px;
   background: #0E0E12;
   border-bottom: 1px solid #1E1E26;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
-  gap: 12px;
+  gap: 16px;
   flex-shrink: 0;
+  z-index: 50;
+}
+
+.period-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.period-label {
+  background: #16161E;
+  border: 1px solid #2A2A34;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #F0F0F8;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-menu-btn {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 6px;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .header-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .month-nav {
@@ -272,6 +314,47 @@ h1, h2, h3, h4, h5, h6 {
   height: 6px;
   background: #34D399;
   border-radius: 50%;
+}
+
+/* Bell Ringing Animation & Red Contour Hover */
+@keyframes bellRing {
+  0% { transform: rotate(0); }
+  15% { transform: rotate(14deg); }
+  30% { transform: rotate(-12deg); }
+  45% { transform: rotate(10deg); }
+  60% { transform: rotate(-8deg); }
+  75% { transform: rotate(4deg); }
+  100% { transform: rotate(0); }
+}
+
+.bell-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 9px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9CA3AF;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.bell-btn.has-alerts {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.bell-btn:hover {
+  border-color: #EF4444 !important;
+  color: #EF4444 !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.bell-btn:hover .bell-icon-anim {
+  animation: bellRing 0.5s ease-in-out infinite;
 }
 
 /* ===================== CONTENT ===================== */
