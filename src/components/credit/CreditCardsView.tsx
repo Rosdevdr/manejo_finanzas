@@ -206,9 +206,11 @@ export function CreditCardsView({
     e.preventDefault()
     if (!txForm.description || !txForm.amount || !txForm.cardId) return
 
+    const computedPeriod = txForm.date ? txForm.date.slice(0, 7) : currentPeriod
+
     onAddTransaction({
       cardId: txForm.cardId,
-      period: currentPeriod,
+      period: computedPeriod,
       description: txForm.description,
       amount: parseFloat(txForm.amount),
       category: txForm.category,
@@ -240,12 +242,14 @@ export function CreditCardsView({
   }
 
   function saveEditTx(t: CreditCardTransaction) {
+    const computedPeriod = editTxForm.date ? editTxForm.date.slice(0, 7) : t.period
     onUpdateTransaction({
       ...t,
       description: editTxForm.description,
       amount: parseFloat(editTxForm.amount),
       category: editTxForm.category,
       date: editTxForm.date,
+      period: computedPeriod,
       installments: Number(editTxForm.installments),
     })
     setEditingTxId(null)

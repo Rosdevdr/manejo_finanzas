@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { User } from '@supabase/supabase-js'
 import type {
   Income,
@@ -52,7 +52,6 @@ const DEFAULT_INCOMES: Income[] = [
   { id: 'inc-1', description: 'Sueldo Principal (Software Engineer)', amount: 85000, type: 'salary',     date: '2026-08-01', period: '2026-08' },
   { id: 'inc-2', description: 'Consultoría Web Freelance',            amount: 22500, type: 'freelance',  date: '2026-08-08', period: '2026-08' },
   { id: 'inc-3', description: 'Dividendos Fondos Indexados',          amount: 4500,  type: 'investment', date: '2026-08-10', period: '2026-08' },
-  // Datos de meses anteriores para permitir comparativas reales
   { id: 'inc-prev-1', description: 'Sueldo Principal (Software Engineer)', amount: 85000, type: 'salary',     date: '2026-07-01', period: '2026-07' },
   { id: 'inc-prev-2', description: 'Proyecto Freelance Frontend',         amount: 18000, type: 'freelance',  date: '2026-07-15', period: '2026-07' },
 ]
@@ -64,7 +63,6 @@ const DEFAULT_EXPENSES: Expense[] = [
   { id: 'exp-4', description: 'Transporte / Gasolina',           amount: 6000,  category: 'transport',     type: 'variable', paymentMethod: 'credit_card',   date: '2026-08-06', period: '2026-08' },
   { id: 'exp-5', description: 'Cena Restaurante & Salidas',      amount: 3800,  category: 'entertainment', type: 'variable', paymentMethod: 'credit_card',   date: '2026-08-07', period: '2026-08' },
   { id: 'exp-6', description: 'Farmacia & Medicamentos',         amount: 1900,  category: 'health',        type: 'variable', paymentMethod: 'cash',          date: '2026-08-09', period: '2026-08' },
-  // Gastos mes anterior
   { id: 'exp-prev-1', description: 'Alquiler Apartamento',        amount: 28000, category: 'housing',       type: 'fixed',    paymentMethod: 'bank_transfer', date: '2026-07-02', period: '2026-07' },
   { id: 'exp-prev-2', description: 'Supermercado',                amount: 16200, category: 'food',          type: 'variable', paymentMethod: 'debit_card',    date: '2026-07-05', period: '2026-07' },
   { id: 'exp-prev-3', description: 'Servicios (Luz e Internet)',  amount: 3100,  category: 'utilities',     type: 'fixed',    paymentMethod: 'bank_transfer', date: '2026-07-06', period: '2026-07' },
@@ -194,200 +192,392 @@ export function useFinanceStorage(user?: User | null) {
   const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => !user ? loadLocal(KEYS.creditTransactions, DEFAULT_CARD_TRANSACTIONS) : [])
   const [categoryBudgets,    setCategoryBudgetsState]    = useState<CategoryBudget[]>(() => !user ? loadLocal(KEYS.categoryBudgets, DEFAULT_BUDGETS) : [])
   const [savingsGoals,       setSavingsGoalsState]       = useState<SavingsGoal[]>(() => !user ? loadLocal(KEYS.savingsGoals, DEFAULT_GOALS) : [])
+  const [isLoading,          setIsLoading]               = useState<boolean>(Boolean(user && isSupabaseConfigured))
 
-  // Sincronización inicial y Realtime con Supabase cuando el usuario está logueado
+  const isMountedRef = useRef(true)
+
+  // Consulta directa a la base de datos
+  const loadData = useCallback(async () => {
+    if (!user || !supabase || !isSupabaseConfigured) return
+    const userId = user.id
+
+    try {
+      const [incRes, expRes, cashRes, cardRes, ctxRes, budRes, goalRes] = await Promise.all([
+        supabase.from('incomes').select('*').eq('user_id', userId).order('date', { ascending: false }),
+        supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }),
+        supabase.from('cash_withdrawals').select('*').eq('user_id', userId).order('date', { ascending: false }),
+        supabase.from('credit_cards').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+        supabase.from('credit_card_transactions').select('*').eq('user_id', userId).order('date', { ascending: false }),
+        supabase.from('category_budgets').select('*').eq('user_id', userId),
+        supabase.from('savings_goals').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+      ])
+
+      if (!isMountedRef.current) return
+
+      const mappedIncomes = (incRes.data || []).map(row => ({
+        id: row.id,
+        period: row.period,
+        description: row.description,
+        amount: Number(row.amount),
+        type: row.type as IncomeType,
+        date: row.date,
+      }))
+      setIncomesState(mappedIncomes)
+      saveLocal(KEYS.incomes, mappedIncomes)
+
+      const mappedExpenses = (expRes.data || []).map(row => ({
+        id: row.id,
+        period: row.period,
+        description: row.description,
+        amount: Number(row.amount),
+        category: row.category as ExpenseCategory,
+        type: row.type as ExpenseType,
+        paymentMethod: row.payment_method as PaymentMethod,
+        date: row.date,
+      }))
+      setExpensesState(mappedExpenses)
+      saveLocal(KEYS.expenses, mappedExpenses)
+
+      const mappedCash = (cashRes.data || []).map(row => ({
+        id: row.id,
+        period: row.period,
+        amount: Number(row.amount),
+        reason: row.reason as CashReason,
+        note: row.note ?? undefined,
+        date: row.date,
+      }))
+      setCashState(mappedCash)
+      saveLocal(KEYS.cash, mappedCash)
+
+      const mappedCards = (cardRes.data || []).map(row => ({
+        id: row.id,
+        name: row.name,
+        bank: row.bank,
+        lastFourDigits: row.last_four_digits,
+        creditLimit: Number(row.credit_limit),
+        cutoffDay: Number(row.cutoff_day),
+        paymentDueDay: Number(row.payment_due_day),
+        interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
+        color: row.color as CardThemeColor,
+      }))
+      setCreditCardsState(mappedCards)
+      saveLocal(KEYS.creditCards, mappedCards)
+
+      const mappedTransactions = (ctxRes.data || []).map(row => ({
+        id: row.id,
+        cardId: row.card_id,
+        period: row.period,
+        description: row.description,
+        amount: Number(row.amount),
+        category: row.category as ExpenseCategory,
+        date: row.date,
+        installments: Number(row.installments || 1),
+        currentInstallment: Number(row.current_installment || 1),
+        isPaid: Boolean(row.is_paid),
+      }))
+      setCreditTransactionsState(mappedTransactions)
+      saveLocal(KEYS.creditTransactions, mappedTransactions)
+
+      const mappedBudgets = (budRes.data || []).map(row => ({
+        id: row.id,
+        period: row.period,
+        category: row.category as ExpenseCategory,
+        limitAmount: Number(row.limit_amount),
+      }))
+      setCategoryBudgetsState(mappedBudgets)
+      saveLocal(KEYS.categoryBudgets, mappedBudgets)
+
+      const mappedGoals = (goalRes.data || []).map(row => ({
+        id: row.id,
+        name: row.name,
+        targetAmount: Number(row.target_amount),
+        currentAmount: Number(row.current_amount || 0),
+        monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
+        targetDate: row.target_date ?? undefined,
+        category: row.category as GoalCategory,
+        color: row.color || '#34D399',
+        isCompleted: Boolean(row.is_completed),
+      }))
+      setSavingsGoalsState(mappedGoals)
+      saveLocal(KEYS.savingsGoals, mappedGoals)
+    } catch (err) {
+      console.error('Error al sincronizar datos con Supabase:', err)
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false)
+      }
+    }
+  }, [user])
+
+  // Inicialización y Realtime con Supabase
   useEffect(() => {
+    isMountedRef.current = true
     if (!user || !supabase || !isSupabaseConfigured) {
       return
     }
 
     const userId = user.id
-    let isMounted = true
 
-    async function loadData() {
-      if (!supabase) return
-      try {
-        const [incRes, expRes, cashRes, cardRes, ctxRes, budRes, goalRes] = await Promise.all([
-          supabase.from('incomes').select('*').eq('user_id', userId).order('date', { ascending: false }),
-          supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }),
-          supabase.from('cash_withdrawals').select('*').eq('user_id', userId).order('date', { ascending: false }),
-          supabase.from('credit_cards').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-          supabase.from('credit_card_transactions').select('*').eq('user_id', userId).order('date', { ascending: false }),
-          supabase.from('category_budgets').select('*').eq('user_id', userId),
-          supabase.from('savings_goals').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-        ])
-
-        if (!isMounted) return
-
-        setIncomesState((incRes.data || []).map(row => ({
-          id: row.id,
-          period: row.period,
-          description: row.description,
-          amount: Number(row.amount),
-          type: row.type as IncomeType,
-          date: row.date,
-        })))
-
-        setExpensesState((expRes.data || []).map(row => ({
-          id: row.id,
-          period: row.period,
-          description: row.description,
-          amount: Number(row.amount),
-          category: row.category as ExpenseCategory,
-          type: row.type as ExpenseType,
-          paymentMethod: row.payment_method as PaymentMethod,
-          date: row.date,
-        })))
-
-        setCashState((cashRes.data || []).map(row => ({
-          id: row.id,
-          period: row.period,
-          amount: Number(row.amount),
-          reason: row.reason as CashReason,
-          note: row.note ?? undefined,
-          date: row.date,
-        })))
-
-        setCreditCardsState((cardRes.data || []).map(row => ({
-          id: row.id,
-          name: row.name,
-          bank: row.bank,
-          lastFourDigits: row.last_four_digits,
-          creditLimit: Number(row.credit_limit),
-          cutoffDay: Number(row.cutoff_day),
-          paymentDueDay: Number(row.payment_due_day),
-          interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
-          color: row.color as CardThemeColor,
-        })))
-
-        setCreditTransactionsState((ctxRes.data || []).map(row => ({
-          id: row.id,
-          cardId: row.card_id,
-          period: row.period,
-          description: row.description,
-          amount: Number(row.amount),
-          category: row.category as ExpenseCategory,
-          date: row.date,
-          installments: Number(row.installments || 1),
-          currentInstallment: Number(row.current_installment || 1),
-          isPaid: Boolean(row.is_paid),
-        })))
-
-        setCategoryBudgetsState((budRes.data || []).map(row => ({
-          id: row.id,
-          period: row.period,
-          category: row.category as ExpenseCategory,
-          limitAmount: Number(row.limit_amount),
-        })))
-
-        setSavingsGoalsState((goalRes.data || []).map(row => ({
-          id: row.id,
-          name: row.name,
-          targetAmount: Number(row.target_amount),
-          currentAmount: Number(row.current_amount || 0),
-          monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
-          targetDate: row.target_date ?? undefined,
-          category: row.category as GoalCategory,
-          color: row.color || '#34D399',
-          isCompleted: Boolean(row.is_completed),
-        })))
-      } catch {
-        // Fallo de red
-      }
+    const initFetch = async () => {
+      await loadData()
     }
+    void initFetch()
 
-    loadData()
-
-    // Suscripción Realtime vía WebSockets (IRT)
+    // Suscripción Realtime por WebSockets (Instant Real-time)
     const channel = supabase
-      .channel(`realtime-finance-${userId}`)
+      .channel(`rt-user-${userId}`)
+      // Incomes Realtime Handler
       .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes' }, (payload) => {
-        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-          const deletedId = (payload.old as { id: string }).id
-          setIncomesState(prev => prev.filter(i => i.id !== deletedId))
-        } else {
-          loadData()
+        if (payload.eventType === 'INSERT') {
+          const row = payload.new as Record<string, unknown>
+          const item: Income = {
+            id: row.id as string,
+            period: row.period as string,
+            description: row.description as string,
+            amount: Number(row.amount),
+            type: row.type as IncomeType,
+            date: row.date as string,
+          }
+          setIncomesState(prev => prev.some(i => i.id === item.id) ? prev.map(i => i.id === item.id ? item : i) : [item, ...prev])
+        } else if (payload.eventType === 'UPDATE') {
+          const row = payload.new as Record<string, unknown>
+          const item: Income = {
+            id: row.id as string,
+            period: row.period as string,
+            description: row.description as string,
+            amount: Number(row.amount),
+            type: row.type as IncomeType,
+            date: row.date as string,
+          }
+          setIncomesState(prev => prev.map(i => i.id === item.id ? item : i))
+        } else if (payload.eventType === 'DELETE') {
+          const oldRow = payload.old as { id?: string }
+          if (oldRow?.id) {
+            setIncomesState(prev => prev.filter(i => i.id !== oldRow.id))
+          }
         }
       })
+      // Expenses Realtime Handler
       .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, (payload) => {
-        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-          const deletedId = (payload.old as { id: string }).id
-          setExpensesState(prev => prev.filter(e => e.id !== deletedId))
-        } else {
-          loadData()
+        if (payload.eventType === 'INSERT') {
+          const row = payload.new as Record<string, unknown>
+          const item: Expense = {
+            id: row.id as string,
+            period: row.period as string,
+            description: row.description as string,
+            amount: Number(row.amount),
+            category: row.category as ExpenseCategory,
+            type: row.type as ExpenseType,
+            paymentMethod: row.payment_method as PaymentMethod,
+            date: row.date as string,
+          }
+          setExpensesState(prev => prev.some(e => e.id === item.id) ? prev.map(e => e.id === item.id ? item : e) : [item, ...prev])
+        } else if (payload.eventType === 'UPDATE') {
+          const row = payload.new as Record<string, unknown>
+          const item: Expense = {
+            id: row.id as string,
+            period: row.period as string,
+            description: row.description as string,
+            amount: Number(row.amount),
+            category: row.category as ExpenseCategory,
+            type: row.type as ExpenseType,
+            paymentMethod: row.payment_method as PaymentMethod,
+            date: row.date as string,
+          }
+          setExpensesState(prev => prev.map(e => e.id === item.id ? item : e))
+        } else if (payload.eventType === 'DELETE') {
+          const oldRow = payload.old as { id?: string }
+          if (oldRow?.id) {
+            setExpensesState(prev => prev.filter(e => e.id !== oldRow.id))
+          }
         }
       })
+      // Cash Realtime Handler
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cash_withdrawals' }, (payload) => {
-        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-          const deletedId = (payload.old as { id: string }).id
-          setCashState(prev => prev.filter(c => c.id !== deletedId))
-        } else {
-          loadData()
+        if (payload.eventType === 'INSERT') {
+          const row = payload.new as Record<string, unknown>
+          const item: CashWithdrawal = {
+            id: row.id as string,
+            period: row.period as string,
+            amount: Number(row.amount),
+            reason: row.reason as CashReason,
+            note: (row.note as string) ?? undefined,
+            date: row.date as string,
+          }
+          setCashState(prev => prev.some(c => c.id === item.id) ? prev.map(c => c.id === item.id ? item : c) : [item, ...prev])
+        } else if (payload.eventType === 'DELETE') {
+          const oldRow = payload.old as { id?: string }
+          if (oldRow?.id) {
+            setCashState(prev => prev.filter(c => c.id !== oldRow.id))
+          }
         }
       })
+      // Credit Cards Realtime Handler
       .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_cards' }, (payload) => {
-        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-          const deletedId = (payload.old as { id: string }).id
-          setCreditCardsState(prev => prev.filter(c => c.id !== deletedId))
-        } else {
-          loadData()
+        if (payload.eventType === 'INSERT') {
+          const row = payload.new as Record<string, unknown>
+          const item: CreditCard = {
+            id: row.id as string,
+            name: row.name as string,
+            bank: row.bank as string,
+            lastFourDigits: row.last_four_digits as string,
+            creditLimit: Number(row.credit_limit),
+            cutoffDay: Number(row.cutoff_day),
+            paymentDueDay: Number(row.payment_due_day),
+            interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
+            color: row.color as CardThemeColor,
+          }
+          setCreditCardsState(prev => prev.some(c => c.id === item.id) ? prev.map(c => c.id === item.id ? item : c) : [...prev, item])
+        } else if (payload.eventType === 'UPDATE') {
+          const row = payload.new as Record<string, unknown>
+          const item: CreditCard = {
+            id: row.id as string,
+            name: row.name as string,
+            bank: row.bank as string,
+            lastFourDigits: row.last_four_digits as string,
+            creditLimit: Number(row.credit_limit),
+            cutoffDay: Number(row.cutoff_day),
+            paymentDueDay: Number(row.payment_due_day),
+            interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
+            color: row.color as CardThemeColor,
+          }
+          setCreditCardsState(prev => prev.map(c => c.id === item.id ? item : c))
+        } else if (payload.eventType === 'DELETE') {
+          const oldRow = payload.old as { id?: string }
+          if (oldRow?.id) {
+            setCreditCardsState(prev => prev.filter(c => c.id !== oldRow.id))
+            setCreditTransactionsState(prev => prev.filter(t => t.cardId !== oldRow.id))
+          }
         }
       })
+      // Credit Transactions Realtime Handler
       .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_transactions' }, (payload) => {
-        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-          const deletedId = (payload.old as { id: string }).id
-          setCreditTransactionsState(prev => prev.filter(t => t.id !== deletedId))
-        } else {
-          loadData()
+        if (payload.eventType === 'INSERT') {
+          const row = payload.new as Record<string, unknown>
+          const item: CreditCardTransaction = {
+            id: row.id as string,
+            cardId: row.card_id as string,
+            period: row.period as string,
+            description: row.description as string,
+            amount: Number(row.amount),
+            category: row.category as ExpenseCategory,
+            date: row.date as string,
+            installments: Number(row.installments || 1),
+            currentInstallment: Number(row.current_installment || 1),
+            isPaid: Boolean(row.is_paid),
+          }
+          setCreditTransactionsState(prev => prev.some(t => t.id === item.id) ? prev.map(t => t.id === item.id ? item : t) : [item, ...prev])
+        } else if (payload.eventType === 'UPDATE') {
+          const row = payload.new as Record<string, unknown>
+          const item: CreditCardTransaction = {
+            id: row.id as string,
+            cardId: row.card_id as string,
+            period: row.period as string,
+            description: row.description as string,
+            amount: Number(row.amount),
+            category: row.category as ExpenseCategory,
+            date: row.date as string,
+            installments: Number(row.installments || 1),
+            currentInstallment: Number(row.current_installment || 1),
+            isPaid: Boolean(row.is_paid),
+          }
+          setCreditTransactionsState(prev => prev.map(t => t.id === item.id ? item : t))
+        } else if (payload.eventType === 'DELETE') {
+          const oldRow = payload.old as { id?: string }
+          if (oldRow?.id) {
+            setCreditTransactionsState(prev => prev.filter(t => t.id !== oldRow.id))
+          }
         }
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'category_budgets' }, () => {
-        loadData()
+      // Category Budgets Realtime Handler
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'category_budgets' }, (payload) => {
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const row = payload.new as Record<string, unknown>
+          const item: CategoryBudget = {
+            id: row.id as string,
+            period: row.period as string,
+            category: row.category as ExpenseCategory,
+            limitAmount: Number(row.limit_amount),
+          }
+          setCategoryBudgetsState(prev => {
+            const exists = prev.some(b => b.id === item.id || (b.category === item.category && b.period === item.period))
+            return exists
+              ? prev.map(b => (b.id === item.id || (b.category === item.category && b.period === item.period)) ? item : b)
+              : [...prev, item]
+          })
+        } else if (payload.eventType === 'DELETE') {
+          const oldRow = payload.old as { id?: string }
+          if (oldRow?.id) {
+            setCategoryBudgetsState(prev => prev.filter(b => b.id !== oldRow.id))
+          }
+        }
       })
+      // Savings Goals Realtime Handler
       .on('postgres_changes', { event: '*', schema: 'public', table: 'savings_goals' }, (payload) => {
-        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-          const deletedId = (payload.old as { id: string }).id
-          setSavingsGoalsState(prev => prev.filter(g => g.id !== deletedId))
-        } else {
-          loadData()
+        if (payload.eventType === 'INSERT') {
+          const row = payload.new as Record<string, unknown>
+          const item: SavingsGoal = {
+            id: row.id as string,
+            name: row.name as string,
+            targetAmount: Number(row.target_amount),
+            currentAmount: Number(row.current_amount || 0),
+            monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
+            targetDate: (row.target_date as string) ?? undefined,
+            category: row.category as GoalCategory,
+            color: (row.color as string) || '#34D399',
+            isCompleted: Boolean(row.is_completed),
+          }
+          setSavingsGoalsState(prev => prev.some(g => g.id === item.id) ? prev.map(g => g.id === item.id ? item : g) : [...prev, item])
+        } else if (payload.eventType === 'UPDATE') {
+          const row = payload.new as Record<string, unknown>
+          const item: SavingsGoal = {
+            id: row.id as string,
+            name: row.name as string,
+            targetAmount: Number(row.target_amount),
+            currentAmount: Number(row.current_amount || 0),
+            monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
+            targetDate: (row.target_date as string) ?? undefined,
+            category: row.category as GoalCategory,
+            color: (row.color as string) || '#34D399',
+            isCompleted: Boolean(row.is_completed),
+          }
+          setSavingsGoalsState(prev => prev.map(g => g.id === item.id ? item : g))
+        } else if (payload.eventType === 'DELETE') {
+          const oldRow = payload.old as { id?: string }
+          if (oldRow?.id) {
+            setSavingsGoalsState(prev => prev.filter(g => g.id !== oldRow.id))
+          }
         }
       })
       .subscribe()
 
     return () => {
-      isMounted = false
+      isMountedRef.current = false
       if (supabase) {
         supabase.removeChannel(channel)
       }
     }
-  }, [user])
-
-  // Persistir en LocalStorage como fallback local cuando no está conectado
-  useEffect(() => {
-    if (!user) {
-      saveLocal(KEYS.incomes,            incomes)
-      saveLocal(KEYS.expenses,           expenses)
-      saveLocal(KEYS.cash,               cash)
-      saveLocal(KEYS.creditCards,        creditCards)
-      saveLocal(KEYS.creditTransactions, creditTransactions)
-      saveLocal(KEYS.categoryBudgets,    categoryBudgets)
-      saveLocal(KEYS.savingsGoals,       savingsGoals)
-    }
-  }, [incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals, user])
+  }, [user, loadData])
 
   // --- Acciones de Ingresos ---
   const addIncome = async (d: Omit<Income, 'id'>) => {
     const cleanDesc = sanitizeString(d.description)
     const cleanAmount = sanitizeAmount(d.amount)
     const newId = `inc-${Date.now()}`
-    const item: Income = { ...d, description: cleanDesc, amount: cleanAmount, id: newId }
-    setIncomesState(prev => [item, ...prev])
+    const computedPeriod = d.date ? d.date.slice(0, 7) : d.period
+    const item: Income = { ...d, period: computedPeriod, description: cleanDesc, amount: cleanAmount, id: newId }
+
+    setIncomesState(prev => {
+      const next = [item, ...prev]
+      saveLocal(KEYS.incomes, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('incomes').insert({
         id: newId,
         user_id: user.id,
-        period: d.period,
+        period: computedPeriod,
         description: cleanDesc,
         amount: cleanAmount,
         type: d.type,
@@ -399,8 +589,14 @@ export function useFinanceStorage(user?: User | null) {
   const updateIncome = async (updated: Income) => {
     const cleanDesc = sanitizeString(updated.description)
     const cleanAmount = sanitizeAmount(updated.amount)
-    const cleanItem: Income = { ...updated, description: cleanDesc, amount: cleanAmount }
-    setIncomesState(prev => prev.map(i => i.id === updated.id ? cleanItem : i))
+    const computedPeriod = updated.date ? updated.date.slice(0, 7) : updated.period
+    const cleanItem: Income = { ...updated, period: computedPeriod, description: cleanDesc, amount: cleanAmount }
+
+    setIncomesState(prev => {
+      const next = prev.map(i => i.id === updated.id ? cleanItem : i)
+      saveLocal(KEYS.incomes, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('incomes').update({
@@ -408,13 +604,17 @@ export function useFinanceStorage(user?: User | null) {
         amount: cleanAmount,
         type: updated.type,
         date: updated.date,
-        period: updated.period,
+        period: computedPeriod,
       }).eq('id', updated.id)
     }
   }
 
   const deleteIncome = async (id: string) => {
-    setIncomesState(prev => prev.filter(i => i.id !== id))
+    setIncomesState(prev => {
+      const next = prev.filter(i => i.id !== id)
+      saveLocal(KEYS.incomes, next)
+      return next
+    })
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('incomes').delete().eq('id', id)
     }
@@ -425,14 +625,20 @@ export function useFinanceStorage(user?: User | null) {
     const cleanDesc = sanitizeString(d.description)
     const cleanAmount = sanitizeAmount(d.amount)
     const newId = `exp-${Date.now()}`
-    const item: Expense = { ...d, description: cleanDesc, amount: cleanAmount, id: newId }
-    setExpensesState(prev => [item, ...prev])
+    const computedPeriod = d.date ? d.date.slice(0, 7) : d.period
+    const item: Expense = { ...d, period: computedPeriod, description: cleanDesc, amount: cleanAmount, id: newId }
+
+    setExpensesState(prev => {
+      const next = [item, ...prev]
+      saveLocal(KEYS.expenses, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('expenses').insert({
         id: newId,
         user_id: user.id,
-        period: d.period,
+        period: computedPeriod,
         description: cleanDesc,
         amount: cleanAmount,
         category: d.category,
@@ -446,8 +652,14 @@ export function useFinanceStorage(user?: User | null) {
   const updateExpense = async (updated: Expense) => {
     const cleanDesc = sanitizeString(updated.description)
     const cleanAmount = sanitizeAmount(updated.amount)
-    const cleanItem: Expense = { ...updated, description: cleanDesc, amount: cleanAmount }
-    setExpensesState(prev => prev.map(e => e.id === updated.id ? cleanItem : e))
+    const computedPeriod = updated.date ? updated.date.slice(0, 7) : updated.period
+    const cleanItem: Expense = { ...updated, period: computedPeriod, description: cleanDesc, amount: cleanAmount }
+
+    setExpensesState(prev => {
+      const next = prev.map(e => e.id === updated.id ? cleanItem : e)
+      saveLocal(KEYS.expenses, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('expenses').update({
@@ -457,13 +669,17 @@ export function useFinanceStorage(user?: User | null) {
         type: updated.type,
         payment_method: updated.paymentMethod,
         date: updated.date,
-        period: updated.period,
+        period: computedPeriod,
       }).eq('id', updated.id)
     }
   }
 
   const deleteExpense = async (id: string) => {
-    setExpensesState(prev => prev.filter(e => e.id !== id))
+    setExpensesState(prev => {
+      const next = prev.filter(e => e.id !== id)
+      saveLocal(KEYS.expenses, next)
+      return next
+    })
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('expenses').delete().eq('id', id)
     }
@@ -474,14 +690,20 @@ export function useFinanceStorage(user?: User | null) {
     const cleanNote = d.note ? sanitizeString(d.note) : undefined
     const cleanAmount = sanitizeAmount(d.amount)
     const newId = `cash-${Date.now()}`
-    const item: CashWithdrawal = { ...d, note: cleanNote, amount: cleanAmount, id: newId }
-    setCashState(prev => [item, ...prev])
+    const computedPeriod = d.date ? d.date.slice(0, 7) : d.period
+    const item: CashWithdrawal = { ...d, period: computedPeriod, note: cleanNote, amount: cleanAmount, id: newId }
+
+    setCashState(prev => {
+      const next = [item, ...prev]
+      saveLocal(KEYS.cash, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('cash_withdrawals').insert({
         id: newId,
         user_id: user.id,
-        period: d.period,
+        period: computedPeriod,
         amount: cleanAmount,
         reason: d.reason,
         note: cleanNote,
@@ -491,7 +713,11 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteWithdrawal = async (id: string) => {
-    setCashState(prev => prev.filter(c => c.id !== id))
+    setCashState(prev => {
+      const next = prev.filter(c => c.id !== id)
+      saveLocal(KEYS.cash, next)
+      return next
+    })
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('cash_withdrawals').delete().eq('id', id)
     }
@@ -512,7 +738,12 @@ export function useFinanceStorage(user?: User | null) {
       creditLimit: cleanLimit,
       id: newId,
     }
-    setCreditCardsState(prev => [...prev, item])
+
+    setCreditCardsState(prev => {
+      const next = [...prev, item]
+      saveLocal(KEYS.creditCards, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_cards').insert({
@@ -545,7 +776,11 @@ export function useFinanceStorage(user?: User | null) {
       paymentDueDay: Math.max(1, Math.min(31, updated.paymentDueDay)),
     }
 
-    setCreditCardsState(prev => prev.map(c => c.id === updated.id ? cleanCard : c))
+    setCreditCardsState(prev => {
+      const next = prev.map(c => c.id === updated.id ? cleanCard : c)
+      saveLocal(KEYS.creditCards, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_cards').update({
@@ -562,8 +797,16 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteCreditCard = async (id: string) => {
-    setCreditCardsState(prev => prev.filter(c => c.id !== id))
-    setCreditTransactionsState(prev => prev.filter(t => t.cardId !== id))
+    setCreditCardsState(prev => {
+      const next = prev.filter(c => c.id !== id)
+      saveLocal(KEYS.creditCards, next)
+      return next
+    })
+    setCreditTransactionsState(prev => {
+      const next = prev.filter(t => t.cardId !== id)
+      saveLocal(KEYS.creditTransactions, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_cards').delete().eq('id', id)
@@ -576,15 +819,21 @@ export function useFinanceStorage(user?: User | null) {
     const cleanDesc = sanitizeString(d.description)
     const cleanAmount = sanitizeAmount(d.amount)
     const newId = `ctx-${Date.now()}`
-    const item: CreditCardTransaction = { ...d, description: cleanDesc, amount: cleanAmount, id: newId }
-    setCreditTransactionsState(prev => [item, ...prev])
+    const computedPeriod = d.date ? d.date.slice(0, 7) : d.period
+    const item: CreditCardTransaction = { ...d, period: computedPeriod, description: cleanDesc, amount: cleanAmount, id: newId }
+
+    setCreditTransactionsState(prev => {
+      const next = [item, ...prev]
+      saveLocal(KEYS.creditTransactions, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_card_transactions').insert({
         id: newId,
         user_id: user.id,
         card_id: d.cardId,
-        period: d.period,
+        period: computedPeriod,
         description: cleanDesc,
         amount: cleanAmount,
         category: d.category,
@@ -599,8 +848,14 @@ export function useFinanceStorage(user?: User | null) {
   const updateCreditTransaction = async (updated: CreditCardTransaction) => {
     const cleanDesc = sanitizeString(updated.description)
     const cleanAmount = sanitizeAmount(updated.amount)
-    const cleanItem: CreditCardTransaction = { ...updated, description: cleanDesc, amount: cleanAmount }
-    setCreditTransactionsState(prev => prev.map(t => t.id === updated.id ? cleanItem : t))
+    const computedPeriod = updated.date ? updated.date.slice(0, 7) : updated.period
+    const cleanItem: CreditCardTransaction = { ...updated, period: computedPeriod, description: cleanDesc, amount: cleanAmount }
+
+    setCreditTransactionsState(prev => {
+      const next = prev.map(t => t.id === updated.id ? cleanItem : t)
+      saveLocal(KEYS.creditTransactions, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_card_transactions').update({
@@ -609,7 +864,7 @@ export function useFinanceStorage(user?: User | null) {
         amount: cleanAmount,
         category: updated.category,
         date: updated.date,
-        period: updated.period,
+        period: computedPeriod,
         installments: updated.installments,
         current_installment: updated.currentInstallment,
         is_paid: updated.isPaid,
@@ -618,7 +873,11 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteCreditTransaction = async (id: string) => {
-    setCreditTransactionsState(prev => prev.filter(t => t.id !== id))
+    setCreditTransactionsState(prev => {
+      const next = prev.filter(t => t.id !== id)
+      saveLocal(KEYS.creditTransactions, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_card_transactions').delete().eq('id', id)
@@ -639,7 +898,11 @@ export function useFinanceStorage(user?: User | null) {
 
     if (existing) {
       const updated: CategoryBudget = { ...existing, limitAmount: cleanLimit, period }
-      setCategoryBudgetsState(prev => prev.map(b => b.id === existing.id ? updated : b))
+      setCategoryBudgetsState(prev => {
+        const next = prev.map(b => b.id === existing.id ? updated : b)
+        saveLocal(KEYS.categoryBudgets, next)
+        return next
+      })
 
       if (supabase && isSupabaseConfigured && user) {
         await supabase.from('category_budgets').upsert({
@@ -653,7 +916,11 @@ export function useFinanceStorage(user?: User | null) {
     } else {
       const newId = `bud-${Date.now()}-${category}`
       const newBudget: CategoryBudget = { id: newId, category, limitAmount: cleanLimit, period }
-      setCategoryBudgetsState(prev => [...prev, newBudget])
+      setCategoryBudgetsState(prev => {
+        const next = [...prev, newBudget]
+        saveLocal(KEYS.categoryBudgets, next)
+        return next
+      })
 
       if (supabase && isSupabaseConfigured && user) {
         await supabase.from('category_budgets').insert({
@@ -679,6 +946,7 @@ export function useFinanceStorage(user?: User | null) {
     }
 
     setCategoryBudgetsState(newBudgets)
+    saveLocal(KEYS.categoryBudgets, newBudgets)
 
     if (supabase && isSupabaseConfigured && user) {
       const rows = newBudgets.map(b => ({
@@ -710,7 +978,11 @@ export function useFinanceStorage(user?: User | null) {
       isCompleted: cleanCurrent >= cleanTarget,
     }
 
-    setSavingsGoalsState(prev => [...prev, item])
+    setSavingsGoalsState(prev => {
+      const next = [...prev, item]
+      saveLocal(KEYS.savingsGoals, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('savings_goals').insert({
@@ -744,7 +1016,11 @@ export function useFinanceStorage(user?: User | null) {
       isCompleted,
     }
 
-    setSavingsGoalsState(prev => prev.map(g => g.id === updated.id ? cleanItem : g))
+    setSavingsGoalsState(prev => {
+      const next = prev.map(g => g.id === updated.id ? cleanItem : g)
+      saveLocal(KEYS.savingsGoals, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('savings_goals').update({
@@ -769,7 +1045,11 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteSavingsGoal = async (goalId: string) => {
-    setSavingsGoalsState(prev => prev.filter(g => g.id !== goalId))
+    setSavingsGoalsState(prev => {
+      const next = prev.filter(g => g.id !== goalId)
+      saveLocal(KEYS.savingsGoals, next)
+      return next
+    })
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('savings_goals').delete().eq('id', goalId)
@@ -778,6 +1058,8 @@ export function useFinanceStorage(user?: User | null) {
 
   return {
     incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
+    isLoading,
+    refreshData: loadData,
     addIncome, updateIncome, deleteIncome,
     addExpense, updateExpense, deleteExpense,
     addWithdrawal, deleteWithdrawal,

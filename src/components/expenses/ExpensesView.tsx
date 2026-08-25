@@ -51,7 +51,8 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.description || !form.amount) return
-    onAddExpense({ ...form, amount: parseFloat(form.amount), period: currentPeriod })
+    const computedPeriod = form.date ? form.date.slice(0, 7) : currentPeriod
+    onAddExpense({ ...form, amount: parseFloat(form.amount), period: computedPeriod })
     setForm({ description: '', amount: '', category: 'food', type: 'variable', paymentMethod: 'debit_card', date: new Date().toISOString().slice(0, 10) })
   }
 
@@ -61,7 +62,17 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
   }
 
   function saveEdit(exp: Expense) {
-    onUpdateExpense({ ...exp, description: editForm.description, amount: parseFloat(editForm.amount), category: editForm.category, type: editForm.type, paymentMethod: editForm.paymentMethod, date: editForm.date })
+    const computedPeriod = editForm.date ? editForm.date.slice(0, 7) : exp.period
+    onUpdateExpense({
+      ...exp,
+      description: editForm.description,
+      amount: parseFloat(editForm.amount),
+      category: editForm.category,
+      type: editForm.type,
+      paymentMethod: editForm.paymentMethod,
+      date: editForm.date,
+      period: computedPeriod,
+    })
     setEditingId(null)
   }
 

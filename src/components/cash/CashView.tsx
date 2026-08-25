@@ -47,7 +47,8 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.amount || parsedAmount <= 0) return
-    onAddWithdrawal({ ...form, amount: parsedAmount, period: currentPeriod })
+    const computedPeriod = form.date ? form.date.slice(0, 7) : currentPeriod
+    onAddWithdrawal({ ...form, amount: parsedAmount, period: computedPeriod })
     setForm({ amount: '', reason: 'pocket_money', note: '', date: new Date().toISOString().slice(0, 10) })
   }
 

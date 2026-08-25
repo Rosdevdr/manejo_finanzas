@@ -39,7 +39,8 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.description || !form.amount) return
-    onAddIncome({ ...form, amount: parseFloat(form.amount), period: currentPeriod })
+    const computedPeriod = form.date ? form.date.slice(0, 7) : currentPeriod
+    onAddIncome({ ...form, amount: parseFloat(form.amount), period: computedPeriod })
     setForm({ description: '', amount: '', type: 'salary', date: new Date().toISOString().slice(0, 10) })
   }
 
@@ -51,7 +52,15 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
   function cancelEdit() { setEditingId(null) }
 
   function saveEdit(inc: Income) {
-    onUpdateIncome({ ...inc, description: editForm.description, amount: parseFloat(editForm.amount), type: editForm.type, date: editForm.date })
+    const computedPeriod = editForm.date ? editForm.date.slice(0, 7) : inc.period
+    onUpdateIncome({
+      ...inc,
+      description: editForm.description,
+      amount: parseFloat(editForm.amount),
+      type: editForm.type,
+      date: editForm.date,
+      period: computedPeriod,
+    })
     setEditingId(null)
   }
 
