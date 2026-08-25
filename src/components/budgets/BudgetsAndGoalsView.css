@@ -6,9 +6,12 @@
 .budgets-container .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;            /* Espacio horizontal y vertical entre las 3 tarjetas */
-  margin-top: 6px;      /* Separación superior con el encabezado */
-  margin-bottom: 24px;  /* Separación inferior con el bloque de la regla 50/30/20 */
+  gap: 16px;
+  /* Espacio horizontal y vertical entre las 3 tarjetas */
+  margin-top: 6px;
+  /* Separación superior con el encabezado */
+  margin-bottom: 40px;
+  /* Separación inferior con el bloque de la regla 50/30/20 */
 }
 
 .budgets-container {
@@ -199,14 +202,17 @@
   background: #34D399;
   box-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
 }
+
 .budget-card.warning::before {
   background: #FBBF24;
   box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
 }
+
 .budget-card.danger::before {
   background: #F87171;
   box-shadow: 0 0 8px rgba(248, 113, 113, 0.4);
 }
+
 .budget-card.exceeded::before {
   background: #FB7185;
   box-shadow: 0 0 12px rgba(251, 113, 133, 0.7);
@@ -275,10 +281,21 @@
   transition: width 0.3s ease;
 }
 
-.budget-bar-fill.safe { background: linear-gradient(90deg, #059669 0%, #34D399 100%); }
-.budget-bar-fill.warning { background: linear-gradient(90deg, #D97706 0%, #FBBF24 100%); }
-.budget-bar-fill.danger { background: linear-gradient(90deg, #DC2626 0%, #F87171 100%); }
-.budget-bar-fill.exceeded { background: linear-gradient(90deg, #E11D48 0%, #FB7185 100%); }
+.budget-bar-fill.safe {
+  background: linear-gradient(90deg, #059669 0%, #34D399 100%);
+}
+
+.budget-bar-fill.warning {
+  background: linear-gradient(90deg, #D97706 0%, #FBBF24 100%);
+}
+
+.budget-bar-fill.danger {
+  background: linear-gradient(90deg, #DC2626 0%, #F87171 100%);
+}
+
+.budget-bar-fill.exceeded {
+  background: linear-gradient(90deg, #E11D48 0%, #FB7185 100%);
+}
 
 .budget-footer {
   display: flex;
@@ -297,10 +314,25 @@
   letter-spacing: 0.04em;
 }
 
-.status-tag-safe { background: rgba(52, 211, 153, 0.12); color: #34D399; }
-.status-tag-warning { background: rgba(251, 191, 36, 0.12); color: #FBBF24; }
-.status-tag-danger { background: rgba(248, 113, 113, 0.12); color: #F87171; }
-.status-tag-exceeded { background: rgba(251, 113, 133, 0.2); color: #FB7185; }
+.status-tag-safe {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34D399;
+}
+
+.status-tag-warning {
+  background: rgba(251, 191, 36, 0.12);
+  color: #FBBF24;
+}
+
+.status-tag-danger {
+  background: rgba(248, 113, 113, 0.12);
+  color: #F87171;
+}
+
+.status-tag-exceeded {
+  background: rgba(251, 113, 133, 0.2);
+  color: #FB7185;
+}
 
 /* Savings Goals Grid */
 .goals-grid {
@@ -438,7 +470,8 @@
   color: #D0D0DC;
 }
 
-.modal-input, .modal-select {
+.modal-input,
+.modal-select {
   background: #111116;
   border: 1px solid #2A2A38;
   border-radius: 9px;
@@ -450,7 +483,8 @@
   transition: border-color 0.15s;
 }
 
-.modal-input:focus, .modal-select:focus {
+.modal-input:focus,
+.modal-select:focus {
   border-color: #F3CA65;
   box-shadow: 0 0 10px rgba(243, 202, 101, 0.2);
 }
@@ -459,6 +493,7 @@
   .subtabs-nav {
     width: 100%;
   }
+
   .subtab-btn {
     flex: 1;
     justify-content: center;
