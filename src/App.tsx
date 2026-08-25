@@ -146,6 +146,7 @@ export function App() {
               expenses={expenses}
               creditCards={creditCards}
               creditTransactions={creditTransactions}
+              userEmail={user?.email}
               onNavigateTab={setActiveTab}
             />
           )}
