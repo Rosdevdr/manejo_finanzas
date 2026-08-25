@@ -6,12 +6,15 @@ import type {
   CashWithdrawal,
   CreditCard,
   CreditCardTransaction,
+  CategoryBudget,
+  SavingsGoal,
   IncomeType,
   ExpenseCategory,
   ExpenseType,
   PaymentMethod,
   CashReason,
-  CardThemeColor
+  CardThemeColor,
+  GoalCategory,
 } from '../types/finance'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { sanitizeString, sanitizeAmount } from '../utils/security'
@@ -22,6 +25,8 @@ const KEYS = {
   cash:               'aureus_cash',
   creditCards:        'aureus_credit_cards',
   creditTransactions: 'aureus_credit_transactions',
+  categoryBudgets:    'aureus_category_budgets',
+  savingsGoals:       'aureus_savings_goals',
 } as const
 
 function loadLocal<T>(key: string, fallback: T[]): T[] {
@@ -133,18 +138,51 @@ const DEFAULT_CARD_TRANSACTIONS: CreditCardTransaction[] = [
     currentInstallment: 1,
     isPaid: false,
   },
-  // Transacción mes anterior
+]
+
+const DEFAULT_BUDGETS: CategoryBudget[] = [
+  { id: 'bud-1', period: 'default', category: 'housing',       limitAmount: 30000 },
+  { id: 'bud-2', period: 'default', category: 'food',          limitAmount: 18000 },
+  { id: 'bud-3', period: 'default', category: 'transport',     limitAmount: 8000 },
+  { id: 'bud-4', period: 'default', category: 'utilities',     limitAmount: 4500 },
+  { id: 'bud-5', period: 'default', category: 'health',        limitAmount: 3500 },
+  { id: 'bud-6', period: 'default', category: 'entertainment', limitAmount: 6000 },
+  { id: 'bud-7', period: 'default', category: 'education',     limitAmount: 5000 },
+  { id: 'bud-8', period: 'default', category: 'debt',          limitAmount: 10000 },
+  { id: 'bud-9', period: 'default', category: 'other',         limitAmount: 4000 },
+]
+
+const DEFAULT_GOALS: SavingsGoal[] = [
   {
-    id: 'ctx-prev-1',
-    cardId: 'card-1',
-    period: '2026-07',
-    description: 'Compras Electrónicos',
-    amount: 18900,
-    category: 'other',
-    date: '2026-07-16',
-    installments: 1,
-    currentInstallment: 1,
-    isPaid: true,
+    id: 'goal-1',
+    name: 'Fondo de Emergencia (3 Meses)',
+    targetAmount: 150000,
+    currentAmount: 65000,
+    monthlyContribution: 15000,
+    category: 'emergency',
+    color: '#34D399',
+    isCompleted: false,
+  },
+  {
+    id: 'goal-2',
+    name: 'Vacaciones Fin de Año',
+    targetAmount: 80000,
+    currentAmount: 35000,
+    monthlyContribution: 10000,
+    targetDate: '2026-12-15',
+    category: 'vacation',
+    color: '#FBBF24',
+    isCompleted: false,
+  },
+  {
+    id: 'goal-3',
+    name: 'Portafolio de Inversión / ETF',
+    targetAmount: 200000,
+    currentAmount: 90000,
+    monthlyContribution: 20000,
+    category: 'investment',
+    color: '#C9A84C',
+    isCompleted: false,
   },
 ]
 
@@ -154,6 +192,8 @@ export function useFinanceStorage(user?: User | null) {
   const [cash,               setCashState]               = useState<CashWithdrawal[]>(() => !user ? loadLocal(KEYS.cash, DEFAULT_CASH) : [])
   const [creditCards,        setCreditCardsState]        = useState<CreditCard[]>(() => !user ? loadLocal(KEYS.creditCards, DEFAULT_CARDS) : [])
   const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => !user ? loadLocal(KEYS.creditTransactions, DEFAULT_CARD_TRANSACTIONS) : [])
+  const [categoryBudgets,    setCategoryBudgetsState]    = useState<CategoryBudget[]>(() => !user ? loadLocal(KEYS.categoryBudgets, DEFAULT_BUDGETS) : [])
+  const [savingsGoals,       setSavingsGoalsState]       = useState<SavingsGoal[]>(() => !user ? loadLocal(KEYS.savingsGoals, DEFAULT_GOALS) : [])
 
   // Sincronización inicial y Realtime con Supabase cuando el usuario está logueado
   useEffect(() => {
@@ -167,12 +207,14 @@ export function useFinanceStorage(user?: User | null) {
     async function loadData() {
       if (!supabase) return
       try {
-        const [incRes, expRes, cashRes, cardRes, ctxRes] = await Promise.all([
+        const [incRes, expRes, cashRes, cardRes, ctxRes, budRes, goalRes] = await Promise.all([
           supabase.from('incomes').select('*').eq('user_id', userId).order('date', { ascending: false }),
           supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }),
           supabase.from('cash_withdrawals').select('*').eq('user_id', userId).order('date', { ascending: false }),
           supabase.from('credit_cards').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
           supabase.from('credit_card_transactions').select('*').eq('user_id', userId).order('date', { ascending: false }),
+          supabase.from('category_budgets').select('*').eq('user_id', userId),
+          supabase.from('savings_goals').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
         ])
 
         if (!isMounted) return
@@ -230,6 +272,25 @@ export function useFinanceStorage(user?: User | null) {
           currentInstallment: Number(row.current_installment || 1),
           isPaid: Boolean(row.is_paid),
         })))
+
+        setCategoryBudgetsState((budRes.data || []).map(row => ({
+          id: row.id,
+          period: row.period,
+          category: row.category as ExpenseCategory,
+          limitAmount: Number(row.limit_amount),
+        })))
+
+        setSavingsGoalsState((goalRes.data || []).map(row => ({
+          id: row.id,
+          name: row.name,
+          targetAmount: Number(row.target_amount),
+          currentAmount: Number(row.current_amount || 0),
+          monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
+          targetDate: row.target_date ?? undefined,
+          category: row.category as GoalCategory,
+          color: row.color || '#34D399',
+          isCompleted: Boolean(row.is_completed),
+        })))
       } catch {
         // Fallo de red
       }
@@ -237,70 +298,60 @@ export function useFinanceStorage(user?: User | null) {
 
     loadData()
 
-
     // Suscripción Realtime vía WebSockets (IRT)
     const channel = supabase
       .channel(`realtime-finance-${userId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'incomes' },
-        (payload) => {
-          if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-            const deletedId = (payload.old as { id: string }).id
-            setIncomesState(prev => prev.filter(i => i.id !== deletedId))
-          } else {
-            loadData()
-          }
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes' }, (payload) => {
+        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
+          const deletedId = (payload.old as { id: string }).id
+          setIncomesState(prev => prev.filter(i => i.id !== deletedId))
+        } else {
+          loadData()
         }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'expenses' },
-        (payload) => {
-          if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-            const deletedId = (payload.old as { id: string }).id
-            setExpensesState(prev => prev.filter(e => e.id !== deletedId))
-          } else {
-            loadData()
-          }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, (payload) => {
+        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
+          const deletedId = (payload.old as { id: string }).id
+          setExpensesState(prev => prev.filter(e => e.id !== deletedId))
+        } else {
+          loadData()
         }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'cash_withdrawals' },
-        (payload) => {
-          if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-            const deletedId = (payload.old as { id: string }).id
-            setCashState(prev => prev.filter(c => c.id !== deletedId))
-          } else {
-            loadData()
-          }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cash_withdrawals' }, (payload) => {
+        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
+          const deletedId = (payload.old as { id: string }).id
+          setCashState(prev => prev.filter(c => c.id !== deletedId))
+        } else {
+          loadData()
         }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'credit_cards' },
-        (payload) => {
-          if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-            const deletedId = (payload.old as { id: string }).id
-            setCreditCardsState(prev => prev.filter(c => c.id !== deletedId))
-          } else {
-            loadData()
-          }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_cards' }, (payload) => {
+        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
+          const deletedId = (payload.old as { id: string }).id
+          setCreditCardsState(prev => prev.filter(c => c.id !== deletedId))
+        } else {
+          loadData()
         }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'credit_card_transactions' },
-        (payload) => {
-          if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
-            const deletedId = (payload.old as { id: string }).id
-            setCreditTransactionsState(prev => prev.filter(t => t.id !== deletedId))
-          } else {
-            loadData()
-          }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_transactions' }, (payload) => {
+        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
+          const deletedId = (payload.old as { id: string }).id
+          setCreditTransactionsState(prev => prev.filter(t => t.id !== deletedId))
+        } else {
+          loadData()
         }
-      )
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'category_budgets' }, () => {
+        loadData()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'savings_goals' }, (payload) => {
+        if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
+          const deletedId = (payload.old as { id: string }).id
+          setSavingsGoalsState(prev => prev.filter(g => g.id !== deletedId))
+        } else {
+          loadData()
+        }
+      })
       .subscribe()
 
     return () => {
@@ -319,8 +370,10 @@ export function useFinanceStorage(user?: User | null) {
       saveLocal(KEYS.cash,               cash)
       saveLocal(KEYS.creditCards,        creditCards)
       saveLocal(KEYS.creditTransactions, creditTransactions)
+      saveLocal(KEYS.categoryBudgets,    categoryBudgets)
+      saveLocal(KEYS.savingsGoals,       savingsGoals)
     }
-  }, [incomes, expenses, cash, creditCards, creditTransactions, user])
+  }, [incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals, user])
 
   // --- Acciones de Ingresos ---
   const addIncome = async (d: Omit<Income, 'id'>) => {
@@ -362,7 +415,6 @@ export function useFinanceStorage(user?: User | null) {
 
   const deleteIncome = async (id: string) => {
     setIncomesState(prev => prev.filter(i => i.id !== id))
-
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('incomes').delete().eq('id', id)
     }
@@ -412,18 +464,17 @@ export function useFinanceStorage(user?: User | null) {
 
   const deleteExpense = async (id: string) => {
     setExpensesState(prev => prev.filter(e => e.id !== id))
-
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('expenses').delete().eq('id', id)
     }
   }
 
-  // --- Acciones de Retiros en Efectivo ---
+  // --- Acciones de Efectivo ---
   const addWithdrawal = async (d: Omit<CashWithdrawal, 'id'>) => {
     const cleanNote = d.note ? sanitizeString(d.note) : undefined
     const cleanAmount = sanitizeAmount(d.amount)
     const newId = `cash-${Date.now()}`
-    const item: CashWithdrawal = { ...d, amount: cleanAmount, note: cleanNote, id: newId }
+    const item: CashWithdrawal = { ...d, note: cleanNote, amount: cleanAmount, id: newId }
     setCashState(prev => [item, ...prev])
 
     if (supabase && isSupabaseConfigured && user) {
@@ -433,7 +484,7 @@ export function useFinanceStorage(user?: User | null) {
         period: d.period,
         amount: cleanAmount,
         reason: d.reason,
-        note: cleanNote ?? null,
+        note: cleanNote,
         date: d.date,
       })
     }
@@ -441,7 +492,6 @@ export function useFinanceStorage(user?: User | null) {
 
   const deleteWithdrawal = async (id: string) => {
     setCashState(prev => prev.filter(c => c.id !== id))
-
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('cash_withdrawals').delete().eq('id', id)
     }
@@ -451,22 +501,18 @@ export function useFinanceStorage(user?: User | null) {
   const addCreditCard = async (d: Omit<CreditCard, 'id'>) => {
     const cleanName = sanitizeString(d.name)
     const cleanBank = sanitizeString(d.bank)
-    const cleanDigits = d.lastFourDigits.replace(/\D/g, '').slice(0, 4) || '0000'
+    const cleanDigits = d.lastFourDigits.replace(/\D/g, '').slice(-4)
     const cleanLimit = sanitizeAmount(d.creditLimit)
     const newId = `card-${Date.now()}`
-
-    const newCard: CreditCard = {
+    const item: CreditCard = {
       ...d,
-      id: newId,
       name: cleanName,
       bank: cleanBank,
       lastFourDigits: cleanDigits,
       creditLimit: cleanLimit,
-      cutoffDay: Math.max(1, Math.min(31, d.cutoffDay)),
-      paymentDueDay: Math.max(1, Math.min(31, d.paymentDueDay)),
+      id: newId,
     }
-
-    setCreditCardsState(prev => [...prev, newCard])
+    setCreditCardsState(prev => [...prev, item])
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_cards').insert({
@@ -476,8 +522,8 @@ export function useFinanceStorage(user?: User | null) {
         bank: cleanBank,
         last_four_digits: cleanDigits,
         credit_limit: cleanLimit,
-        cutoff_day: newCard.cutoffDay,
-        payment_due_day: newCard.paymentDueDay,
+        cutoff_day: d.cutoffDay,
+        payment_due_day: d.paymentDueDay,
         interest_rate: d.interestRate ?? null,
         color: d.color,
       })
@@ -487,9 +533,8 @@ export function useFinanceStorage(user?: User | null) {
   const updateCreditCard = async (updated: CreditCard) => {
     const cleanName = sanitizeString(updated.name)
     const cleanBank = sanitizeString(updated.bank)
-    const cleanDigits = updated.lastFourDigits.replace(/\D/g, '').slice(0, 4) || '0000'
+    const cleanDigits = updated.lastFourDigits.replace(/\D/g, '').slice(-4)
     const cleanLimit = sanitizeAmount(updated.creditLimit)
-
     const cleanCard: CreditCard = {
       ...updated,
       name: cleanName,
@@ -587,13 +632,158 @@ export function useFinanceStorage(user?: User | null) {
     await updateCreditTransaction(updated)
   }
 
+  // --- Acciones de Presupuestos por Categoría ---
+  const setCategoryBudget = async (category: ExpenseCategory, limitAmount: number, period: string = 'default') => {
+    const cleanLimit = Math.max(0, sanitizeAmount(limitAmount))
+    const existing = categoryBudgets.find(b => b.category === category && (b.period === period || b.period === 'default'))
+
+    if (existing) {
+      const updated: CategoryBudget = { ...existing, limitAmount: cleanLimit, period }
+      setCategoryBudgetsState(prev => prev.map(b => b.id === existing.id ? updated : b))
+
+      if (supabase && isSupabaseConfigured && user) {
+        await supabase.from('category_budgets').upsert({
+          id: existing.id,
+          user_id: user.id,
+          period,
+          category,
+          limit_amount: cleanLimit,
+        })
+      }
+    } else {
+      const newId = `bud-${Date.now()}-${category}`
+      const newBudget: CategoryBudget = { id: newId, category, limitAmount: cleanLimit, period }
+      setCategoryBudgetsState(prev => [...prev, newBudget])
+
+      if (supabase && isSupabaseConfigured && user) {
+        await supabase.from('category_budgets').insert({
+          id: newId,
+          user_id: user.id,
+          period,
+          category,
+          limit_amount: cleanLimit,
+        })
+      }
+    }
+  }
+
+  const setMultipleCategoryBudgets = async (budgetsMap: Record<ExpenseCategory, number>, period: string = 'default') => {
+    const newBudgets: CategoryBudget[] = []
+
+    for (const [cat, limit] of Object.entries(budgetsMap)) {
+      const category = cat as ExpenseCategory
+      const cleanLimit = Math.max(0, sanitizeAmount(limit))
+      const existing = categoryBudgets.find(b => b.category === category)
+      const id = existing ? existing.id : `bud-${Date.now()}-${category}`
+      newBudgets.push({ id, category, limitAmount: cleanLimit, period })
+    }
+
+    setCategoryBudgetsState(newBudgets)
+
+    if (supabase && isSupabaseConfigured && user) {
+      const rows = newBudgets.map(b => ({
+        id: b.id,
+        user_id: user.id,
+        period: b.period,
+        category: b.category,
+        limit_amount: b.limitAmount,
+      }))
+      await supabase.from('category_budgets').upsert(rows)
+    }
+  }
+
+  // --- Acciones de Metas de Ahorro ---
+  const addSavingsGoal = async (g: Omit<SavingsGoal, 'id'>) => {
+    const cleanName = sanitizeString(g.name)
+    const cleanTarget = sanitizeAmount(g.targetAmount)
+    const cleanCurrent = Math.max(0, sanitizeAmount(g.currentAmount || 0))
+    const cleanMonthly = g.monthlyContribution ? sanitizeAmount(g.monthlyContribution) : undefined
+    const newId = `goal-${Date.now()}`
+
+    const item: SavingsGoal = {
+      ...g,
+      id: newId,
+      name: cleanName,
+      targetAmount: cleanTarget,
+      currentAmount: cleanCurrent,
+      monthlyContribution: cleanMonthly,
+      isCompleted: cleanCurrent >= cleanTarget,
+    }
+
+    setSavingsGoalsState(prev => [...prev, item])
+
+    if (supabase && isSupabaseConfigured && user) {
+      await supabase.from('savings_goals').insert({
+        id: newId,
+        user_id: user.id,
+        name: cleanName,
+        target_amount: cleanTarget,
+        current_amount: cleanCurrent,
+        monthly_contribution: cleanMonthly ?? null,
+        target_date: g.targetDate ?? null,
+        category: g.category,
+        color: g.color || '#34D399',
+        is_completed: item.isCompleted,
+      })
+    }
+  }
+
+  const updateSavingsGoal = async (updated: SavingsGoal) => {
+    const cleanName = sanitizeString(updated.name)
+    const cleanTarget = sanitizeAmount(updated.targetAmount)
+    const cleanCurrent = Math.max(0, sanitizeAmount(updated.currentAmount || 0))
+    const cleanMonthly = updated.monthlyContribution ? sanitizeAmount(updated.monthlyContribution) : undefined
+    const isCompleted = cleanCurrent >= cleanTarget
+
+    const cleanItem: SavingsGoal = {
+      ...updated,
+      name: cleanName,
+      targetAmount: cleanTarget,
+      currentAmount: cleanCurrent,
+      monthlyContribution: cleanMonthly,
+      isCompleted,
+    }
+
+    setSavingsGoalsState(prev => prev.map(g => g.id === updated.id ? cleanItem : g))
+
+    if (supabase && isSupabaseConfigured && user) {
+      await supabase.from('savings_goals').update({
+        name: cleanName,
+        target_amount: cleanTarget,
+        current_amount: cleanCurrent,
+        monthly_contribution: cleanMonthly ?? null,
+        target_date: updated.targetDate ?? null,
+        category: updated.category,
+        color: updated.color || '#34D399',
+        is_completed: isCompleted,
+      }).eq('id', updated.id)
+    }
+  }
+
+  const depositToGoal = async (goalId: string, amount: number) => {
+    const target = savingsGoals.find(g => g.id === goalId)
+    if (!target) return
+    const cleanDeposit = sanitizeAmount(amount)
+    const newCurrent = target.currentAmount + cleanDeposit
+    await updateSavingsGoal({ ...target, currentAmount: newCurrent })
+  }
+
+  const deleteSavingsGoal = async (goalId: string) => {
+    setSavingsGoalsState(prev => prev.filter(g => g.id !== goalId))
+
+    if (supabase && isSupabaseConfigured && user) {
+      await supabase.from('savings_goals').delete().eq('id', goalId)
+    }
+  }
+
   return {
-    incomes, expenses, cash, creditCards, creditTransactions,
+    incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
     addIncome, updateIncome, deleteIncome,
     addExpense, updateExpense, deleteExpense,
     addWithdrawal, deleteWithdrawal,
     addCreditCard, updateCreditCard, deleteCreditCard,
     addCreditTransaction, updateCreditTransaction, deleteCreditTransaction, toggleTransactionPaid,
+    setCategoryBudget, setMultipleCategoryBudgets,
+    addSavingsGoal, updateSavingsGoal, depositToGoal, deleteSavingsGoal,
   }
 }
-

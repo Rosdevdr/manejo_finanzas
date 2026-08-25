@@ -35,6 +35,16 @@ export type CashReason =
 
 export type CardThemeColor = 'gold' | 'emerald' | 'blue' | 'purple' | 'silver' | 'rose';
 
+export type GoalCategory = 
+  | 'emergency'    // Fondo de Emergencia
+  | 'vacation'     // Vacaciones / Viajes
+  | 'car'          // Vehículo / Transporte
+  | 'home'         // Vivienda / Remodelación / Enganche
+  | 'investment'   // Fondo de Inversión / Negocio
+  | 'education'    // Educación / Cursos
+  | 'tech'         // Tecnología / Equipos
+  | 'other';       // Otro objetivo personal
+
 // ==========================================
 // 2. ENTIDADES PRINCIPALES
 // ==========================================
@@ -93,6 +103,27 @@ export interface CreditCardTransaction {
   isPaid: boolean;         // Si ya fue saldada
 }
 
+// Límite presupuestario por categoría
+export interface CategoryBudget {
+  id: string;
+  period: string;          // Formato "YYYY-MM" o "default" (base mensual recurrente)
+  category: ExpenseCategory;
+  limitAmount: number;     // Techo máximo mensual presupuestado
+}
+
+// Meta de Ahorro / Fondo Específico
+export interface SavingsGoal {
+  id: string;
+  name: string;            // Ej: "Fondo de Emergencia (3 meses)", "Vacaciones Japón"
+  targetAmount: number;    // Monto objetivo total
+  currentAmount: number;   // Monto acumulado actual
+  monthlyContribution?: number; // Cuánto planea aportar mensualmente
+  targetDate?: string;     // Fecha estimada "YYYY-MM-DD"
+  category: GoalCategory;
+  color?: string;          // Color temático o acento
+  isCompleted?: boolean;
+}
+
 // ==========================================
 // 3. MODELOS DE RESUMEN Y CÁLCULO
 // ==========================================
@@ -120,6 +151,28 @@ export interface CreditCardSummary {
   pendingPaymentsCount: number;    // Cantidad de compras pendientes
 }
 
+export interface CategoryBudgetStatus {
+  category: ExpenseCategory;
+  spent: number;
+  limit: number;
+  remaining: number;
+  percentUsed: number;
+  status: 'safe' | 'warning' | 'danger' | 'exceeded';
+}
+
+export interface Rule503020Breakdown {
+  income: number;
+  needsSpent: number;
+  needsTarget: number;
+  needsPercent: number;
+  wantsSpent: number;
+  wantsTarget: number;
+  wantsPercent: number;
+  savingsSpent: number;
+  savingsTarget: number;
+  savingsPercent: number;
+}
+
 // Estructura completa de un mes para la persistencia
 export interface MonthData {
   period: string;
@@ -127,5 +180,6 @@ export interface MonthData {
   expenses: Expense[];
   cashWithdrawals: CashWithdrawal[];
   creditTransactions?: CreditCardTransaction[];
+  categoryBudgets?: CategoryBudget[];
+  savingsGoals?: SavingsGoal[];
 }
-

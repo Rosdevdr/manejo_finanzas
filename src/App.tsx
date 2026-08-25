@@ -8,6 +8,7 @@ import { IncomesView }       from './components/incomes/IncomesView'
 import { ExpensesView }      from './components/expenses/ExpensesView'
 import { CreditCardsView }   from './components/credit/CreditCardsView'
 import { CashView }          from './components/cash/CashView'
+import { BudgetsAndGoalsView } from './components/budgets/BudgetsAndGoalsView'
 import { SmartAnalysisPanel } from './components/analysis/SmartAnalysisPanel'
 import { ToastContainer }    from './components/ui/ToastContainer'
 import { LoginView }         from './components/auth/LoginView'
@@ -49,12 +50,14 @@ export function App() {
   } = useAuth()
 
   const {
-    incomes, expenses, cash, creditCards, creditTransactions,
+    incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
     addIncome, updateIncome, deleteIncome,
     addExpense, updateExpense, deleteExpense,
     addWithdrawal, deleteWithdrawal,
     addCreditCard, updateCreditCard, deleteCreditCard,
     addCreditTransaction, updateCreditTransaction, deleteCreditTransaction, toggleTransactionPaid,
+    setCategoryBudget, setMultipleCategoryBudgets,
+    addSavingsGoal, updateSavingsGoal, depositToGoal, deleteSavingsGoal,
   } = useFinanceStorage(user)
 
   const periodIncomes  = incomes.filter(i => i.period === currentPeriod)
@@ -164,6 +167,22 @@ export function App() {
               availableBalance={available}
               onAddWithdrawal={d    => { addWithdrawal(d);    showToast('Retiro registrado correctamente', 'success') }}
               onDeleteWithdrawal={id => { deleteWithdrawal(id); showToast('Retiro eliminado',              'error')   }}
+            />
+          )}
+          {activeTab === 'budgets' && (
+            <BudgetsAndGoalsView
+              currentPeriod={currentPeriod}
+              incomes={incomes}
+              expenses={expenses}
+              categoryBudgets={categoryBudgets}
+              savingsGoals={savingsGoals}
+              onSetCategoryBudget={setCategoryBudget}
+              onSetMultipleBudgets={setMultipleCategoryBudgets}
+              onAddSavingsGoal={addSavingsGoal}
+              onUpdateSavingsGoal={updateSavingsGoal}
+              onDepositToGoal={depositToGoal}
+              onDeleteSavingsGoal={deleteSavingsGoal}
+              onShowToast={showToast}
             />
           )}
           {activeTab === 'advisor' && (

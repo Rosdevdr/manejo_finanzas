@@ -1,5 +1,17 @@
 import type { ReactNode } from 'react'
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, CreditCard, Banknote, BrainCircuit, LogOut, Cloud, HardDrive, ShieldCheck } from 'lucide-react'
+import {
+  LayoutDashboard,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  CreditCard,
+  Banknote,
+  Target,
+  BrainCircuit,
+  LogOut,
+  Cloud,
+  HardDrive,
+  ShieldCheck,
+} from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import type { TabType } from '../../types/navigation'
 
@@ -13,12 +25,13 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
-  { id: 'dashboard', icon: <LayoutDashboard size={15} />, label: 'Dashboard'   },
-  { id: 'incomes',   icon: <ArrowDownCircle size={15} />, label: 'Ingresos'    },
-  { id: 'expenses',  icon: <ArrowUpCircle   size={15} />, label: 'Gastos'      },
-  { id: 'credit',    icon: <CreditCard      size={15} />, label: 'Tarjetas'    },
-  { id: 'cash',      icon: <Banknote        size={15} />, label: 'Efectivo'    },
-  { id: 'advisor',   icon: <BrainCircuit    size={15} />, label: 'Asesor IA'   },
+  { id: 'dashboard', icon: <LayoutDashboard size={15} />, label: 'Dashboard'    },
+  { id: 'incomes',   icon: <ArrowDownCircle size={15} />, label: 'Ingresos'     },
+  { id: 'expenses',  icon: <ArrowUpCircle   size={15} />, label: 'Gastos'       },
+  { id: 'credit',    icon: <CreditCard      size={15} />, label: 'Tarjetas'     },
+  { id: 'cash',      icon: <Banknote        size={15} />, label: 'Efectivo'     },
+  { id: 'budgets',   icon: <Target          size={15} />, label: 'Presupuestos' },
+  { id: 'advisor',   icon: <BrainCircuit    size={15} />, label: 'Asesor IA'    },
 ]
 
 export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignOut, onOpenSecurity }: SidebarProps) {

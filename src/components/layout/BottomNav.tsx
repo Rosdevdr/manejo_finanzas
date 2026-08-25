@@ -1,4 +1,4 @@
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, CreditCard, Banknote, BrainCircuit } from 'lucide-react'
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, CreditCard, Banknote, Target, BrainCircuit } from 'lucide-react'
 import type { TabType } from '../../types/navigation'
 
 interface BottomNavProps {
@@ -7,12 +7,13 @@ interface BottomNavProps {
 }
 
 const NAV_ITEMS: { id: TabType; icon: React.ComponentType<{ size?: number }>; label: string }[] = [
-  { id: 'dashboard', icon: LayoutDashboard, label: 'Panel'     },
-  { id: 'incomes',   icon: ArrowDownCircle, label: 'Ingresos'  },
-  { id: 'expenses',  icon: ArrowUpCircle,   label: 'Gastos'    },
-  { id: 'credit',    icon: CreditCard,      label: 'Tarjetas'  },
-  { id: 'cash',      icon: Banknote,        label: 'Efectivo'  },
-  { id: 'advisor',   icon: BrainCircuit,    label: 'Asesor IA' },
+  { id: 'dashboard', icon: LayoutDashboard, label: 'Panel'        },
+  { id: 'incomes',   icon: ArrowDownCircle, label: 'Ingresos'     },
+  { id: 'expenses',  icon: ArrowUpCircle,   label: 'Gastos'       },
+  { id: 'credit',    icon: CreditCard,      label: 'Tarjetas'     },
+  { id: 'cash',      icon: Banknote,        label: 'Efectivo'     },
+  { id: 'budgets',   icon: Target,          label: 'Presupuestos' },
+  { id: 'advisor',   icon: BrainCircuit,    label: 'Asesor IA'    },
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
