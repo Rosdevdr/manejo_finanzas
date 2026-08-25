@@ -46,6 +46,23 @@ describe('aiAdvisorEngine', () => {
     expect(res).toContain('Regla Financiera 50 / 30 / 20')
   })
 
+  it('generates cash flow forecasting response', () => {
+    const res = generateAiFinancialResponse('Pronóstico de flujo de caja a 30 días', emptySnapshot)
+    expect(res).toContain('Cash Flow Forecasting')
+    expect(res).toContain('Proyección a 30 días')
+  })
+
+  it('generates saas metrics response (MRR, ARR, Churn)', () => {
+    const res = generateAiFinancialResponse('Métricas recurrentes MRR y suscripciones', emptySnapshot)
+    expect(res).toContain('MRR / ARR / Churn')
+    expect(res).toContain('MRR Equivalente')
+  })
+
+  it('generates contract negotiation response', () => {
+    const res = generateAiFinancialResponse('Estrategia de negociación de contratos', emptySnapshot)
+    expect(res).toContain('Negociación de Contratos')
+  })
+
   it('generates overall health assessment', () => {
     const res = generateAiFinancialResponse('Analiza mi salud financiera general', emptySnapshot)
     expect(res).toContain('Score de Salud Financiera')

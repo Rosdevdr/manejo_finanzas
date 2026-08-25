@@ -11,6 +11,7 @@ import { BudgetsAndGoalsView } from './components/budgets/BudgetsAndGoalsView'
 import { SmartAnalysisPanel } from './components/analysis/SmartAnalysisPanel'
 import { AiChatAssistantView } from './components/chat/AiChatAssistantView'
 import { FireCalculatorModal } from './components/budgets/FireCalculatorModal'
+import { ScenarioSimulatorModal } from './components/scenarios/ScenarioSimulatorModal'
 import { ToastContainer }    from './components/ui/ToastContainer'
 import { LoginView }         from './components/auth/LoginView'
 import { SecurityModal }     from './components/security/SecurityModal'
@@ -36,6 +37,7 @@ export function App() {
   const [isSecurityOpen, setIsSecurityOpen]     = useState(false)
   const [showExportModal, setShowExportModal]   = useState(false)
   const [showFireModal, setShowFireModal]       = useState(false)
+  const [showScenarioModal, setShowScenarioModal] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const { toasts, show: showToast, dismiss } = useToast()
@@ -124,11 +126,14 @@ export function App() {
           balancePositive={available >= 0}
           isDemoMode={isDemoMode}
           userEmail={user?.email}
+          creditCards={creditCards}
+          creditTransactions={creditTransactions}
           onSignOut={signOut}
           onOpenSecurity={() => setIsSecurityOpen(true)}
           onOpenLicense={() => setShowLicenseModal(true)}
           onOpenExport={() => setShowExportModal(true)}
           onOpenFireCalculator={() => setShowFireModal(true)}
+          onOpenScenarioSimulator={() => setShowScenarioModal(true)}
           isInstallable={isInstallable}
           onInstallApp={installApp}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
@@ -249,6 +254,14 @@ export function App() {
         onClose={() => setShowFireModal(false)}
         currentMonthlyExpense={totalExpense}
         currentSavings={available}
+      />
+
+      <ScenarioSimulatorModal
+        isOpen={showScenarioModal}
+        onClose={() => setShowScenarioModal(false)}
+        currentPeriod={currentPeriod}
+        incomes={incomes}
+        expenses={expenses}
       />
 
       <SecurityModal

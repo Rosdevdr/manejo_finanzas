@@ -138,7 +138,63 @@ ${exceededBudgets.length > 0
   : '✅ Todas tus categorías de presupuesto se encuentran dentro de sus límites establecidos.'}`
   }
 
-  // 5. Análisis General de Salud Financiera
+  // 5. Previsión y Pronóstico de Flujo de Caja (Cash Flow Forecasting)
+  if (lowerPrompt.includes('flujo de caja') || lowerPrompt.includes('pronostico') || lowerPrompt.includes('forecasting') || lowerPrompt.includes('proyeccion') || lowerPrompt.includes('liquidez')) {
+    const monthlyNetRate = netBalance
+    const proj30Days = Math.max(0, monthlyNetRate)
+    const proj60Days = Math.max(0, monthlyNetRate * 2)
+    const proj90Days = Math.max(0, monthlyNetRate * 3)
+
+    return `### 📈 Previsión y Pronóstico de Flujo de Caja (Cash Flow Forecasting)
+
+Evaluando la velocidad de entrada y salida de fondos para los próximos 90 días:
+
+• **Tasa Neta Mensual Actual:** **\`${formatCurrency(monthlyNetRate)}\`**
+• **Proyección a 30 días:** \`${formatCurrency(proj30Days)}\` de súperavit acumulado estimado.
+• **Proyección a 60 días:** \`${formatCurrency(proj60Days)}\`
+• **Proyección a 90 días:** \`${formatCurrency(proj90Days)}\`
+
+**🧠 Análisis de Competencia Técnica en Liquidez:**
+1. **Runway Estimado:** Con tu ritmo de gasto actual de \`${formatCurrency(totalExpense)}\`/mes, mantienes una reserva operativa sólida.
+2. **Control de Varianza:** Para mantener la previsión exacta, monitorea los cobros o ingresos variables a mitad de período.`
+  }
+
+  // 6. Métricas SaaS / Recurrentes (MRR, ARR, Churn, LTV, CAC)
+  if (lowerPrompt.includes('mrr') || lowerPrompt.includes('arr') || lowerPrompt.includes('churn') || lowerPrompt.includes('suscripcion') || lowerPrompt.includes('ltv') || lowerPrompt.includes('cac') || lowerPrompt.includes('recurrente')) {
+    const recurringIncome  = pIncomes.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0)
+    const arrEstimate      = recurringIncome * 12
+    const fixedSubExpenses = pExpenses.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
+    const subRatio         = totalIncome > 0 ? Math.round((fixedSubExpenses / totalIncome) * 100) : 0
+
+    return `### 🚀 Métricas Financieras Recurrentes & SaaS (MRR / ARR / Churn)
+
+Aplicando métricas avanzadas de economía recurrente a tu modelo financiero:
+
+• **Ingreso Mensual Recurrente (MRR Equivalente):** **\`${formatCurrency(recurringIncome)}\`**
+• **Ingreso Anualizado Proyectado (ARR Equivalente):** \`${formatCurrency(arrEstimate)}\`
+• **Ratio de Gastos Fijos/Suscripciones:** \`${subRatio}%\` de tus ingresos.
+• **Gasto Fijo Recurrente:** \`${formatCurrency(fixedSubExpenses)}\`
+
+**🎯 Principios de Gestión de Retención & Costos:**
+1. **Auditoría de Churn de Suscripciones:** Identifica servicios o licencias en la nube no utilizadas y realiza una cancelación inmediata para reducir el consumo fantasma.
+2. **Reconocimiento de Ingresos:** Si recibes cobros o bonos anticipados, divídelos en el cálculo mensual para no inflar tu presupuesto mensual.`
+  }
+
+  // 7. Negociación de Contratos y Optimización de Costos
+  if (lowerPrompt.includes('negociar') || lowerPrompt.includes('contrato') || lowerPrompt.includes('proveedor') || lowerPrompt.includes('costos') || lowerPrompt.includes('optimizacion')) {
+    return `### 🤝 Estrategia de Negociación de Contratos & Optimización de Costos
+
+Basado en habilidades estratégicas de compras y negociación de servicios:
+
+• **Potencial de Optimización en Gastos Variables:** \`${formatCurrency(totalExpense * 0.15)}\` (15% estimado de reducción posible).
+
+**📋 Pasos Tácticos para Negociar Mejor:**
+1. **Benchmark de Mercado:** Solicita al menos 2 cotizaciones alternativas antes de renovar contratos anuales o servicios fijos.
+2. **Descuento por Pago Anual vs. Mensual:** Negocia un descuento del 10% al 20% si pagas licencias o seguros de forma anual anticipada.
+3. **Revisión de Términos:** Elimina cláusulas de renovación automática en servicios que no sean críticos.`
+  }
+
+  // 8. Análisis General de Salud Financiera
   if (lowerPrompt.includes('salud') || lowerPrompt.includes('general') || lowerPrompt.includes('analisis') || lowerPrompt.includes('resumen')) {
     const healthScore = totalIncome > 0
       ? Math.max(0, Math.min(100, Math.round(((netBalance / totalIncome) * 50) + ((1 - Math.min(1, totalCreditDebt / (totalIncome * 2))) * 50))))
@@ -158,7 +214,7 @@ ${exceededBudgets.length > 0
 3. Revisa tus tarjetas de crédito y asegúrate de pagar la totalidad de la fecha de corte.`
   }
 
-  // 6. Respuesta General Inteligente Adaptada a las Preguntas del Usuario
+  // 9. Respuesta General Inteligente Adaptada a las Preguntas del Usuario
   return `Entiendo tu consulta sobre **"${prompt}"**. 
 
 Analizando tu situación financiera para **${currentPeriod}**:
@@ -169,6 +225,7 @@ Analizando tu situación financiera para **${currentPeriod}**:
 Si deseas una recomendación específica, me puedes preguntar sobre:
 1. *"¿Cuánto puedo gastar este mes?"*
 2. *"¿Cuánto debería ahorrar?"*
-3. *"¿Cómo puedo saldar mis deudas?"*
-4. *"Analiza mi salud financiera general"*`
+3. *"Pronóstico de flujo de caja a 30 días"*
+4. *"Análisis de suscripciones y métricas MRR"*
+5. *"Estrategia para negociar contratos y costos"*`
 }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, Trash2, Copy, Volume2, Sparkles, ShieldCheck } from 'lucide-react'
+import { Bot, Send, Trash2, Copy, Volume2, Sparkles, ShieldCheck, Lightbulb, UserCheck } from 'lucide-react'
 import type {
   Income,
   Expense,
@@ -10,6 +10,7 @@ import type {
   SavingsGoal,
 } from '../../types/finance'
 import { generateAiFinancialResponse, type ChatMessage } from '../../utils/aiAdvisorEngine'
+import { getRandomDailyTip } from '../../utils/financialTips'
 import { formatCurrency } from '../../utils/formatters'
 import './AiChatAssistantView.css'
 
@@ -32,9 +33,10 @@ interface AiChatAssistantViewProps {
 const QUICK_PROMPTS = [
   '¿Cuánto dinero puedo gastar este mes?',
   '¿Cuánto debería ahorrar?',
-  '¿Cómo puedo liquidar mis deudas?',
+  'Pronóstico de flujo de caja a 30 días',
+  'Métricas recurrentes MRR / ARR y suscripciones',
+  'Estrategia de negociación de contratos',
   'Analiza mi salud financiera general',
-  'Diagnóstico de la regla 50/30/20',
 ]
 
 export function AiChatAssistantView({
@@ -48,27 +50,36 @@ export function AiChatAssistantView({
   savingsGoals,
   userEmail,
 }: AiChatAssistantViewProps) {
-  const pIncomes  = incomes.filter(i => i.period === currentPeriod)
-  const pExpenses = expenses.filter(e => e.period === currentPeriod)
-  const totalInc  = pIncomes.reduce((s, i) => s + i.amount, 0)
-  const totalExp  = pExpenses.reduce((s, e) => s + e.amount, 0)
-  const netBalance = totalInc - totalExp
+  const userName = userEmail ? userEmail.split('@')[0] : 'Jesús'
+  const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
 
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    return [
-      {
-        id: 'msg-welcome',
-        sender: 'assistant',
-        text: `¡Hola ${userEmail ? userEmail.split('@')[0] : 'de nuevo'}! 👋 Soy tu **Asistente Virtual Financiero impulsado por IA** en AUREUS.\n\nHe analizado tus datos del período **${currentPeriod}**:\n• **Ingresos Totales:** \`${formatCurrency(totalInc)}\`\n• **Gastos Registrados:** \`${formatCurrency(totalExp)}\`\n• **Margen Neto Libre:** \`${formatCurrency(netBalance)}\`\n\n¿En qué te puedo ayudar a tomar la mejor decisión financiera hoy? Selecciona una sugerencia abajo o escribe tu pregunta.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ]
-  })
+  const dailyTip = getRandomDailyTip(currentPeriod)
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
+    {
+      id: 'msg-welcome-init',
+      sender: 'assistant',
+      text: `¡Bienvenido de nuevo, **${capitalizedName}**! 👋
+
+Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la información de tus **ingresos, gastos, tarjetas y presupuestos** para el período **${currentPeriod}**.
+
+💡 **Consejo Financiero del Día (${dailyTip.category.toUpperCase()}):**
+*${dailyTip.title}* — ${dailyTip.content}
+
+¿En qué puedo ayudarte a tomar decisiones financieras hoy?`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    },
+  ])
 
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping]   = useState(false)
   const [copiedId, setCopiedId]   = useState<string | null>(null)
-  const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const messagesEndRef            = useRef<HTMLDivElement>(null)
+
+  const pIncomes  = incomes.filter(i => i.period === currentPeriod)
+  const pExpenses = expenses.filter(e => e.period === currentPeriod)
+  const totalInc  = pIncomes.reduce((s, i) => s + i.amount, 0)
+  const totalExp  = pExpenses.reduce((s, e) => s + e.amount, 0)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -138,9 +149,9 @@ export function AiChatAssistantView({
   const handleClearChat = () => {
     setMessages([
       {
-        id: `msg-welcome-${Date.now()}`,
+        id: createId('msg-welcome'),
         sender: 'assistant',
-        text: `Conversación reiniciada. ¿Qué otra duda tienes sobre tus finanzas en **${currentPeriod}**?`,
+        text: `Conversación reiniciada para **${capitalizedName}**. ¿Qué otra duda tienes sobre tus finanzas en **${currentPeriod}**?`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ])
@@ -161,6 +172,39 @@ export function AiChatAssistantView({
             <span>Sistema interactivo de Inteligencia Artificial en tiempo real</span>
           </div>
           <div className="ai-act-tag">Transparencia: Art. 50 Reglamento UE (AI Act)</div>
+        </div>
+
+        {/* Personalized Welcome Card with Variable Daily Tip */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.12) 0%, rgba(18, 18, 26, 0.8) 100%)',
+          border: '1px solid rgba(201, 168, 76, 0.25)',
+          borderRadius: 14,
+          padding: '12px 18px',
+          margin: '12px 16px 0 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <UserCheck size={20} style={{ color: '#F3CA65' }} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#F3CA65' }}>
+                ¡Bienvenido de nuevo, {capitalizedName}! 👋
+              </div>
+              <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>
+                Sesión activa para {userEmail || 'Usuario AUREUS'} · Datos sincronizados
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255, 255, 255, 0.05)', padding: '6px 12px', borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <Lightbulb size={15} style={{ color: '#F59E0B', flexShrink: 0 }} />
+            <div style={{ fontSize: 11, color: '#E5E7EB', maxWidth: 380 }}>
+              <strong style={{ color: '#F3CA65' }}>Tip del Día:</strong> {dailyTip.title}
+            </div>
+          </div>
         </div>
 
         {/* Header */}
@@ -194,7 +238,7 @@ export function AiChatAssistantView({
                 </div>
               ) : (
                 <div className="user-avatar-icon">
-                  {userEmail ? userEmail.slice(0, 2).toUpperCase() : 'YO'}
+                  {capitalizedName.slice(0, 2).toUpperCase()}
                 </div>
               )}
 

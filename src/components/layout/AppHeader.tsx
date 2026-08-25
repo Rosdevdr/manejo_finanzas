@@ -13,6 +13,10 @@ import {
 } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 
+import { Sliders } from 'lucide-react'
+import { CardAlertsPopover } from '../alerts/CardAlertsPopover'
+import type { CreditCard, CreditCardTransaction } from '../../types/finance'
+
 interface AppHeaderProps {
   periodLabel: string
   onPrev: () => void
@@ -23,11 +27,14 @@ interface AppHeaderProps {
   balancePositive: boolean
   isDemoMode?: boolean
   userEmail?: string | null
+  creditCards?: CreditCard[]
+  creditTransactions?: CreditCardTransaction[]
   onSignOut?: () => void
   onOpenSecurity?: () => void
   onOpenLicense?: () => void
   onOpenExport?: () => void
   onOpenFireCalculator?: () => void
+  onOpenScenarioSimulator?: () => void
   isInstallable?: boolean
   onInstallApp?: () => void
   onOpenMenu?: () => void
@@ -43,11 +50,14 @@ export function AppHeader({
   balancePositive,
   isDemoMode,
   userEmail,
+  creditCards = [],
+  creditTransactions = [],
   onSignOut,
   onOpenSecurity,
   onOpenLicense,
   onOpenExport,
   onOpenFireCalculator,
+  onOpenScenarioSimulator,
   isInstallable,
   onInstallApp,
   onOpenMenu,
@@ -206,6 +216,37 @@ export function AppHeader({
           <span>Calculadora FIRE</span>
         </button>
       )}
+
+      {/* What-If Scenario Simulator Button */}
+      {onOpenScenarioSimulator && (
+        <button
+          type="button"
+          onClick={onOpenScenarioSimulator}
+          className="header-export-btn"
+          title="Simulador de Escenarios What-If"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 11.5,
+            fontWeight: 700,
+            fontFamily: 'Space Grotesk',
+            color: '#F3CA65',
+            background: 'rgba(243, 202, 101, 0.1)',
+            border: '1px solid rgba(243, 202, 101, 0.3)',
+            padding: '5px 12px',
+            borderRadius: 10,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Sliders size={13} />
+          <span>Simulador What-If</span>
+        </button>
+      )}
+
+      {/* Card Alerts Bell Popover */}
+      <CardAlertsPopover creditCards={creditCards} creditTransactions={creditTransactions} />
 
       {/* GitHub shortcut (Desktop) */}
       <a
