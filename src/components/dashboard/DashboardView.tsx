@@ -9,6 +9,8 @@ import {
   Calendar,
   AlertCircle,
   Sparkles,
+  Lightbulb,
+  UserCheck,
 } from 'lucide-react'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -19,6 +21,7 @@ import type { TabType } from '../../types/navigation'
 import { formatCurrency } from '../../utils/formatters'
 import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES } from '../../utils/calendar'
 import { getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
+import { getRandomDailyTip } from '../../utils/financialTips'
 
 interface DashboardViewProps {
   currentPeriod: string
@@ -26,6 +29,7 @@ interface DashboardViewProps {
   expenses: Expense[]
   creditCards?: CreditCard[]
   creditTransactions?: CreditCardTransaction[]
+  userEmail?: string | null
   onNavigateTab?: (t: TabType) => void
 }
 
@@ -47,8 +51,13 @@ export function DashboardView({
   expenses,
   creditCards = [],
   creditTransactions = [],
+  userEmail,
   onNavigateTab,
 }: DashboardViewProps) {
+  const userName = userEmail ? userEmail.split('@')[0] : 'Jesús'
+  const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
+  const dailyTip = getRandomDailyTip(currentPeriod)
+
   // Datos del período actual
   const pInc  = incomes.filter(i  => i.period === currentPeriod)
   const pExp  = expenses.filter(e => e.period === currentPeriod)
@@ -59,32 +68,28 @@ export function DashboardView({
   const fixedExp   = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
   const varExp     = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
 
-  // Datos del período anterior (Cálculo matemático con calendario)
-  const prevPeriod = getPreviousPeriod(currentPeriod)
-  const prevInc = incomes.filter(i => i.period === prevPeriod)
-  const prevExp = expenses.filter(e => e.period === prevPeriod)
-  const prevTotalIn = prevInc.reduce((s, i) => s + i.amount, 0)
+  // Comparativa contra período anterior
+  const prevPeriod  = getPreviousPeriod(currentPeriod)
+  const prevInc     = incomes.filter(i => i.period === prevPeriod)
+  const prevExp     = expenses.filter(e => e.period === prevPeriod)
+  const prevTotalIn  = prevInc.reduce((s, i) => s + i.amount, 0)
   const prevTotalExp = prevExp.reduce((s, e) => s + e.amount, 0)
-  const prevBalance = prevTotalIn - prevTotalExp
+  const prevBalance  = prevTotalIn - prevTotalExp
   const prevSavingRate = prevTotalIn > 0 ? ((prevBalance / prevTotalIn) * 100) : 0
 
-  // Comparativas estadísticas Mes vs Mes Anterior
-  const incDiff = totalIn - prevTotalIn
-  const incPct = prevTotalIn > 0 ? (incDiff / prevTotalIn) * 100 : (totalIn > 0 ? 100 : 0)
-  const incTrend = prevTotalIn > 0 || totalIn > 0
-    ? `${incPct >= 0 ? '+' : ''}${incPct.toFixed(1)}% vs mes ant.`
+  const incDiff  = totalIn - prevTotalIn
+  const incTrend = prevTotalIn > 0
+    ? `${incDiff >= 0 ? '+' : ''}${((incDiff / prevTotalIn) * 100).toFixed(1)}% vs mes ant.`
     : undefined
-  const incTrendDir = incPct >= 0 ? 'up' : 'down'
+  const incTrendDir = incDiff >= 0 ? 'up' : 'down'
 
-  const expDiff = totalExp - prevTotalExp
-  const expPct = prevTotalExp > 0 ? (expDiff / prevTotalExp) * 100 : (totalExp > 0 ? 100 : 0)
-  const expTrend = prevTotalExp > 0 || totalExp > 0
-    ? `${expPct >= 0 ? '+' : ''}${expPct.toFixed(1)}% vs mes ant.`
+  const expDiff  = totalExp - prevTotalExp
+  const expTrend = prevTotalExp > 0
+    ? `${expDiff >= 0 ? '+' : ''}${((expDiff / prevTotalExp) * 100).toFixed(1)}% vs mes ant.`
     : undefined
-  // En gastos: si baja es favorable (trend-up verde), si sube es desfavorable (trend-down rojo)
-  const expTrendDir = expPct <= 0 ? 'up' : 'down'
+  const expTrendDir = expDiff <= 0 ? 'up' : 'down' // menor gasto es mejor ('up')
 
-  const balDiff = balance - prevBalance
+  const balDiff  = balance - prevBalance
   const balTrend = prevTotalIn > 0 || totalIn > 0
     ? `${balDiff >= 0 ? '+' : ''}${formatCurrency(balDiff)} vs mes ant.`
     : undefined
@@ -181,11 +186,11 @@ export function DashboardView({
     {
       label: 'Deuda Tarjetas',
       value: formatCurrency(creditSummary.totalDebt),
-      sub: `${creditSummary.utilizationRate.toFixed(1)}% de cupo utilizado`,
-      color: creditSummary.utilizationRate > 50 ? 'red' : creditSummary.utilizationRate > 30 ? 'amber' : 'gold',
+      sub: `${creditSummary.utilizationRate}% de cupo utilizado`,
+      color: creditSummary.utilizationRate > 30 ? 'red' : 'gold',
       icon: <CardIcon size={14} />,
-      trend: creditSummary.cardsCount > 0 ? `${creditSummary.cardsCount} tarjeta${creditSummary.cardsCount > 1 ? 's' : ''}` : undefined,
-      trendDir: creditSummary.utilizationRate <= 30 ? 'up' : 'down',
+      trend: undefined,
+      trendDir: 'up',
     },
     {
       label: 'Gastos Fijos',
@@ -207,13 +212,54 @@ export function DashboardView({
     },
   ]
 
-
   return (
     <div className="fade-in">
       {/* Page Header */}
       <div className="page-header">
         <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Dashboard</span></div>
         <h1 className="page-title">Panorama Financiero</h1>
+      </div>
+
+      {/* Personalized Welcome Card with Variable Daily Financial Tip */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.14) 0%, rgba(18, 18, 26, 0.85) 100%)',
+        border: '1px solid rgba(201, 168, 76, 0.3)',
+        borderRadius: 14,
+        padding: '14px 18px',
+        marginBottom: 18,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 12,
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <UserCheck size={22} style={{ color: '#F3CA65' }} />
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#F3CA65' }}>
+              ¡Bienvenido de nuevo, {capitalizedName}! 👋
+            </div>
+            <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>
+              Resumen operativo para el período {currentPeriod} · Datos en vivo
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: 'rgba(255, 255, 255, 0.05)',
+          padding: '8px 14px',
+          borderRadius: 10,
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+        }}>
+          <Lightbulb size={16} style={{ color: '#F59E0B', flexShrink: 0 }} />
+          <div style={{ fontSize: 11.5, color: '#E5E7EB', maxWidth: 450 }}>
+            <strong style={{ color: '#F3CA65' }}>Consejo Financiero del Día ({dailyTip.category.toUpperCase()}):</strong> {dailyTip.title} — {dailyTip.content}
+          </div>
+        </div>
       </div>
 
       {/* Calendar Progress & End of Month Alert Banner */}
@@ -233,27 +279,19 @@ export function DashboardView({
           gap: 12,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: monthProgress.isMonthEndingSoon ? 'rgba(239,68,68,0.15)' : 'rgba(201,168,76,0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: monthProgress.isMonthEndingSoon ? '#F87171' : '#C9A84C',
-            }}>
-              {monthProgress.isMonthEndingSoon ? <AlertCircle size={16} /> : <Calendar size={16} />}
-            </div>
+            {monthProgress.isMonthEndingSoon ? (
+              <AlertCircle size={18} style={{ color: '#EF4444' }} />
+            ) : (
+              <Calendar size={18} style={{ color: '#F3CA65' }} />
+            )}
             <div>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#FFFFFF' }}>
-                {monthProgress.isMonthEndingSoon
-                  ? `⚡ ¡Cierre de Mes en Curso! Quedan solo ${monthProgress.daysRemaining} día${monthProgress.daysRemaining !== 1 ? 's' : ''} para finalizar el ciclo.`
-                  : `📅 Calendario Real: Día ${monthProgress.currentDay} de ${monthProgress.totalDays} (${monthProgress.percentPassed}% transcurrido).`}
+              <div style={{ fontSize: 13, fontWeight: 700, color: monthProgress.isMonthEndingSoon ? '#EF4444' : '#F3CA65' }}>
+                📅 Calendario Real: Día {monthProgress.currentDay} de {monthProgress.totalDays} ({monthProgress.percentPassed}% transcurrido).
               </div>
-              <div style={{ fontSize: 11.5, color: '#888898', marginTop: 2 }}>
-                Quedan {monthProgress.daysRemaining} días calendario para cerrar este mes.
-                {creditCards.length > 0 && ` Recuerda revisar tus fechas de corte y límites de pago.`}
+              <div style={{ fontSize: 11.5, color: '#9CA3AF', marginTop: 2 }}>
+                {monthProgress.isMonthEndingSoon
+                  ? ` Quedan solo ${monthProgress.daysRemaining} días para cerrar el mes. ¡Revisa tus gastos variables pendientes!`
+                  : ` Quedan ${monthProgress.daysRemaining} días calendario para cerrar este mes.`}
               </div>
             </div>
           </div>
@@ -261,157 +299,155 @@ export function DashboardView({
           {onNavigateTab && (
             <button
               type="button"
-              onClick={() => onNavigateTab('advisor')}
-              className="btn-primary"
-              style={{ padding: '6px 14px', fontSize: 11.5 }}
+              className="btn btn-secondary"
+              onClick={() => onNavigateTab('chat-advisor')}
+              style={{ padding: '6px 14px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}
             >
-              <Sparkles size={13} />
-              <span>Ver Asesor IA</span>
+              <Sparkles size={14} style={{ color: '#F3CA65' }} />
+              Ver Asesor IA
             </button>
           )}
         </div>
       )}
 
-      {/* KPI Grid */}
+      {/* KPI Cards Grid */}
       <div className="kpi-grid">
-        {kpis.map(k => (
-          <div key={k.label} className={`kpi-card ${k.color}`}>
-            <div className="kpi-top">
+        {kpis.map((k, idx) => (
+          <div key={idx} className={`kpi-card ${k.color}`}>
+            <div className="kpi-header">
               <span className="kpi-label">{k.label}</span>
-              <span className="kpi-icon">{k.icon}</span>
+              <span className="kpi-icon-badge">{k.icon}</span>
             </div>
+
             <div className="kpi-value">{k.value}</div>
-            <div className="kpi-sub">{k.sub}</div>
-            {k.trend && (
-              <div className={`kpi-trend ${k.trendDir === 'up' ? 'trend-up' : 'trend-down'}`}>
-                {k.trendDir === 'up' ? '↑' : '↓'} {k.trend}
-              </div>
-            )}
+
+            <div className="kpi-footer">
+              <span className="kpi-sub">{k.sub}</span>
+              {k.trend && (
+                <span className={`kpi-trend ${k.trendDir}`}>
+                  {k.trendDir === 'up' ? '↑' : '↓'} {k.trend}
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="charts-grid">
-        <div className="chart-card">
-          <div className="chart-title">Ingresos vs Gastos Históricos</div>
-          <div className="chart-sub">Datos reales de los últimos 5 meses</div>
-          <ResponsiveContainer width="100%" height={165}>
-            <BarChart data={barData} barSize={14} barGap={5}>
-              <defs>
-                <linearGradient id="incBarGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#34D399" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#059669" stopOpacity={0.8} />
-                </linearGradient>
-                <linearGradient id="expBarGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#FB7185" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#E11D48" stopOpacity={0.8} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="label" tick={{ fill: '#717182', fontSize: 10, fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
-              <YAxis hide />
-              <Tooltip
-                contentStyle={{
-                  background: 'rgba(19, 19, 26, 0.95)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: 10,
-                  fontSize: 12,
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                  fontFamily: 'Space Mono',
-                }}
-                labelStyle={{ color: '#888898', fontFamily: 'Space Grotesk', fontWeight: 600 }}
-                formatter={(v: unknown) => [formatCurrency(v as number), '']}
-              />
-              <Bar dataKey="ingresos" fill="url(#incBarGrad)" radius={[4, 4, 0, 0]} name="Ingresos" />
-              <Bar dataKey="gastos"   fill="url(#expBarGrad)" radius={[4, 4, 0, 0]} name="Gastos" />
-            </BarChart>
-          </ResponsiveContainer>
+      {/* Charts Section */}
+      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginBottom: 20 }}>
+        {/* Bar Chart — Historico 5 Meses */}
+        <div className="chart-card" style={{ background: '#12121A', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 14, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F5' }}>Históricos (Ingresos vs Gastos)</div>
+              <div style={{ fontSize: 11, color: '#9CA3AF' }}>Últimos 5 meses acumulados en base de datos</div>
+            </div>
+          </div>
+          <div style={{ width: '100%', height: 200 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <XAxis dataKey="label" stroke="#666" fontSize={11} tickLine={false} />
+                <YAxis stroke="#666" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                <Tooltip
+                  contentStyle={{ background: '#1A1A24', border: '1px solid #333', borderRadius: 8, fontSize: 12 }}
+                  formatter={(value) => [formatCurrency(Number(value) || 0), '']}
+                />
+                <Bar dataKey="ingresos" fill="#34D399" radius={[4, 4, 0, 0]} name="Ingresos" />
+                <Bar dataKey="gastos"   fill="#F87171" radius={[4, 4, 0, 0]} name="Gastos" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        <div className="chart-card">
-          <div className="chart-title">Distribución de Gastos</div>
-          <div className="chart-sub">Por categoría en este período</div>
-          {pieData.length > 0 ? (
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-              <ResponsiveContainer width={120} height={120}>
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={32} outerRadius={56} dataKey="value" strokeWidth={0}>
-                    {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: 'rgba(19, 19, 26, 0.95)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: 10,
-                      fontSize: 12,
-                      backdropFilter: 'blur(12px)',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                      fontFamily: 'Space Mono',
-                    }}
-                    formatter={(v: unknown) => [formatCurrency(v as number), '']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 125, overflowY: 'auto' }}>
-                {pieData.slice(0, 5).map(d => (
-                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
-                      <span style={{ color: '#888898', fontFamily: 'Space Grotesk' }}>{d.name}</span>
-                    </div>
-                    <span style={{ color: '#E0E0E8', fontFamily: 'Space Mono', fontWeight: 700, fontSize: 11 }}>
-                      {formatCurrency(d.value)}
-                    </span>
+        {/* Pie Chart — Distribucion de Gastos */}
+        <div className="chart-card" style={{ background: '#12121A', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 14, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F5' }}>Distribución de Gastos</div>
+              <div style={{ fontSize: 11, color: '#9CA3AF' }}>Por categoría en este período</div>
+            </div>
+          </div>
+          {pieData.length === 0 ? (
+            <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: 12 }}>
+              Sin gastos registrados en {currentPeriod}
+            </div>
+          ) : (
+            <div style={{ width: '100%', height: 200, display: 'flex', alignItems: 'center' }}>
+              <div style={{ width: '50%', height: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData} dataKey="value" innerRadius={45} outerRadius={70} paddingAngle={3}>
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ background: '#1A1A24', border: '1px solid #333', borderRadius: 8, fontSize: 12 }}
+                      formatter={(value) => [formatCurrency(Number(value) || 0), '']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ width: '50%', paddingLeft: 10, display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+                {pieData.map((d, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
+                    <span style={{ color: '#BBB', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</span>
+                    <span style={{ color: '#FFF', fontWeight: 600 }}>{formatCurrency(d.value)}</span>
                   </div>
                 ))}
               </div>
             </div>
-          ) : (
-            <div className="empty-state"><p className="empty-text">Sin datos de gastos para graficar</p></div>
           )}
         </div>
       </div>
 
-      {/* Recent Transactions */}
-      <div className="section-header">
-        <div className="section-label">ACTIVIDAD RECIENTE</div>
-        <div className="section-title">Últimos movimientos del período</div>
-      </div>
-      <div className="tx-list">
-        <div className="tx-header">
-          <span className="tx-title">Transacciones</span>
-          <span className="tx-count">{recentTx.length} movimientos</span>
+      {/* Movimientos Recientes */}
+      <div className="recent-card" style={{ background: '#12121A', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 14, padding: 18 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F5' }}>Últimos Movimientos ({currentPeriod})</div>
+          {onNavigateTab && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => onNavigateTab('expenses')}
+              style={{ fontSize: 11, padding: '4px 10px' }}
+            >
+              Ver todos
+            </button>
+          )}
         </div>
+
         {recentTx.length === 0 ? (
-          <div className="empty-state"><p className="empty-text">Sin movimientos para este período</p></div>
-        ) : recentTx.map(tx => (
-          <div key={tx.id} className="tx-row">
-            <div className="tx-icon"
-              style={{ background: tx.kind === 'income' ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)' }}>
-              {tx.kind === 'income' ? '↓' : '↑'}
-            </div>
-            <div className="tx-body">
-              <div className="tx-name">{tx.description}</div>
-              <div className="tx-meta">
-                <span className={`tx-badge ${tx.kind === 'income' ? 'badge-ingreso' : 'badge-variable'}`}>
-                  {tx.kind === 'income' ? 'Ingreso' : 'Gasto'}
-                </span>
-                <span className="tx-date">{tx.date}</span>
-              </div>
-            </div>
-            <div className="tx-right">
-              <div className={`tx-amount ${tx.kind === 'income' ? 'amount-green' : 'amount-red'}`}>
-                {tx.kind === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-              </div>
-            </div>
+          <div style={{ textAlign: 'center', padding: '20px 0', color: '#666', fontSize: 12 }}>
+            No hay movimientos registrados en {currentPeriod}
           </div>
-        ))}
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {recentTx.map((tx, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: tx.kind === 'income' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(248, 113, 113, 0.15)',
+                    color: tx.kind === 'income' ? '#34D399' : '#F87171',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}>
+                    {tx.kind === 'income' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: '#FFF' }}>{tx.description}</div>
+                    <div style={{ fontSize: 10.5, color: '#888' }}>{tx.date}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: tx.kind === 'income' ? '#34D399' : '#F87171', fontFamily: 'Space Mono' }}>
+                  {tx.kind === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 }
-
-
-
-
