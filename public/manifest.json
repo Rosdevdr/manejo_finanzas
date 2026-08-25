@@ -1,0 +1,32 @@
+{
+  "name": "AUREUS · Wealth Advisor",
+  "short_name": "AUREUS",
+  "description": "Plataforma SaaS de control presupuestario, salud crediticia y asesoría financiera en tiempo real.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0D0D12",
+  "theme_color": "#0D0D12",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/",
+      "description": "Ver resumen y balances financieros"
+    },
+    {
+      "name": "Presupuestos",
+      "url": "/?tab=budgets",
+      "description": "Ver límites y metas de ahorro"
+    }
+  ]
+}

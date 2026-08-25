@@ -1,5 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Cloud, HardDrive, LogOut, ShieldCheck } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Cloud,
+  HardDrive,
+  LogOut,
+  ShieldCheck,
+  FileText,
+  Smartphone,
+} from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 
 interface AppHeaderProps {
@@ -15,6 +24,9 @@ interface AppHeaderProps {
   onSignOut?: () => void
   onOpenSecurity?: () => void
   onOpenLicense?: () => void
+  onOpenExport?: () => void
+  isInstallable?: boolean
+  onInstallApp?: () => void
 }
 
 export function AppHeader({
@@ -30,6 +42,9 @@ export function AppHeader({
   onSignOut,
   onOpenSecurity,
   onOpenLicense,
+  onOpenExport,
+  isInstallable,
+  onInstallApp,
 }: AppHeaderProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
@@ -86,6 +101,62 @@ export function AppHeader({
         {isDemoMode ? <HardDrive size={12} /> : <Cloud size={12} />}
         <span>{isDemoMode ? 'Modo Local' : 'Sync IRT'}</span>
       </div>
+
+      {/* PWA Install Button */}
+      {isInstallable && onInstallApp && (
+        <button
+          type="button"
+          onClick={onInstallApp}
+          className="header-install-btn"
+          title="Instalar AUREUS como App en tu dispositivo"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 11.5,
+            fontWeight: 700,
+            fontFamily: 'Space Grotesk',
+            color: '#34D399',
+            background: 'rgba(52, 211, 153, 0.1)',
+            border: '1px solid rgba(52, 211, 153, 0.3)',
+            padding: '5px 12px',
+            borderRadius: 10,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Smartphone size={13} />
+          <span>Instalar App</span>
+        </button>
+      )}
+
+      {/* Export Report Button */}
+      {onOpenExport && (
+        <button
+          type="button"
+          onClick={onOpenExport}
+          className="header-export-btn"
+          title="Exportar Reporte Financiero (PDF / CSV)"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 11.5,
+            fontWeight: 700,
+            fontFamily: 'Space Grotesk',
+            color: '#F3CA65',
+            background: 'rgba(201, 168, 76, 0.1)',
+            border: '1px solid rgba(201, 168, 76, 0.3)',
+            padding: '5px 12px',
+            borderRadius: 10,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <FileText size={13} />
+          <span>Exportar</span>
+        </button>
+      )}
 
       {/* GitHub shortcut */}
       <a
@@ -197,6 +268,37 @@ export function AppHeader({
                 </div>
               </div>
             </div>
+
+            {onOpenExport && (
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOpen(false)
+                  onOpenExport()
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#D4D4E0',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 0.12s ease',
+                  width: '100%',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#1C1C26' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+              >
+                <FileText size={15} color="#F3CA65" />
+                <span>Exportar Reportes</span>
+              </button>
+            )}
 
             {onOpenSecurity && (
               <button

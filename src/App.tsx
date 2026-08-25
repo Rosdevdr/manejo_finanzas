@@ -14,10 +14,12 @@ import { ToastContainer }    from './components/ui/ToastContainer'
 import { LoginView }         from './components/auth/LoginView'
 import { SecurityModal }     from './components/security/SecurityModal'
 import { MitLicenseModal }   from './components/ui/MitLicenseModal'
+import { ReportExportModal } from './components/reports/ReportExportModal'
 import { Analytics }         from '@vercel/analytics/react'
 import { useFinanceStorage } from './hooks/useFinanceStorage'
 import { useAuth }           from './hooks/useAuth'
 import { useToast }          from './hooks/useToast'
+import { usePwaInstall }     from './hooks/usePwaInstall'
 import { formatCurrency }    from './utils/formatters'
 import {
   getPreviousPeriod,
@@ -31,8 +33,10 @@ export function App() {
   const [currentPeriod, setCurrentPeriod]       = useState<string>(() => getCurrentSystemPeriod())
   const [showLicenseModal, setShowLicenseModal] = useState(false)
   const [isSecurityOpen, setIsSecurityOpen]     = useState(false)
+  const [showExportModal, setShowExportModal]   = useState(false)
 
   const { toasts, show: showToast, dismiss } = useToast()
+  const { isInstallable, installApp } = usePwaInstall()
 
   const {
     user,
@@ -114,6 +118,9 @@ export function App() {
           onSignOut={signOut}
           onOpenSecurity={() => setIsSecurityOpen(true)}
           onOpenLicense={() => setShowLicenseModal(true)}
+          onOpenExport={() => setShowExportModal(true)}
+          isInstallable={isInstallable}
+          onInstallApp={installApp}
         />
 
         <div className="content">
@@ -197,6 +204,21 @@ export function App() {
           )}
         </div>
       </div>
+
+      <ReportExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        currentPeriod={currentPeriod}
+        incomes={incomes}
+        expenses={expenses}
+        cashWithdrawals={cash}
+        creditTransactions={creditTransactions}
+        creditCards={creditCards}
+        categoryBudgets={categoryBudgets}
+        savingsGoals={savingsGoals}
+        userEmail={user?.email}
+        onShowToast={showToast}
+      />
 
       <SecurityModal
         isOpen={isSecurityOpen}
