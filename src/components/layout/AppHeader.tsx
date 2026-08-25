@@ -9,6 +9,7 @@ import {
   FileText,
   Smartphone,
   Menu,
+  Flame,
 } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 
@@ -26,6 +27,7 @@ interface AppHeaderProps {
   onOpenSecurity?: () => void
   onOpenLicense?: () => void
   onOpenExport?: () => void
+  onOpenFireCalculator?: () => void
   isInstallable?: boolean
   onInstallApp?: () => void
   onOpenMenu?: () => void
@@ -45,6 +47,7 @@ export function AppHeader({
   onOpenSecurity,
   onOpenLicense,
   onOpenExport,
+  onOpenFireCalculator,
   isInstallable,
   onInstallApp,
   onOpenMenu,
@@ -173,6 +176,34 @@ export function AppHeader({
         >
           <FileText size={13} />
           <span>Exportar</span>
+        </button>
+      )}
+
+      {/* FIRE Calculator Button */}
+      {onOpenFireCalculator && (
+        <button
+          type="button"
+          onClick={onOpenFireCalculator}
+          className="header-export-btn"
+          title="Calculadora FIRE (Retiro Temprano)"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 11.5,
+            fontWeight: 700,
+            fontFamily: 'Space Grotesk',
+            color: '#F59E0B',
+            background: 'rgba(245, 158, 11, 0.1)',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+            padding: '5px 12px',
+            borderRadius: 10,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Flame size={13} />
+          <span>Calculadora FIRE</span>
         </button>
       )}
 

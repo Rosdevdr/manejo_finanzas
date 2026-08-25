@@ -1,1 +1,1 @@
-export type TabType = 'dashboard' | 'incomes' | 'expenses' | 'credit' | 'cash' | 'budgets' | 'advisor'
+export type TabType = 'dashboard' | 'incomes' | 'expenses' | 'credit' | 'cash' | 'budgets' | 'advisor' | 'chat-advisor'

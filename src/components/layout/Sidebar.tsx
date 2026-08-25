@@ -14,6 +14,7 @@ import {
   FileText,
   Smartphone,
   X,
+  Bot,
 } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
@@ -35,13 +36,14 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
-  { id: 'dashboard', icon: <LayoutDashboard size={16} />, label: 'Dashboard'    },
-  { id: 'incomes',   icon: <ArrowDownCircle size={16} />, label: 'Ingresos'     },
-  { id: 'expenses',  icon: <ArrowUpCircle   size={16} />, label: 'Gastos'       },
-  { id: 'credit',    icon: <CreditCard      size={16} />, label: 'Tarjetas'     },
-  { id: 'cash',      icon: <Banknote        size={16} />, label: 'Efectivo'     },
-  { id: 'budgets',   icon: <Target          size={16} />, label: 'Presupuestos' },
-  { id: 'advisor',   icon: <BrainCircuit    size={16} />, label: 'Asesor IA'    },
+  { id: 'dashboard',    icon: <LayoutDashboard size={16} />, label: 'Dashboard'    },
+  { id: 'incomes',      icon: <ArrowDownCircle size={16} />, label: 'Ingresos'     },
+  { id: 'expenses',     icon: <ArrowUpCircle   size={16} />, label: 'Gastos'       },
+  { id: 'credit',       icon: <CreditCard      size={16} />, label: 'Tarjetas'     },
+  { id: 'cash',         icon: <Banknote        size={16} />, label: 'Efectivo'     },
+  { id: 'budgets',      icon: <Target          size={16} />, label: 'Presupuestos' },
+  { id: 'advisor',      icon: <BrainCircuit    size={16} />, label: 'Análisis IA'  },
+  { id: 'chat-advisor', icon: <Bot             size={16} />, label: 'Asistente IA' },
 ]
 
 export function Sidebar({

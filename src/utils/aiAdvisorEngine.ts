@@ -1,0 +1,174 @@
+import type {
+  Income,
+  Expense,
+  CashWithdrawal,
+  CreditCard,
+  CreditCardTransaction,
+  CategoryBudget,
+  SavingsGoal,
+  ExpenseCategory,
+} from '../types/finance'
+import { formatCurrency } from './formatters'
+import { evaluate503020Rule, calculateCategoryBudgetStatus } from './budgetAdvisor'
+import { evaluateCardHealth } from './creditAdvisor'
+
+export interface FinancialSnapshot {
+  currentPeriod: string
+  incomes: Income[]
+  expenses: Expense[]
+  cashWithdrawals: CashWithdrawal[]
+  creditCards: CreditCard[]
+  creditTransactions: CreditCardTransaction[]
+  categoryBudgets: CategoryBudget[]
+  savingsGoals: SavingsGoal[]
+}
+
+export interface ChatMessage {
+  id: string
+  sender: 'user' | 'assistant'
+  text: string
+  timestamp: string
+  suggestedActions?: string[]
+}
+
+export function generateAiFinancialResponse(prompt: string, snapshot: FinancialSnapshot): string {
+  const { currentPeriod, incomes, expenses, cashWithdrawals, creditCards, creditTransactions, categoryBudgets, savingsGoals } = snapshot
+
+  const pIncomes  = incomes.filter(i => i.period === currentPeriod)
+  const pExpenses = expenses.filter(e => e.period === currentPeriod)
+  const pCash     = cashWithdrawals.filter(c => c.period === currentPeriod)
+  const pTx       = creditTransactions.filter(t => t.period === currentPeriod)
+
+  const totalIncome  = pIncomes.reduce((s, i) => s + i.amount, 0)
+  const totalExpense = pExpenses.reduce((s, e) => s + e.amount, 0)
+  const totalCash    = pCash.reduce((s, c) => s + c.amount, 0)
+  const netBalance   = totalIncome - totalExpense
+
+  const rule503020 = evaluate503020Rule(incomes, expenses, netBalance, currentPeriod)
+  const categories: ExpenseCategory[] = ['housing', 'food', 'transport', 'utilities', 'health', 'entertainment', 'education', 'debt', 'other']
+  const budgetStatuses = categories.map(cat => {
+    const budgetObj = categoryBudgets.find(b => b.category === cat)
+    const limit = budgetObj ? budgetObj.limitAmount : 0
+    return calculateCategoryBudgetStatus(cat, limit, pExpenses, currentPeriod)
+  })
+  const exceededBudgets = budgetStatuses.filter(b => b.status === 'exceeded')
+
+  const totalCreditDebt = creditCards.reduce((acc, card) => {
+    const health = evaluateCardHealth(card, creditTransactions)
+    return acc + health.totalDebt
+  }, 0)
+
+  const lowerPrompt = prompt
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+
+  // 1. ¿Cuánto dinero puedo gastar este mes?
+  if (lowerPrompt.includes('cuanto') && (lowerPrompt.includes('gastar') || lowerPrompt.includes('puedo gastar') || lowerPrompt.includes('disponible'))) {
+    if (totalIncome === 0) {
+      return `Actualmente no tienes ingresos registrados para el período **${currentPeriod}**. Te sugiero registrar primero tu sueldo o fuentes de ingresos para calcular con precisión tu margen de gasto seguro.`
+    }
+
+    const maxRecommendedExpense = totalIncome * 0.80
+    const remainingSpendCapacity = Math.max(0, maxRecommendedExpense - totalExpense)
+
+    return `### 💡 Margen de Gasto Disponible (${currentPeriod})
+
+Basándome en tus datos de este mes:
+
+• **Ingresos Totales:** \`${formatCurrency(totalIncome)}\`
+• **Gastos Acumulados:** \`${formatCurrency(totalExpense)}\`
+• **Balance Neto Actual:** \`${formatCurrency(netBalance)}\`
+
+**🎯 Recomendación del Asesor IA:**
+1. **Límite de Gasto Seguro (80% de ingresos):** Tu techo ideal de gasto es \`${formatCurrency(maxRecommendedExpense)}\`.
+2. **Capacidad de Gasto Restante:** Aún puedes gastar hasta **\`${formatCurrency(remainingSpendCapacity)}\`** sin comprometer tu fondo de reserva de ahorro (20%).
+3. ${netBalance < 0 ? `⚠️ **Atención:** Actualmente tus gastos superan tus ingresos por \`${formatCurrency(Math.abs(netBalance))}\`. Te sugiero pausar compras no esenciales.` : `✅ Vas por buen camino con un superávit positivo de \`${formatCurrency(netBalance)}\`.`}`
+  }
+
+  // 2. ¿Cuánto debería ahorrar?
+  if (lowerPrompt.includes('ahorrar') || lowerPrompt.includes('ahorro') || lowerPrompt.includes('cuanto ahorro')) {
+    const recommended20 = totalIncome * 0.20
+    const totalGoalsSaved = savingsGoals.reduce((s, g) => s + g.currentAmount, 0)
+    const totalGoalsTarget = savingsGoals.reduce((s, g) => s + g.targetAmount, 0)
+
+    return `### 🛡️ Plan y Estrategia de Ahorro (${currentPeriod})
+
+Siguiendo las mejores prácticas financieras internacionales (Regla 50/30/20):
+
+• **Ahorro Mensual Recomendado (20%):** **\`${formatCurrency(recommended20)}\`** al mes.
+• **Capacidad de Ahorro Real Actual:** \`${formatCurrency(Math.max(0, netBalance))}\`
+• **Progreso en Metas:** Has acumulado \`${formatCurrency(totalGoalsSaved)}\` de \`${formatCurrency(totalGoalsTarget)}\` acumulados en tus metas activas.
+
+**📌 Sugerencia de Distribución de tu Ahorro:**
+1. **Fondo de Emergencia (3 a 6 meses de gastos):** Cubre hasta \`${formatCurrency(totalExpense * 3)}\`.
+2. **Inversiones / Patrimonio:** Destina el excedente a activos que generen rendimiento.
+3. **Metas Corto Plazo:** Automátiza depósitos mensuales a tus metas activas en la sección de Presupuestos.`
+  }
+
+  // 3. Deudas y Tarjetas de Crédito
+  if (lowerPrompt.includes('deuda') || lowerPrompt.includes('tarjeta') || lowerPrompt.includes('credito') || lowerPrompt.includes('tarjetas')) {
+    const totalCreditLimit = creditCards.reduce((s, c) => s + c.creditLimit, 0)
+    const globalUsagePct   = totalCreditLimit > 0 ? Math.round((totalCreditDebt / totalCreditLimit) * 100) : 0
+
+    return `### 💳 Diagnóstico y Plan de Deudas
+
+• **Deuda Total Acumulada en Tarjetas:** **\`${formatCurrency(totalCreditDebt)}\`**
+• **Límite Total de Crédito:** \`${formatCurrency(totalCreditLimit)}\`
+• **Uso Global de Línea:** \`${globalUsagePct}%\` ${globalUsagePct > 30 ? '⚠️ (Por encima del 30% recomendado)' : '✅ (Nivel óptimo de utilización)'}
+• **Consumos del Mes Actual:** \`${pTx.length}\` transacciones registradas por \`${formatCurrency(pTx.reduce((s, t) => s + t.amount, 0))}\`.
+
+**⚡ Estrategia de Liquidación Recomendada (Método Avalancha):**
+1. Ordena tus tarjetas de mayor a menor tasa de interés.
+2. Realiza siempre el pago total del mes (no el pago mínimo) para evitar cargos por financiamiento.
+3. Destina cualquier excedente de tu balance neto (\`${formatCurrency(Math.max(0, netBalance))}\`) a cancelar primero la tarjeta con mayor tasa de interés.`
+  }
+
+  // 4. Regla 50/30/20 y Presupuestos por Categoría
+  if (lowerPrompt.includes('50/30/20') || lowerPrompt.includes('regla') || lowerPrompt.includes('presupuesto') || lowerPrompt.includes('categoria')) {
+    return `### 📊 Diagnóstico de la Regla Financiera 50 / 30 / 20
+
+• **🏠 Necesidades (Target 50%):** \`${rule503020.needsPercent}%\` (\`${formatCurrency(rule503020.needsSpent)}\`) ${rule503020.needsPercent <= 50 ? '✅ En rango' : '⚠️ Excedido'}
+• **🍿 Deseos / Ocio (Target 30%):** \`${rule503020.wantsPercent}%\` (\`${formatCurrency(rule503020.wantsSpent)}\`) ${rule503020.wantsPercent <= 30 ? '✅ En rango' : '⚠️ Excedido'}
+• **🎯 Ahorro & Deuda (Target 20%):** \`${rule503020.savingsPercent}%\` (\`${formatCurrency(rule503020.savingsSpent)}\`) ${rule503020.savingsPercent >= 20 ? '✅ Excelente' : '⚠️ Ajustar'}
+
+${exceededBudgets.length > 0
+  ? `🚨 **Categorías que han superado su límite:**\n` + exceededBudgets.map(b => `• **${b.category}:** gastado \`${formatCurrency(b.spent)}\` vs límite \`${formatCurrency(b.limit)}\``).join('\n')
+  : '✅ Todas tus categorías de presupuesto se encuentran dentro de sus límites establecidos.'}`
+  }
+
+  // 5. Análisis General de Salud Financiera
+  if (lowerPrompt.includes('salud') || lowerPrompt.includes('general') || lowerPrompt.includes('analisis') || lowerPrompt.includes('resumen')) {
+    const healthScore = totalIncome > 0
+      ? Math.max(0, Math.min(100, Math.round(((netBalance / totalIncome) * 50) + ((1 - Math.min(1, totalCreditDebt / (totalIncome * 2))) * 50))))
+      : 50
+
+    return `### 📊 Análisis Integral de Salud Financiera (${currentPeriod})
+
+• **Score de Salud Financiera:** **\`${healthScore} / 100\`** ${healthScore >= 75 ? '🟢 Excelente' : healthScore >= 50 ? '🟡 Aceptable' : '🔴 Requiere Atención'}
+• **Ingresos Registrados:** \`${formatCurrency(totalIncome)}\`
+• **Gastos Totales:** \`${formatCurrency(totalExpense)}\`
+• **Margen Neto Libre:** \`${formatCurrency(netBalance)}\`
+• **Retiros en Efectivo:** \`${formatCurrency(totalCash)}\` (${pCash.length} retiros)
+
+**💡 Recomendación Ejecutiva:**
+1. Manten un margen disponible positivo superior al 20% de tus ingresos.
+2. Evita gastar en efectivo sin categorizar para mantener la trazabilidad de tus finanzas.
+3. Revisa tus tarjetas de crédito y asegúrate de pagar la totalidad de la fecha de corte.`
+  }
+
+  // 6. Respuesta General Inteligente Adaptada a las Preguntas del Usuario
+  return `Entiendo tu consulta sobre **"${prompt}"**. 
+
+Analizando tu situación financiera para **${currentPeriod}**:
+• Tienes un ingreso total de **\`${formatCurrency(totalIncome)}\`** y gastos de **\`${formatCurrency(totalExpense)}\`**.
+• Tu balance neto libre actual es de **\`${formatCurrency(netBalance)}\`**.
+• Mantienes **\`${savingsGoals.length}\`** metas de ahorro activas y **\`${creditCards.length}\`** tarjetas de crédito registradas.
+
+Si deseas una recomendación específica, me puedes preguntar sobre:
+1. *"¿Cuánto puedo gastar este mes?"*
+2. *"¿Cuánto debería ahorrar?"*
+3. *"¿Cómo puedo saldar mis deudas?"*
+4. *"Analiza mi salud financiera general"*`
+}

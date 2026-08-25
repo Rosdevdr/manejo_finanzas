@@ -9,6 +9,8 @@ import { CreditCardsView }   from './components/credit/CreditCardsView'
 import { CashView }          from './components/cash/CashView'
 import { BudgetsAndGoalsView } from './components/budgets/BudgetsAndGoalsView'
 import { SmartAnalysisPanel } from './components/analysis/SmartAnalysisPanel'
+import { AiChatAssistantView } from './components/chat/AiChatAssistantView'
+import { FireCalculatorModal } from './components/budgets/FireCalculatorModal'
 import { ToastContainer }    from './components/ui/ToastContainer'
 import { LoginView }         from './components/auth/LoginView'
 import { SecurityModal }     from './components/security/SecurityModal'
@@ -33,6 +35,7 @@ export function App() {
   const [showLicenseModal, setShowLicenseModal] = useState(false)
   const [isSecurityOpen, setIsSecurityOpen]     = useState(false)
   const [showExportModal, setShowExportModal]   = useState(false)
+  const [showFireModal, setShowFireModal]       = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const { toasts, show: showToast, dismiss } = useToast()
@@ -125,6 +128,7 @@ export function App() {
           onOpenSecurity={() => setIsSecurityOpen(true)}
           onOpenLicense={() => setShowLicenseModal(true)}
           onOpenExport={() => setShowExportModal(true)}
+          onOpenFireCalculator={() => setShowFireModal(true)}
           isInstallable={isInstallable}
           onInstallApp={installApp}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
@@ -209,6 +213,19 @@ export function App() {
               creditTransactions={creditTransactions}
             />
           )}
+          {activeTab === 'chat-advisor' && (
+            <AiChatAssistantView
+              currentPeriod={currentPeriod}
+              incomes={incomes}
+              expenses={expenses}
+              cashWithdrawals={cash}
+              creditCards={creditCards}
+              creditTransactions={creditTransactions}
+              categoryBudgets={categoryBudgets}
+              savingsGoals={savingsGoals}
+              userEmail={user?.email}
+            />
+          )}
         </div>
       </div>
 
@@ -225,6 +242,13 @@ export function App() {
         savingsGoals={savingsGoals}
         userEmail={user?.email}
         onShowToast={showToast}
+      />
+
+      <FireCalculatorModal
+        isOpen={showFireModal}
+        onClose={() => setShowFireModal(false)}
+        currentMonthlyExpense={totalExpense}
+        currentSavings={available}
       />
 
       <SecurityModal
