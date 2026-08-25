@@ -354,7 +354,103 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .bell-btn:hover .bell-icon-anim {
-  animation: bellRing 0.5s ease-in-out infinite;
+  animation: bellRing 0.5s ease-in-out 1;
+}
+
+/* ===================== PROFILE AVATAR & DROPDOWN MENU ===================== */
+.profile-wrapper {
+  position: relative;
+}
+
+.profile-trigger {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer;
+  outline: none !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 230px;
+  background: #12121A;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-header {
+  padding: 6px 8px 8px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.profile-email {
+  font-size: 12px;
+  font-weight: 700;
+  color: #F3CA65;
+  word-break: break-all;
+  margin-bottom: 4px;
+}
+
+.profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #34D399;
+  font-weight: 500;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px;
+  color: #D1D5DB !important;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+}
+
+.dropdown-item.danger {
+  color: #F87171 !important;
+}
+
+.dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #EF4444 !important;
 }
 
 /* ===================== CONTENT ===================== */
