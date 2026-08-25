@@ -1,5 +1,5 @@
 // public/sw.js - AUREUS PWA Service Worker
-const CACHE_NAME = 'aureus-cache-v1'
+const CACHE_NAME = 'aureus-cache-v2'
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -16,7 +16,7 @@ self.addEventListener('install', (event) => {
   )
 })
 
-// Activación: Limpieza de cachés antiguas
+// Activación: Limpieza de cachés antiguas y toma de control inmediata
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -27,25 +27,25 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-// Fetch: Estrategia Network-First con fallback a Caché para offline
+// Fetch: Solo responder cuando sea una petición GET y NO pertenezca a Supabase ni a APIs dinámicas
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
-  // Ignorar llamadas de analítica y APIs de Supabase para evitar interceptar WebSockets
   const url = new URL(event.request.url)
-  if (url.origin.includes('supabase.co') || url.pathname.includes('_vercel')) {
+  // Ignorar WebSockets, Supabase, Vercel analytics o peticiones externas
+  if (
+    url.origin.includes('supabase.co') ||
+    url.pathname.includes('/rest/v1') ||
+    url.pathname.includes('/realtime/v1') ||
+    url.pathname.includes('_vercel')
+  ) {
     return
   }
 
+  // Network-First para navegación y recursos
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone()
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone)
-          })
-        }
         return networkResponse
       })
       .catch(() => {

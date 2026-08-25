@@ -44,7 +44,7 @@ function saveLocal<T>(key: string, data: T[]) {
   try {
     localStorage.setItem(key, JSON.stringify(data))
   } catch {
-    // quota exceeded — fail silently
+    // fail silently
   }
 }
 
@@ -192,11 +192,10 @@ export function useFinanceStorage(user?: User | null) {
   const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => !user ? loadLocal(KEYS.creditTransactions, DEFAULT_CARD_TRANSACTIONS) : [])
   const [categoryBudgets,    setCategoryBudgetsState]    = useState<CategoryBudget[]>(() => !user ? loadLocal(KEYS.categoryBudgets, DEFAULT_BUDGETS) : [])
   const [savingsGoals,       setSavingsGoalsState]       = useState<SavingsGoal[]>(() => !user ? loadLocal(KEYS.savingsGoals, DEFAULT_GOALS) : [])
-  const [isLoading,          setIsLoading]               = useState<boolean>(Boolean(user && isSupabaseConfigured))
 
   const isMountedRef = useRef(true)
 
-  // Consulta directa a la base de datos
+  // Consulta directa completa e instantánea a Supabase
   const loadData = useCallback(async () => {
     if (!user || !supabase || !isSupabaseConfigured) return
     const userId = user.id
@@ -214,98 +213,108 @@ export function useFinanceStorage(user?: User | null) {
 
       if (!isMountedRef.current) return
 
-      const mappedIncomes = (incRes.data || []).map(row => ({
-        id: row.id,
-        period: row.period,
-        description: row.description,
-        amount: Number(row.amount),
-        type: row.type as IncomeType,
-        date: row.date,
-      }))
-      setIncomesState(mappedIncomes)
-      saveLocal(KEYS.incomes, mappedIncomes)
+      if (incRes.data) {
+        const mapped = incRes.data.map(row => ({
+          id: row.id,
+          period: row.period,
+          description: row.description,
+          amount: Number(row.amount),
+          type: row.type as IncomeType,
+          date: row.date,
+        }))
+        setIncomesState(mapped)
+        saveLocal(KEYS.incomes, mapped)
+      }
 
-      const mappedExpenses = (expRes.data || []).map(row => ({
-        id: row.id,
-        period: row.period,
-        description: row.description,
-        amount: Number(row.amount),
-        category: row.category as ExpenseCategory,
-        type: row.type as ExpenseType,
-        paymentMethod: row.payment_method as PaymentMethod,
-        date: row.date,
-      }))
-      setExpensesState(mappedExpenses)
-      saveLocal(KEYS.expenses, mappedExpenses)
+      if (expRes.data) {
+        const mapped = expRes.data.map(row => ({
+          id: row.id,
+          period: row.period,
+          description: row.description,
+          amount: Number(row.amount),
+          category: row.category as ExpenseCategory,
+          type: row.type as ExpenseType,
+          paymentMethod: row.payment_method as PaymentMethod,
+          date: row.date,
+        }))
+        setExpensesState(mapped)
+        saveLocal(KEYS.expenses, mapped)
+      }
 
-      const mappedCash = (cashRes.data || []).map(row => ({
-        id: row.id,
-        period: row.period,
-        amount: Number(row.amount),
-        reason: row.reason as CashReason,
-        note: row.note ?? undefined,
-        date: row.date,
-      }))
-      setCashState(mappedCash)
-      saveLocal(KEYS.cash, mappedCash)
+      if (cashRes.data) {
+        const mapped = cashRes.data.map(row => ({
+          id: row.id,
+          period: row.period,
+          amount: Number(row.amount),
+          reason: row.reason as CashReason,
+          note: row.note ?? undefined,
+          date: row.date,
+        }))
+        setCashState(mapped)
+        saveLocal(KEYS.cash, mapped)
+      }
 
-      const mappedCards = (cardRes.data || []).map(row => ({
-        id: row.id,
-        name: row.name,
-        bank: row.bank,
-        lastFourDigits: row.last_four_digits,
-        creditLimit: Number(row.credit_limit),
-        cutoffDay: Number(row.cutoff_day),
-        paymentDueDay: Number(row.payment_due_day),
-        interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
-        color: row.color as CardThemeColor,
-      }))
-      setCreditCardsState(mappedCards)
-      saveLocal(KEYS.creditCards, mappedCards)
+      if (cardRes.data) {
+        const mapped = cardRes.data.map(row => ({
+          id: row.id,
+          name: row.name,
+          bank: row.bank,
+          lastFourDigits: row.last_four_digits,
+          creditLimit: Number(row.credit_limit),
+          cutoffDay: Number(row.cutoff_day),
+          paymentDueDay: Number(row.payment_due_day),
+          interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
+          color: row.color as CardThemeColor,
+        }))
+        setCreditCardsState(mapped)
+        saveLocal(KEYS.creditCards, mapped)
+      }
 
-      const mappedTransactions = (ctxRes.data || []).map(row => ({
-        id: row.id,
-        cardId: row.card_id,
-        period: row.period,
-        description: row.description,
-        amount: Number(row.amount),
-        category: row.category as ExpenseCategory,
-        date: row.date,
-        installments: Number(row.installments || 1),
-        currentInstallment: Number(row.current_installment || 1),
-        isPaid: Boolean(row.is_paid),
-      }))
-      setCreditTransactionsState(mappedTransactions)
-      saveLocal(KEYS.creditTransactions, mappedTransactions)
+      if (ctxRes.data) {
+        const mapped = ctxRes.data.map(row => ({
+          id: row.id,
+          cardId: row.card_id,
+          period: row.period,
+          description: row.description,
+          amount: Number(row.amount),
+          category: row.category as ExpenseCategory,
+          date: row.date,
+          installments: Number(row.installments || 1),
+          currentInstallment: Number(row.current_installment || 1),
+          isPaid: Boolean(row.is_paid),
+        }))
+        setCreditTransactionsState(mapped)
+        saveLocal(KEYS.creditTransactions, mapped)
+      }
 
-      const mappedBudgets = (budRes.data || []).map(row => ({
-        id: row.id,
-        period: row.period,
-        category: row.category as ExpenseCategory,
-        limitAmount: Number(row.limit_amount),
-      }))
-      setCategoryBudgetsState(mappedBudgets)
-      saveLocal(KEYS.categoryBudgets, mappedBudgets)
+      if (budRes.data) {
+        const mapped = budRes.data.map(row => ({
+          id: row.id,
+          period: row.period,
+          category: row.category as ExpenseCategory,
+          limitAmount: Number(row.limit_amount),
+        }))
+        setCategoryBudgetsState(mapped)
+        saveLocal(KEYS.categoryBudgets, mapped)
+      }
 
-      const mappedGoals = (goalRes.data || []).map(row => ({
-        id: row.id,
-        name: row.name,
-        targetAmount: Number(row.target_amount),
-        currentAmount: Number(row.current_amount || 0),
-        monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
-        targetDate: row.target_date ?? undefined,
-        category: row.category as GoalCategory,
-        color: row.color || '#34D399',
-        isCompleted: Boolean(row.is_completed),
-      }))
-      setSavingsGoalsState(mappedGoals)
-      saveLocal(KEYS.savingsGoals, mappedGoals)
+      if (goalRes.data) {
+        const mapped = goalRes.data.map(row => ({
+          id: row.id,
+          name: row.name,
+          targetAmount: Number(row.target_amount),
+          currentAmount: Number(row.current_amount || 0),
+          monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
+          targetDate: row.target_date ?? undefined,
+          category: row.category as GoalCategory,
+          color: row.color || '#34D399',
+          isCompleted: Boolean(row.is_completed),
+        }))
+        setSavingsGoalsState(mapped)
+        saveLocal(KEYS.savingsGoals, mapped)
+      }
     } catch (err) {
       console.error('Error al sincronizar datos con Supabase:', err)
-    } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false)
-      }
     }
   }, [user])
 
@@ -323,236 +332,52 @@ export function useFinanceStorage(user?: User | null) {
     }
     void initFetch()
 
-    // Suscripción Realtime por WebSockets (Instant Real-time)
+    // ⚡ Suscripción Realtime por WebSockets (Instant Real-time) sin filtros restrictivos
     const channel = supabase
-      .channel(`rt-user-${userId}`)
-      // Incomes Realtime Handler
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const row = payload.new as Record<string, unknown>
-          const item: Income = {
-            id: row.id as string,
-            period: row.period as string,
-            description: row.description as string,
-            amount: Number(row.amount),
-            type: row.type as IncomeType,
-            date: row.date as string,
-          }
-          setIncomesState(prev => prev.some(i => i.id === item.id) ? prev.map(i => i.id === item.id ? item : i) : [item, ...prev])
-        } else if (payload.eventType === 'UPDATE') {
-          const row = payload.new as Record<string, unknown>
-          const item: Income = {
-            id: row.id as string,
-            period: row.period as string,
-            description: row.description as string,
-            amount: Number(row.amount),
-            type: row.type as IncomeType,
-            date: row.date as string,
-          }
-          setIncomesState(prev => prev.map(i => i.id === item.id ? item : i))
-        } else if (payload.eventType === 'DELETE') {
-          const oldRow = payload.old as { id?: string }
-          if (oldRow?.id) {
-            setIncomesState(prev => prev.filter(i => i.id !== oldRow.id))
-          }
+      .channel(`realtime-finance-stream-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes' }, () => {
+        void loadData()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => {
+        void loadData()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cash_withdrawals' }, () => {
+        void loadData()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_cards' }, () => {
+        void loadData()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_transactions' }, () => {
+        void loadData()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'category_budgets' }, () => {
+        void loadData()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'savings_goals' }, () => {
+        void loadData()
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          void loadData()
         }
       })
-      // Expenses Realtime Handler
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const row = payload.new as Record<string, unknown>
-          const item: Expense = {
-            id: row.id as string,
-            period: row.period as string,
-            description: row.description as string,
-            amount: Number(row.amount),
-            category: row.category as ExpenseCategory,
-            type: row.type as ExpenseType,
-            paymentMethod: row.payment_method as PaymentMethod,
-            date: row.date as string,
-          }
-          setExpensesState(prev => prev.some(e => e.id === item.id) ? prev.map(e => e.id === item.id ? item : e) : [item, ...prev])
-        } else if (payload.eventType === 'UPDATE') {
-          const row = payload.new as Record<string, unknown>
-          const item: Expense = {
-            id: row.id as string,
-            period: row.period as string,
-            description: row.description as string,
-            amount: Number(row.amount),
-            category: row.category as ExpenseCategory,
-            type: row.type as ExpenseType,
-            paymentMethod: row.payment_method as PaymentMethod,
-            date: row.date as string,
-          }
-          setExpensesState(prev => prev.map(e => e.id === item.id ? item : e))
-        } else if (payload.eventType === 'DELETE') {
-          const oldRow = payload.old as { id?: string }
-          if (oldRow?.id) {
-            setExpensesState(prev => prev.filter(e => e.id !== oldRow.id))
-          }
-        }
-      })
-      // Cash Realtime Handler
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cash_withdrawals' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const row = payload.new as Record<string, unknown>
-          const item: CashWithdrawal = {
-            id: row.id as string,
-            period: row.period as string,
-            amount: Number(row.amount),
-            reason: row.reason as CashReason,
-            note: (row.note as string) ?? undefined,
-            date: row.date as string,
-          }
-          setCashState(prev => prev.some(c => c.id === item.id) ? prev.map(c => c.id === item.id ? item : c) : [item, ...prev])
-        } else if (payload.eventType === 'DELETE') {
-          const oldRow = payload.old as { id?: string }
-          if (oldRow?.id) {
-            setCashState(prev => prev.filter(c => c.id !== oldRow.id))
-          }
-        }
-      })
-      // Credit Cards Realtime Handler
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_cards' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const row = payload.new as Record<string, unknown>
-          const item: CreditCard = {
-            id: row.id as string,
-            name: row.name as string,
-            bank: row.bank as string,
-            lastFourDigits: row.last_four_digits as string,
-            creditLimit: Number(row.credit_limit),
-            cutoffDay: Number(row.cutoff_day),
-            paymentDueDay: Number(row.payment_due_day),
-            interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
-            color: row.color as CardThemeColor,
-          }
-          setCreditCardsState(prev => prev.some(c => c.id === item.id) ? prev.map(c => c.id === item.id ? item : c) : [...prev, item])
-        } else if (payload.eventType === 'UPDATE') {
-          const row = payload.new as Record<string, unknown>
-          const item: CreditCard = {
-            id: row.id as string,
-            name: row.name as string,
-            bank: row.bank as string,
-            lastFourDigits: row.last_four_digits as string,
-            creditLimit: Number(row.credit_limit),
-            cutoffDay: Number(row.cutoff_day),
-            paymentDueDay: Number(row.payment_due_day),
-            interestRate: row.interest_rate ? Number(row.interest_rate) : undefined,
-            color: row.color as CardThemeColor,
-          }
-          setCreditCardsState(prev => prev.map(c => c.id === item.id ? item : c))
-        } else if (payload.eventType === 'DELETE') {
-          const oldRow = payload.old as { id?: string }
-          if (oldRow?.id) {
-            setCreditCardsState(prev => prev.filter(c => c.id !== oldRow.id))
-            setCreditTransactionsState(prev => prev.filter(t => t.cardId !== oldRow.id))
-          }
-        }
-      })
-      // Credit Transactions Realtime Handler
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_transactions' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const row = payload.new as Record<string, unknown>
-          const item: CreditCardTransaction = {
-            id: row.id as string,
-            cardId: row.card_id as string,
-            period: row.period as string,
-            description: row.description as string,
-            amount: Number(row.amount),
-            category: row.category as ExpenseCategory,
-            date: row.date as string,
-            installments: Number(row.installments || 1),
-            currentInstallment: Number(row.current_installment || 1),
-            isPaid: Boolean(row.is_paid),
-          }
-          setCreditTransactionsState(prev => prev.some(t => t.id === item.id) ? prev.map(t => t.id === item.id ? item : t) : [item, ...prev])
-        } else if (payload.eventType === 'UPDATE') {
-          const row = payload.new as Record<string, unknown>
-          const item: CreditCardTransaction = {
-            id: row.id as string,
-            cardId: row.card_id as string,
-            period: row.period as string,
-            description: row.description as string,
-            amount: Number(row.amount),
-            category: row.category as ExpenseCategory,
-            date: row.date as string,
-            installments: Number(row.installments || 1),
-            currentInstallment: Number(row.current_installment || 1),
-            isPaid: Boolean(row.is_paid),
-          }
-          setCreditTransactionsState(prev => prev.map(t => t.id === item.id ? item : t))
-        } else if (payload.eventType === 'DELETE') {
-          const oldRow = payload.old as { id?: string }
-          if (oldRow?.id) {
-            setCreditTransactionsState(prev => prev.filter(t => t.id !== oldRow.id))
-          }
-        }
-      })
-      // Category Budgets Realtime Handler
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'category_budgets' }, (payload) => {
-        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-          const row = payload.new as Record<string, unknown>
-          const item: CategoryBudget = {
-            id: row.id as string,
-            period: row.period as string,
-            category: row.category as ExpenseCategory,
-            limitAmount: Number(row.limit_amount),
-          }
-          setCategoryBudgetsState(prev => {
-            const exists = prev.some(b => b.id === item.id || (b.category === item.category && b.period === item.period))
-            return exists
-              ? prev.map(b => (b.id === item.id || (b.category === item.category && b.period === item.period)) ? item : b)
-              : [...prev, item]
-          })
-        } else if (payload.eventType === 'DELETE') {
-          const oldRow = payload.old as { id?: string }
-          if (oldRow?.id) {
-            setCategoryBudgetsState(prev => prev.filter(b => b.id !== oldRow.id))
-          }
-        }
-      })
-      // Savings Goals Realtime Handler
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'savings_goals' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const row = payload.new as Record<string, unknown>
-          const item: SavingsGoal = {
-            id: row.id as string,
-            name: row.name as string,
-            targetAmount: Number(row.target_amount),
-            currentAmount: Number(row.current_amount || 0),
-            monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
-            targetDate: (row.target_date as string) ?? undefined,
-            category: row.category as GoalCategory,
-            color: (row.color as string) || '#34D399',
-            isCompleted: Boolean(row.is_completed),
-          }
-          setSavingsGoalsState(prev => prev.some(g => g.id === item.id) ? prev.map(g => g.id === item.id ? item : g) : [...prev, item])
-        } else if (payload.eventType === 'UPDATE') {
-          const row = payload.new as Record<string, unknown>
-          const item: SavingsGoal = {
-            id: row.id as string,
-            name: row.name as string,
-            targetAmount: Number(row.target_amount),
-            currentAmount: Number(row.current_amount || 0),
-            monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
-            targetDate: (row.target_date as string) ?? undefined,
-            category: row.category as GoalCategory,
-            color: (row.color as string) || '#34D399',
-            isCompleted: Boolean(row.is_completed),
-          }
-          setSavingsGoalsState(prev => prev.map(g => g.id === item.id ? item : g))
-        } else if (payload.eventType === 'DELETE') {
-          const oldRow = payload.old as { id?: string }
-          if (oldRow?.id) {
-            setSavingsGoalsState(prev => prev.filter(g => g.id !== oldRow.id))
-          }
-        }
-      })
-      .subscribe()
+
+    // Sincronización automática al reactivar la pantalla del móvil / cambiar de pestaña
+    const handleReactivation = () => {
+      if (document.visibilityState === 'visible') {
+        void loadData()
+      }
+    }
+
+    window.addEventListener('visibilitychange', handleReactivation)
+    window.addEventListener('focus', handleReactivation)
+    window.addEventListener('online', handleReactivation)
 
     return () => {
       isMountedRef.current = false
+      window.removeEventListener('visibilitychange', handleReactivation)
+      window.removeEventListener('focus', handleReactivation)
+      window.removeEventListener('online', handleReactivation)
       if (supabase) {
         supabase.removeChannel(channel)
       }
@@ -583,6 +408,7 @@ export function useFinanceStorage(user?: User | null) {
         type: d.type,
         date: d.date,
       })
+      void loadData()
     }
   }
 
@@ -606,6 +432,7 @@ export function useFinanceStorage(user?: User | null) {
         date: updated.date,
         period: computedPeriod,
       }).eq('id', updated.id)
+      void loadData()
     }
   }
 
@@ -617,6 +444,7 @@ export function useFinanceStorage(user?: User | null) {
     })
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('incomes').delete().eq('id', id)
+      void loadData()
     }
   }
 
@@ -646,6 +474,7 @@ export function useFinanceStorage(user?: User | null) {
         payment_method: d.paymentMethod,
         date: d.date,
       })
+      void loadData()
     }
   }
 
@@ -671,6 +500,7 @@ export function useFinanceStorage(user?: User | null) {
         date: updated.date,
         period: computedPeriod,
       }).eq('id', updated.id)
+      void loadData()
     }
   }
 
@@ -682,6 +512,7 @@ export function useFinanceStorage(user?: User | null) {
     })
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('expenses').delete().eq('id', id)
+      void loadData()
     }
   }
 
@@ -709,6 +540,7 @@ export function useFinanceStorage(user?: User | null) {
         note: cleanNote,
         date: d.date,
       })
+      void loadData()
     }
   }
 
@@ -720,6 +552,7 @@ export function useFinanceStorage(user?: User | null) {
     })
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('cash_withdrawals').delete().eq('id', id)
+      void loadData()
     }
   }
 
@@ -758,6 +591,7 @@ export function useFinanceStorage(user?: User | null) {
         interest_rate: d.interestRate ?? null,
         color: d.color,
       })
+      void loadData()
     }
   }
 
@@ -793,6 +627,7 @@ export function useFinanceStorage(user?: User | null) {
         interest_rate: updated.interestRate ?? null,
         color: updated.color,
       }).eq('id', updated.id)
+      void loadData()
     }
   }
 
@@ -811,6 +646,7 @@ export function useFinanceStorage(user?: User | null) {
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_cards').delete().eq('id', id)
       await supabase.from('credit_card_transactions').delete().eq('card_id', id)
+      void loadData()
     }
   }
 
@@ -842,6 +678,7 @@ export function useFinanceStorage(user?: User | null) {
         current_installment: d.currentInstallment,
         is_paid: d.isPaid,
       })
+      void loadData()
     }
   }
 
@@ -869,6 +706,7 @@ export function useFinanceStorage(user?: User | null) {
         current_installment: updated.currentInstallment,
         is_paid: updated.isPaid,
       }).eq('id', updated.id)
+      void loadData()
     }
   }
 
@@ -881,6 +719,7 @@ export function useFinanceStorage(user?: User | null) {
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_card_transactions').delete().eq('id', id)
+      void loadData()
     }
   }
 
@@ -912,6 +751,7 @@ export function useFinanceStorage(user?: User | null) {
           category,
           limit_amount: cleanLimit,
         })
+        void loadData()
       }
     } else {
       const newId = `bud-${Date.now()}-${category}`
@@ -930,6 +770,7 @@ export function useFinanceStorage(user?: User | null) {
           category,
           limit_amount: cleanLimit,
         })
+        void loadData()
       }
     }
   }
@@ -957,6 +798,7 @@ export function useFinanceStorage(user?: User | null) {
         limit_amount: b.limitAmount,
       }))
       await supabase.from('category_budgets').upsert(rows)
+      void loadData()
     }
   }
 
@@ -997,6 +839,7 @@ export function useFinanceStorage(user?: User | null) {
         color: g.color || '#34D399',
         is_completed: item.isCompleted,
       })
+      void loadData()
     }
   }
 
@@ -1033,6 +876,7 @@ export function useFinanceStorage(user?: User | null) {
         color: updated.color || '#34D399',
         is_completed: isCompleted,
       }).eq('id', updated.id)
+      void loadData()
     }
   }
 
@@ -1053,12 +897,12 @@ export function useFinanceStorage(user?: User | null) {
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('savings_goals').delete().eq('id', goalId)
+      void loadData()
     }
   }
 
   return {
     incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
-    isLoading,
     refreshData: loadData,
     addIncome, updateIncome, deleteIncome,
     addExpense, updateExpense, deleteExpense,
