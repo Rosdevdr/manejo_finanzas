@@ -13,6 +13,10 @@ import { generateAiFinancialResponse, type ChatMessage } from '../../utils/aiAdv
 import { formatCurrency } from '../../utils/formatters'
 import './AiChatAssistantView.css'
 
+function createId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}`
+}
+
 interface AiChatAssistantViewProps {
   currentPeriod: string
   incomes: Income[]
@@ -79,7 +83,7 @@ export function AiChatAssistantView({
     if (!query) return
 
     const userMsg: ChatMessage = {
-      id: `msg-user-${Date.now()}`,
+      id: createId('msg-user'),
       sender: 'user',
       text: query,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -103,7 +107,7 @@ export function AiChatAssistantView({
       })
 
       const aiMsg: ChatMessage = {
-        id: `msg-ai-${Date.now()}`,
+        id: createId('msg-ai'),
         sender: 'assistant',
         text: responseText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
