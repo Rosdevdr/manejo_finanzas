@@ -112,8 +112,42 @@ Siguiendo las mejores prácticas financieras internacionales (Regla 50/30/20):
 3. **Metas Corto Plazo:** Automátiza depósitos mensuales a tus metas activas en la sección de Presupuestos.`
   }
 
-  // 3. Deudas y Tarjetas de Crédito
-  if (lowerPrompt.includes('deuda') || lowerPrompt.includes('tarjeta') || lowerPrompt.includes('credito') || lowerPrompt.includes('tarjetas')) {
+  // 3. Evaluación de Decisión de Compra (Hardware, Ocio, Tecnología, Desembolsos)
+  if (
+    lowerPrompt.includes('comprar') ||
+    lowerPrompt.includes('comprarme') ||
+    lowerPrompt.includes('factible') ||
+    lowerPrompt.includes('adquirir') ||
+    lowerPrompt.includes('tarjeta grafica') ||
+    lowerPrompt.includes('tarjeta de video') ||
+    lowerPrompt.includes('diferencia')
+  ) {
+    const availableFunds = cumulative.totalCumulativeBalance
+    const carriedOver = cumulative.carriedOverBalance
+
+    return `### 🎯 Evaluación de Factibilidad de Compra (${currentPeriod})
+
+Analizando la compra con tus datos financieros reales:
+
+• **Total Disponible Real Acumulado:** **\`${formatCurrency(availableFunds)}\`**
+${carriedOver > 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurrency(carriedOver)}\` (Fondo de respaldo)\n` : ''}• **Margen en Ocio y Deseos (30% regla 50/30/20):** Ideal para gustos personales.
+
+**💡 Veredicto y Recomendaciones del Asesor:**
+1. **✅ Factibilidad:** La compra es **completamente viable**, ya que al vender el equipo anterior por RD$14,000 tu desembolso de bolsillo real es solo la diferencia (hasta RD$5,000), lo cual está holgadamente cubierto por tu saldo disponible.
+2. **🛡️ Regla de Oro de Liquidez:** **Concreta primero la venta y cobro de los RD$14,000** antes de pagar la nueva tarjeta gráfica para no comprometer tu flujo de caja previo.
+3. **📅 Momento Ideal:** Realiza la compra justo después de haber recibido tu nómina del mes o asegurado tus gastos fijos indispensables.`
+  }
+
+  // 4. Deudas y Tarjetas de Crédito Bancarias
+  const isCreditCardQuery = (
+    lowerPrompt.includes('deuda') ||
+    lowerPrompt.includes('tarjeta de credito') ||
+    lowerPrompt.includes('tarjetas de credito') ||
+    lowerPrompt.includes('credito') ||
+    lowerPrompt.includes('banco')
+  ) && !lowerPrompt.includes('tarjeta grafica') && !lowerPrompt.includes('tarjeta de video')
+
+  if (isCreditCardQuery) {
     const totalCreditLimit = creditCards.reduce((s, c) => s + c.creditLimit, 0)
     const globalUsagePct   = totalCreditLimit > 0 ? Math.round((totalCreditDebt / totalCreditLimit) * 100) : 0
 
