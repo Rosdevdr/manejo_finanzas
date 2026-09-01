@@ -36,15 +36,15 @@ export function generateAiFinancialResponse(prompt: string, snapshot: FinancialS
   const { currentPeriod, incomes, expenses, cashWithdrawals, creditCards, creditTransactions, categoryBudgets, savingsGoals } = snapshot
 
   const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
-  const pIncomes  = incomes.filter(i => i.period === currentPeriod)
+  const pIncomes = incomes.filter(i => i.period === currentPeriod)
   const pExpenses = expenses.filter(e => e.period === currentPeriod)
-  const pCash     = cashWithdrawals.filter(c => c.period === currentPeriod)
-  const pTx       = creditTransactions.filter(t => t.period === currentPeriod)
+  const pCash = cashWithdrawals.filter(c => c.period === currentPeriod)
+  const pTx = creditTransactions.filter(t => t.period === currentPeriod)
 
-  const totalIncome  = pIncomes.reduce((s, i) => s + i.amount, 0)
+  const totalIncome = pIncomes.reduce((s, i) => s + i.amount, 0)
   const totalExpense = pExpenses.reduce((s, e) => s + e.amount, 0)
-  const totalCash    = pCash.reduce((s, c) => s + c.amount, 0)
-  const netBalance   = totalIncome - totalExpense
+  const totalCash = pCash.reduce((s, c) => s + c.amount, 0)
+  const netBalance = totalIncome - totalExpense
   const totalAvailable = cumulative.totalCumulativeBalance
 
   const rule503020 = evaluate503020Rule(incomes, expenses, netBalance, currentPeriod)
@@ -100,6 +100,7 @@ ${cumulative.carriedOverBalance !== 0 ? `• **Saldo Arrastrado del Mes Anterior
 
     return `### 🛡️ Plan y Estrategia de Ahorro (${currentPeriod})
 
+    
 Siguiendo las mejores prácticas financieras internacionales (Regla 50/30/20):
 
 • **Ahorro Mensual Recomendado (20%):** **\`${formatCurrency(recommended20)}\`** al mes.
@@ -149,10 +150,10 @@ ${carriedOver > 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurren
 
 **💡 Veredicto y Recomendaciones del Asesor:**
 1. ${!isViable
-  ? `⚠️ **Precaución (Te dejaría en déficit):** Con un desembolso de \`${formatCurrency(totalOutlay)}\`, sobrepasas tu saldo disponible actual de \`${formatCurrency(availableFunds)}\` por **\`${formatCurrency(Math.abs(remainingAfterPurchase))}\`**. Te sugiero esperar a recibir tu próximo ingreso de nómina antes de realizar el gasto.`
-  : isTight
-  ? `🟡 **Factible pero Ajustado:** Puedes realizar el gasto de \`${formatCurrency(totalOutlay)}\`, pero tu saldo disponible se reducirá a **\`${formatCurrency(remainingAfterPurchase)}\`**. Te dejará con poco margen para imprevistos hasta tu próximo cobro.`
-  : `✅ **Completamente Viable:** El desembolso de \`${formatCurrency(totalOutlay)}\` está bien cubierto y mantendrás un colchón disponible de **\`${formatCurrency(remainingAfterPurchase)}\`**.`}
+        ? `⚠️ **Precaución (Te dejaría en déficit):** Con un desembolso de \`${formatCurrency(totalOutlay)}\`, sobrepasas tu saldo disponible actual de \`${formatCurrency(availableFunds)}\` por **\`${formatCurrency(Math.abs(remainingAfterPurchase))}\`**. Te sugiero esperar a recibir tu próximo ingreso de nómina antes de realizar el gasto.`
+        : isTight
+          ? `🟡 **Factible pero Ajustado:** Puedes realizar el gasto de \`${formatCurrency(totalOutlay)}\`, pero tu saldo disponible se reducirá a **\`${formatCurrency(remainingAfterPurchase)}\`**. Te dejará con poco margen para imprevistos hasta tu próximo cobro.`
+          : `✅ **Completamente Viable:** El desembolso de \`${formatCurrency(totalOutlay)}\` está bien cubierto y mantendrás un colchón disponible de **\`${formatCurrency(remainingAfterPurchase)}\`**.`}
 2. **🛡️ Regla de Oro de Liquidez:** Si la compra depende de vender un artículo anterior, **asegura y cobra primero la venta** antes de pagar el nuevo artículo.
 3. **📅 Plan de Acción:** Si decides comprarlo, asegúrate de mantener intactos los fondos para tus compromisos fijos esenciales.`
   }
@@ -168,7 +169,7 @@ ${carriedOver > 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurren
 
   if (isCreditCardQuery) {
     const totalCreditLimit = creditCards.reduce((s, c) => s + c.creditLimit, 0)
-    const globalUsagePct   = totalCreditLimit > 0 ? Math.round((totalCreditDebt / totalCreditLimit) * 100) : 0
+    const globalUsagePct = totalCreditLimit > 0 ? Math.round((totalCreditDebt / totalCreditLimit) * 100) : 0
 
     return `### 💳 Diagnóstico y Plan de Deudas
 
@@ -192,8 +193,8 @@ ${carriedOver > 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurren
 • **🎯 Ahorro & Deuda (Target 20%):** \`${rule503020.savingsPercent}%\` (\`${formatCurrency(rule503020.savingsSpent)}\`) ${rule503020.savingsPercent >= 20 ? '✅ Excelente' : '⚠️ Ajustar'}
 
 ${exceededBudgets.length > 0
-  ? `🚨 **Categorías que han superado su límite:**\n` + exceededBudgets.map(b => `• **${b.category}:** gastado \`${formatCurrency(b.spent)}\` vs límite \`${formatCurrency(b.limit)}\``).join('\n')
-  : '✅ Todas tus categorías de presupuesto se encuentran dentro de sus límites establecidos.'}`
+        ? `🚨 **Categorías que han superado su límite:**\n` + exceededBudgets.map(b => `• **${b.category}:** gastado \`${formatCurrency(b.spent)}\` vs límite \`${formatCurrency(b.limit)}\``).join('\n')
+        : '✅ Todas tus categorías de presupuesto se encuentran dentro de sus límites establecidos.'}`
   }
 
   // 5. Previsión y Pronóstico de Flujo de Caja (Cash Flow Forecasting)
@@ -219,10 +220,10 @@ Evaluando la velocidad de entrada y salida de fondos para los próximos 90 días
 
   // 6. Métricas SaaS / Recurrentes (MRR, ARR, Churn, LTV, CAC)
   if (lowerPrompt.includes('mrr') || lowerPrompt.includes('arr') || lowerPrompt.includes('churn') || lowerPrompt.includes('suscripcion') || lowerPrompt.includes('ltv') || lowerPrompt.includes('cac') || lowerPrompt.includes('recurrente')) {
-    const recurringIncome  = pIncomes.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0)
-    const arrEstimate      = recurringIncome * 12
+    const recurringIncome = pIncomes.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0)
+    const arrEstimate = recurringIncome * 12
     const fixedSubExpenses = pExpenses.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
-    const subRatio         = totalIncome > 0 ? Math.round((fixedSubExpenses / totalIncome) * 100) : 0
+    const subRatio = totalIncome > 0 ? Math.round((fixedSubExpenses / totalIncome) * 100) : 0
 
     return `### 🚀 Métricas Financieras Recurrentes & SaaS (MRR / ARR / Churn)
 
