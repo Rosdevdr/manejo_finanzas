@@ -7,6 +7,7 @@ import {
   formatPeriodLabel,
   getMonthProgress,
   getAllAvailablePeriods,
+  calculateCumulativeBalance,
 } from '../calendar'
 
 describe('Calendar and Period Engine', () => {
@@ -77,6 +78,44 @@ describe('Calendar and Period Engine', () => {
       expect(progress.currentDay).toBe(29)
       expect(progress.daysRemaining).toBe(2)
       expect(progress.isMonthEndingSoon).toBe(true)
+    })
+  })
+
+  describe('calculateCumulativeBalance', () => {
+    it('correctly calculates rollover from previous months when current month has 0 movements', () => {
+      const mockIncomes = [
+        { period: '2026-08', amount: 85000 },
+        { period: '2026-08', amount: 15000 },
+      ]
+      const mockExpenses = [
+        { period: '2026-08', amount: 40000 },
+        { period: '2026-08', amount: 20000 },
+      ]
+
+      const res = calculateCumulativeBalance(mockIncomes, mockExpenses, '2026-09')
+      expect(res.carriedOverBalance).toBe(40000) // 100,000 - 60,000
+      expect(res.periodIncome).toBe(0)
+      expect(res.periodExpense).toBe(0)
+      expect(res.periodNet).toBe(0)
+      expect(res.totalCumulativeBalance).toBe(40000)
+    })
+
+    it('combines previous rollover balance with current period movements', () => {
+      const mockIncomes = [
+        { period: '2026-08', amount: 100000 },
+        { period: '2026-09', amount: 50000 },
+      ]
+      const mockExpenses = [
+        { period: '2026-08', amount: 70000 },
+        { period: '2026-09', amount: 20000 },
+      ]
+
+      const res = calculateCumulativeBalance(mockIncomes, mockExpenses, '2026-09')
+      expect(res.carriedOverBalance).toBe(30000)
+      expect(res.periodIncome).toBe(50000)
+      expect(res.periodExpense).toBe(20000)
+      expect(res.periodNet).toBe(30000)
+      expect(res.totalCumulativeBalance).toBe(60000)
     })
   })
 

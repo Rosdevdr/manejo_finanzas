@@ -19,7 +19,7 @@ import {
 import type { Income, Expense, CreditCard, CreditCardTransaction } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
 import { formatCurrency } from '../../utils/formatters'
-import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES } from '../../utils/calendar'
+import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES, calculateCumulativeBalance } from '../../utils/calendar'
 import { getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
 import { getRandomDailyTip } from '../../utils/financialTips'
 
@@ -58,7 +58,8 @@ export function DashboardView({
   const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
   const dailyTip = getRandomDailyTip(currentPeriod)
 
-  // Datos del período actual
+  // Datos del período actual y acumulado histórico
+  const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
   const pInc  = incomes.filter(i  => i.period === currentPeriod)
   const pExp  = expenses.filter(e => e.period === currentPeriod)
   const totalIn  = pInc.reduce((s, i) => s + i.amount, 0)
@@ -89,8 +90,8 @@ export function DashboardView({
     : undefined
   const expTrendDir = expDiff <= 0 ? 'up' : 'down' // menor gasto es mejor ('up')
 
-  const balDiff  = balance - prevBalance
-  const balTrend = prevTotalIn > 0 || totalIn > 0
+  const balDiff  = cumulative.totalCumulativeBalance - prevBalance
+  const balTrend = prevTotalIn > 0 || totalIn > 0 || cumulative.carriedOverBalance !== 0
     ? `${balDiff >= 0 ? '+' : ''}${formatCurrency(balDiff)} vs mes ant.`
     : undefined
   const balTrendDir = balDiff >= 0 ? 'up' : 'down'
@@ -166,10 +167,12 @@ export function DashboardView({
       trendDir: expTrendDir,
     },
     {
-      label: 'Balance Neto',
-      value: formatCurrency(balance),
-      sub: balance >= 0 ? 'Saldo superavitario' : 'Déficit presupuestario',
-      color: balance >= 0 ? 'emerald' : 'red',
+      label: 'Balance Total',
+      value: formatCurrency(cumulative.totalCumulativeBalance),
+      sub: cumulative.carriedOverBalance !== 0
+        ? `Incluye ${formatCurrency(cumulative.carriedOverBalance)} de arrastre anterior`
+        : (balance >= 0 ? 'Saldo superavitario del mes' : 'Déficit del mes'),
+      color: cumulative.totalCumulativeBalance >= 0 ? 'emerald' : 'red',
       icon: <Wallet size={14} />,
       trend: balTrend,
       trendDir: balTrendDir,
@@ -260,6 +263,28 @@ export function DashboardView({
             <strong style={{ color: '#F3CA65' }}>Consejo Financiero del Día ({dailyTip.category.toUpperCase()}):</strong> {dailyTip.title} — {dailyTip.content}
           </div>
         </div>
+
+        {cumulative.carriedOverBalance !== 0 && (
+          <div style={{
+            width: '100%',
+            marginTop: 4,
+            padding: '7px 12px',
+            borderRadius: 8,
+            background: 'rgba(243, 202, 101, 0.07)',
+            border: '1px solid rgba(243, 202, 101, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: 11.5,
+          }}>
+            <span style={{ color: '#D1D5DB' }}>
+              💼 <strong>Saldo Arrastrado del Mes Anterior:</strong> Remanente acumulado transferido a {currentPeriod}:
+            </span>
+            <strong style={{ color: cumulative.carriedOverBalance >= 0 ? '#34D399' : '#F87171', fontFamily: 'Space Mono' }}>
+              {cumulative.carriedOverBalance >= 0 ? '+' : ''}{formatCurrency(cumulative.carriedOverBalance)}
+            </strong>
+          </div>
+        )}
       </div>
 
       {/* Calendar Progress & End of Month Alert Banner */}
