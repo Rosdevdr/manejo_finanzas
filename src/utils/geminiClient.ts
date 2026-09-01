@@ -134,36 +134,42 @@ export async function queryGeminiFinancialAdvisor(
     },
   ]
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      system_instruction: {
-        parts: [{ text: systemInstruction }],
+  let response: Response
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
       },
-      contents,
-      generationConfig: {
-        temperature: 0.5,
-        topP: 0.95,
-        maxOutputTokens: 1024,
-      },
-    }),
-  })
+      body: JSON.stringify({
+        system_instruction: {
+          parts: [{ text: systemInstruction }],
+        },
+        contents,
+        generationConfig: {
+          temperature: 0.5,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        },
+      }),
+    })
+  } catch (netErr: any) {
+    throw new Error(`Error de conexión al servidor de Google AI (${netErr.message || 'Verifica tu conexión a internet o adblocker'})`)
+  }
 
   if (!response.ok) {
     const errJson = await response.json().catch(() => ({}))
-    const msg = errJson?.error?.message || `Error ${response.status}: ${response.statusText}`
+    const msg = errJson?.error?.message || `Error ${response.status} (${response.statusText}): Clave de API de Google no válida o sin permisos de Generative Language.`
     throw new Error(msg)
   }
 
   const data = await response.json()
   const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text
   if (!candidate) {
-    throw new Error('No se recibió una respuesta válida de Google Gemini.')
+    throw new Error('Google Gemini no generó texto en su respuesta.')
   }
 
   return candidate
