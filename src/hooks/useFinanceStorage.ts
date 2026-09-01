@@ -17,7 +17,16 @@ import type {
   GoalCategory,
 } from '../types/finance'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { sanitizeString, sanitizeAmount } from '../utils/security'
+import { sanitizeAmount } from '../utils/security'
+import {
+  validateIncomeInput,
+  validateExpenseInput,
+  validateCashWithdrawalInput,
+  validateCreditCardInput,
+  validateCreditTransactionInput,
+  validateBudgetInput,
+  validateSavingsGoalInput,
+} from '../utils/bllValidator'
 
 const KEYS = {
   incomes:            'aureus_incomes',
@@ -421,11 +430,13 @@ export function useFinanceStorage(user?: User | null) {
 
   // --- Acciones de Ingresos ---
   const addIncome = async (d: Omit<Income, 'id'>) => {
-    const cleanDesc = sanitizeString(d.description)
-    const cleanAmount = sanitizeAmount(d.amount)
+    const val = validateIncomeInput(d)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de ingreso inválidos' }
+    }
+    const cleanData = val.data
     const newId = `inc-${Date.now()}`
-    const computedPeriod = d.date ? d.date.slice(0, 7) : d.period
-    const item: Income = { ...d, period: computedPeriod, description: cleanDesc, amount: cleanAmount, id: newId }
+    const item: Income = { ...cleanData, id: newId }
 
     setIncomesState(prev => {
       const next = [item, ...prev]
@@ -437,22 +448,24 @@ export function useFinanceStorage(user?: User | null) {
       await supabase.from('incomes').insert({
         id: newId,
         user_id: user.id,
-        period: computedPeriod,
-        description: cleanDesc,
-        amount: cleanAmount,
-        type: d.type,
-        date: d.date,
+        period: cleanData.period,
+        description: cleanData.description,
+        amount: cleanData.amount,
+        type: cleanData.type,
+        date: cleanData.date,
       })
       notifyMutation('incomes')
       void loadData()
     }
+    return { success: true, targetPeriod: cleanData.period }
   }
 
   const updateIncome = async (updated: Income) => {
-    const cleanDesc = sanitizeString(updated.description)
-    const cleanAmount = sanitizeAmount(updated.amount)
-    const computedPeriod = updated.date ? updated.date.slice(0, 7) : updated.period
-    const cleanItem: Income = { ...updated, period: computedPeriod, description: cleanDesc, amount: cleanAmount }
+    const val = validateIncomeInput(updated)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de ingreso inválidos' }
+    }
+    const cleanItem: Income = { ...val.data, id: updated.id }
 
     setIncomesState(prev => {
       const next = prev.map(i => i.id === updated.id ? cleanItem : i)
@@ -462,15 +475,16 @@ export function useFinanceStorage(user?: User | null) {
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('incomes').update({
-        description: cleanDesc,
-        amount: cleanAmount,
-        type: updated.type,
-        date: updated.date,
-        period: computedPeriod,
+        description: cleanItem.description,
+        amount: cleanItem.amount,
+        type: cleanItem.type,
+        date: cleanItem.date,
+        period: cleanItem.period,
       }).eq('id', updated.id)
       notifyMutation('incomes')
       void loadData()
     }
+    return { success: true, targetPeriod: cleanItem.period }
   }
 
   const deleteIncome = async (id: string) => {
@@ -488,11 +502,13 @@ export function useFinanceStorage(user?: User | null) {
 
   // --- Acciones de Gastos ---
   const addExpense = async (d: Omit<Expense, 'id'>) => {
-    const cleanDesc = sanitizeString(d.description)
-    const cleanAmount = sanitizeAmount(d.amount)
+    const val = validateExpenseInput(d)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de gasto inválidos' }
+    }
+    const cleanData = val.data
     const newId = `exp-${Date.now()}`
-    const computedPeriod = d.date ? d.date.slice(0, 7) : d.period
-    const item: Expense = { ...d, period: computedPeriod, description: cleanDesc, amount: cleanAmount, id: newId }
+    const item: Expense = { ...cleanData, id: newId }
 
     setExpensesState(prev => {
       const next = [item, ...prev]
@@ -504,24 +520,26 @@ export function useFinanceStorage(user?: User | null) {
       await supabase.from('expenses').insert({
         id: newId,
         user_id: user.id,
-        period: computedPeriod,
-        description: cleanDesc,
-        amount: cleanAmount,
-        category: d.category,
-        type: d.type,
-        payment_method: d.paymentMethod,
-        date: d.date,
+        period: cleanData.period,
+        description: cleanData.description,
+        amount: cleanData.amount,
+        category: cleanData.category,
+        type: cleanData.type,
+        payment_method: cleanData.paymentMethod,
+        date: cleanData.date,
       })
       notifyMutation('expenses')
       void loadData()
     }
+    return { success: true, targetPeriod: cleanData.period }
   }
 
   const updateExpense = async (updated: Expense) => {
-    const cleanDesc = sanitizeString(updated.description)
-    const cleanAmount = sanitizeAmount(updated.amount)
-    const computedPeriod = updated.date ? updated.date.slice(0, 7) : updated.period
-    const cleanItem: Expense = { ...updated, period: computedPeriod, description: cleanDesc, amount: cleanAmount }
+    const val = validateExpenseInput(updated)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de gasto inválidos' }
+    }
+    const cleanItem: Expense = { ...val.data, id: updated.id }
 
     setExpensesState(prev => {
       const next = prev.map(e => e.id === updated.id ? cleanItem : e)
@@ -531,17 +549,18 @@ export function useFinanceStorage(user?: User | null) {
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('expenses').update({
-        description: cleanDesc,
-        amount: cleanAmount,
-        category: updated.category,
-        type: updated.type,
-        payment_method: updated.paymentMethod,
-        date: updated.date,
-        period: computedPeriod,
+        description: cleanItem.description,
+        amount: cleanItem.amount,
+        category: cleanItem.category,
+        type: cleanItem.type,
+        payment_method: cleanItem.paymentMethod,
+        date: cleanItem.date,
+        period: cleanItem.period,
       }).eq('id', updated.id)
       notifyMutation('expenses')
       void loadData()
     }
+    return { success: true, targetPeriod: cleanItem.period }
   }
 
   const deleteExpense = async (id: string) => {
@@ -559,11 +578,13 @@ export function useFinanceStorage(user?: User | null) {
 
   // --- Acciones de Efectivo ---
   const addWithdrawal = async (d: Omit<CashWithdrawal, 'id'>) => {
-    const cleanNote = d.note ? sanitizeString(d.note) : undefined
-    const cleanAmount = sanitizeAmount(d.amount)
+    const val = validateCashWithdrawalInput(d)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de retiro inválidos' }
+    }
+    const cleanData = val.data
     const newId = `cash-${Date.now()}`
-    const computedPeriod = d.date ? d.date.slice(0, 7) : d.period
-    const item: CashWithdrawal = { ...d, period: computedPeriod, note: cleanNote, amount: cleanAmount, id: newId }
+    const item: CashWithdrawal = { ...cleanData, id: newId }
 
     setCashState(prev => {
       const next = [item, ...prev]
@@ -575,15 +596,16 @@ export function useFinanceStorage(user?: User | null) {
       await supabase.from('cash_withdrawals').insert({
         id: newId,
         user_id: user.id,
-        period: computedPeriod,
-        amount: cleanAmount,
-        reason: d.reason,
-        note: cleanNote,
-        date: d.date,
+        period: cleanData.period,
+        amount: cleanData.amount,
+        reason: cleanData.reason,
+        note: cleanData.note ?? null,
+        date: cleanData.date,
       })
       notifyMutation('cash')
       void loadData()
     }
+    return { success: true, targetPeriod: cleanData.period }
   }
 
   const deleteWithdrawal = async (id: string) => {
@@ -601,19 +623,13 @@ export function useFinanceStorage(user?: User | null) {
 
   // --- Acciones de Tarjetas de Crédito ---
   const addCreditCard = async (d: Omit<CreditCard, 'id'>) => {
-    const cleanName = sanitizeString(d.name)
-    const cleanBank = sanitizeString(d.bank)
-    const cleanDigits = d.lastFourDigits.replace(/\D/g, '').slice(-4)
-    const cleanLimit = sanitizeAmount(d.creditLimit)
-    const newId = `card-${Date.now()}`
-    const item: CreditCard = {
-      ...d,
-      name: cleanName,
-      bank: cleanBank,
-      lastFourDigits: cleanDigits,
-      creditLimit: cleanLimit,
-      id: newId,
+    const val = validateCreditCardInput(d)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de tarjeta inválidos' }
     }
+    const cleanData = val.data
+    const newId = `card-${Date.now()}`
+    const item: CreditCard = { ...cleanData, id: newId }
 
     setCreditCardsState(prev => {
       const next = [...prev, item]
@@ -625,34 +641,27 @@ export function useFinanceStorage(user?: User | null) {
       await supabase.from('credit_cards').insert({
         id: newId,
         user_id: user.id,
-        name: cleanName,
-        bank: cleanBank,
-        last_four_digits: cleanDigits,
-        credit_limit: cleanLimit,
-        cutoff_day: d.cutoffDay,
-        payment_due_day: d.paymentDueDay,
-        interest_rate: d.interestRate ?? null,
-        color: d.color,
+        name: cleanData.name,
+        bank: cleanData.bank,
+        last_four_digits: cleanData.lastFourDigits,
+        credit_limit: cleanData.creditLimit,
+        cutoff_day: cleanData.cutoffDay,
+        payment_due_day: cleanData.paymentDueDay,
+        interest_rate: cleanData.interestRate ?? null,
+        color: cleanData.color,
       })
       notifyMutation('credit_cards')
       void loadData()
     }
+    return { success: true }
   }
 
   const updateCreditCard = async (updated: CreditCard) => {
-    const cleanName = sanitizeString(updated.name)
-    const cleanBank = sanitizeString(updated.bank)
-    const cleanDigits = updated.lastFourDigits.replace(/\D/g, '').slice(-4)
-    const cleanLimit = sanitizeAmount(updated.creditLimit)
-    const cleanCard: CreditCard = {
-      ...updated,
-      name: cleanName,
-      bank: cleanBank,
-      lastFourDigits: cleanDigits,
-      creditLimit: cleanLimit,
-      cutoffDay: Math.max(1, Math.min(31, updated.cutoffDay)),
-      paymentDueDay: Math.max(1, Math.min(31, updated.paymentDueDay)),
+    const val = validateCreditCardInput(updated)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de tarjeta inválidos' }
     }
+    const cleanCard: CreditCard = { ...val.data, id: updated.id }
 
     setCreditCardsState(prev => {
       const next = prev.map(c => c.id === updated.id ? cleanCard : c)
@@ -662,18 +671,19 @@ export function useFinanceStorage(user?: User | null) {
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_cards').update({
-        name: cleanName,
-        bank: cleanBank,
-        last_four_digits: cleanDigits,
-        credit_limit: cleanLimit,
+        name: cleanCard.name,
+        bank: cleanCard.bank,
+        last_four_digits: cleanCard.lastFourDigits,
+        credit_limit: cleanCard.creditLimit,
         cutoff_day: cleanCard.cutoffDay,
         payment_due_day: cleanCard.paymentDueDay,
-        interest_rate: updated.interestRate ?? null,
-        color: updated.color,
+        interest_rate: cleanCard.interestRate ?? null,
+        color: cleanCard.color,
       }).eq('id', updated.id)
       notifyMutation('credit_cards')
       void loadData()
     }
+    return { success: true }
   }
 
   const deleteCreditCard = async (id: string) => {
@@ -698,11 +708,13 @@ export function useFinanceStorage(user?: User | null) {
 
   // --- Acciones de Transacciones de Tarjeta ---
   const addCreditTransaction = async (d: Omit<CreditCardTransaction, 'id'>) => {
-    const cleanDesc = sanitizeString(d.description)
-    const cleanAmount = sanitizeAmount(d.amount)
+    const val = validateCreditTransactionInput(d, creditCards)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de consumo con tarjeta inválidos' }
+    }
+    const cleanData = val.data
     const newId = `ctx-${Date.now()}`
-    const computedPeriod = d.date ? d.date.slice(0, 7) : d.period
-    const item: CreditCardTransaction = { ...d, period: computedPeriod, description: cleanDesc, amount: cleanAmount, id: newId }
+    const item: CreditCardTransaction = { ...cleanData, id: newId }
 
     setCreditTransactionsState(prev => {
       const next = [item, ...prev]
@@ -714,26 +726,28 @@ export function useFinanceStorage(user?: User | null) {
       await supabase.from('credit_card_transactions').insert({
         id: newId,
         user_id: user.id,
-        card_id: d.cardId,
-        period: computedPeriod,
-        description: cleanDesc,
-        amount: cleanAmount,
-        category: d.category,
-        date: d.date,
-        installments: d.installments,
-        current_installment: d.currentInstallment,
-        is_paid: d.isPaid,
+        card_id: cleanData.cardId,
+        period: cleanData.period,
+        description: cleanData.description,
+        amount: cleanData.amount,
+        category: cleanData.category,
+        date: cleanData.date,
+        installments: cleanData.installments,
+        current_installment: cleanData.currentInstallment,
+        is_paid: cleanData.isPaid,
       })
       notifyMutation('credit_transactions')
       void loadData()
     }
+    return { success: true, targetPeriod: cleanData.period }
   }
 
   const updateCreditTransaction = async (updated: CreditCardTransaction) => {
-    const cleanDesc = sanitizeString(updated.description)
-    const cleanAmount = sanitizeAmount(updated.amount)
-    const computedPeriod = updated.date ? updated.date.slice(0, 7) : updated.period
-    const cleanItem: CreditCardTransaction = { ...updated, period: computedPeriod, description: cleanDesc, amount: cleanAmount }
+    const val = validateCreditTransactionInput(updated, creditCards)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de consumo inválidos' }
+    }
+    const cleanItem: CreditCardTransaction = { ...val.data, id: updated.id }
 
     setCreditTransactionsState(prev => {
       const next = prev.map(t => t.id === updated.id ? cleanItem : t)
@@ -743,19 +757,20 @@ export function useFinanceStorage(user?: User | null) {
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('credit_card_transactions').update({
-        card_id: updated.cardId,
-        description: cleanDesc,
-        amount: cleanAmount,
-        category: updated.category,
-        date: updated.date,
-        period: computedPeriod,
-        installments: updated.installments,
-        current_installment: updated.currentInstallment,
-        is_paid: updated.isPaid,
+        card_id: cleanItem.cardId,
+        description: cleanItem.description,
+        amount: cleanItem.amount,
+        category: cleanItem.category,
+        date: cleanItem.date,
+        period: cleanItem.period,
+        installments: cleanItem.installments,
+        current_installment: cleanItem.currentInstallment,
+        is_paid: cleanItem.isPaid,
       }).eq('id', updated.id)
       notifyMutation('credit_transactions')
       void loadData()
     }
+    return { success: true, targetPeriod: cleanItem.period }
   }
 
   const deleteCreditTransaction = async (id: string) => {
@@ -781,7 +796,11 @@ export function useFinanceStorage(user?: User | null) {
 
   // --- Acciones de Presupuestos por Categoría ---
   const setCategoryBudget = async (category: ExpenseCategory, limitAmount: number, period: string = 'default') => {
-    const cleanLimit = Math.max(0, sanitizeAmount(limitAmount))
+    const val = validateBudgetInput({ category, limitAmount, period })
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Presupuesto inválido' }
+    }
+    const cleanLimit = val.data.limitAmount
     const existing = categoryBudgets.find(b => b.category === category && (b.period === period || b.period === 'default'))
 
     if (existing) {
@@ -824,6 +843,7 @@ export function useFinanceStorage(user?: User | null) {
         void loadData()
       }
     }
+    return { success: true }
   }
 
   const setMultipleCategoryBudgets = async (budgetsMap: Record<ExpenseCategory, number>, period: string = 'default') => {
@@ -852,24 +872,24 @@ export function useFinanceStorage(user?: User | null) {
       notifyMutation('category_budgets')
       void loadData()
     }
+    return { success: true }
   }
 
   // --- Acciones de Metas de Ahorro ---
   const addSavingsGoal = async (g: Omit<SavingsGoal, 'id'>) => {
-    const cleanName = sanitizeString(g.name)
-    const cleanTarget = sanitizeAmount(g.targetAmount)
-    const cleanCurrent = Math.max(0, sanitizeAmount(g.currentAmount || 0))
-    const cleanMonthly = g.monthlyContribution ? sanitizeAmount(g.monthlyContribution) : undefined
+    const val = validateSavingsGoalInput(g)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de meta inválidos' }
+    }
+    const cleanData = val.data
     const newId = `goal-${Date.now()}`
 
     const item: SavingsGoal = {
-      ...g,
+      ...cleanData,
       id: newId,
-      name: cleanName,
-      targetAmount: cleanTarget,
-      currentAmount: cleanCurrent,
-      monthlyContribution: cleanMonthly,
-      isCompleted: cleanCurrent >= cleanTarget,
+      color: g.color || '#34D399',
+      targetDate: g.targetDate,
+      isCompleted: cleanData.currentAmount >= cleanData.targetAmount,
     }
 
     setSavingsGoalsState(prev => {
@@ -882,33 +902,34 @@ export function useFinanceStorage(user?: User | null) {
       await supabase.from('savings_goals').insert({
         id: newId,
         user_id: user.id,
-        name: cleanName,
-        target_amount: cleanTarget,
-        current_amount: cleanCurrent,
-        monthly_contribution: cleanMonthly ?? null,
+        name: cleanData.name,
+        target_amount: cleanData.targetAmount,
+        current_amount: cleanData.currentAmount,
+        monthly_contribution: cleanData.monthlyContribution ?? null,
         target_date: g.targetDate ?? null,
-        category: g.category,
+        category: cleanData.category,
         color: g.color || '#34D399',
         is_completed: item.isCompleted,
       })
       notifyMutation('savings_goals')
       void loadData()
     }
+    return { success: true }
   }
 
   const updateSavingsGoal = async (updated: SavingsGoal) => {
-    const cleanName = sanitizeString(updated.name)
-    const cleanTarget = sanitizeAmount(updated.targetAmount)
-    const cleanCurrent = Math.max(0, sanitizeAmount(updated.currentAmount || 0))
-    const cleanMonthly = updated.monthlyContribution ? sanitizeAmount(updated.monthlyContribution) : undefined
-    const isCompleted = cleanCurrent >= cleanTarget
+    const val = validateSavingsGoalInput(updated)
+    if (!val.isValid || !val.data) {
+      return { success: false, error: val.error || 'Datos de meta inválidos' }
+    }
+    const cleanData = val.data
+    const isCompleted = cleanData.currentAmount >= cleanData.targetAmount
 
     const cleanItem: SavingsGoal = {
-      ...updated,
-      name: cleanName,
-      targetAmount: cleanTarget,
-      currentAmount: cleanCurrent,
-      monthlyContribution: cleanMonthly,
+      ...cleanData,
+      id: updated.id,
+      color: updated.color || '#34D399',
+      targetDate: updated.targetDate,
       isCompleted,
     }
 
@@ -920,18 +941,19 @@ export function useFinanceStorage(user?: User | null) {
 
     if (supabase && isSupabaseConfigured && user) {
       await supabase.from('savings_goals').update({
-        name: cleanName,
-        target_amount: cleanTarget,
-        current_amount: cleanCurrent,
-        monthly_contribution: cleanMonthly ?? null,
+        name: cleanData.name,
+        target_amount: cleanData.targetAmount,
+        current_amount: cleanData.currentAmount,
+        monthly_contribution: cleanData.monthlyContribution ?? null,
         target_date: updated.targetDate ?? null,
-        category: updated.category,
+        category: cleanData.category,
         color: updated.color || '#34D399',
         is_completed: isCompleted,
       }).eq('id', updated.id)
       notifyMutation('savings_goals')
       void loadData()
     }
+    return { success: true }
   }
 
   const depositToGoal = async (goalId: string, amount: number) => {

@@ -177,9 +177,25 @@ export function ScenarioSimulatorModal({
           </div>
         </div>
 
-        <div className="modal-footer">
-          <button type="button" className="btn btn-secondary" onClick={onClose} style={{ width: '100%' }}>
-            Cerrar Simulador
+        <div className="modal-footer" style={{ padding: '14px 24px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'flex-end', background: '#0E0E14' }}>
+          <button
+            type="button"
+            className="mit-submit-btn"
+            onClick={onClose}
+            style={{
+              background: 'linear-gradient(135deg, #F3CA65 0%, #C9A84C 100%)',
+              color: '#0A0A0C',
+              border: 'none',
+              fontWeight: 700,
+              padding: '10px 28px',
+              borderRadius: 8,
+              fontSize: 13,
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(243, 202, 101, 0.25)',
+              width: '100%',
+            }}
+          >
+            Entendido, cerrar simulador
           </button>
         </div>
       </div>

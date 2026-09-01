@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Target,
   PiggyBank,
@@ -10,6 +10,7 @@ import {
   Calendar,
   Compass,
   X,
+  Filter,
 } from 'lucide-react'
 import type {
   Expense,
@@ -34,12 +35,12 @@ interface BudgetsAndGoalsViewProps {
   expenses: Expense[]
   categoryBudgets: CategoryBudget[]
   savingsGoals: SavingsGoal[]
-  onSetCategoryBudget: (category: ExpenseCategory, limit: number, period?: string) => Promise<void>
-  onSetMultipleBudgets: (budgetsMap: Record<ExpenseCategory, number>, period?: string) => Promise<void>
-  onAddSavingsGoal: (goal: Omit<SavingsGoal, 'id'>) => Promise<void>
-  onUpdateSavingsGoal: (goal: SavingsGoal) => Promise<void>
-  onDepositToGoal: (goalId: string, amount: number) => Promise<void>
-  onDeleteSavingsGoal: (goalId: string) => Promise<void>
+  onSetCategoryBudget: (category: ExpenseCategory, limit: number, period?: string) => Promise<any>
+  onSetMultipleBudgets: (budgetsMap: Record<ExpenseCategory, number>, period?: string) => Promise<any>
+  onAddSavingsGoal: (goal: Omit<SavingsGoal, 'id'>) => Promise<any>
+  onUpdateSavingsGoal: (goal: SavingsGoal) => Promise<any>
+  onDepositToGoal: (goalId: string, amount: number) => Promise<any>
+  onDeleteSavingsGoal: (goalId: string) => Promise<any>
   onShowToast: (msg: string, type?: 'success' | 'error' | 'info') => void
 }
 
@@ -88,6 +89,16 @@ export function BudgetsAndGoalsView({
   const [activeSubtab, setActiveSubtab] = useState<'budgets' | 'goals'>('budgets')
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null)
   const [tempLimit, setTempLimit] = useState<string>('')
+  const [showAllCategories, setShowAllCategories] = useState(false)
+
+  // Carga automática de límites inteligentes si no existen o están en 0
+  useEffect(() => {
+    const hasCustomLimits = categoryBudgets.some(b => b.limitAmount > 0)
+    if (!hasCustomLimits && (expenses.length > 0 || incomes.length > 0)) {
+      const suggestions = suggestCategoryBudgetsFromHistory(expenses, incomes, currentPeriod)
+      void onSetMultipleBudgets(suggestions, currentPeriod)
+    }
+  }, [currentPeriod, expenses, incomes, categoryBudgets, onSetMultipleBudgets])
 
   // Modal para Crear / Editar Meta
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
@@ -374,9 +385,76 @@ export function BudgetsAndGoalsView({
             </div>
           </div>
 
+          {/* Smart Limits Automatic Banner */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.1) 0%, rgba(20, 20, 28, 0.85) 100%)',
+            border: '1px solid rgba(201, 168, 76, 0.25)',
+            borderRadius: 14,
+            padding: '12px 18px',
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Sparkles size={18} style={{ color: '#F3CA65' }} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF' }}>
+                  Límites Sugeridos Calculados Automáticamente
+                </div>
+                <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>
+                  Determinados por tus ingresos y gastos reales. Las categorías sin gastos se descartan para mayor claridad.
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowAllCategories(prev => !prev)}
+                style={{
+                  fontSize: 11.5,
+                  padding: '6px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#D1D5DB',
+                }}
+              >
+                <Filter size={13} />
+                <span>{showAllCategories ? 'Ocultar categorías sin gastos' : 'Ver todas las categorías'}</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleAutoSuggestBudgets}
+                style={{
+                  fontSize: 11.5,
+                  padding: '6px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'linear-gradient(135deg, rgba(243, 202, 101, 0.2) 0%, rgba(201, 168, 76, 0.25) 100%)',
+                  border: '1px solid rgba(243, 202, 101, 0.4)',
+                  color: '#F3CA65',
+                  fontWeight: 700,
+                }}
+              >
+                <Sparkles size={13} />
+                <span>Actualizar Límites</span>
+              </button>
+            </div>
+          </div>
+
           {/* Categories Grid */}
           <div className="budgets-grid">
-            {budgetStatuses.map(status => {
+            {(showAllCategories ? budgetStatuses : budgetStatuses.filter(b => b.limit > 0 || b.spent > 0)).map(status => {
               const meta = CATEGORY_META[status.category]
               return (
                 <div key={status.category} className={`budget-card ${status.status}`}>
