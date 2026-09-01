@@ -149,7 +149,7 @@ export async function queryGeminiFinancialAdvisor(
     generationConfig: {
       temperature: 0.5,
       topP: 0.95,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 4096,
     },
   }
 
@@ -167,7 +167,11 @@ export async function queryGeminiFinancialAdvisor(
 
     if (proxyRes.ok) {
       const data = await proxyRes.json()
-      const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text
+      const parts = data?.candidates?.[0]?.content?.parts
+      const candidate = parts
+        ? parts.map((p: any) => p.text || '').filter(Boolean).join('\n')
+        : data?.candidates?.[0]?.content?.parts?.[0]?.text
+
       if (candidate) {
         if (data.usedModel) setStoredGeminiModel(data.usedModel)
         return candidate
@@ -202,7 +206,11 @@ export async function queryGeminiFinancialAdvisor(
 
       if (response.ok) {
         const data = await response.json()
-        const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text
+        const parts = data?.candidates?.[0]?.content?.parts
+        const candidate = parts
+          ? parts.map((p: any) => p.text || '').filter(Boolean).join('\n')
+          : data?.candidates?.[0]?.content?.parts?.[0]?.text
+
         if (candidate) {
           setStoredGeminiModel(model)
           return candidate
