@@ -142,7 +142,6 @@ export async function queryGeminiFinancialAdvisor(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
       },
       body: JSON.stringify({
         system_instruction: {
@@ -157,7 +156,7 @@ export async function queryGeminiFinancialAdvisor(
       }),
     })
   } catch (netErr: any) {
-    throw new Error(`Error de conexión al servidor de Google AI (${netErr.message || 'Verifica tu conexión a internet o adblocker'})`)
+    throw new Error(`Error de conexión al servidor de Google AI (${netErr.message || 'Verifica tu conexión o adblocker'})`)
   }
 
   if (!response.ok) {
