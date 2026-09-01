@@ -17,6 +17,7 @@ import {
   Bot,
   Flame,
   Sliders,
+  BookOpen,
 } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
@@ -35,6 +36,7 @@ interface SidebarProps {
   onOpenFireCalculator?: () => void
   onOpenScenarioSimulator?: () => void
   onOpenLicense?: () => void
+  onOpenGuide?: () => void
   isInstallable?: boolean
   onInstallApp?: () => void
 }
@@ -63,6 +65,7 @@ export function Sidebar({
   onOpenFireCalculator,
   onOpenScenarioSimulator,
   onOpenLicense,
+  onOpenGuide,
   isInstallable,
   onInstallApp,
 }: SidebarProps) {
@@ -185,6 +188,20 @@ export function Sidebar({
             >
               <span className="nav-icon"><Smartphone size={16} /></span>
               <span>Instalar App</span>
+            </button>
+          )}
+
+          {onOpenGuide && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenGuide()
+              }}
+            >
+              <span className="nav-icon" style={{ color: '#F3CA65' }}><BookOpen size={16} /></span>
+              <span>Guía de Módulos</span>
             </button>
           )}
 
