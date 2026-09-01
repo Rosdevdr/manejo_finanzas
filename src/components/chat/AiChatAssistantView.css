@@ -1,16 +1,24 @@
 /* src/components/chat/AiChatAssistantView.css */
 
+.chat-view-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .chat-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px);
-  max-height: 820px;
-  background: rgba(13, 13, 18, 0.7);
+  flex: 1;
+  min-height: 460px;
+  height: calc(100vh - 170px);
+  background: rgba(14, 14, 18, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  border-radius: 16px;
   backdrop-filter: blur(16px);
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
 }
 
 /* EU AI Act Article 50 Compliance Banner */

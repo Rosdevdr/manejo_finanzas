@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, Trash2, Copy, Volume2, Sparkles, ShieldCheck, Lightbulb, UserCheck, Key, Check, X } from 'lucide-react'
+import { Bot, Send, Trash2, Copy, Volume2, Sparkles, ShieldCheck, Key, Check, X } from 'lucide-react'
 import type {
   Income,
   Expense,
@@ -315,64 +315,28 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
   }
 
   return (
-    <div className="fade-in">
-      <div className="page-header">
-        <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Asistente Financiero IA</span></div>
-        <h1 className="page-title">Asesor Financiero Conversacional con IA</h1>
+    <div className="fade-in chat-view-wrapper">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <div>
+          <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Asistente IA</span></div>
+          <h1 className="page-title">Asesor Financiero con Inteligencia Artificial</h1>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, background: 'rgba(52, 211, 153, 0.08)', padding: '4px 10px', borderRadius: 12, border: '1px solid rgba(52, 211, 153, 0.2)' }}>
+          <ShieldCheck size={13} style={{ color: '#34D399' }} />
+          <span style={{ fontSize: 10.5, color: '#34D399', fontFamily: 'Space Mono, monospace' }}>Art. 50 UE AI Act</span>
+        </div>
       </div>
 
       <div className="chat-container">
-        {/* EU AI Act Article 50 Compliance Banner */}
-        <div className="ai-act-banner">
-          <div className="ai-act-badge">
-            <ShieldCheck size={14} />
-            <span>Sistema interactivo de Inteligencia Artificial en tiempo real</span>
-          </div>
-          <div className="ai-act-tag">Transparencia: Art. 50 Reglamento UE (AI Act)</div>
-        </div>
-
-        {/* Personalized Welcome Card with Variable Daily Tip */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.12) 0%, rgba(18, 18, 26, 0.8) 100%)',
-          border: '1px solid rgba(201, 168, 76, 0.25)',
-          borderRadius: 14,
-          padding: '12px 18px',
-          margin: '12px 16px 0 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 12,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <UserCheck size={20} style={{ color: '#F3CA65' }} />
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#F3CA65' }}>
-                ¡Bienvenido de nuevo, {capitalizedName}! 👋
-              </div>
-              <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>
-                Sesión activa para {userEmail || 'Usuario AUREUS'} · Datos sincronizados
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255, 255, 255, 0.05)', padding: '6px 12px', borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <Lightbulb size={15} style={{ color: '#F59E0B', flexShrink: 0 }} />
-            <div style={{ fontSize: 11, color: '#E5E7EB', maxWidth: 380 }}>
-              <strong style={{ color: '#F3CA65' }}>Tip del Día:</strong> {dailyTip.title}
-            </div>
-          </div>
-        </div>
-
         {/* Header */}
         <div className="chat-header">
           <div className="chat-title-box">
             <div className="chat-avatar-ai">
-              <Bot size={22} />
+              <Bot size={20} />
             </div>
             <div className="chat-header-info">
               <h2>AUREUS Financial Intelligence</h2>
-              <p>Análisis cuantitativo y toma de decisiones en vivo</p>
+              <p>Mentor Financiero Inteligente en tiempo real</p>
             </div>
           </div>
 
