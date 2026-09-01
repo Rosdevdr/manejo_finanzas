@@ -24,8 +24,12 @@ export function setStoredGeminiApiKey(key: string): void {
 }
 
 export function getStoredGeminiModel(): string {
-  if (typeof window === 'undefined') return 'gemini-1.5-flash'
-  return localStorage.getItem(GEMINI_MODEL_STORAGE) || 'gemini-1.5-flash'
+  if (typeof window === 'undefined') return 'gemini-3.5-flash'
+  const stored = localStorage.getItem(GEMINI_MODEL_STORAGE)
+  if (!stored || stored === 'gemini-1.5-flash' || stored === 'gemini-2.0-flash') {
+    return 'gemini-3.5-flash'
+  }
+  return stored
 }
 
 export function setStoredGeminiModel(model: string): void {
@@ -95,7 +99,7 @@ ${goalsSummaries || 'Sin metas activas.'}
 
 REGLAS DE RESPUESTA:
 1. Responde en español dominicano/latino neutral, cálido y profesional.
-2. Si el usuario pregunta cuánto puede gastar o sobre una decisión de compra (ej: una tarjeta gráfica, un electrodoméstico o salidas), analiza el desembolso neto, compáralo con su Total Disponible Acumulado Real (${formatCurrency(cumulative.totalCumulativeBalance)}) y su Saldo Arrastrado del mes anterior (${formatCurrency(cumulative.carriedOverBalance)}).
+2. Si el usuario pregunta cuánto puede gastar o sobre una decisión de compra (ej: una tarjeta gráfica, audífonos, un electrodoméstico o salidas), analiza el desembolso neto, compáralo con su Total Disponible Acumulado Real (${formatCurrency(cumulative.totalCumulativeBalance)}) y su Saldo Arrastrado del mes anterior (${formatCurrency(cumulative.carriedOverBalance)}).
 3. Distingue claramente entre "tarjeta gráfica / hardware" y "tarjeta de crédito bancaria".
 4. Adapta tu respuesta tanto para finanzas del hogar como para visión emprendedor según el contexto de la pregunta.
 5. Usa formato Markdown con negritas y viñetas para que la lectura sea muy cómoda y agradable.`
@@ -114,7 +118,10 @@ export async function queryGeminiFinancialAdvisor(
     throw new Error('No se ha configurado una clave API de Google Gemini. Haz clic en "Conectar Gemini API" en el chat.')
   }
 
-  const model = getStoredGeminiModel()
+  const selectedModel = getStoredGeminiModel()
+  const candidateModels = [selectedModel, 'gemini-3.5-flash', 'gemma-4-31b-it', 'gemini-2.5-flash']
+  const uniqueModels = Array.from(new Set(candidateModels))
+
   const systemInstruction = buildSystemPrompt(snapshot)
 
   // Filtrar y estructurar historial reciente
@@ -134,42 +141,46 @@ export async function queryGeminiFinancialAdvisor(
     },
   ]
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
+  let lastErrorMsg = ''
 
-  let response: Response
-  try {
-    response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemInstruction }],
+  for (const model of uniqueModels) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        contents,
-        generationConfig: {
-          temperature: 0.5,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
-      }),
-    })
-  } catch (netErr: any) {
-    throw new Error(`Error de conexión al servidor de Google AI (${netErr.message || 'Verifica tu conexión o adblocker'})`)
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: systemInstruction }],
+          },
+          contents,
+          generationConfig: {
+            temperature: 0.5,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          },
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text
+        if (candidate) {
+          // Guardar el modelo exitoso como preferido
+          setStoredGeminiModel(model)
+          return candidate
+        }
+      } else {
+        const errJson = await response.json().catch(() => ({}))
+        lastErrorMsg = errJson?.error?.message || `Error ${response.status}: ${response.statusText}`
+      }
+    } catch (netErr: any) {
+      lastErrorMsg = netErr.message || 'Error de conexión'
+    }
   }
 
-  if (!response.ok) {
-    const errJson = await response.json().catch(() => ({}))
-    const msg = errJson?.error?.message || `Error ${response.status} (${response.statusText}): Clave de API de Google no válida o sin permisos de Generative Language.`
-    throw new Error(msg)
-  }
-
-  const data = await response.json()
-  const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text
-  if (!candidate) {
-    throw new Error('Google Gemini no generó texto en su respuesta.')
-  }
-
-  return candidate
+  throw new Error(lastErrorMsg || 'No se pudo obtener respuesta de los modelos de Gemini disponibles.')
 }
