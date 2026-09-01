@@ -449,9 +449,9 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
                     fontSize: 13,
                   }}
                 >
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (Ultra rápido, ideal para finanzas en vivo)</option>
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (Nueva generación multimodal)</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (Razonamiento complejo avanzado)</option>
+                  <option value="gemini-3.5-flash">Gemini 3.5 Flash (Recomendado - Ultra rápido y preciso)</option>
+                  <option value="gemma-4-31b-it">Gemma 4 31B Instruct (Alta capacidad analítica)</option>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                 </select>
               </div>
 

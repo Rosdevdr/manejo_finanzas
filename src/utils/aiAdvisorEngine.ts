@@ -120,22 +120,41 @@ Siguiendo las mejores prácticas financieras internacionales (Regla 50/30/20):
     lowerPrompt.includes('adquirir') ||
     lowerPrompt.includes('tarjeta grafica') ||
     lowerPrompt.includes('tarjeta de video') ||
-    lowerPrompt.includes('diferencia')
+    lowerPrompt.includes('diferencia') ||
+    lowerPrompt.includes('audifonos')
   ) {
     const availableFunds = cumulative.totalCumulativeBalance
     const carriedOver = cumulative.carriedOverBalance
 
+    // Extraer montos numéricos relevantes de la consulta
+    const foundNumbers = prompt.match(/\b\d{1,3}(?:[.,]\d{3})*(?:\.\d+)?\b/g)
+      ?.map(n => parseFloat(n.replace(/,/g, '')))
+      ?.filter(n => !isNaN(n) && n >= 500) || []
+
+    const targetAmount = foundNumbers.length > 0 ? foundNumbers[0] : 5000
+    const secondAmount = foundNumbers.length > 1 ? foundNumbers[1] : undefined
+    const totalOutlay = secondAmount ? targetAmount + secondAmount : targetAmount
+
+    const remainingAfterPurchase = availableFunds - totalOutlay
+    const isViable = remainingAfterPurchase >= 0
+    const isTight = remainingAfterPurchase >= 0 && remainingAfterPurchase < (availableFunds * 0.35)
+
     return `### 🎯 Evaluación de Factibilidad de Compra (${currentPeriod})
 
-Analizando la compra con tus datos financieros reales:
+Analizando la consulta con tus datos financieros reales:
 
 • **Total Disponible Real Acumulado:** **\`${formatCurrency(availableFunds)}\`**
-${carriedOver > 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurrency(carriedOver)}\` (Fondo de respaldo)\n` : ''}• **Margen en Ocio y Deseos (30% regla 50/30/20):** Ideal para gustos personales.
+${carriedOver > 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurrency(carriedOver)}\` (Fondo de respaldo)\n` : ''}• **Desembolso Estimado:** **\`${formatCurrency(totalOutlay)}\`**${secondAmount ? ` (\`${formatCurrency(targetAmount)}\` + \`${formatCurrency(secondAmount)}\`)` : ''}
+• **Margen Restante tras la compra:** **\`${formatCurrency(remainingAfterPurchase)}\`**
 
 **💡 Veredicto y Recomendaciones del Asesor:**
-1. **✅ Factibilidad:** La compra es **completamente viable**, ya que al vender el equipo anterior por RD$14,000 tu desembolso de bolsillo real es solo la diferencia (hasta RD$5,000), lo cual está holgadamente cubierto por tu saldo disponible.
-2. **🛡️ Regla de Oro de Liquidez:** **Concreta primero la venta y cobro de los RD$14,000** antes de pagar la nueva tarjeta gráfica para no comprometer tu flujo de caja previo.
-3. **📅 Momento Ideal:** Realiza la compra justo después de haber recibido tu nómina del mes o asegurado tus gastos fijos indispensables.`
+1. ${!isViable
+  ? `⚠️ **Precaución (Te dejaría en déficit):** Con un desembolso de \`${formatCurrency(totalOutlay)}\`, sobrepasas tu saldo disponible actual de \`${formatCurrency(availableFunds)}\` por **\`${formatCurrency(Math.abs(remainingAfterPurchase))}\`**. Te sugiero esperar a recibir tu próximo ingreso de nómina antes de realizar el gasto.`
+  : isTight
+  ? `🟡 **Factible pero Ajustado:** Puedes realizar el gasto de \`${formatCurrency(totalOutlay)}\`, pero tu saldo disponible se reducirá a **\`${formatCurrency(remainingAfterPurchase)}\`**. Te dejará con poco margen para imprevistos hasta tu próximo cobro.`
+  : `✅ **Completamente Viable:** El desembolso de \`${formatCurrency(totalOutlay)}\` está bien cubierto y mantendrás un colchón disponible de **\`${formatCurrency(remainingAfterPurchase)}\`**.`}
+2. **🛡️ Regla de Oro de Liquidez:** Si la compra depende de vender un artículo anterior, **asegura y cobra primero la venta** antes de pagar el nuevo artículo.
+3. **📅 Plan de Acción:** Si decides comprarlo, asegúrate de mantener intactos los fondos para tus compromisos fijos esenciales.`
   }
 
   // 4. Deudas y Tarjetas de Crédito Bancarias
