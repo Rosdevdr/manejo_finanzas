@@ -38,6 +38,116 @@ interface AiChatAssistantViewProps {
   userEmail?: string
 }
 
+function parseInlineMarkdown(text: string): React.ReactNode[] {
+  // Regex to split by bold (**text**), inline code (`code`), and italics (*text*)
+  const tokens = text.split(/(\*\*.*?\*\*|`.*?`|\*.*?\*)/g)
+  return tokens.map((token, i) => {
+    if (token.startsWith('**') && token.endsWith('**')) {
+      return <strong key={i} className="chat-md-bold">{token.slice(2, -2)}</strong>
+    }
+    if (token.startsWith('`') && token.endsWith('`')) {
+      return <code key={i} className="chat-md-code">{token.slice(1, -1)}</code>
+    }
+    if (token.startsWith('*') && token.endsWith('*') && token.length > 2) {
+      return <em key={i} className="chat-md-em">{token.slice(1, -1)}</em>
+    }
+    return token
+  })
+}
+
+function FormattedChatMessage({ text }: { text: string }) {
+  const lines = text.split('\n')
+  const elements: React.ReactNode[] = []
+
+  let inList = false
+  let listItems: React.ReactNode[] = []
+
+  const flushList = (key: string) => {
+    if (inList && listItems.length > 0) {
+      elements.push(
+        <ul key={key} className="chat-md-list">
+          {listItems}
+        </ul>
+      )
+      listItems = []
+      inList = false
+    }
+  }
+
+  lines.forEach((line, index) => {
+    const trimmed = line.trim()
+
+    // Horizontal Rule
+    if (trimmed === '---' || trimmed === '***' || trimmed === '___') {
+      flushList(`list-before-hr-${index}`)
+      elements.push(<hr key={`hr-${index}`} className="chat-md-hr" />)
+      return
+    }
+
+    // Headers
+    if (trimmed.startsWith('### ')) {
+      flushList(`list-before-h3-${index}`)
+      elements.push(
+        <h3 key={`h3-${index}`} className="chat-md-h3">
+          {parseInlineMarkdown(trimmed.slice(4))}
+        </h3>
+      )
+      return
+    }
+
+    if (trimmed.startsWith('#### ')) {
+      flushList(`list-before-h4-${index}`)
+      elements.push(
+        <h4 key={`h4-${index}`} className="chat-md-h4">
+          {parseInlineMarkdown(trimmed.slice(5))}
+        </h4>
+      )
+      return
+    }
+
+    if (trimmed.startsWith('## ')) {
+      flushList(`list-before-h2-${index}`)
+      elements.push(
+        <h2 key={`h2-${index}`} className="chat-md-h2">
+          {parseInlineMarkdown(trimmed.slice(3))}
+        </h2>
+      )
+      return
+    }
+
+    // List items (bullet or numbered)
+    const bulletMatch = trimmed.match(/^([*•\-]|(\d+\.))\s+(.*)$/)
+    if (bulletMatch) {
+      inList = true
+      const content = bulletMatch[3]
+      const prefix = bulletMatch[2] ? `${bulletMatch[2]} ` : ''
+      listItems.push(
+        <li key={`li-${index}`} className="chat-md-li">
+          {prefix && <span className="chat-md-num">{prefix}</span>}
+          <span>{parseInlineMarkdown(content)}</span>
+        </li>
+      )
+      return
+    }
+
+    // Normal line / paragraph
+    flushList(`list-before-p-${index}`)
+    if (trimmed) {
+      elements.push(
+        <p key={`p-${index}`} className="chat-md-p">
+          {parseInlineMarkdown(line)}
+        </p>
+      )
+    } else {
+      elements.push(<div key={`empty-${index}`} className="chat-md-spacer" />)
+    }
+  })
+
+  flushList(`list-end`)
+
+  return <div className="chat-md-body">{elements}</div>
+}
+
 const QUICK_PROMPTS = [
   '¿Cuánto dinero puedo gastar este mes?',
   '¿Cuánto debería ahorrar?',
@@ -320,11 +430,7 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
               )}
 
               <div className="message-bubble">
-                <div style={{ whiteSpace: 'pre-wrap' }}>
-                  {msg.text.split('\n').map((line, idx) => (
-                    <p key={idx} style={{ margin: '3px 0' }}>{line}</p>
-                  ))}
-                </div>
+                <FormattedChatMessage text={msg.text} />
                 <span className="message-time">{msg.timestamp}</span>
 
                 {msg.sender === 'assistant' && (

@@ -200,6 +200,92 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* Markdown Formatting for Chat Messages */
+.chat-md-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-md-p {
+  margin: 2px 0;
+  line-height: 1.6;
+  color: #E5E7EB;
+}
+
+.chat-md-bold {
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.message-row.assistant .chat-md-bold {
+  color: #F9FAFB;
+  font-weight: 700;
+}
+
+.chat-md-code {
+  background: rgba(243, 202, 101, 0.14);
+  border: 1px solid rgba(243, 202, 101, 0.3);
+  color: #F3CA65;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chat-md-h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #F3CA65;
+  margin: 12px 0 4px 0;
+}
+
+.chat-md-h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #F3CA65;
+  margin: 10px 0 4px 0;
+}
+
+.chat-md-h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #E5E7EB;
+  margin: 8px 0 2px 0;
+}
+
+.chat-md-hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 10px 0;
+  width: 100%;
+}
+
+.chat-md-list {
+  margin: 4px 0 6px 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  list-style-type: disc;
+}
+
+.chat-md-li {
+  color: #D1D5DB;
+  line-height: 1.5;
+}
+
+.chat-md-num {
+  font-weight: 700;
+  color: #F3CA65;
+  margin-right: 4px;
+}
+
+.chat-md-spacer {
+  height: 4px;
+}
+
 .msg-action-btn {
   background: transparent;
   border: none;
