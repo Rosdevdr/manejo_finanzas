@@ -41,6 +41,12 @@ describe('aiAdvisorEngine', () => {
     expect(res).toContain('Diagnóstico y Plan de Deudas')
   })
 
+  it('generates purchase feasibility response for graphic card/hardware', () => {
+    const res = generateAiFinancialResponse('Deseo comprarme una tarjeta gráfica vendiendo la anterior y poniendo cinco mil de diferencia', emptySnapshot)
+    expect(res).toContain('Evaluación de Factibilidad de Compra')
+    expect(res).not.toContain('Diagnóstico y Plan de Deudas')
+  })
+
   it('generates 50/30/20 rule diagnostics', () => {
     const res = generateAiFinancialResponse('Diagnóstico de la regla 50/30/20', emptySnapshot)
     expect(res).toContain('Regla Financiera 50 / 30 / 20')

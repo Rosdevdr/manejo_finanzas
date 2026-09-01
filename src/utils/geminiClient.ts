@@ -9,13 +9,15 @@ const GEMINI_MODEL_STORAGE = 'aureus_gemini_model'
 
 export function getStoredGeminiApiKey(): string {
   if (typeof window === 'undefined') return ''
-  return localStorage.getItem(GEMINI_API_KEY_STORAGE) || import.meta.env.VITE_GEMINI_API_KEY || ''
+  const stored = localStorage.getItem(GEMINI_API_KEY_STORAGE) || import.meta.env.VITE_GEMINI_API_KEY || ''
+  return stored.trim().replace(/^["']|["']$/g, '')
 }
 
 export function setStoredGeminiApiKey(key: string): void {
   if (typeof window === 'undefined') return
-  if (key.trim()) {
-    localStorage.setItem(GEMINI_API_KEY_STORAGE, key.trim())
+  const clean = key.trim().replace(/^["']|["']$/g, '')
+  if (clean) {
+    localStorage.setItem(GEMINI_API_KEY_STORAGE, clean)
   } else {
     localStorage.removeItem(GEMINI_API_KEY_STORAGE)
   }
@@ -93,9 +95,10 @@ ${goalsSummaries || 'Sin metas activas.'}
 
 REGLAS DE RESPUESTA:
 1. Responde en español dominicano/latino neutral, cálido y profesional.
-2. Si el usuario pregunta cuánto puede gastar o ahorrar, basa tu recomendación en el "Total Disponible Acumulado Real" (${formatCurrency(cumulative.totalCumulativeBalance)}) y el Saldo Arrastrado del mes anterior (${formatCurrency(cumulative.carriedOverBalance)}).
-3. Adapta tu respuesta tanto para finanzas del hogar como para visión emprendedor según el contexto de la pregunta.
-4. Usa formato Markdown con negritas y viñetas para que la lectura sea muy cómoda y agradable.`
+2. Si el usuario pregunta cuánto puede gastar o sobre una decisión de compra (ej: una tarjeta gráfica, un electrodoméstico o salidas), analiza el desembolso neto, compáralo con su Total Disponible Acumulado Real (${formatCurrency(cumulative.totalCumulativeBalance)}) y su Saldo Arrastrado del mes anterior (${formatCurrency(cumulative.carriedOverBalance)}).
+3. Distingue claramente entre "tarjeta gráfica / hardware" y "tarjeta de crédito bancaria".
+4. Adapta tu respuesta tanto para finanzas del hogar como para visión emprendedor según el contexto de la pregunta.
+5. Usa formato Markdown con negritas y viñetas para que la lectura sea muy cómoda y agradable.`
 }
 
 /**
@@ -108,26 +111,23 @@ export async function queryGeminiFinancialAdvisor(
 ): Promise<string> {
   const apiKey = getStoredGeminiApiKey()
   if (!apiKey) {
-    throw new Error('No se ha configurado una clave API de Google Gemini.')
+    throw new Error('No se ha configurado una clave API de Google Gemini. Haz clic en "Conectar Gemini API" en el chat.')
   }
 
   const model = getStoredGeminiModel()
   const systemInstruction = buildSystemPrompt(snapshot)
 
-  // Formato de mensajes para la API de Gemini
-  const contents = [
-    {
-      role: 'user',
-      parts: [{ text: systemInstruction + '\n\nPor favor, responde a mis consultas teniendo siempre en cuenta estos datos.' }],
-    },
-    {
-      role: 'model',
-      parts: [{ text: 'Entendido. Conozco todos tus datos financieros en tiempo real de AUREUS y estoy listo para asesorarte con total precisión. ¿En qué te puedo orientar?' }],
-    },
-    ...chatHistory.slice(-6).map(msg => ({
+  // Filtrar y estructurar historial reciente
+  const recentValidHistory = chatHistory
+    .filter(m => m.text && !m.text.startsWith('*('))
+    .slice(-4)
+    .map(msg => ({
       role: msg.sender === 'user' ? 'user' : 'model',
       parts: [{ text: msg.text }],
-    })),
+    }))
+
+  const contents = [
+    ...recentValidHistory,
     {
       role: 'user',
       parts: [{ text: prompt }],
@@ -142,9 +142,12 @@ export async function queryGeminiFinancialAdvisor(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      system_instruction: {
+        parts: [{ text: systemInstruction }],
+      },
       contents,
       generationConfig: {
-        temperature: 0.4,
+        temperature: 0.5,
         topP: 0.95,
         maxOutputTokens: 1024,
       },
