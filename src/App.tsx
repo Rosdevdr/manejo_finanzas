@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import type { TabType } from './types/navigation'
 import { Sidebar }           from './components/layout/Sidebar'
 import { AppHeader }         from './components/layout/AppHeader'
@@ -107,6 +107,14 @@ export function App() {
     )
   }
 
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0
+    }
+  }, [activeTab])
+
   return (
     <div className="app-shell">
       <Sidebar
@@ -151,7 +159,7 @@ export function App() {
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <div className="content">
+        <div ref={contentRef} className="content">
           {activeTab === 'dashboard' && (
             <DashboardView
               currentPeriod={currentPeriod}

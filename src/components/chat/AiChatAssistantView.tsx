@@ -199,7 +199,7 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping]   = useState(false)
   const [copiedId, setCopiedId]   = useState<string | null>(null)
-  const messagesEndRef            = useRef<HTMLDivElement>(null)
+  const chatMessagesRef           = useRef<HTMLDivElement>(null)
 
   const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
   const pIncomes  = incomes.filter(i => i.period === currentPeriod)
@@ -208,7 +208,9 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
   const totalExp  = pExpenses.reduce((s, e) => s + e.amount, 0)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight
+    }
   }
 
   useEffect(() => {
@@ -380,7 +382,7 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
         </div>
 
         {/* Messages */}
-        <div className="chat-messages">
+        <div ref={chatMessagesRef} className="chat-messages">
           {messages.map((msg) => (
             <div key={msg.id} className={`message-row ${msg.sender}`}>
               {msg.sender === 'assistant' ? (
@@ -421,7 +423,6 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Quick Suggestion Chips */}
