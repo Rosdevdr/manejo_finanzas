@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, Trash2, Copy, Volume2, Sparkles, ShieldCheck, Lightbulb, UserCheck } from 'lucide-react'
+import { Bot, Send, Trash2, Copy, Volume2, Sparkles, ShieldCheck, Lightbulb, UserCheck, Key, Check, X } from 'lucide-react'
 import type {
   Income,
   Expense,
@@ -9,9 +9,17 @@ import type {
   CategoryBudget,
   SavingsGoal,
 } from '../../types/finance'
-import { generateAiFinancialResponse, type ChatMessage } from '../../utils/aiAdvisorEngine'
+import { generateAiFinancialResponse, type ChatMessage, type FinancialSnapshot } from '../../utils/aiAdvisorEngine'
 import { getRandomDailyTip } from '../../utils/financialTips'
 import { formatCurrency } from '../../utils/formatters'
+import { calculateCumulativeBalance } from '../../utils/calendar'
+import {
+  getStoredGeminiApiKey,
+  setStoredGeminiApiKey,
+  getStoredGeminiModel,
+  setStoredGeminiModel,
+  queryGeminiFinancialAdvisor,
+} from '../../utils/geminiClient'
 import './AiChatAssistantView.css'
 
 function createId(prefix: string): string {
@@ -34,8 +42,8 @@ const QUICK_PROMPTS = [
   '¿Cuánto dinero puedo gastar este mes?',
   '¿Cuánto debería ahorrar?',
   'Pronóstico de flujo de caja a 30 días',
-  'Métricas recurrentes MRR / ARR y suscripciones',
-  'Estrategia de negociación de contratos',
+  'Métricas y consejos para proyectos de emprendimiento',
+  'Estrategia de negociación y reducción de costos',
   'Analiza mi salud financiera general',
 ]
 
@@ -54,6 +62,13 @@ export function AiChatAssistantView({
   const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
 
   const dailyTip = getRandomDailyTip(currentPeriod)
+
+  // Estado de API Gemini
+  const [apiKey, setApiKey] = useState(getStoredGeminiApiKey)
+  const [selectedModel, setSelectedModel] = useState(getStoredGeminiModel)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [tempApiKey, setTempApiKey] = useState(apiKey)
+  const [tempModel, setTempModel] = useState(selectedModel)
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
@@ -76,6 +91,7 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
   const [copiedId, setCopiedId]   = useState<string | null>(null)
   const messagesEndRef            = useRef<HTMLDivElement>(null)
 
+  const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
   const pIncomes  = incomes.filter(i => i.period === currentPeriod)
   const pExpenses = expenses.filter(e => e.period === currentPeriod)
   const totalInc  = pIncomes.reduce((s, i) => s + i.amount, 0)
@@ -89,7 +105,15 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
     scrollToBottom()
   }, [messages, isTyping])
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSaveSettings = () => {
+    setStoredGeminiApiKey(tempApiKey)
+    setStoredGeminiModel(tempModel)
+    setApiKey(tempApiKey)
+    setSelectedModel(tempModel)
+    setIsSettingsOpen(false)
+  }
+
+  const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputText).trim()
     if (!query) return
 
@@ -101,32 +125,55 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
     }
 
     setMessages(prev => [...prev, userMsg])
-    if (!textToSend) setInputText('')
+    setInputText('')
     setIsTyping(true)
 
-    // Simular tiempo de procesamiento natural de la IA (350ms)
-    setTimeout(() => {
-      const responseText = generateAiFinancialResponse(query, {
-        currentPeriod,
-        incomes,
-        expenses,
-        cashWithdrawals,
-        creditCards,
-        creditTransactions,
-        categoryBudgets,
-        savingsGoals,
-      })
+    const snapshot: FinancialSnapshot = {
+      currentPeriod,
+      incomes,
+      expenses,
+      cashWithdrawals,
+      creditCards,
+      creditTransactions,
+      categoryBudgets,
+      savingsGoals,
+    }
 
-      const aiMsg: ChatMessage = {
-        id: createId('msg-ai'),
-        sender: 'assistant',
-        text: responseText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    if (apiKey) {
+      try {
+        const responseText = await queryGeminiFinancialAdvisor(query, snapshot, messages)
+        const aiMsg: ChatMessage = {
+          id: createId('msg-ai'),
+          sender: 'assistant',
+          text: responseText,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+        setMessages(prev => [...prev, aiMsg])
+      } catch (err: any) {
+        const fallback = generateAiFinancialResponse(query, snapshot)
+        const aiMsg: ChatMessage = {
+          id: createId('msg-ai'),
+          sender: 'assistant',
+          text: `*(Google Gemini no disponible: ${err.message || 'Error de conexión'}. Mostrando análisis local)*\n\n${fallback}`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+        setMessages(prev => [...prev, aiMsg])
+      } finally {
+        setIsTyping(false)
       }
-
-      setMessages(prev => [...prev, aiMsg])
-      setIsTyping(false)
-    }, 400)
+    } else {
+      setTimeout(() => {
+        const responseText = generateAiFinancialResponse(query, snapshot)
+        const aiMsg: ChatMessage = {
+          id: createId('msg-ai'),
+          sender: 'assistant',
+          text: responseText,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+        setMessages(prev => [...prev, aiMsg])
+        setIsTyping(false)
+      }, 350)
+    }
   }
 
   const handleCopy = (id: string, text: string) => {
@@ -220,8 +267,38 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
           </div>
 
           <div className="chat-context-pills">
-            <span className="context-pill">Ingresos: {formatCurrency(totalInc)}</span>
-            <span className="context-pill">Gastos: {formatCurrency(totalExp)}</span>
+            <span className="context-pill" style={{ color: '#F3CA65', borderColor: 'rgba(243, 202, 101, 0.3)' }}>
+              Disponible: {formatCurrency(cumulative.totalCumulativeBalance)}
+            </span>
+            {cumulative.carriedOverBalance !== 0 && (
+              <span className="context-pill" style={{ color: '#34D399', borderColor: 'rgba(52, 211, 153, 0.3)' }}>
+                Arrastre: {formatCurrency(cumulative.carriedOverBalance)}
+              </span>
+            )}
+            {totalInc > 0 && <span className="context-pill">Ingresos Mes: {formatCurrency(totalInc)}</span>}
+            {totalExp > 0 && <span className="context-pill">Gastos Mes: {formatCurrency(totalExp)}</span>}
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                setTempApiKey(apiKey)
+                setTempModel(selectedModel)
+                setIsSettingsOpen(true)
+              }}
+              style={{
+                padding: '6px 12px',
+                fontSize: 11,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                color: apiKey ? '#34D399' : '#F3CA65',
+                borderColor: apiKey ? 'rgba(52, 211, 153, 0.35)' : 'rgba(243, 202, 101, 0.35)',
+                background: apiKey ? 'rgba(52, 211, 153, 0.08)' : 'rgba(243, 202, 101, 0.08)',
+              }}
+              title="Configurar conexión con Google Gemini API"
+            >
+              <Sparkles size={13} /> {apiKey ? 'Gemini AI Conectado' : 'Conectar Gemini API'}
+            </button>
             <button className="btn btn-secondary" onClick={handleClearChat} style={{ padding: '6px 12px', fontSize: 11 }}>
               <Trash2 size={13} /> Limpiar Chat
             </button>
@@ -301,6 +378,109 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
           </button>
         </form>
       </div>
+
+      {/* Gemini Settings Modal */}
+      {isSettingsOpen && (
+        <div className="mit-modal-overlay" onClick={() => setIsSettingsOpen(false)}>
+          <div
+            className="mit-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 520, background: '#12121A', border: '1px solid rgba(243, 202, 101, 0.3)', borderRadius: 16, padding: 24 }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(243, 202, 101, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Key size={18} style={{ color: '#F3CA65' }} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16, color: '#FFF', fontWeight: 700 }}>Conexión con Google Gemini AI</h3>
+                  <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>Alimenta al Asesor Financiero con Inteligencia Artificial real</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(false)}
+                style={{ background: 'transparent', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#E5E7EB', display: 'block', marginBottom: 6 }}>
+                  Google Gemini API Key:
+                </label>
+                <input
+                  type="password"
+                  value={tempApiKey}
+                  onChange={(e) => setTempApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    background: '#1A1A24',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#FFF',
+                    fontSize: 13,
+                    fontFamily: 'monospace',
+                  }}
+                />
+                <span style={{ fontSize: 11, color: '#9CA3AF', display: 'block', marginTop: 4 }}>
+                  🔑 Tu clave se guarda exclusivamente en tu navegador local (localStorage). Puedes obtenerla gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: '#F3CA65' }}>Google AI Studio</a>.
+                </span>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#E5E7EB', display: 'block', marginBottom: 6 }}>
+                  Modelo de Inteligencia Artificial:
+                </label>
+                <select
+                  value={tempModel}
+                  onChange={(e) => setTempModel(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    background: '#1A1A24',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#FFF',
+                    fontSize: 13,
+                  }}
+                >
+                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (Ultra rápido, ideal para finanzas en vivo)</option>
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (Nueva generación multimodal)</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (Razonamiento complejo avanzado)</option>
+                </select>
+              </div>
+
+              <div style={{ background: 'rgba(243, 202, 101, 0.08)', border: '1px solid rgba(243, 202, 101, 0.2)', padding: '10px 14px', borderRadius: 8, fontSize: 11.5, color: '#D1D5DB' }}>
+                💡 <strong>¿Cómo funciona?</strong> Al activar Gemini, AUREUS le suministra a la IA todo tu contexto financiero (ingresos, gastos, balance arrastrado, tarjetas, metas y regla 50/30/20) para que actúe como tu Director Financiero (CFO) personal.
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setIsSettingsOpen(false)}
+                style={{ padding: '8px 16px', fontSize: 12 }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="mit-submit-btn"
+                onClick={handleSaveSettings}
+                style={{ padding: '8px 18px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}
+              >
+                <Check size={14} /> Guardar Conexión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

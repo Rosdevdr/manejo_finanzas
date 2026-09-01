@@ -26,7 +26,7 @@ describe('aiAdvisorEngine', () => {
   it('generates spending capacity response', () => {
     const res = generateAiFinancialResponse('¿Cuánto dinero puedo gastar este mes?', emptySnapshot)
     expect(res).toContain('Margen de Gasto Disponible')
-    expect(res).toContain('Ingresos Totales')
+    expect(res).toContain('Ingresos del Mes')
     expect(res).toContain('RD$100,000.00')
   })
 

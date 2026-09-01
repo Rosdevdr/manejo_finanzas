@@ -305,11 +305,26 @@ export function BudgetsAndGoalsView({
                 Diagnóstico de la Regla Financiera 50 / 30 / 20
               </div>
               <button
+                type="button"
                 className="btn btn-secondary"
                 onClick={handleAutoSuggestBudgets}
-                style={{ fontSize: 11.5, padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6 }}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: '7px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'linear-gradient(135deg, rgba(243, 202, 101, 0.15) 0%, rgba(201, 168, 76, 0.25) 100%)',
+                  border: '1px solid rgba(243, 202, 101, 0.35)',
+                  color: '#F3CA65',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
               >
-                <Sparkles size={14} style={{ color: '#F3CA65' }} /> Cálculo automático de límites inteligentes
+                <Sparkles size={14} />
+                <span>Cálculo automático de límites inteligentes</span>
               </button>
             </div>
 
