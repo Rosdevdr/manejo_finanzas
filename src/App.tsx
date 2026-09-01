@@ -29,6 +29,7 @@ import {
   getNextPeriod,
   formatPeriodLabel,
   getCurrentSystemPeriod,
+  calculateCumulativeBalance,
 } from './utils/calendar'
 
 export function App() {
@@ -72,11 +73,14 @@ export function App() {
     addSavingsGoal, updateSavingsGoal, depositToGoal, deleteSavingsGoal,
   } = useFinanceStorage(user)
 
-  const periodIncomes  = incomes.filter(i => i.period === currentPeriod)
+  const cumulativeSummary = useMemo(
+    () => calculateCumulativeBalance(incomes, expenses, currentPeriod),
+    [incomes, expenses, currentPeriod]
+  )
+
   const periodExpenses = expenses.filter(e => e.period === currentPeriod)
-  const totalIncome    = periodIncomes.reduce((s, i) => s + i.amount, 0)
   const totalExpense   = periodExpenses.reduce((s, e) => s + e.amount, 0)
-  const available      = totalIncome - totalExpense
+  const available      = cumulativeSummary.totalCumulativeBalance
 
   // Navegación matemática dinámica e ilimitada de meses (sin pérdida de datos)
   const prevPeriod  = () => setCurrentPeriod(prev => getPreviousPeriod(prev))
@@ -131,8 +135,10 @@ export function App() {
           periodLabel={periodLabel}
           onPrev={prevPeriod}
           onNext={nextPeriod}
-          balanceLabel={formatCurrency(available)}
-          balancePositive={available >= 0}
+          balanceLabel={formatCurrency(cumulativeSummary.totalCumulativeBalance)}
+          balancePositive={cumulativeSummary.totalCumulativeBalance >= 0}
+          carriedOverBalance={cumulativeSummary.carriedOverBalance}
+          monthNetFlow={cumulativeSummary.periodNet}
           isDemoMode={isDemoMode}
           userEmail={user?.email}
           creditCards={creditCards}

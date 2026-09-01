@@ -22,6 +22,8 @@ interface AppHeaderProps {
   nextDisabled?: boolean
   balanceLabel: string
   balancePositive: boolean
+  carriedOverBalance?: number
+  monthNetFlow?: number
   isDemoMode?: boolean
   userEmail?: string | null
   creditCards?: CreditCard[]
@@ -42,6 +44,8 @@ export function AppHeader({
   nextDisabled,
   balanceLabel,
   balancePositive,
+  carriedOverBalance,
+  monthNetFlow,
   isDemoMode,
   userEmail,
   creditCards = [],
@@ -110,7 +114,14 @@ export function AppHeader({
       {/* Balances & Acciones a la derecha */}
       <div className="header-right">
         {/* Pill de Saldo Disponible */}
-        <div className="balance-pill" title="Dinero libre en el período actual">
+        <div
+          className="balance-pill"
+          title={
+            carriedOverBalance !== undefined && carriedOverBalance !== 0
+              ? `Balance Acumulado Total: ${balanceLabel}\n• Saldo arrastrado de meses previos: ${carriedOverBalance >= 0 ? '+' : ''}${carriedOverBalance.toLocaleString('es-DO', { style: 'currency', currency: 'DOP' })}\n• Flujo neto de este mes: ${(monthNetFlow ?? 0).toLocaleString('es-DO', { style: 'currency', currency: 'DOP' })}`
+              : 'Dinero libre disponible en el período'
+          }
+        >
           <span className="balance-pill-label">Disponible</span>
           <span className={`balance-pill-value ${balancePositive ? 'positive' : 'negative'}`}>
             {balanceLabel}
