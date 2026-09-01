@@ -86,6 +86,13 @@ export function App() {
   const prevPeriod  = () => setCurrentPeriod(prev => getPreviousPeriod(prev))
   const nextPeriod  = () => setCurrentPeriod(prev => getNextPeriod(prev))
   const periodLabel = useMemo(() => formatPeriodLabel(currentPeriod), [currentPeriod])
+  const contentRef  = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0
+    }
+  }, [activeTab])
 
   // Mostrar pantalla de Login si no hay usuario ni modo demo (o si está en flujo de recuperación de contraseña)
   if ((!authLoading && !user && !isDemoMode) || isPasswordRecovery) {
@@ -106,14 +113,6 @@ export function App() {
       </>
     )
   }
-
-  const contentRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (contentRef.current) {
-      contentRef.current.scrollTop = 0
-    }
-  }, [activeTab])
 
   return (
     <div className="app-shell">
