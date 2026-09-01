@@ -141,6 +141,51 @@ export async function queryGeminiFinancialAdvisor(
     },
   ]
 
+  const payload = {
+    system_instruction: {
+      parts: [{ text: systemInstruction }],
+    },
+    contents,
+    generationConfig: {
+      temperature: 0.5,
+      topP: 0.95,
+      maxOutputTokens: 1024,
+    },
+  }
+
+  // 1. Intentar a través del endpoint serverless de la app (evita bloqueos de Brave Shields y CORS)
+  try {
+    const proxyRes = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey,
+        model: selectedModel,
+        payload,
+      }),
+    })
+
+    if (proxyRes.ok) {
+      const data = await proxyRes.json()
+      const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text
+      if (candidate) {
+        if (data.usedModel) setStoredGeminiModel(data.usedModel)
+        return candidate
+      }
+    } else {
+      const errData = await proxyRes.json().catch(() => ({}))
+      if (errData?.error?.message) {
+        throw new Error(errData.error.message)
+      }
+    }
+  } catch (proxyErr: any) {
+    if (proxyErr.message && !proxyErr.message.includes('404') && !proxyErr.message.includes('Failed to fetch')) {
+      throw proxyErr
+    }
+    // Si falla por ser entorno local sin API proxy, intentar llamada directa
+  }
+
+  // 2. Llamada directa de respaldo
   let lastErrorMsg = ''
 
   for (const model of uniqueModels) {
@@ -152,24 +197,13 @@ export async function queryGeminiFinancialAdvisor(
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: systemInstruction }],
-          },
-          contents,
-          generationConfig: {
-            temperature: 0.5,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          },
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (response.ok) {
         const data = await response.json()
         const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text
         if (candidate) {
-          // Guardar el modelo exitoso como preferido
           setStoredGeminiModel(model)
           return candidate
         }
@@ -182,5 +216,5 @@ export async function queryGeminiFinancialAdvisor(
     }
   }
 
-  throw new Error(lastErrorMsg || 'No se pudo obtener respuesta de los modelos de Gemini disponibles.')
+  throw new Error(lastErrorMsg || 'No se pudo obtener respuesta de los servidores de Google Gemini.')
 }
