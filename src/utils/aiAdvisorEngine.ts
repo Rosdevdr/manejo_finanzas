@@ -11,6 +11,7 @@ import type {
 import { formatCurrency } from './formatters'
 import { evaluate503020Rule, calculateCategoryBudgetStatus } from './budgetAdvisor'
 import { evaluateCardHealth } from './creditAdvisor'
+import { calculateCumulativeBalance } from './calendar'
 
 export interface FinancialSnapshot {
   currentPeriod: string
@@ -34,6 +35,7 @@ export interface ChatMessage {
 export function generateAiFinancialResponse(prompt: string, snapshot: FinancialSnapshot): string {
   const { currentPeriod, incomes, expenses, cashWithdrawals, creditCards, creditTransactions, categoryBudgets, savingsGoals } = snapshot
 
+  const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
   const pIncomes  = incomes.filter(i => i.period === currentPeriod)
   const pExpenses = expenses.filter(e => e.period === currentPeriod)
   const pCash     = cashWithdrawals.filter(c => c.period === currentPeriod)
@@ -43,6 +45,7 @@ export function generateAiFinancialResponse(prompt: string, snapshot: FinancialS
   const totalExpense = pExpenses.reduce((s, e) => s + e.amount, 0)
   const totalCash    = pCash.reduce((s, c) => s + c.amount, 0)
   const netBalance   = totalIncome - totalExpense
+  const totalAvailable = cumulative.totalCumulativeBalance
 
   const rule503020 = evaluate503020Rule(incomes, expenses, netBalance, currentPeriod)
   const categories: ExpenseCategory[] = ['housing', 'food', 'transport', 'utilities', 'health', 'entertainment', 'education', 'debt', 'other']
@@ -66,25 +69,27 @@ export function generateAiFinancialResponse(prompt: string, snapshot: FinancialS
 
   // 1. ¿Cuánto dinero puedo gastar este mes?
   if (lowerPrompt.includes('cuanto') && (lowerPrompt.includes('gastar') || lowerPrompt.includes('puedo gastar') || lowerPrompt.includes('disponible'))) {
-    if (totalIncome === 0) {
+    if (totalIncome === 0 && cumulative.carriedOverBalance <= 0) {
       return `Actualmente no tienes ingresos registrados para el período **${currentPeriod}**. Te sugiero registrar primero tu sueldo o fuentes de ingresos para calcular con precisión tu margen de gasto seguro.`
     }
 
-    const maxRecommendedExpense = totalIncome * 0.80
-    const remainingSpendCapacity = Math.max(0, maxRecommendedExpense - totalExpense)
+    const baseFunds = totalIncome > 0 ? totalIncome : cumulative.carriedOverBalance
+    const maxRecommendedExpense = baseFunds * 0.80
+    const remainingSpendCapacity = Math.max(0, totalAvailable - (baseFunds * 0.20))
 
     return `### 💡 Margen de Gasto Disponible (${currentPeriod})
 
 Basándome en tus datos de este mes:
 
-• **Ingresos Totales:** \`${formatCurrency(totalIncome)}\`
+• **Ingresos del Mes:** \`${formatCurrency(totalIncome)}\`
+${cumulative.carriedOverBalance !== 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurrency(cumulative.carriedOverBalance)}\`\n` : ''}• **Total Disponible Real:** **\`${formatCurrency(totalAvailable)}\`**
 • **Gastos Acumulados:** \`${formatCurrency(totalExpense)}\`
-• **Balance Neto Actual:** \`${formatCurrency(netBalance)}\`
+• **Balance Neto del Mes:** \`${formatCurrency(netBalance)}\`
 
 **🎯 Recomendación del Asesor IA:**
-1. **Límite de Gasto Seguro (80% de ingresos):** Tu techo ideal de gasto es \`${formatCurrency(maxRecommendedExpense)}\`.
+1. **Límite de Gasto Seguro (80% del disponible):** Tu techo de gasto recomendado es **\`${formatCurrency(maxRecommendedExpense)}\`**.
 2. **Capacidad de Gasto Restante:** Aún puedes gastar hasta **\`${formatCurrency(remainingSpendCapacity)}\`** sin comprometer tu fondo de reserva de ahorro (20%).
-3. ${netBalance < 0 ? `⚠️ **Atención:** Actualmente tus gastos superan tus ingresos por \`${formatCurrency(Math.abs(netBalance))}\`. Te sugiero pausar compras no esenciales.` : `✅ Vas por buen camino con un superávit positivo de \`${formatCurrency(netBalance)}\`.`}`
+3. ${totalAvailable <= 0 ? `⚠️ **Atención:** Actualmente tu saldo disponible se encuentra en cero o déficit. Te sugiero pausar compras no esenciales.` : `✅ Mantienes un saldo disponible positivo de \`${formatCurrency(totalAvailable)}\`.`}`
   }
 
   // 2. ¿Cuánto debería ahorrar?

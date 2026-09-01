@@ -326,10 +326,23 @@ export function DashboardView({
               type="button"
               className="btn btn-secondary"
               onClick={() => onNavigateTab('chat-advisor')}
-              style={{ padding: '6px 14px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}
+              style={{
+                padding: '7px 16px',
+                fontSize: 12,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'linear-gradient(135deg, rgba(243, 202, 101, 0.15) 0%, rgba(201, 168, 76, 0.25) 100%)',
+                border: '1px solid rgba(243, 202, 101, 0.35)',
+                color: '#F3CA65',
+                borderRadius: 8,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
             >
-              <Sparkles size={14} style={{ color: '#F3CA65' }} />
-              Ver Asesor IA
+              <Sparkles size={14} />
+              <span>Ver Asesor IA</span>
             </button>
           )}
         </div>
@@ -436,9 +449,19 @@ export function DashboardView({
               type="button"
               className="btn btn-secondary"
               onClick={() => onNavigateTab('expenses')}
-              style={{ fontSize: 11, padding: '4px 10px' }}
+              style={{
+                fontSize: 11.5,
+                fontWeight: 600,
+                padding: '5px 14px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(243, 202, 101, 0.25)',
+                color: '#F3CA65',
+                borderRadius: 7,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
             >
-              Ver todos
+              Ver todos los gastos →
             </button>
           )}
         </div>
