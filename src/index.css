@@ -242,16 +242,17 @@ h1, h2, h3, h4, h5, h6 {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 24px 28px 80px;
+  padding: 24px 28px 100px;
   min-height: 0;
   max-width: 100%;
-  display: block; /* Permite que el contenido crezca verticalmente y active la navegación natural */
   overscroll-behavior-y: contain;
 }
 
 .content > .fade-in {
   width: 100%;
-  display: block;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
 }
 
 /* ===================== HEADER ===================== */
@@ -2002,9 +2003,9 @@ select.field-select {
 
 .sandbox-dashboard,
 .sandbox-view {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 22px !important;
   width: 100%;
   max-width: 100%;
 }
@@ -2015,7 +2016,8 @@ select.field-select {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 14px;
-  padding-bottom: 6px;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
 }
 
 .sandbox-subhead {
@@ -2380,7 +2382,8 @@ select.field-select {
 .sandbox-grid-2 {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
-  gap: 14px;
+  gap: 16px;
+  margin-bottom: 8px;
 }
 
 .sandbox-panel {
@@ -2388,6 +2391,7 @@ select.field-select {
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px;
   padding: 18px 20px;
+  margin-bottom: 8px;
 }
 
 .sandbox-panel-header {
@@ -2554,6 +2558,8 @@ select.field-select {
 .transactions-table-panel {
   padding: 0 !important;
   overflow: visible !important;
+  margin-top: 10px;
+  margin-bottom: 24px;
 }
 
 .transactions-table-panel .sandbox-panel-header {
