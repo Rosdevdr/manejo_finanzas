@@ -36,6 +36,7 @@ interface SidebarProps {
   onOpenFireCalculator?: () => void
   onOpenScenarioSimulator?: () => void
   onOpenLicense?: () => void
+  onOpenTerms?: () => void
   onOpenGuide?: () => void
   isInstallable?: boolean
   onInstallApp?: () => void
@@ -65,6 +66,7 @@ export function Sidebar({
   onOpenFireCalculator,
   onOpenScenarioSimulator,
   onOpenLicense,
+  onOpenTerms,
   onOpenGuide,
   isInstallable,
   onInstallApp,
@@ -216,6 +218,20 @@ export function Sidebar({
             >
               <span className="nav-icon">📜</span>
               <span>Licencia MIT</span>
+            </button>
+          )}
+
+          {onOpenTerms && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenTerms()
+              }}
+            >
+              <span className="nav-icon" style={{ color: '#60A5FA' }}><FileText size={16} /></span>
+              <span>Términos & Condiciones</span>
             </button>
           )}
 

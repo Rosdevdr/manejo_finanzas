@@ -32,10 +32,13 @@ import {
   calculateCumulativeBalance,
 } from './utils/calendar'
 
+import { TermsAndConditionsModal } from './components/legal/TermsAndConditionsModal'
+
 export function App() {
   const [activeTab, setActiveTab]               = useState<TabType>('dashboard')
   const [currentPeriod, setCurrentPeriod]       = useState<string>(() => getCurrentSystemPeriod())
   const [showLicenseModal, setShowLicenseModal] = useState(false)
+  const [showTermsModal, setShowTermsModal]     = useState(false)
   const [isSecurityOpen, setIsSecurityOpen]     = useState(false)
   const [showExportModal, setShowExportModal]   = useState(false)
   const [showFireModal, setShowFireModal]       = useState(false)
@@ -129,6 +132,7 @@ export function App() {
         onOpenFireCalculator={() => setShowFireModal(true)}
         onOpenScenarioSimulator={() => setShowScenarioModal(true)}
         onOpenLicense={() => setShowLicenseModal(true)}
+        onOpenTerms={() => setShowTermsModal(true)}
         onOpenGuide={() => {
           setGuideInitialModule('dashboard')
           setShowGuideModal(true)
@@ -169,6 +173,7 @@ export function App() {
               creditTransactions={creditTransactions}
               userEmail={user?.email}
               onNavigateTab={setActiveTab}
+              onOpenTerms={() => setShowTermsModal(true)}
             />
           )}
           {activeTab === 'incomes' && (
@@ -350,6 +355,7 @@ export function App() {
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <MitLicenseModal isOpen={showLicenseModal} onClose={() => setShowLicenseModal(false)} />
+      <TermsAndConditionsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
       <ModuleUsageGuideModal
         isOpen={showGuideModal}
         onClose={() => setShowGuideModal(false)}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   TrendingUp,
   CreditCard as CardIcon,
@@ -16,6 +17,8 @@ import {
   Info,
   X,
   Plus,
+  Download,
+  FileText,
 } from 'lucide-react'
 import {
   ResponsiveContainer, XAxis, YAxis, Tooltip,
@@ -26,6 +29,7 @@ import type { TabType } from '../../types/navigation'
 import { formatCurrency } from '../../utils/formatters'
 import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES, calculateCumulativeBalance, formatPeriodLabel } from '../../utils/calendar'
 import { getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
+import { downloadAiRegulationDocument } from '../../utils/aiRegulationDocument'
 
 interface DashboardViewProps {
   currentPeriod: string
@@ -35,6 +39,7 @@ interface DashboardViewProps {
   creditTransactions?: CreditCardTransaction[]
   userEmail?: string | null
   onNavigateTab?: (t: TabType) => void
+  onOpenTerms?: () => void
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -57,6 +62,7 @@ export function DashboardView({
   creditTransactions = [],
   userEmail,
   onNavigateTab,
+  onOpenTerms,
 }: DashboardViewProps) {
   const userName = userEmail ? userEmail.split('@')[0] : 'Inversor'
   const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
@@ -210,8 +216,8 @@ export function DashboardView({
           className="ai-compliance-link"
           onClick={() => setShowComplianceModal(true)}
         >
-          <Info size={12} style={{ display: 'inline', marginRight: 4 }} />
-          Ver Normativas de Uso
+          <Info size={13} />
+          <span>Ver Normativas de Uso</span>
         </button>
       </div>
 
@@ -607,28 +613,31 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* ── MODAL DE CUMPLIMIENTO Y NORMATIVAS GLOBALES DE IA ── */}
-      {showComplianceModal && (
+      {/* ── MODAL DE CUMPLIMIENTO Y NORMATIVAS GLOBALES DE IA (PORTAL VIEWPORT) ── */}
+      {showComplianceModal && createPortal(
         <div className="modal-overlay" onClick={() => setShowComplianceModal(false)}>
-          <div className="modal-card" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
+          <div className="modal-card" style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">
-                <Shield size={18} className="text-gold" />
+                <Shield size={20} className="text-gold" />
                 <span>Normativas de Inteligencia Artificial & Transparencia</span>
               </h2>
               <button
                 type="button"
                 className="modal-close"
                 onClick={() => setShowComplianceModal(false)}
+                aria-label="Cerrar modal"
               >
                 <X size={16} />
               </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 12.5, color: '#D0D0DC', lineHeight: 1.6 }}>
-              <div style={{ background: 'rgba(201, 168, 76, 0.08)', border: '1px solid rgba(201, 168, 76, 0.25)', borderRadius: 8, padding: 12 }}>
-                <strong style={{ color: '#F3CA65' }}>Marco Regulatorio Internacional (EU AI Act & Global Digital Standards)</strong>
-                <p style={{ margin: '6px 0 0', fontSize: 12, color: '#D1D5DB' }}>
+              <div style={{ background: 'rgba(201, 168, 76, 0.08)', border: '1px solid rgba(201, 168, 76, 0.25)', borderRadius: 10, padding: 14 }}>
+                <strong style={{ color: '#F3CA65', display: 'block', marginBottom: 4 }}>
+                  Marco Regulatorio Internacional (EU AI Act & Global Digital Standards)
+                </strong>
+                <p style={{ margin: 0, fontSize: 12, color: '#D1D5DB' }}>
                   El Asesor IA de AUREUS opera bajo los principios del Reglamento Europeo de Inteligencia Artificial (Reglamento UE 2024/1689), clasificado como sistema de propósito específico de <strong>riesgo limitado</strong> con obligaciones de transparencia algorítmica estricta.
                 </p>
               </div>
@@ -655,18 +664,47 @@ export function DashboardView({
               </div>
             </div>
 
-            <div className="modal-footer" style={{ marginTop: 18 }}>
+            {/* ── BOTONES DE ACCIÓN: DESCARGA DE NORMATIVA & TÉRMINOS Y CONDICIONES ── */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18, paddingTop: 14, borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <button
+                type="button"
+                className="sandbox-btn-outline"
+                style={{ flex: 1, minWidth: 220, justifyContent: 'center' }}
+                onClick={downloadAiRegulationDocument}
+              >
+                <Download size={14} />
+                <span>Bajar Normativa Global IA (.txt)</span>
+              </button>
+
+              {onOpenTerms && (
+                <button
+                  type="button"
+                  className="sandbox-btn-outline"
+                  style={{ flex: 1, minWidth: 220, justifyContent: 'center', borderColor: 'rgba(201, 168, 76, 0.3)', color: '#F1D97E' }}
+                  onClick={() => {
+                    setShowComplianceModal(false)
+                    onOpenTerms()
+                  }}
+                >
+                  <FileText size={14} />
+                  <span>Ver Términos y Condiciones</span>
+                </button>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ marginTop: 14, borderTop: 'none', paddingTop: 0 }}>
               <button
                 type="button"
                 className="sandbox-btn-gold"
-                style={{ width: '100%' }}
+                style={{ width: '100%', justifyContent: 'center' }}
                 onClick={() => setShowComplianceModal(false)}
               >
                 Entendido y Aceptado
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
