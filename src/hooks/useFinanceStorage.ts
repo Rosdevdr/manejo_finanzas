@@ -56,12 +56,25 @@ function cleanLegacyStorage() {
   })
 }
 
+function ensurePeriod(period?: string | null, date?: string | null): string {
+  if (period && typeof period === 'string' && period.trim().length >= 7 && period.includes('-')) {
+    return period.trim().slice(0, 7)
+  }
+  if (date && typeof date === 'string' && date.trim().length >= 7) {
+    return date.trim().slice(0, 7)
+  }
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  return `${y}-${m}`
+}
+
 function loadLocal<T>(key: string, fallback: T[]): T[] {
   try {
     const raw = localStorage.getItem(key)
     if (!raw) return fallback
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : fallback
+    return Array.isArray(parsed) ? parsed : fallback
   } catch {
     return fallback
   }
@@ -290,7 +303,7 @@ export function useFinanceStorage(user?: User | null) {
       if (incRes.data) {
         const mapped = incRes.data.map(row => ({
           id: row.id,
-          period: row.period,
+          period: ensurePeriod(row.period, row.date),
           description: row.description,
           amount: Number(row.amount),
           type: row.type as IncomeType,
@@ -303,7 +316,7 @@ export function useFinanceStorage(user?: User | null) {
       if (expRes.data) {
         const mapped = expRes.data.map(row => ({
           id: row.id,
-          period: row.period,
+          period: ensurePeriod(row.period, row.date),
           description: row.description,
           amount: Number(row.amount),
           category: row.category as ExpenseCategory,
@@ -318,7 +331,7 @@ export function useFinanceStorage(user?: User | null) {
       if (cashRes.data) {
         const mapped = cashRes.data.map(row => ({
           id: row.id,
-          period: row.period,
+          period: ensurePeriod(row.period, row.date),
           amount: Number(row.amount),
           reason: row.reason as CashReason,
           note: row.note ?? undefined,
@@ -348,7 +361,7 @@ export function useFinanceStorage(user?: User | null) {
         const mapped = ctxRes.data.map(row => ({
           id: row.id,
           cardId: row.card_id,
-          period: row.period,
+          period: ensurePeriod(row.period, row.date),
           description: row.description,
           amount: Number(row.amount),
           category: row.category as ExpenseCategory,
