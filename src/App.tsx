@@ -85,9 +85,23 @@ export function App() {
   const totalExpense   = periodExpenses.reduce((s, e) => s + e.amount, 0)
   const available      = cumulativeSummary.totalCumulativeBalance
 
-  // Navegación matemática dinámica e ilimitada de meses (sin pérdida de datos)
-  const prevPeriod  = () => setCurrentPeriod(prev => getPreviousPeriod(prev))
-  const nextPeriod  = () => setCurrentPeriod(prev => getNextPeriod(prev))
+  // Navegación matemática dinámica e ilimitada de meses con notificación
+  const prevPeriod = () => {
+    setCurrentPeriod(prev => {
+      const p = getPreviousPeriod(prev)
+      showToast(`Visualizando datos de ${formatPeriodLabel(p)}`, 'info')
+      return p
+    })
+  }
+
+  const nextPeriod = () => {
+    setCurrentPeriod(prev => {
+      const n = getNextPeriod(prev)
+      showToast(`Visualizando datos de ${formatPeriodLabel(n)}`, 'info')
+      return n
+    })
+  }
+
   const periodLabel = useMemo(() => formatPeriodLabel(currentPeriod), [currentPeriod])
   const contentRef  = useRef<HTMLDivElement>(null)
 
@@ -169,8 +183,10 @@ export function App() {
               currentPeriod={currentPeriod}
               incomes={incomes}
               expenses={expenses}
+              cashWithdrawals={cash}
               creditCards={creditCards}
               creditTransactions={creditTransactions}
+              categoryBudgets={categoryBudgets}
               userEmail={user?.email}
               onNavigateTab={setActiveTab}
               onOpenTerms={() => setShowTermsModal(true)}
@@ -302,6 +318,7 @@ export function App() {
           )}
           {activeTab === 'chat-advisor' && (
             <AiChatAssistantView
+              key={user?.email || (isDemoMode ? 'demo' : 'guest')}
               currentPeriod={currentPeriod}
               incomes={incomes}
               expenses={expenses}

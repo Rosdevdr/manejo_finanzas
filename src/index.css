@@ -2653,6 +2653,63 @@ select.field-select {
   color: #FFFFFF;
 }
 
+/* ── Live Module Sync Ribbon ── */
+.sandbox-modules-sync-strip {
+  background: rgba(18, 18, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.sync-strip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #D1D5DB;
+  letter-spacing: 0.04em;
+}
+
+.sync-strip-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sync-module-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #A0A0B0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sync-module-pill:hover {
+  background: rgba(201, 168, 76, 0.12);
+  border-color: rgba(201, 168, 76, 0.3);
+  color: #F1D97E;
+}
+
+.sync-module-pill strong {
+  font-family: 'Space Mono', monospace;
+  color: #FFFFFF;
+}
+
 /* ── Transactions Institutional Table (Sandbox Image 4) ── */
 .transactions-table-panel {
   padding: 0 !important;
@@ -2748,6 +2805,18 @@ select.field-select {
   color: #D0D0DC;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sandbox-type-pill.card {
+  color: #F1D97E;
+  background: rgba(201, 168, 76, 0.12);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+}
+
+.sandbox-type-pill.cash {
+  color: #FBBF24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.2);
 }
 
 .cell-total {

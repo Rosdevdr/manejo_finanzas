@@ -24,7 +24,7 @@ import {
   ResponsiveContainer, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts'
-import type { Income, Expense, CreditCard as CreditCardType, CreditCardTransaction } from '../../types/finance'
+import type { Income, Expense, CreditCard as CreditCardType, CreditCardTransaction, CashWithdrawal, CategoryBudget } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
 import { formatCurrency } from '../../utils/formatters'
 import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES, calculateCumulativeBalance, formatPeriodLabel } from '../../utils/calendar'
@@ -35,8 +35,10 @@ interface DashboardViewProps {
   currentPeriod: string
   incomes: Income[]
   expenses: Expense[]
+  cashWithdrawals?: CashWithdrawal[]
   creditCards?: CreditCardType[]
   creditTransactions?: CreditCardTransaction[]
+  categoryBudgets?: CategoryBudget[]
   userEmail?: string | null
   onNavigateTab?: (t: TabType) => void
   onOpenTerms?: () => void
@@ -58,8 +60,10 @@ export function DashboardView({
   currentPeriod,
   incomes,
   expenses,
+  cashWithdrawals = [],
   creditCards = [],
   creditTransactions = [],
+  categoryBudgets = [],
   userEmail,
   onNavigateTab,
   onOpenTerms,
@@ -70,10 +74,13 @@ export function DashboardView({
   // Modal de cumplimiento de IA
   const [showComplianceModal, setShowComplianceModal] = useState(false)
 
-  // 1. Datos estrictamente del período actual
+  // 1. Datos de TODOS los módulos estrictamente del período actual
   const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
   const pInc = incomes.filter(i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === currentPeriod)
   const pExp = expenses.filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === currentPeriod)
+  const pCash = cashWithdrawals.filter(c => (c.period && c.period.trim().length === 7 ? c.period.trim() : c.date?.slice(0, 7)) === currentPeriod)
+  const pCardTxs = creditTransactions.filter(t => (t.period && t.period.trim().length === 7 ? t.period.trim() : t.date?.slice(0, 7)) === currentPeriod)
+
   const totalIn = pInc.reduce((s, i) => s + i.amount, 0)
   const totalExp = pExp.reduce((s, e) => s + e.amount, 0)
   const balance = totalIn - totalExp
@@ -94,13 +101,55 @@ export function DashboardView({
   const creditSummary = getConsolidatedCreditSummary(creditCards, creditTransactions)
   const monthProgress = getMonthProgress(currentPeriod)
 
-  // 4. Últimos Movimientos: ESTRICTAMENTE DEL PERÍODO ACTUAL
+  // 4. Últimos Movimientos Consolidados de TODOS los Módulos
   const recentTx = [
-    ...pInc.map(i => ({ ...i, kind: 'income' as const })),
-    ...pExp.map(e => ({ ...e, kind: 'expense' as const })),
+    ...pInc.map(i => ({
+      id: i.id,
+      date: i.date,
+      description: i.description,
+      amount: i.amount,
+      kind: 'income' as const,
+      tag: 'INGRESO',
+      typePillClass: 'in',
+      pillLabel: '+ INFLOW',
+      targetTab: 'incomes' as TabType,
+    })),
+    ...pExp.map(e => ({
+      id: e.id,
+      date: e.date,
+      description: e.description,
+      amount: e.amount,
+      kind: 'expense' as const,
+      tag: 'GASTO',
+      typePillClass: 'out',
+      pillLabel: '- OUTFLOW',
+      targetTab: 'expenses' as TabType,
+    })),
+    ...pCardTxs.map(t => ({
+      id: t.id,
+      date: t.date,
+      description: `[Tarjeta] ${t.description}`,
+      amount: t.amount,
+      kind: 'expense' as const,
+      tag: 'TARJETA',
+      typePillClass: 'card',
+      pillLabel: '💳 TARJETA',
+      targetTab: 'credit' as TabType,
+    })),
+    ...pCash.map(c => ({
+      id: c.id,
+      date: c.date,
+      description: `[Efectivo] ${c.note || 'Retiro en efectivo'}`,
+      amount: c.amount,
+      kind: 'expense' as const,
+      tag: 'EFECTIVO',
+      typePillClass: 'cash',
+      pillLabel: '💵 EFECTIVO',
+      targetTab: 'cash' as TabType,
+    })),
   ]
     .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 6)
+    .slice(0, 8)
 
   // 5. Pie chart data
   const categoryTotals: Record<string, number> = {}
@@ -152,7 +201,7 @@ export function DashboardView({
     }
   })
 
-  // 8. Métodos de Pago del Período
+  // 8. Métodos de Pago del Período (Consolidando Gastos, Tarjetas y Efectivo)
   const paymentTotals = {
     debit_card: 0,
     credit_card: 0,
@@ -164,6 +213,16 @@ export function DashboardView({
       paymentTotals[e.paymentMethod] += e.amount
     }
   })
+  // Reflejar consumos del módulo de tarjetas
+  const cardTxsSum = pCardTxs.reduce((s, t) => s + t.amount, 0)
+  if (cardTxsSum > paymentTotals.credit_card) {
+    paymentTotals.credit_card = cardTxsSum
+  }
+  // Reflejar retiros del módulo de efectivo
+  const cashWithdrawalsSum = pCash.reduce((s, c) => s + c.amount, 0)
+  if (cashWithdrawalsSum > paymentTotals.cash) {
+    paymentTotals.cash = cashWithdrawalsSum
+  }
 
   const paymentMethodsList = [
     { name: 'Transferencia', amount: paymentTotals.bank_transfer, icon: <Building2 size={13} />, color: '#34D399' },
@@ -219,6 +278,40 @@ export function DashboardView({
           <Info size={13} />
           <span>Ver Normativas de Uso</span>
         </button>
+      </div>
+
+      {/* ── CONEXIÓN EN VIVO CON TODOS LOS MÓDULOS ── */}
+      <div className="sandbox-modules-sync-strip">
+        <div className="sync-strip-header">
+          <Activity size={14} className="text-emerald" />
+          <span>Sincronización Total de Módulos · {formatPeriodLabel(currentPeriod)}</span>
+        </div>
+        <div className="sync-strip-pills">
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('incomes')} title="Ver Ingresos">
+            <span>Ingresos</span>
+            <strong>{pInc.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('expenses')} title="Ver Gastos">
+            <span>Gastos</span>
+            <strong>{pExp.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('credit')} title="Ver Tarjetas">
+            <span>Tarjetas</span>
+            <strong>{pCardTxs.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('cash')} title="Ver Efectivo">
+            <span>Efectivo</span>
+            <strong>{pCash.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('budgets')} title="Ver Presupuestos">
+            <span>Presupuestos</span>
+            <strong>{categoryBudgets.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('chat-advisor')} title="Ir a Asesor IA">
+            <span>Asesor IA</span>
+            <strong style={{ color: '#34D399' }}>Activo</strong>
+          </button>
+        </div>
       </div>
 
       {/* ── 5-METRIC INSTITUTIONAL KPI STRIP (SANDBOX IMAGE 4) ── */}
@@ -533,8 +626,8 @@ export function DashboardView({
                           <div className="item-title">{tx.description}</div>
                         </td>
                         <td>
-                          <span className={`sandbox-type-pill ${isInc ? 'in' : 'out'}`}>
-                            {isInc ? '+ INFLOW' : '- OUTFLOW'}
+                          <span className={`sandbox-type-pill ${tx.typePillClass}`}>
+                            {tx.pillLabel}
                           </span>
                         </td>
                         <td className={`cell-total ${isInc ? 'text-emerald' : 'text-rose'}`}>
@@ -544,8 +637,8 @@ export function DashboardView({
                           <button
                             type="button"
                             className="table-action-chevron"
-                            onClick={() => onNavigateTab && onNavigateTab(isInc ? 'incomes' : 'expenses')}
-                            title="Ver en detalle"
+                            onClick={() => onNavigateTab && onNavigateTab(tx.targetTab)}
+                            title={`Ir a ${tx.tag}`}
                           >
                             <ChevronRight size={14} />
                           </button>

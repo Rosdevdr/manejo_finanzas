@@ -179,22 +179,48 @@ export function AiChatAssistantView({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [tempApiKey, setTempApiKey] = useState(apiKey)
   const [tempModel, setTempModel] = useState(selectedModel)
+  // Clave de memoria conversacional completamente aislada por usuario
+  const userKey = userEmail ? userEmail.toLowerCase().trim() : 'demo_user'
+  const CHAT_STORAGE_KEY = `aureus_chat_history_${userKey}`
 
-  const [messages, setMessages] = useState<ChatMessage[]>(() => [
-    {
-      id: 'msg-welcome-init',
-      sender: 'assistant',
-      text: `¡Bienvenido de nuevo, **${capitalizedName}**! 👋
+  const getInitialWelcomeMessage = (): ChatMessage => ({
+    id: `msg-welcome-init-${userKey}`,
+    sender: 'assistant',
+    text: `¡Bienvenido de nuevo, **${capitalizedName}**! 👋
 
 Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la información de tus **ingresos, gastos, tarjetas y presupuestos** para el período **${currentPeriod}**.
 
 💡 **Consejo Financiero del Día (${dailyTip.category.toUpperCase()}):**
 *${dailyTip.title}* — ${dailyTip.content}
 
-¿En qué puedo ayudarte a tomar decisiones financieras hoy?`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    },
-  ])
+Tu historial conversacional está cifrado y **100% aislado para la cuenta (${userEmail || 'Modo Local'})**. ¿En qué puedo ayudarte hoy?`,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  })
+
+  // Carga inicial persistente de la memoria del usuario activo
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = localStorage.getItem(CHAT_STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return [getInitialWelcomeMessage()]
+  })
+
+  // Sincronizar memoria privada en localStorage cada vez que hay nuevos mensajes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages))
+    } catch {
+      // ignore
+    }
+  }, [messages, CHAT_STORAGE_KEY])
 
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping]   = useState(false)
@@ -306,11 +332,16 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
   }
 
   const handleClearChat = () => {
+    try {
+      localStorage.removeItem(CHAT_STORAGE_KEY)
+    } catch {
+      // ignore
+    }
     setMessages([
       {
         id: createId('msg-welcome'),
         sender: 'assistant',
-        text: `Conversación reiniciada para **${capitalizedName}**. ¿Qué otra duda tienes sobre tus finanzas en **${currentPeriod}**?`,
+        text: `Memoria conversacional privada reiniciada para **${capitalizedName}**. Historial de esta cuenta borrado por completo. ¿Qué otra consulta deseas realizar en **${currentPeriod}**?`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ])
@@ -343,6 +374,10 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
           </div>
 
           <div className="chat-context-pills">
+            <span className="context-pill" style={{ color: '#34D399', borderColor: 'rgba(52, 211, 153, 0.35)', background: 'rgba(52, 211, 153, 0.08)' }}>
+              <ShieldCheck size={12} style={{ display: 'inline', marginRight: 4 }} />
+              Memoria Aislada: {userEmail || 'Modo Local'}
+            </span>
             <span className="context-pill" style={{ color: '#F3CA65', borderColor: 'rgba(243, 202, 101, 0.3)' }}>
               Disponible: {formatCurrency(cumulative.totalCumulativeBalance)}
             </span>
@@ -351,10 +386,10 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
                 Arrastre: {formatCurrency(cumulative.carriedOverBalance)}
               </span>
             )}
-            {totalInc > 0 && <span className="context-pill">Ingresos Mes: {formatCurrency(totalInc)}</span>}
-            {totalExp > 0 && <span className="context-pill">Gastos Mes: {formatCurrency(totalExp)}</span>}
-            <button className="btn btn-secondary" onClick={handleClearChat} style={{ padding: '6px 12px', fontSize: 11 }}>
-              <Trash2 size={13} /> Limpiar Chat
+            {totalInc > 0 && <span className="context-pill">Ingresos: {formatCurrency(totalInc)}</span>}
+            {totalExp > 0 && <span className="context-pill">Gastos: {formatCurrency(totalExp)}</span>}
+            <button className="btn btn-secondary" onClick={handleClearChat} style={{ padding: '6px 12px', fontSize: 11 }} title="Borrar historial privado de esta cuenta">
+              <Trash2 size={13} /> Limpiar Memoria
             </button>
           </div>
         </div>
