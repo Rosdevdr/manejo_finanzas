@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { TrendingDown, Lock, Shuffle, Plus, Trash2, Pencil } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -39,7 +39,17 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
   const fixedExp = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
   const varExp   = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
 
-  const [showAllPeriods, setShowAllPeriods] = useState<boolean>(() => pExp.length === 0 && expenses.length > 0)
+  const [showAllPeriods, setShowAllPeriods] = useState(false)
+
+  // Auto-switch to full history when Supabase loads data asynchronously
+  useEffect(() => {
+    if (pExp.length === 0 && expenses.length > 0) {
+      setShowAllPeriods(true)
+    } else if (pExp.length > 0) {
+      setShowAllPeriods(false)
+    }
+  }, [expenses.length, currentPeriod, pExp.length])
+
   const displayedExpenses = (showAllPeriods || (pExp.length === 0 && expenses.length > 0))
     ? [...expenses].sort((a, b) => b.date.localeCompare(a.date))
     : pExp

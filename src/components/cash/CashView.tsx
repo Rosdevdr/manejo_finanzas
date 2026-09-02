@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Banknote, AlertTriangle, Plus, Trash2, Pencil } from 'lucide-react'
 import type { CashWithdrawal, CashReason, Expense } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -32,7 +32,17 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
   const cashPct  = totalExp > 0 ? (totalCash / totalExp) * 100 : 0
   const hasRisk  = pCash.some(c => c.reason === 'unassigned') || cashPct > 25
 
-  const [showAllPeriods, setShowAllPeriods] = useState<boolean>(() => pCash.length === 0 && withdrawals.length > 0)
+  const [showAllPeriods, setShowAllPeriods] = useState(false)
+
+  // Auto-switch to full history when Supabase loads data asynchronously
+  useEffect(() => {
+    if (pCash.length === 0 && withdrawals.length > 0) {
+      setShowAllPeriods(true)
+    } else if (pCash.length > 0) {
+      setShowAllPeriods(false)
+    }
+  }, [withdrawals.length, currentPeriod, pCash.length])
+
   const displayedCash = (showAllPeriods || (pCash.length === 0 && withdrawals.length > 0))
     ? [...withdrawals].sort((a, b) => b.date.localeCompare(a.date))
     : pCash

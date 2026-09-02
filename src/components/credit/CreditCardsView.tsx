@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   CreditCard as CardIcon,
   Plus,
@@ -139,7 +139,16 @@ export function CreditCardsView({
   const activePeriodTxs = creditTransactions.filter(t => getPeriod(t) === currentPeriod)
 
   const [showAllCards, setShowAllCards] = useState(false)
-  const [showAllPeriods, setShowAllPeriods] = useState<boolean>(() => activePeriodTxs.length === 0 && creditTransactions.length > 0)
+  const [showAllPeriods, setShowAllPeriods] = useState(false)
+
+  // Auto-switch to full history when Supabase loads data asynchronously
+  useEffect(() => {
+    if (activePeriodTxs.length === 0 && creditTransactions.length > 0) {
+      setShowAllPeriods(true)
+    } else if (activePeriodTxs.length > 0) {
+      setShowAllPeriods(false)
+    }
+  }, [creditTransactions.length, currentPeriod, activePeriodTxs.length])
 
   const displayedTransactions = creditTransactions
     .filter(t => {

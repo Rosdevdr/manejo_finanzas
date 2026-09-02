@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Wallet, Briefcase, TrendingUp, Plus, Trash2, Pencil } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -67,7 +67,19 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
     setEditingId(null)
   }
 
-  const [showAllPeriods, setShowAllPeriods] = useState<boolean>(() => periodIncomes.length === 0 && incomes.length > 0)
+  const [showAllPeriods, setShowAllPeriods] = useState(false)
+
+  // Auto-switch to full history when Supabase loads data asynchronously:
+  // useState lazy initializer only runs on mount (before async data arrives),
+  // so we need a useEffect that reacts when data actually loads.
+  useEffect(() => {
+    if (periodIncomes.length === 0 && incomes.length > 0) {
+      setShowAllPeriods(true)
+    } else if (periodIncomes.length > 0) {
+      setShowAllPeriods(false)
+    }
+  }, [incomes.length, currentPeriod, periodIncomes.length])
+
   const displayedIncomes = (showAllPeriods || (periodIncomes.length === 0 && incomes.length > 0))
     ? [...incomes].sort((a, b) => b.date.localeCompare(a.date))
     : periodIncomes
