@@ -94,7 +94,7 @@ export function ReportExportModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" style={{ maxWidth: 540 }} onClick={e => e.stopPropagation()}>
+      <div className="modal-card export-modal-card" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <FileText size={18} style={{ color: '#F3CA65' }} />
