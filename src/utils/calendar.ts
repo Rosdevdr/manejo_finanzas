@@ -184,26 +184,37 @@ export interface CumulativePeriodSummary {
  * más el flujo neto del período actual.
  */
 export function calculateCumulativeBalance(
-  incomes: { period: string; amount: number }[],
-  expenses: { period: string; amount: number }[],
+  incomes: { period: string; amount: number; date?: string }[],
+  expenses: { period: string; amount: number; date?: string }[],
   currentPeriod: string
 ): CumulativePeriodSummary {
   let carriedOverBalance = 0
   let periodIncome = 0
   let periodExpense = 0
 
+  // Resilient period extraction: if period is null/empty, fall back to date slice
+  const getP = (item: { period: string; date?: string }) => {
+    if (item.period && item.period.trim().length === 7 && item.period.includes('-')) {
+      return item.period.trim()
+    }
+    if (item.date && item.date.length >= 7) return item.date.slice(0, 7)
+    return currentPeriod
+  }
+
   incomes.forEach(i => {
-    if (i.period < currentPeriod) {
+    const p = getP(i)
+    if (p < currentPeriod) {
       carriedOverBalance += i.amount
-    } else if (i.period === currentPeriod) {
+    } else if (p === currentPeriod) {
       periodIncome += i.amount
     }
   })
 
   expenses.forEach(e => {
-    if (e.period < currentPeriod) {
+    const p = getP(e)
+    if (p < currentPeriod) {
       carriedOverBalance -= e.amount
-    } else if (e.period === currentPeriod) {
+    } else if (p === currentPeriod) {
       periodExpense += e.amount
     }
   })

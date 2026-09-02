@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Wallet, Briefcase, TrendingUp, Plus, Trash2, Pencil } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -19,7 +19,10 @@ const TYPE_MAP: Record<IncomeType, { label: string; badge: string; emoji: string
 }
 
 export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncome, onDeleteIncome }: IncomesViewProps) {
-  const periodIncomes = incomes.filter(i => i.period === currentPeriod)
+  const getPeriod = (i: { period?: string; date?: string }) =>
+    i.period && i.period.trim().length === 7 ? i.period.trim() : (i.date ? i.date.slice(0, 7) : currentPeriod)
+
+  const periodIncomes = incomes.filter(i => getPeriod(i) === currentPeriod)
   const totalIncome   = periodIncomes.reduce((s, i) => s + i.amount, 0)
   const salary        = periodIncomes.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0)
   const extra         = periodIncomes.filter(i => i.type !== 'salary').reduce((s, i) => s + i.amount, 0)
@@ -65,7 +68,19 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
   }
 
   const [showAllPeriods, setShowAllPeriods] = useState(false)
-  const displayedIncomes = showAllPeriods 
+
+  // Auto-switch to full history when Supabase loads data asynchronously:
+  // useState lazy initializer only runs on mount (before async data arrives),
+  // so we need a useEffect that reacts when data actually loads.
+  useEffect(() => {
+    if (periodIncomes.length === 0 && incomes.length > 0) {
+      setShowAllPeriods(true)
+    } else if (periodIncomes.length > 0) {
+      setShowAllPeriods(false)
+    }
+  }, [incomes.length, currentPeriod, periodIncomes.length])
+
+  const displayedIncomes = (showAllPeriods || (periodIncomes.length === 0 && incomes.length > 0))
     ? [...incomes].sort((a, b) => b.date.localeCompare(a.date))
     : periodIncomes
 

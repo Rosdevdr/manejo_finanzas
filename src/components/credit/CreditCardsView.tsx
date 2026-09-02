@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   CreditCard as CardIcon,
   Plus,
@@ -133,13 +133,27 @@ export function CreditCardsView({
   const abonoAmount = customAbonoAmount ?? defaultAbono
   const setAbonoAmount = (val: string) => setCustomAbonoAmount(val)
 
+  const getPeriod = (t: { period?: string; date?: string }) =>
+    t.period && t.period.trim().length === 7 ? t.period.trim() : (t.date ? t.date.slice(0, 7) : currentPeriod)
+
+  const activePeriodTxs = creditTransactions.filter(t => getPeriod(t) === currentPeriod)
+
   const [showAllCards, setShowAllCards] = useState(false)
   const [showAllPeriods, setShowAllPeriods] = useState(false)
+
+  // Auto-switch to full history when Supabase loads data asynchronously
+  useEffect(() => {
+    if (activePeriodTxs.length === 0 && creditTransactions.length > 0) {
+      setShowAllPeriods(true)
+    } else if (activePeriodTxs.length > 0) {
+      setShowAllPeriods(false)
+    }
+  }, [creditTransactions.length, currentPeriod, activePeriodTxs.length])
 
   const displayedTransactions = creditTransactions
     .filter(t => {
       const matchCard = showAllCards || !selectedCardId || t.cardId === selectedCardId
-      const matchPeriod = showAllPeriods || t.period === currentPeriod
+      const matchPeriod = showAllPeriods || (activePeriodTxs.length === 0 && creditTransactions.length > 0) || getPeriod(t) === currentPeriod
       return matchCard && matchPeriod
     })
     .sort((a, b) => b.date.localeCompare(a.date))

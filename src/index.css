@@ -234,7 +234,7 @@ h1, h2, h3, h4, h5, h6 {
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 32px;
+  padding: 24px 28px;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -515,12 +515,7 @@ h1, h2, h3, h4, h5, h6 {
   color: #EF4444 !important;
 }
 
-/* ===================== CONTENT ===================== */
-.content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px;
-}
+/* ===================== CONTENT (scrollbar) ===================== */
 
 .content::-webkit-scrollbar { width: 4px; }
 .content::-webkit-scrollbar-track { background: transparent; }
@@ -720,6 +715,12 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 20px;
 }
 
+@media (max-width: 900px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .chart-card {
   background: linear-gradient(145deg, rgba(20, 20, 28, 0.95) 0%, rgba(13, 13, 18, 0.98) 100%);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -794,6 +795,27 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: repeat(12, 1fr);
   gap: 14px;
   margin-bottom: 16px;
+}
+
+/* Tablet: collapse 12-col grid to 2-col so span-8 / span-4 fields fit */
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px;
+  }
+  .form-grid > div {
+    grid-column: span 1 !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  .form-grid > div {
+    grid-column: span 1 !important;
+  }
 }
 
 .form-row {
@@ -1091,7 +1113,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   font-family: 'Space Grotesk', sans-serif;
 }
 
-/* Row actions — ghost on hover */
+/* Row actions — ghost on hover (always visible on touch devices) */
 .tx-actions {
   display: flex;
   align-items: center;
@@ -1099,9 +1121,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 0;
   transition: opacity 0.15s;
   margin-left: 8px;
+  flex-shrink: 0;
 }
 
 .tx-row:hover .tx-actions { opacity: 1; }
+
+/* Touch devices: always show action buttons */
+@media (hover: none) {
+  .tx-actions { opacity: 1; }
+}
 
 .tx-action-btn {
   width: 26px;
@@ -1672,36 +1700,15 @@ select.field-select {
 }
 
 /* ===================== RESPONSIVE BREAKPOINTS ===================== */
-@media (max-width: 1024px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .charts-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .advisor-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
 
-.mobile-bottom-nav {
-  display: none !important;
-}
+/* Desktop-only helpers */
+.mobile-bottom-nav  { display: none !important; }
+.sidebar-mobile-close { display: none; }
+.mobile-only-section  { display: none; }
+.sidebar-backdrop     { display: none; }
+.header-menu-btn      { display: none; }
 
-/* Desktop: Sidebar default styles & helpers */
-.sidebar-mobile-close {
-  display: none;
-}
-.mobile-only-section {
-  display: none;
-}
-.sidebar-backdrop {
-  display: none;
-}
-.header-menu-btn {
-  display: none;
-}
-
+/* ── Tablet (769 – 1024px) ─────────────────────────── */
 @media (max-width: 1024px) {
   .app-shell {
     flex-direction: column;
@@ -1711,7 +1718,7 @@ select.field-select {
     position: relative;
   }
 
-  /* Slide-over Mobile Sidebar Drawer */
+  /* Slide-over sidebar drawer */
   .sidebar {
     position: fixed !important;
     top: 0 !important;
@@ -1719,7 +1726,6 @@ select.field-select {
     bottom: 0 !important;
     width: 290px !important;
     max-width: 85vw !important;
-    height: 100vh !important;
     height: 100dvh !important;
     z-index: 10001 !important;
     transform: translateX(-100%) !important;
@@ -1731,12 +1737,10 @@ select.field-select {
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     padding: 0 !important;
   }
-
   .sidebar.mobile-open {
     transform: translateX(0) !important;
     box-shadow: 10px 0 50px rgba(0, 0, 0, 0.85) !important;
   }
-
   .sidebar-backdrop {
     position: fixed !important;
     inset: 0 !important;
@@ -1747,7 +1751,6 @@ select.field-select {
     display: block !important;
     animation: fadeIn 0.2s ease-out;
   }
-
   .sidebar-mobile-close {
     display: flex !important;
     align-items: center;
@@ -1762,22 +1765,17 @@ select.field-select {
     margin-left: auto;
     transition: all 0.15s ease;
   }
-
-  .sidebar-mobile-close:hover {
-    color: #FFFFFF;
-    background: rgba(255, 255, 255, 0.12);
-  }
-
+  .sidebar-mobile-close:hover { color: #fff; background: rgba(255,255,255,0.12); }
   .mobile-only-section {
     display: flex !important;
     flex-direction: column;
     gap: 4px;
     margin-top: 8px;
     padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(255,255,255,0.06);
   }
 
-  /* Hamburger Menu Button */
+  /* Hamburger button */
   .header-menu-btn {
     display: flex !important;
     align-items: center;
@@ -1792,42 +1790,27 @@ select.field-select {
     transition: all 0.15s ease;
     flex-shrink: 0;
   }
+  .header-menu-btn:hover { color: #F3CA65; border-color: #F3CA65; }
 
-  .header-menu-btn:hover {
-    color: #F3CA65;
-    border-color: #F3CA65;
-  }
-
-  /* ===== AppHeader on tablet/mobile ===== */
+  /* AppHeader */
   .app-header {
     padding: 0 12px !important;
     gap: 8px !important;
     height: 54px;
     flex-wrap: nowrap;
   }
+  .period-label  { font-size: 12px; padding: 4px 10px; }
+  .header-right  { gap: 8px !important; flex-shrink: 0; }
+  .balance-pill  { font-size: 11px; padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 
-  .period-label {
-    font-size: 12px;
-    padding: 4px 10px;
-  }
+  /* Hide secondary header items */
+  .github-shortcut,
+  .header-sync-pill,
+  .header-install-btn,
+  .header-export-btn,
+  .header-github-btn { display: none !important; }
 
-  .header-right {
-    gap: 8px !important;
-    flex-shrink: 0;
-  }
-
-  .balance-pill {
-    font-size: 11px;
-    padding: 4px 10px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  /* Hide low-priority items to free up header space */
-  .github-shortcut {
-    display: none !important;
-  }
-
+  /* Main / content */
   .main {
     flex: 1;
     height: 100%;
@@ -1836,219 +1819,145 @@ select.field-select {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
+  .content { padding: 16px 14px 80px !important; }
 
-  .content {
-    padding: 16px 14px 28px !important;
-  }
+  /* Typography */
+  .page-title { font-size: 20px; }
+  .month-badge { font-size: 12px; padding: 4px 8px; }
 
-  .mobile-bottom-nav {
-    display: none !important;
-  }
+  /* KPI grid → 2 cols on tablet, 1 col on small tablet */
+  .kpi-grid     { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+  .kpi-card     { padding: 14px 16px; }
+  .kpi-value    { font-size: 20px; }
 
-  .header {
-    padding: 0 12px;
-    height: 56px;
-    gap: 8px;
-  }
+  /* Charts → single col */
+  .charts-grid  { grid-template-columns: 1fr !important; }
+  .advisor-grid { grid-template-columns: 1fr !important; }
 
-  .month-badge {
-    font-size: 12px;
-    padding: 4px 8px;
-  }
-
-  /* Hide overflowing secondary pills from the mobile header */
-  .header-sync-pill,
-  .header-install-btn,
-  .header-export-btn,
-  .header-github-btn {
-    display: none !important;
-  }
-  .page-title {
-    font-size: 20px;
-  }
-  .kpi-grid {
-    grid-template-columns: 1fr !important;
-    gap: 10px;
-  }
-  .kpi-card {
-    padding: 14px 16px;
-  }
-  .kpi-value {
-    font-size: 20px;
-  }
-  .form-card {
-    padding: 16px 14px;
-  }
+  /* Forms */
+  .form-card { padding: 16px 14px; }
   .form-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
     gap: 12px;
   }
-  .form-grid > div {
-    grid-column: span 1 !important;
-  }
-  .form-row {
-    flex-direction: column;
-    gap: 10px;
-  }
-  .form-field {
-    max-width: 100% !important;
-  }
-  .form-actions {
-    width: 100%;
-    padding-top: 8px;
-  }
-  .btn-primary,
-  .btn-gold,
-  .btn-expense,
-  .btn-cash,
-  .btn-income {
+  .form-grid > div { grid-column: span 1 !important; }
+  .form-row { flex-direction: column; gap: 10px; }
+  .form-field { max-width: 100% !important; }
+  .form-actions { width: 100%; padding-top: 8px; }
+  .btn-primary, .btn-gold, .btn-expense, .btn-cash, .btn-income, .btn-danger {
     width: 100% !important;
     height: 44px;
     font-size: 13px;
   }
-  .tx-row {
-    padding: 12px 14px;
-    gap: 10px;
-  }
-  .tx-actions {
-    opacity: 1; /* Always visible on touch screens */
-  }
-  .tx-edit-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  .edit-input,
-  .edit-select {
+
+  /* Transaction list */
+  .tx-row { padding: 12px 14px; gap: 10px; }
+  .tx-actions { opacity: 1; }
+  .tx-edit-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .edit-input, .edit-select {
     max-width: 100% !important;
     min-width: 100% !important;
     height: 38px;
   }
-  .edit-actions {
-    justify-content: flex-end;
-    margin-top: 4px;
-  }
-  .edit-save-btn,
-  .edit-cancel-btn {
-    height: 36px;
-    padding: 0 16px;
-  }
+  .edit-actions { justify-content: flex-end; margin-top: 4px; }
+  .edit-save-btn, .edit-cancel-btn { height: 36px; padding: 0 16px; }
 }
 
+/* ── Small tablet / large phone (481 – 768px) ───────── */
+@media (max-width: 768px) {
+  .kpi-grid     { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  .content      { padding: 14px 12px 80px !important; }
+
+  /* Forms: single column */
+  .form-grid    { grid-template-columns: 1fr !important; gap: 10px; }
+  .form-grid > div { grid-column: span 1 !important; }
+}
+
+/* ── Mobile phone (≤ 480px) ──────────────────────────── */
 @media (max-width: 480px) {
-  /* ===== AppHeader mobile fixes ===== */
+  /* AppHeader */
   .app-header {
     height: auto !important;
-    min-height: 52px;
+    min-height: 50px;
     padding: 6px 10px !important;
     gap: 6px !important;
     flex-wrap: nowrap;
   }
-
-  /* Period nav arrows: compact */
-  .nav-btn {
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
-  }
-
-  /* Period label: compact, no overflow */
+  .nav-btn { width: 26px; height: 26px; border-radius: 6px; }
   .period-label {
-    padding: 4px 8px;
+    padding: 3px 7px;
     font-size: 11px;
-    max-width: 90px;
+    max-width: 86px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
-  /* Right side: shrink gap */
-  .header-right {
-    gap: 6px !important;
-  }
-
-  /* Balance pill: truncate value if too long */
+  .header-right { gap: 5px !important; }
   .balance-pill {
-    padding: 4px 8px;
+    padding: 3px 7px;
     font-size: 10px;
-    max-width: 130px;
-    overflow: hidden;
-  }
-  .balance-pill-label {
-    display: none; /* Hide "Disponible" label, keep only the value */
-  }
-  .balance-pill-value {
-    font-size: 11px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* Hide low-priority header items on small phones */
-  .github-shortcut {
-    display: none !important;
-  }
-
-  /* ===== Other existing 480px rules ===== */
-  .header {
-    gap: 6px;
-  }
-  .header-sync-pill {
-    display: none !important;
-  }
-  .month-badge {
     max-width: 120px;
     overflow: hidden;
-    text-overflow: ellipsis;
+  }
+  .balance-pill-label { display: none; }
+  .balance-pill-value {
+    font-size: 10px;
     white-space: nowrap;
-    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .month-btn {
-    width: 22px;
-    height: 22px;
-  }
-  .pill-dot {
-    width: 5px;
-    height: 5px;
-  }
-  .modal-card {
-    padding: 20px 16px !important;
-    border-radius: 14px !important;
-  }
-  .modal-footer {
-    flex-direction: column-reverse !important;
-    gap: 10px !important;
-    width: 100% !important;
-  }
+  .pill-dot { width: 5px; height: 5px; }
+
+  /* KPI: single column */
+  .kpi-grid   { grid-template-columns: 1fr !important; gap: 8px; }
+  .kpi-value  { font-size: 18px; }
+  .page-title { font-size: 18px; }
+  .content    { padding: 12px 10px 80px !important; }
+
+  /* Modals */
+  .modal-card     { padding: 18px 14px !important; border-radius: 14px !important; }
+  .modal-footer   { flex-direction: column-reverse !important; gap: 10px !important; width: 100% !important; }
   .modal-footer .btn,
   .modal-footer button {
-    width: 100% !important;
-    height: 44px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    width: 100% !important; height: 44px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
     font-size: 14px !important;
   }
+
+  /* Misc header tokens */
+  .github-shortcut, .header-sync-pill { display: none !important; }
+  .month-badge   { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+  .month-btn     { width: 22px; height: 22px; }
 }
 
-/* ===================== IOS SAFARI AUTO-ZOOM PREVENTION ===================== */
+/* ── Tiny phones (≤ 360px) ───────────────────────────── */
+@media (max-width: 360px) {
+  .balance-pill   { max-width: 90px; font-size: 9.5px; }
+  .period-label   { max-width: 72px; font-size: 10px; }
+  .nav-btn        { width: 24px; height: 24px; }
+  .kpi-value      { font-size: 16px; }
+  .content        { padding: 10px 8px 80px !important; }
+}
+
+/* ===================== IOS SAFARI AUTO-ZOOM PREVENTION =====================
+   Font size >= 16px prevents Safari from auto-zooming on input focus.
+   We set font-size via CSS var so layout calc in components still uses
+   the design-token value; only the rendered size is bumped for iOS.
+   ========================================================================= */
 @media screen and (max-width: 768px) {
-  input,
-  select,
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="search"],
   textarea,
-  .form-input,
-  .form-select,
-  .auth-input,
-  .edit-input,
-  .edit-select {
-    font-size: 16px !important;
+  select {
+    font-size: max(16px, 1em) !important;
     touch-action: manipulation;
   }
 
-  button,
-  a,
-  .nav-item,
-  .mobile-nav-item {
+  button, a, .nav-item, .mobile-nav-item {
     touch-action: manipulation;
   }
 }
