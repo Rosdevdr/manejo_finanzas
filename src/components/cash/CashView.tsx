@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
-import { Banknote, AlertTriangle, Plus, Trash2, Pencil } from 'lucide-react'
+import { useState } from 'react'
+import { Banknote, AlertTriangle, Plus, Trash2, Pencil, X } from 'lucide-react'
 import type { CashWithdrawal, CashReason, Expense } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
+import { formatPeriodLabel } from '../../utils/calendar'
 import { evaluateCashWithdrawal } from '../../utils/cashAdvisor'
 
 interface CashViewProps {
@@ -32,31 +33,20 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
   const cashPct  = totalExp > 0 ? (totalCash / totalExp) * 100 : 0
   const hasRisk  = pCash.some(c => c.reason === 'unassigned') || cashPct > 25
 
-  const [showAllPeriods, setShowAllPeriods] = useState(false)
-
-  // Auto-switch to full history when Supabase loads data asynchronously
-  useEffect(() => {
-    if (pCash.length === 0 && withdrawals.length > 0) {
-      setShowAllPeriods(true)
-    } else if (pCash.length > 0) {
-      setShowAllPeriods(false)
-    }
-  }, [withdrawals.length, currentPeriod, pCash.length])
-
-  const displayedCash = (showAllPeriods || (pCash.length === 0 && withdrawals.length > 0))
-    ? [...withdrawals].sort((a, b) => b.date.localeCompare(a.date))
-    : pCash
-
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [form, setForm] = useState({
     amount: '', reason: 'pocket_money' as CashReason,
     note: '', date: new Date().toISOString().slice(0, 10),
   })
 
-  // Live advisor advice
+  const [showAllPeriods, setShowAllPeriods] = useState(false)
+  const displayedCash = (showAllPeriods || (pCash.length === 0 && withdrawals.length > 0))
+    ? [...withdrawals].sort((a, b) => b.date.localeCompare(a.date))
+    : pCash
+
   const parsedAmount = parseFloat(form.amount) || 0
   const advice = parsedAmount > 0 ? evaluateCashWithdrawal(parsedAmount, form.reason, availableBalance) : null
 
-  // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editNote,  setEditNote]  = useState('')
   const [editReason, setEditReason] = useState<CashReason>('pocket_money')
@@ -68,6 +58,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
     const computedPeriod = form.date ? form.date.slice(0, 7) : currentPeriod
     onAddWithdrawal({ ...form, amount: parsedAmount, period: computedPeriod })
     setForm({ amount: '', reason: 'pocket_money', note: '', date: new Date().toISOString().slice(0, 10) })
+    setIsModalOpen(false)
   }
 
   function startEdit(c: CashWithdrawal) {
@@ -84,230 +75,319 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
   }
 
   return (
-    <div className="fade-in">
-      <div className="page-header">
-        <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Efectivo</span></div>
-        <h1 className="page-title">Control de Efectivo</h1>
-      </div>
-
-      {/* KPIs */}
-      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        <div className="kpi-card amber">
-          <div className="kpi-top"><span className="kpi-label">Total Retirado</span><Banknote size={14} className="kpi-icon" /></div>
-          <div className="kpi-value">{formatCurrency(totalCash)}</div>
-          <div className="kpi-sub">{pCash.length} retiro{pCash.length !== 1 ? 's' : ''}</div>
+    <div className="fade-in sandbox-view">
+      {/* ── CABECERA INSTITUCIONAL CON BOTÓN MODAL ── */}
+      <div className="sandbox-header-strip">
+        <div>
+          <div className="sandbox-subhead">LIQUIDEZ EN EFECTIVO · {formatPeriodLabel(currentPeriod).toUpperCase()}</div>
+          <h1 className="sandbox-title">Control de Efectivo</h1>
         </div>
-        <div className={`kpi-card ${cashPct > 25 ? 'red' : cashPct > 15 ? 'amber' : 'emerald'}`}>
-          <div className="kpi-top"><span className="kpi-label">% sobre Gastos</span><AlertTriangle size={14} className="kpi-icon" /></div>
-          <div className="kpi-value">{cashPct.toFixed(1)}%</div>
-          <div className="kpi-sub">{cashPct > 25 ? 'Alto — revisar hábito' : cashPct > 15 ? 'Moderado' : 'Nivel óptimo'}</div>
-        </div>
-        <div className={`kpi-card ${hasRisk ? 'red' : 'emerald'}`}>
-          <div className="kpi-top"><span className="kpi-label">Alerta de Riesgo</span><AlertTriangle size={14} className="kpi-icon" /></div>
-          <div className="kpi-value" style={{ fontSize: 18 }}>{hasRisk ? '⚠️ Detectada' : '✓ Sin riesgo'}</div>
-          <div className="kpi-sub">{hasRisk ? 'Retiros sin destino o excesivos' : 'Uso responsable del efectivo'}</div>
-        </div>
-      </div>
-
-      {/* Add form */}
-      <div className="section-header" style={{ marginTop: 4 }}>
-        <div className="section-label">REGISTRAR</div>
-        <div className="section-title">Nuevo retiro de efectivo</div>
-      </div>
-      <form className="form-card" onSubmit={handleSubmit}>
-        <div className="form-grid">
-          <div style={{ gridColumn: 'span 4' }}>
-            <label className="field-label">Monto a Retirar (RD$)</label>
-            <input
-              type="number"
-              className="field-input"
-              placeholder="0.00"
-              min={0.01}
-              step="0.01"
-              value={form.amount}
-              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
-              required
-            />
-          </div>
-          <div style={{ gridColumn: 'span 4' }}>
-            <label className="field-label">Motivo del Retiro</label>
-            <select
-              className="field-select"
-              value={form.reason}
-              onChange={e => setForm(p => ({ ...p, reason: e.target.value as CashReason }))}
-            >
-              {Object.entries(REASON_MAP).map(([k, v]) => (
-                <option key={k} value={k}>{v.emoji} {v.label}</option>
-              ))}
-            </select>
-          </div>
-          <div style={{ gridColumn: 'span 4' }}>
-            <label className="field-label">Fecha del Retiro</label>
-            <input
-              type="date"
-              className="field-input"
-              value={form.date}
-              onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
-              required
-            />
-          </div>
-          <div style={{ gridColumn: 'span 12' }}>
-            <label className="field-label">Nota o Ubicación (Opcional)</label>
-            <input
-              className="field-input"
-              placeholder="Ej: Cajero Banreservas Plaza Central, pago directo plomero..."
-              value={form.note}
-              onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
-            />
-          </div>
-        </div>
-
-        {/* Live Advisor Advice Card */}
-        {advice && (
-          <div className={`alert-pill ${advice.level === 'danger' ? 'danger' : ''}`} style={{
-            marginTop: 4,
-            marginBottom: 14,
-            background: advice.level === 'danger' ? 'rgba(248,113,113,0.1)' : advice.level === 'warning' ? 'rgba(251,191,36,0.1)' : 'rgba(52,211,153,0.1)',
-            borderColor: advice.level === 'danger' ? 'rgba(248,113,113,0.3)' : advice.level === 'warning' ? 'rgba(251,191,36,0.3)' : 'rgba(52,211,153,0.3)',
-            borderRadius: 10,
-            padding: '12px 14px'
-          }}>
-            <span className="alert-icon" style={{ fontSize: 16 }}>
-              {advice.level === 'danger' ? '🚨' : advice.level === 'warning' ? '⚠️' : '💡'}
-            </span>
-            <div className="alert-text">
-              <strong style={{ color: advice.level === 'danger' ? '#F87171' : advice.level === 'warning' ? '#FBBF24' : '#34D399' }}>
-                {advice.title}
-              </strong>
-              <p style={{ margin: '3px 0', fontSize: 11, color: '#D0D0DC' }}>{advice.message}</p>
-              <p style={{ fontSize: 11, color: '#888898' }}>{advice.recommendation}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="form-actions">
-          <button type="submit" className="btn-primary btn-cash">
-            <Plus size={16} />
+        <div className="sandbox-header-actions">
+          <button
+            type="button"
+            className="sandbox-btn-gold"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <Plus size={15} />
             <span>Registrar Retiro</span>
           </button>
         </div>
-      </form>
+      </div>
 
-      {/* List */}
-      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-        <div>
-          <div className="section-label">HISTORIAL</div>
-          <div className="section-title">
-            {showAllPeriods ? 'Todos los retiros registrados' : `Retiros de ${currentPeriod}`} ({displayedCash.length})
+      {/* ── METRIC STRIP COMPACTO ── */}
+      <div className="sandbox-kpi-row" style={{ marginBottom: 20 }}>
+        <div className="sandbox-kpi-card gold-glow">
+          <div className="sandbox-kpi-header">
+            <span className="sandbox-kpi-label">Total Retirado</span>
+            <Banknote size={14} className="text-gold" />
           </div>
+          <div className="sandbox-kpi-value">{formatCurrency(totalCash)}</div>
+          <div className="sandbox-kpi-sub">{pCash.length} retiros en {currentPeriod}</div>
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button
-            type="button"
-            onClick={() => setShowAllPeriods(false)}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 6,
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: !showAllPeriods ? 'rgba(243, 202, 101, 0.18)' : 'rgba(255, 255, 255, 0.05)',
-              border: `1px solid ${!showAllPeriods ? '#F3CA65' : 'rgba(255, 255, 255, 0.1)'}`,
-              color: !showAllPeriods ? '#F3CA65' : '#9CA3AF',
-            }}
-          >
-            {currentPeriod} ({pCash.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowAllPeriods(true)}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 6,
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: showAllPeriods ? 'rgba(243, 202, 101, 0.18)' : 'rgba(255, 255, 255, 0.05)',
-              border: `1px solid ${showAllPeriods ? '#F3CA65' : 'rgba(255, 255, 255, 0.1)'}`,
-              color: showAllPeriods ? '#F3CA65' : '#9CA3AF',
-            }}
-          >
-            Ver Todo el Historial ({withdrawals.length})
-          </button>
+
+        <div className="sandbox-kpi-card">
+          <div className="sandbox-kpi-header">
+            <span className="sandbox-kpi-label">Intensidad de Efectivo</span>
+            <span className={`sandbox-kpi-pill ${cashPct > 25 ? 'neg' : 'pos'}`}>
+              {cashPct.toFixed(1)}% de egresos
+            </span>
+          </div>
+          <div className="sandbox-kpi-value text-amber">{cashPct.toFixed(1)}%</div>
+          <div className="sandbox-kpi-sub">{cashPct > 25 ? '⚠️ Excede el umbral del 25%' : 'Nivel de fuga controlado'}</div>
+        </div>
+
+        <div className="sandbox-kpi-card">
+          <div className="sandbox-kpi-header">
+            <span className="sandbox-kpi-label">Diagnóstico de Fuga</span>
+            <AlertTriangle size={14} className={hasRisk ? 'text-rose' : 'text-emerald'} />
+          </div>
+          <div className={`sandbox-kpi-value ${hasRisk ? 'text-rose' : 'text-emerald'}`}>
+            {hasRisk ? 'Vulnerable' : 'Controlado'}
+          </div>
+          <div className="sandbox-kpi-sub">{hasRisk ? 'Retiros sin destino detectados' : 'Trazabilidad óptima'}</div>
         </div>
       </div>
 
-      <div className="tx-list">
-        <div className="tx-header">
-          <span className="tx-title">Retiros en Efectivo</span>
-          <span className="tx-count">{displayedCash.length} registro{displayedCash.length !== 1 ? 's' : ''}</span>
+      {/* ── TABLA DE RETIROS DE HISTORIAL INMEDIATAMENTE VISIBLE ── */}
+      <div className="sandbox-panel transactions-table-panel">
+        <div className="sandbox-panel-header">
+          <div>
+            <div className="sandbox-panel-title">
+              {showAllPeriods ? 'Registro Histórico de Efectivo' : `Retiros de ${formatPeriodLabel(currentPeriod)}`}
+            </div>
+            <div className="sandbox-panel-sub">
+              {displayedCash.length} movimiento{displayedCash.length !== 1 ? 's' : ''} registrado{displayedCash.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+
+          <div className="sandbox-pills">
+            <button
+              type="button"
+              className={`sandbox-pill-btn ${!showAllPeriods ? 'active' : ''}`}
+              onClick={() => setShowAllPeriods(false)}
+            >
+              {currentPeriod} ({pCash.length})
+            </button>
+            <button
+              type="button"
+              className={`sandbox-pill-btn ${showAllPeriods ? 'active' : ''}`}
+              onClick={() => setShowAllPeriods(true)}
+            >
+              Ver Todo el Historial ({withdrawals.length})
+            </button>
+          </div>
         </div>
+
         {displayedCash.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-text">Sin retiros registrados para este período</p>
+          <div className="sandbox-empty">
+            <p style={{ margin: 0 }}>No hay retiros de efectivo registrados en {formatPeriodLabel(currentPeriod)}.</p>
             {withdrawals.length > 0 && !showAllPeriods && (
               <button
                 type="button"
+                className="sandbox-btn-outline"
+                style={{ marginTop: 12 }}
                 onClick={() => setShowAllPeriods(true)}
-                className="btn btn-secondary"
-                style={{ marginTop: 10, fontSize: 11.5, color: '#F3CA65' }}
               >
-                Ver {withdrawals.length} retiro{withdrawals.length !== 1 ? 's' : ''} de otros meses
+                Ver los {withdrawals.length} retiros de otros meses
               </button>
             )}
           </div>
-        ) : displayedCash.map(c => {
-          const r = REASON_MAP[c.reason]
+        ) : (
+          <div className="sandbox-table-wrapper">
+            <table className="sandbox-table">
+              <thead>
+                <tr>
+                  <th>FECHA</th>
+                  <th>DESTINO / PROPÓSITO</th>
+                  <th>NOTA / CAJERO</th>
+                  <th>PERÍODO</th>
+                  <th>MONTO</th>
+                  <th style={{ textAlign: 'right' }}>ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedCash.map(c => {
+                  const r = REASON_MAP[c.reason] || REASON_MAP.pocket_money
 
-          if (editingId === c.id) {
-            return (
-              <div key={c.id} className="tx-edit-row">
-                <input type="number" className="edit-input" style={{ maxWidth: 130 }} value={editAmount}
-                  onChange={e => setEditAmount(e.target.value)} />
-                <select className="edit-select" value={editReason}
-                  onChange={e => setEditReason(e.target.value as CashReason)}>
-                  {Object.entries(REASON_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                </select>
-                <input className="edit-input" placeholder="Nota…" value={editNote}
-                  onChange={e => setEditNote(e.target.value)} />
-                <div className="edit-actions">
-                  <button className="edit-save-btn" onClick={() => saveEdit(c)}>✓ Guardar</button>
-                  <button className="edit-cancel-btn" onClick={() => setEditingId(null)}>Cancelar</button>
-                </div>
-              </div>
-            )
-          }
+                  if (editingId === c.id) {
+                    return (
+                      <tr key={c.id} className="edit-active-row">
+                        <td className="cell-date">{c.date}</td>
+                        <td>
+                          <select
+                            className="sandbox-edit-select"
+                            value={editReason}
+                            onChange={e => setEditReason(e.target.value as CashReason)}
+                          >
+                            {Object.entries(REASON_MAP).map(([k, v]) => (
+                              <option key={k} value={k}>{v.emoji} {v.label}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>
+                          <input
+                            className="sandbox-edit-input"
+                            value={editNote}
+                            onChange={e => setEditNote(e.target.value)}
+                          />
+                        </td>
+                        <td style={{ color: '#888' }}>{c.period}</td>
+                        <td>
+                          <input
+                            type="number"
+                            className="sandbox-edit-input"
+                            style={{ width: 110 }}
+                            value={editAmount}
+                            onChange={e => setEditAmount(e.target.value)}
+                          />
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            className="sandbox-btn-save"
+                            onClick={() => saveEdit(c)}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            type="button"
+                            className="sandbox-btn-cancel"
+                            onClick={() => setEditingId(null)}
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  }
 
-          return (
-            <div key={c.id} className="tx-row">
-              <div className="tx-icon" style={{ background: 'rgba(251,191,36,0.1)', fontSize: 18 }}>{r.emoji}</div>
-              <div className="tx-body">
-                <div className="tx-name">{c.note || r.label}</div>
-                <div className="tx-meta">
-                  <span className={`tx-badge ${r.badge}`}>{r.label}</span>
-                  {c.reason === 'unassigned' && (
-                    <span className="tx-badge" style={{ background: 'rgba(248,113,113,0.15)', color: '#F87171' }}>⚠ Riesgo</span>
-                  )}
-                  <span className="tx-date">{c.date}</span>
-                  {showAllPeriods && (
-                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 4, color: '#F3CA65', fontFamily: 'Space Mono' }}>
-                      {c.period}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="tx-right">
-                <div className="tx-amount amount-amber">-{formatCurrency(c.amount)}</div>
-                <div className="tx-method">Efectivo</div>
-              </div>
-              <div className="tx-actions">
-                <button className="tx-action-btn" onClick={() => startEdit(c)} title="Editar"><Pencil size={11} /></button>
-                <button className="tx-action-btn danger" onClick={() => onDeleteWithdrawal(c.id)} title="Eliminar"><Trash2 size={11} /></button>
-              </div>
-            </div>
-          )
-        })}
+                  return (
+                    <tr key={c.id}>
+                      <td className="cell-date">{c.date}</td>
+                      <td>
+                        <span className="sandbox-type-pill out">
+                          {r.emoji} {r.label}
+                        </span>
+                      </td>
+                      <td className="cell-item">
+                        <div className="item-title">{c.note || '— Sin nota adjunta —'}</div>
+                      </td>
+                      <td style={{ fontFamily: 'Space Mono', fontSize: 11.5, color: '#C9A84C' }}>
+                        {c.period}
+                      </td>
+                      <td className="cell-total text-amber">
+                        -{formatCurrency(c.amount)}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: 4 }}>
+                          <button
+                            type="button"
+                            className="table-action-btn"
+                            onClick={() => startEdit(c)}
+                            title="Editar"
+                          >
+                            <Pencil size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            className="table-action-btn danger"
+                            onClick={() => onDeleteWithdrawal(c.id)}
+                            title="Eliminar"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
+
+      {/* ── MODAL PARA REGISTRAR RETIRO DE EFECTIVO ── */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                <Banknote size={16} className="text-gold" />
+                <span>Registrar Retiro de Efectivo</span>
+              </h2>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setIsModalOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="modal-form-group">
+                  <label className="modal-label">Monto a Retirar (RD$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    className="modal-input"
+                    placeholder="0.00"
+                    value={form.amount}
+                    onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+                    autoFocus
+                    required
+                  />
+                </div>
+
+                <div className="modal-form-group">
+                  <label className="modal-label">Destino / Uso Previsto</label>
+                  <select
+                    className="modal-select"
+                    value={form.reason}
+                    onChange={e => setForm(p => ({ ...p, reason: e.target.value as CashReason }))}
+                  >
+                    {Object.entries(REASON_MAP).map(([k, v]) => (
+                      <option key={k} value={k}>{v.emoji} {v.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {advice && (
+                <div style={{
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  marginBottom: 12,
+                  fontSize: 11.5,
+                  background: advice.level === 'danger' ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
+                  border: `1px solid ${advice.level === 'danger' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                  color: advice.level === 'danger' ? '#F87171' : '#FBBF24',
+                }}>
+                  {advice.message}
+                </div>
+              )}
+
+              <div className="modal-form-group">
+                <label className="modal-label">Cajero o Nota Opcional</label>
+                <input
+                  className="modal-input"
+                  placeholder="Ej: Cajero BHD Bella Vista, Propina, Mercado..."
+                  value={form.note}
+                  onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
+                />
+              </div>
+
+              <div className="modal-form-group">
+                <label className="modal-label">Fecha</label>
+                <input
+                  type="date"
+                  className="modal-input"
+                  value={form.date}
+                  onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="sandbox-btn-gold">
+                  <Plus size={14} />
+                  <span>Guardar Retiro</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
