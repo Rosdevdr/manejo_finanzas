@@ -64,6 +64,11 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
     setEditingId(null)
   }
 
+  const [showAllPeriods, setShowAllPeriods] = useState(false)
+  const displayedIncomes = showAllPeriods 
+    ? [...incomes].sort((a, b) => b.date.localeCompare(a.date))
+    : periodIncomes
+
   return (
     <div className="fade-in">
       <div className="page-header">
@@ -76,7 +81,7 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
         <div className="kpi-card emerald">
           <div className="kpi-top"><span className="kpi-label">Total del Período</span><Wallet size={14} className="kpi-icon" /></div>
           <div className="kpi-value">{formatCurrency(totalIncome)}</div>
-          <div className="kpi-sub">{periodIncomes.length} registro{periodIncomes.length !== 1 ? 's' : ''}</div>
+          <div className="kpi-sub">{periodIncomes.length} registro{periodIncomes.length !== 1 ? 's' : ''} en {currentPeriod}</div>
         </div>
         <div className="kpi-card gold">
           <div className="kpi-top"><span className="kpi-label">Ingresos Fijos</span><Briefcase size={14} className="kpi-icon" /></div>
@@ -153,18 +158,69 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
       </form>
 
       {/* List */}
-      <div className="section-header">
-        <div className="section-label">HISTORIAL</div>
-        <div className="section-title">Ingresos registrados</div>
+      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <div className="section-label">HISTORIAL</div>
+          <div className="section-title">
+            {showAllPeriods ? 'Todos los ingresos registrados' : `Ingresos de ${currentPeriod}`} ({displayedIncomes.length})
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => setShowAllPeriods(false)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: !showAllPeriods ? 'rgba(243, 202, 101, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${!showAllPeriods ? '#F3CA65' : 'rgba(255, 255, 255, 0.1)'}`,
+              color: !showAllPeriods ? '#F3CA65' : '#9CA3AF',
+            }}
+          >
+            {currentPeriod} ({periodIncomes.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAllPeriods(true)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: showAllPeriods ? 'rgba(243, 202, 101, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${showAllPeriods ? '#F3CA65' : 'rgba(255, 255, 255, 0.1)'}`,
+              color: showAllPeriods ? '#F3CA65' : '#9CA3AF',
+            }}
+          >
+            Ver Todo el Historial ({incomes.length})
+          </button>
+        </div>
       </div>
+
       <div className="tx-list">
         <div className="tx-header">
           <span className="tx-title">Entradas de Capital</span>
-          <span className="tx-count">{periodIncomes.length} registro{periodIncomes.length !== 1 ? 's' : ''}</span>
+          <span className="tx-count">{displayedIncomes.length} registro{displayedIncomes.length !== 1 ? 's' : ''}</span>
         </div>
-        {periodIncomes.length === 0 ? (
-          <div className="empty-state"><p className="empty-text">Sin ingresos registrados para este período</p></div>
-        ) : periodIncomes.map(inc => {
+        {displayedIncomes.length === 0 ? (
+          <div className="empty-state">
+            <p className="empty-text">Sin ingresos registrados para este período</p>
+            {incomes.length > 0 && !showAllPeriods && (
+              <button
+                type="button"
+                onClick={() => setShowAllPeriods(true)}
+                className="btn btn-secondary"
+                style={{ marginTop: 10, fontSize: 11.5, color: '#F3CA65' }}
+              >
+                Ver {incomes.length} ingreso{incomes.length !== 1 ? 's' : ''} de otros meses
+              </button>
+            )}
+          </div>
+        ) : displayedIncomes.map(inc => {
           const t = TYPE_MAP[inc.type]
 
           if (editingId === inc.id) {
@@ -199,6 +255,11 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
                 <div className="tx-meta">
                   <span className={`tx-badge ${t.badge}`}>{t.label}</span>
                   <span className="tx-date">{inc.date}</span>
+                  {showAllPeriods && (
+                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 4, color: '#F3CA65', fontFamily: 'Space Mono' }}>
+                      {inc.period}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="tx-right">

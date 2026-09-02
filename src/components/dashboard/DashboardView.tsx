@@ -10,12 +10,16 @@ import {
   AlertCircle,
   Sparkles,
   UserCheck,
+  Activity,
+  CreditCard,
+  Banknote,
+  Building2,
 } from 'lucide-react'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
-  PieChart, Pie, Cell
+  PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts'
-import type { Income, Expense, CreditCard, CreditCardTransaction } from '../../types/finance'
+import type { Income, Expense, CreditCard as CreditCardType, CreditCardTransaction } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
 import { formatCurrency } from '../../utils/formatters'
 import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES, calculateCumulativeBalance } from '../../utils/calendar'
@@ -25,7 +29,7 @@ interface DashboardViewProps {
   currentPeriod: string
   incomes: Income[]
   expenses: Expense[]
-  creditCards?: CreditCard[]
+  creditCards?: CreditCardType[]
   creditTransactions?: CreditCardTransaction[]
   userEmail?: string | null
   onNavigateTab?: (t: TabType) => void
@@ -62,41 +66,29 @@ export function DashboardView({
   const totalIn  = pInc.reduce((s, i) => s + i.amount, 0)
   const totalExp = pExp.reduce((s, e) => s + e.amount, 0)
   const balance  = totalIn - totalExp
-  const savingRate = totalIn > 0 ? ((balance / totalIn) * 100) : 0
-  const fixedExp   = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
-  const varExp     = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
+  const savingRate = totalIn > 0 ? ((totalIn - totalExp) / totalIn) * 100 : 0
+  const fixedExp = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
+  const varExp   = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
 
   // Comparativa contra período anterior
-  const prevPeriod  = getPreviousPeriod(currentPeriod)
-  const prevInc     = incomes.filter(i => i.period === prevPeriod)
-  const prevExp     = expenses.filter(e => e.period === prevPeriod)
-  const prevTotalIn  = prevInc.reduce((s, i) => s + i.amount, 0)
-  const prevTotalExp = prevExp.reduce((s, e) => s + e.amount, 0)
-  const prevBalance  = prevTotalIn - prevTotalExp
-  const prevSavingRate = prevTotalIn > 0 ? ((prevBalance / prevTotalIn) * 100) : 0
+  const prevPeriod = getPreviousPeriod(currentPeriod)
+  const prevInc = incomes.filter(i => i.period === prevPeriod).reduce((s, i) => s + i.amount, 0)
+  const prevExp = expenses.filter(e => e.period === prevPeriod).reduce((s, e) => s + e.amount, 0)
+  const prevBal = prevInc - prevExp
+  const prevSavingRate = prevInc > 0 ? (prevBal / prevInc) * 100 : 0
 
-  const incDiff  = totalIn - prevTotalIn
-  const incTrend = prevTotalIn > 0
-    ? `${incDiff >= 0 ? '+' : ''}${((incDiff / prevTotalIn) * 100).toFixed(1)}% vs mes ant.`
-    : undefined
-  const incTrendDir = incDiff >= 0 ? 'up' : 'down'
-
-  const expDiff  = totalExp - prevTotalExp
-  const expTrend = prevTotalExp > 0
-    ? `${expDiff >= 0 ? '+' : ''}${((expDiff / prevTotalExp) * 100).toFixed(1)}% vs mes ant.`
-    : undefined
-  const expTrendDir = expDiff <= 0 ? 'up' : 'down' // menor gasto es mejor ('up')
-
-  const balDiff  = cumulative.totalCumulativeBalance - prevBalance
-  const balTrend = prevTotalIn > 0 || totalIn > 0 || cumulative.carriedOverBalance !== 0
-    ? `${balDiff >= 0 ? '+' : ''}${formatCurrency(balDiff)} vs mes ant.`
-    : undefined
-  const balTrendDir = balDiff >= 0 ? 'up' : 'down'
-
+  const incDiff = prevInc > 0 ? ((totalIn - prevInc) / prevInc) * 100 : 0
+  const expDiff = prevExp > 0 ? ((totalExp - prevExp) / prevExp) * 100 : 0
+  const balDiff = prevBal !== 0 ? ((balance - prevBal) / Math.abs(prevBal)) * 100 : 0
   const rateDiff = savingRate - prevSavingRate
-  const rateTrend = prevTotalIn > 0 || totalIn > 0
-    ? `${rateDiff >= 0 ? '+' : ''}${rateDiff.toFixed(1)}% vs mes ant.`
-    : undefined
+
+  const incTrend = prevInc > 0 ? `${incDiff >= 0 ? '+' : ''}${incDiff.toFixed(1)}% vs mes ant.` : undefined
+  const incTrendDir = incDiff >= 0 ? 'up' : 'down'
+  const expTrend = prevExp > 0 ? `${expDiff >= 0 ? '+' : ''}${expDiff.toFixed(1)}% vs mes ant.` : undefined
+  const expTrendDir = expDiff <= 0 ? 'up' : 'down'
+  const balTrend = prevBal !== 0 ? `${balDiff >= 0 ? '+' : ''}${balDiff.toFixed(1)}% vs mes ant.` : undefined
+  const balTrendDir = balDiff >= 0 ? 'up' : 'down'
+  const rateTrend = prevInc > 0 ? `${rateDiff >= 0 ? '+' : ''}${rateDiff.toFixed(1)} pp vs mes ant.` : undefined
   const rateTrendDir = rateDiff >= 0 ? 'up' : 'down'
 
   // Resumen de Tarjetas de Crédito
@@ -114,7 +106,7 @@ export function DashboardView({
     color: CATEGORY_COLORS[cat] ?? '#555'
   }))
 
-  // Bar chart — 5 meses históricos reales desde el almacenamiento
+  // Últimos 5 meses históricos
   const last5Periods: string[] = []
   let cursor = currentPeriod
   for (let i = 0; i < 5; i++) {
@@ -122,6 +114,7 @@ export function DashboardView({
     cursor = getPreviousPeriod(cursor)
   }
 
+  // 1. Gráfico de Barras: Ingresos vs Gastos
   const barData = last5Periods.map(p => {
     const [, monthStr] = p.split('-')
     const mIdx = (parseInt(monthStr, 10) || 1) - 1
@@ -136,6 +129,55 @@ export function DashboardView({
       gastos: Math.round(totE),
     }
   })
+
+  // 2. Gráfico de Área: Curva de Balance Acumulado & Trayectoria Patrimonial
+  const areaData = last5Periods.map(p => {
+    const [, monthStr] = p.split('-')
+    const mIdx = (parseInt(monthStr, 10) || 1) - 1
+    const cum = calculateCumulativeBalance(incomes, expenses, p)
+    const pIncomes = incomes.filter(i => i.period === p).reduce((s, i) => s + i.amount, 0)
+    const pExpenses = expenses.filter(e => e.period === p).reduce((s, e) => s + e.amount, 0)
+    return {
+      label: MONTH_SHORT_NAMES[mIdx] || p,
+      period: p,
+      balance: Math.round(cum.totalCumulativeBalance),
+      superavit: Math.round(Math.max(0, pIncomes - pExpenses)),
+    }
+  })
+
+  // 3. Gráfico de Barras Apiladas: Composición de Gastos Fijos vs Variables
+  const stackedData = last5Periods.map(p => {
+    const [, monthStr] = p.split('-')
+    const mIdx = (parseInt(monthStr, 10) || 1) - 1
+    const pExpenses = expenses.filter(e => e.period === p)
+    const f = pExpenses.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
+    const v = pExpenses.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
+    return {
+      label: MONTH_SHORT_NAMES[mIdx] || p,
+      period: p,
+      fijos: Math.round(f),
+      variables: Math.round(v),
+    }
+  })
+
+  // 4. Métodos de Pago del Período
+  const paymentTotals = {
+    debit_card: 0,
+    credit_card: 0,
+    bank_transfer: 0,
+    cash: 0,
+  }
+  pExp.forEach(e => {
+    if (paymentTotals[e.paymentMethod] !== undefined) {
+      paymentTotals[e.paymentMethod] += e.amount
+    }
+  })
+  const paymentMethodsList = [
+    { name: 'Transferencia', amount: paymentTotals.bank_transfer, icon: <Building2 size={13} />, color: '#34D399' },
+    { name: 'Tarjeta Débito', amount: paymentTotals.debit_card, icon: <CreditCard size={13} />, color: '#60A5FA' },
+    { name: 'Tarjeta Crédito', amount: paymentTotals.credit_card, icon: <CardIcon size={13} />, color: '#F3CA65' },
+    { name: 'Efectivo', amount: paymentTotals.cash, icon: <Banknote size={13} />, color: '#FBBF24' },
+  ]
 
   const recentTx = [
     ...pInc.slice(0, 3).map(i => ({ ...i, kind: 'income' as const })),
@@ -186,7 +228,7 @@ export function DashboardView({
     {
       label: 'Deuda Tarjetas',
       value: formatCurrency(creditSummary.totalDebt),
-      sub: `${creditSummary.utilizationRate}% de cupo utilizado`,
+      sub: `${creditSummary.utilizationRate.toFixed(1)}% de cupo utilizado`,
       color: creditSummary.utilizationRate > 30 ? 'red' : 'gold',
       icon: <CardIcon size={14} />,
       trend: undefined,
@@ -220,7 +262,7 @@ export function DashboardView({
         <h1 className="page-title">Panorama Financiero</h1>
       </div>
 
-      {/* Personalized Welcome Card with Variable Daily Financial Tip */}
+      {/* Personalized Welcome Card */}
       <div style={{
         background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.14) 0%, rgba(18, 18, 26, 0.85) 100%)',
         border: '1px solid rgba(201, 168, 76, 0.3)',
@@ -269,7 +311,7 @@ export function DashboardView({
         )}
       </div>
 
-      {/* Calendar Progress & End of Month Alert Banner */}
+      {/* Calendar Progress */}
       {monthProgress.isCurrentMonth && (
         <div style={{
           background: monthProgress.isMonthEndingSoon
@@ -298,7 +340,7 @@ export function DashboardView({
               <div style={{ fontSize: 11.5, color: '#9CA3AF', marginTop: 2 }}>
                 {monthProgress.isMonthEndingSoon
                   ? ` Quedan solo ${monthProgress.daysRemaining} días para cerrar el mes. ¡Revisa tus gastos variables pendientes!`
-                  : ` Quedan ${monthProgress.daysRemaining} días calendario para cerrar este mes.`}
+                  : ` Período financiero en curso con métricas actualizadas al instante.`}
               </div>
             </div>
           </div>
@@ -307,16 +349,16 @@ export function DashboardView({
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => onNavigateTab('chat-advisor')}
+              onClick={() => onNavigateTab('advisor')}
               style={{
-                padding: '7px 16px',
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                background: 'linear-gradient(135deg, rgba(243, 202, 101, 0.15) 0%, rgba(201, 168, 76, 0.25) 100%)',
-                border: '1px solid rgba(243, 202, 101, 0.35)',
+                padding: '6px 12px',
+                background: 'rgba(201, 168, 76, 0.15)',
+                border: '1px solid rgba(201, 168, 76, 0.35)',
                 color: '#F3CA65',
                 borderRadius: 8,
                 cursor: 'pointer',
@@ -353,17 +395,17 @@ export function DashboardView({
         ))}
       </div>
 
-      {/* Charts Section */}
-      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginBottom: 20 }}>
-        {/* Bar Chart — Historico 5 Meses */}
+      {/* Charts Section: Wealth Advisor 4-Quadrant Matrix */}
+      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginBottom: 20 }}>
+        {/* 1. Bar Chart — Historico 5 Meses */}
         <div className="chart-card" style={{ background: '#12121A', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 14, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F5' }}>Históricos (Ingresos vs Gastos)</div>
-              <div style={{ fontSize: 11, color: '#9CA3AF' }}>Últimos 5 meses acumulados en base de datos</div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#F5F5F5' }}>Históricos (Ingresos vs Gastos)</div>
+              <div style={{ fontSize: 11, color: '#9CA3AF' }}>Flujo de caja de los últimos 5 meses</div>
             </div>
           </div>
-          <div style={{ width: '100%', height: 200 }}>
+          <div style={{ width: '100%', height: 210 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <XAxis dataKey="label" stroke="#666" fontSize={11} tickLine={false} />
@@ -379,20 +421,20 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Pie Chart — Distribucion de Gastos */}
+        {/* 2. Pie Chart — Distribucion de Gastos */}
         <div className="chart-card" style={{ background: '#12121A', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 14, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F5' }}>Distribución de Gastos</div>
-              <div style={{ fontSize: 11, color: '#9CA3AF' }}>Por categoría en este período</div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#F5F5F5' }}>Distribución de Gastos</div>
+              <div style={{ fontSize: 11, color: '#9CA3AF' }}>Por categoría en {currentPeriod}</div>
             </div>
           </div>
           {pieData.length === 0 ? (
-            <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: 12 }}>
+            <div style={{ height: 210, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: 12 }}>
               Sin gastos registrados en {currentPeriod}
             </div>
           ) : (
-            <div style={{ width: '100%', height: 200, display: 'flex', alignItems: 'center' }}>
+            <div style={{ width: '100%', height: 210, display: 'flex', alignItems: 'center' }}>
               <div style={{ width: '50%', height: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -408,7 +450,7 @@ export function DashboardView({
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div style={{ width: '50%', paddingLeft: 10, display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+              <div style={{ width: '50%', paddingLeft: 10, display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 190, overflowY: 'auto' }}>
                 {pieData.map((d, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
@@ -419,6 +461,99 @@ export function DashboardView({
               </div>
             </div>
           )}
+        </div>
+
+        {/* 3. Area Chart — Trayectoria de Patrimonio y Balance Acumulado */}
+        <div className="chart-card" style={{ background: '#12121A', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 14, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#F5F5F5' }}>Evolución del Balance Acumulado</div>
+              <div style={{ fontSize: 11, color: '#9CA3AF' }}>Trayectoria del patrimonio líquido mes a mes</div>
+            </div>
+          </div>
+          <div style={{ width: '100%', height: 210 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={areaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="balanceGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#F3CA65" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#F3CA65" stopOpacity={0.0} />
+                  </linearGradient>
+                  <linearGradient id="superavitGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#34D399" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#34D399" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="label" stroke="#666" fontSize={11} tickLine={false} />
+                <YAxis stroke="#666" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                <Tooltip
+                  contentStyle={{ background: '#1A1A24', border: '1px solid #333', borderRadius: 8, fontSize: 12 }}
+                  formatter={(value) => [formatCurrency(Number(value) || 0), '']}
+                />
+                <Area type="monotone" dataKey="balance" stroke="#F3CA65" strokeWidth={2.5} fillOpacity={1} fill="url(#balanceGrad)" name="Balance Acumulado" />
+                <Area type="monotone" dataKey="superavit" stroke="#34D399" strokeWidth={1.5} fillOpacity={1} fill="url(#superavitGrad)" name="Superávit del Mes" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* 4. Stacked Bar Chart — Estructura de Gastos Fijos vs Variables */}
+        <div className="chart-card" style={{ background: '#12121A', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 14, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#F5F5F5' }}>Composición de Gastos (Fijos vs Variables)</div>
+              <div style={{ fontSize: 11, color: '#9CA3AF' }}>Rigidez vs Flexibilidad estructural de egresos</div>
+            </div>
+          </div>
+          <div style={{ width: '100%', height: 210 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stackedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <XAxis dataKey="label" stroke="#666" fontSize={11} tickLine={false} />
+                <YAxis stroke="#666" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                <Tooltip
+                  contentStyle={{ background: '#1A1A24', border: '1px solid #333', borderRadius: 8, fontSize: 12 }}
+                  formatter={(value) => [formatCurrency(Number(value) || 0), '']}
+                />
+                <Bar dataKey="fijos" stackId="a" fill="#C9A84C" radius={[0, 0, 0, 0]} name="Gastos Fijos" />
+                <Bar dataKey="variables" stackId="a" fill="#FBBF24" radius={[4, 4, 0, 0]} name="Gastos Variables" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Canales de Pago del Período */}
+      <div style={{
+        background: '#12121A',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 14,
+        padding: '16px 18px',
+        marginBottom: 20,
+      }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#F5F5F5', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Activity size={16} style={{ color: '#F3CA65' }} />
+          <span>Canales de Pago y Flujo de Liquidez ({currentPeriod})</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+          {paymentMethodsList.map((pm, i) => {
+            const pct = totalExp > 0 ? (pm.amount / totalExp) * 100 : 0
+            return (
+              <div key={i} style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: 10, padding: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#9CA3AF', fontSize: 11.5, marginBottom: 4 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: pm.color, fontWeight: 600 }}>
+                    {pm.icon} {pm.name}
+                  </span>
+                  <span style={{ fontFamily: 'Space Mono', fontWeight: 700 }}>{pct.toFixed(0)}%</span>
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#FFF', fontFamily: 'Space Mono' }}>
+                  {formatCurrency(pm.amount)}
+                </div>
+                <div style={{ height: 4, width: '100%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: pm.color, borderRadius: 2 }} />
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 

@@ -36,6 +36,11 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
   const fixedExp = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
   const varExp   = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
 
+  const [showAllPeriods, setShowAllPeriods] = useState(false)
+  const displayedExpenses = showAllPeriods
+    ? [...expenses].sort((a, b) => b.date.localeCompare(a.date))
+    : pExp
+
   const [form, setForm] = useState({
     description: '', amount: '', category: 'food' as ExpenseCategory,
     type: 'variable' as ExpenseType, paymentMethod: 'debit_card' as PaymentMethod,
@@ -188,19 +193,70 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
       </form>
 
       {/* List */}
-      <div className="section-header">
-        <div className="section-label">HISTORIAL</div>
-        <div className="section-title">Gastos registrados</div>
+      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <div className="section-label">HISTORIAL</div>
+          <div className="section-title">
+            {showAllPeriods ? 'Todos los gastos registrados' : `Gastos de ${currentPeriod}`} ({displayedExpenses.length})
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => setShowAllPeriods(false)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: !showAllPeriods ? 'rgba(243, 202, 101, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${!showAllPeriods ? '#F3CA65' : 'rgba(255, 255, 255, 0.1)'}`,
+              color: !showAllPeriods ? '#F3CA65' : '#9CA3AF',
+            }}
+          >
+            {currentPeriod} ({pExp.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAllPeriods(true)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: showAllPeriods ? 'rgba(243, 202, 101, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${showAllPeriods ? '#F3CA65' : 'rgba(255, 255, 255, 0.1)'}`,
+              color: showAllPeriods ? '#F3CA65' : '#9CA3AF',
+            }}
+          >
+            Ver Todo el Historial ({expenses.length})
+          </button>
+        </div>
       </div>
+
       <div className="tx-list">
         <div className="tx-header">
           <span className="tx-title">Egresos del Período</span>
-          <span className="tx-count">{pExp.length} registro{pExp.length !== 1 ? 's' : ''}</span>
+          <span className="tx-count">{displayedExpenses.length} registro{displayedExpenses.length !== 1 ? 's' : ''}</span>
         </div>
-        {pExp.length === 0 ? (
-          <div className="empty-state"><p className="empty-text">Sin gastos registrados para este período</p></div>
-        ) : pExp.map(exp => {
-          const c = CATEGORY_MAP[exp.category]
+        {displayedExpenses.length === 0 ? (
+          <div className="empty-state">
+            <p className="empty-text">Sin gastos registrados para este período</p>
+            {expenses.length > 0 && !showAllPeriods && (
+              <button
+                type="button"
+                onClick={() => setShowAllPeriods(true)}
+                className="btn btn-secondary"
+                style={{ marginTop: 10, fontSize: 11.5, color: '#F3CA65' }}
+              >
+                Ver {expenses.length} gasto{expenses.length !== 1 ? 's' : ''} de otros meses
+              </button>
+            )}
+          </div>
+        ) : displayedExpenses.map(exp => {
+          const c = CATEGORY_MAP[exp.category] || CATEGORY_MAP.other
 
           if (editingId === exp.id) {
             return (
@@ -237,6 +293,11 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                   <span className={`tx-badge ${c.badge}`}>{c.label}</span>
                   <span className={`tx-badge ${exp.type === 'fixed' ? 'badge-fijo' : 'badge-variable'}`}>{exp.type === 'fixed' ? 'Fijo' : 'Variable'}</span>
                   <span className="tx-date">{exp.date}</span>
+                  {showAllPeriods && (
+                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 4, color: '#F3CA65', fontFamily: 'Space Mono' }}>
+                      {exp.period}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="tx-right">
