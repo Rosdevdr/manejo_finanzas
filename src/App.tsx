@@ -148,6 +148,7 @@ export function App() {
           monthNetFlow={cumulativeSummary.periodNet}
           isDemoMode={isDemoMode}
           userEmail={user?.email}
+          currentPeriod={currentPeriod}
           creditCards={creditCards}
           creditTransactions={creditTransactions}
           onSignOut={signOut}

@@ -353,28 +353,6 @@ Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la 
             )}
             {totalInc > 0 && <span className="context-pill">Ingresos Mes: {formatCurrency(totalInc)}</span>}
             {totalExp > 0 && <span className="context-pill">Gastos Mes: {formatCurrency(totalExp)}</span>}
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                setTempApiKey(apiKey)
-                setTempModel(selectedModel)
-                setIsSettingsOpen(true)
-              }}
-              style={{
-                padding: '6px 12px',
-                fontSize: 11,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                color: apiKey ? '#34D399' : '#F3CA65',
-                borderColor: apiKey ? 'rgba(52, 211, 153, 0.35)' : 'rgba(243, 202, 101, 0.35)',
-                background: apiKey ? 'rgba(52, 211, 153, 0.08)' : 'rgba(243, 202, 101, 0.08)',
-              }}
-              title="Configurar conexión con Google Gemini API"
-            >
-              <Sparkles size={13} /> {apiKey ? 'Gemini AI Conectado' : 'Conectar Gemini API'}
-            </button>
             <button className="btn btn-secondary" onClick={handleClearChat} style={{ padding: '6px 12px', fontSize: 11 }}>
               <Trash2 size={13} /> Limpiar Chat
             </button>

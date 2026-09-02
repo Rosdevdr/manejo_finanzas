@@ -87,7 +87,7 @@ export function SmartAnalysisPanel({
   const isAlert = savingsRate < 5 || balance <= 0
 
   return (
-    <div className="fade-in">
+    <div className="fade-in" style={{ paddingBottom: 36 }}>
       {/* Page Header */}
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div>
@@ -349,7 +349,7 @@ export function SmartAnalysisPanel({
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ color: '#888898' }}>Cupo Utilizado:</span>
               <strong style={{ color: creditSummary.utilizationRate > 30 ? '#F87171' : '#34D399' }}>
-                {creditSummary.utilizationRate}% (Límite sano: &lt;30%)
+                {creditSummary.utilizationRate.toFixed(1)}% (Límite sano: &lt;30%)
               </strong>
             </div>
             <ProgressBar value={creditSummary.utilizationRate} max={100} color={creditSummary.utilizationRate > 30 ? 'red' : 'emerald'} />

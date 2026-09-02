@@ -176,8 +176,8 @@ export function ReportExportModal({
               </div>
             </div>
 
-            <button className="btn btn-secondary" style={{ width: '100%', fontSize: 12, marginTop: 6 }} onClick={handleExportCSV}>
-              <Download size={14} /> Descargar .CSV
+            <button className="btn-primary btn-income" style={{ width: '100%', fontSize: 12.5, marginTop: 6 }} onClick={handleExportCSV}>
+              <Download size={15} /> <span>Descargar .CSV (Excel)</span>
             </button>
           </div>
         </div>

@@ -9,10 +9,14 @@ import {
   FileText,
   Smartphone,
   Menu,
+  Lightbulb,
+  Sparkles,
+  RefreshCw,
 } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 import { CardAlertsPopover } from '../alerts/CardAlertsPopover'
 import type { CreditCard, CreditCardTransaction } from '../../types/finance'
+import { getRandomDailyTip, FINANCIAL_TIPS_BANK } from '../../utils/financialTips'
 
 interface AppHeaderProps {
   periodLabel: string
@@ -26,6 +30,7 @@ interface AppHeaderProps {
   monthNetFlow?: number
   isDemoMode?: boolean
   userEmail?: string | null
+  currentPeriod?: string
   creditCards?: CreditCard[]
   creditTransactions?: CreditCardTransaction[]
   onSignOut?: () => void
@@ -48,6 +53,7 @@ export function AppHeader({
   monthNetFlow,
   isDemoMode,
   userEmail,
+  currentPeriod = '2026-09',
   creditCards = [],
   creditTransactions = [],
   onSignOut,
@@ -60,11 +66,30 @@ export function AppHeader({
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
-  // Cerrar el menú si se hace clic fuera de él
+  // Estado y popover del Consejo del Día
+  const [tipOpen, setTipOpen] = useState(false)
+  const [tipIndex, setTipIndex] = useState(() => {
+    const defaultTip = getRandomDailyTip(currentPeriod)
+    const idx = FINANCIAL_TIPS_BANK.findIndex(t => t.id === defaultTip.id)
+    return idx >= 0 ? idx : 0
+  })
+  const tipRef = useRef<HTMLDivElement>(null)
+
+  const activeTip = FINANCIAL_TIPS_BANK[tipIndex] || FINANCIAL_TIPS_BANK[0]
+
+  const handleNextTip = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setTipIndex(prev => (prev + 1) % FINANCIAL_TIPS_BANK.length)
+  }
+
+  // Cerrar menús al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setProfileOpen(false)
+      }
+      if (tipRef.current && !tipRef.current.contains(event.target as Node)) {
+        setTipOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -113,6 +138,101 @@ export function AppHeader({
 
       {/* Balances & Acciones a la derecha */}
       <div className="header-right">
+        {/* Pastilla de Consejo Financiero del Día */}
+        <div className="profile-wrapper" ref={tipRef}>
+          <button
+            type="button"
+            className={`header-tip-btn ${tipOpen ? 'active' : ''}`}
+            onClick={() => setTipOpen(prev => !prev)}
+            title="Consejo Financiero del Día"
+            aria-label="Consejo Financiero del Día"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: tipOpen ? 'rgba(243, 202, 101, 0.2)' : 'rgba(243, 202, 101, 0.1)',
+              border: '1px solid rgba(243, 202, 101, 0.3)',
+              color: '#F3CA65',
+              cursor: 'pointer',
+              transition: 'all 0.18s ease',
+            }}
+          >
+            <Lightbulb size={16} className={tipOpen ? 'spin-subtle' : ''} />
+          </button>
+
+          {tipOpen && (
+            <div className="profile-dropdown tip-dropdown fade-in" style={{ width: 300, padding: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#F3CA65' }}>
+                  <Sparkles size={14} />
+                  <span>Consejo del Día</span>
+                </div>
+                <span style={{
+                  fontSize: 9.5,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  background: 'rgba(243, 202, 101, 0.15)',
+                  color: '#F3CA65',
+                  border: '1px solid rgba(243, 202, 101, 0.3)',
+                }}>
+                  {activeTip.category}
+                </span>
+              </div>
+
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: '#FFFFFF', marginBottom: 6, lineHeight: 1.35 }}>
+                {activeTip.title}
+              </div>
+
+              <div style={{ fontSize: 11.5, color: '#9CA3AF', lineHeight: 1.45, marginBottom: 12 }}>
+                {activeTip.content}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <button
+                  type="button"
+                  onClick={handleNextTip}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#F3CA65',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: '4px 6px',
+                    borderRadius: 6,
+                  }}
+                >
+                  <RefreshCw size={11} /> Siguiente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipOpen(false)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#D1D5DB',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                  }}
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Pill de Saldo Disponible */}
         <div
           className="balance-pill"
@@ -142,10 +262,12 @@ export function AppHeader({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#717182',
+            color: '#D1D5DB',
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             padding: 6,
             borderRadius: 8,
-            transition: 'color 0.15s ease',
+            transition: 'all 0.15s ease',
           }}
         >
           <GithubIcon size={16} />

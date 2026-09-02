@@ -87,19 +87,32 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-section {
-  padding: 16px 12px 8px;
+  padding: 14px 12px 8px;
   flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-section::-webkit-scrollbar {
+  width: 3px;
+}
+.nav-section::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
 }
 
 .nav-label {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 9px;
-  color: #555566;
+  font-size: 9.5px;
+  color: #888898;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   padding: 0 8px;
   margin-bottom: 6px;
-  font-weight: 600;
+  margin-top: 6px;
+  font-weight: 700;
 }
 
 .nav-item {
@@ -110,7 +123,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px;
   cursor: pointer;
   margin-bottom: 2px;
-  color: #6B6B7A;
+  color: #9CA3AF;
   font-size: 13px;
   font-weight: 500;
   font-family: 'Space Grotesk', sans-serif;
@@ -125,15 +138,28 @@ h1, h2, h3, h4, h5, h6 {
 
 .nav-item:hover {
   background: #16161E;
-  color: #C0C0CC;
+  color: #FFFFFF;
 }
 
 .nav-item.active {
-  background: rgba(201, 168, 76, 0.1);
-  color: #C9A84C;
-  border-left: 2px solid #C9A84C;
+  background: rgba(201, 168, 76, 0.12);
+  color: #F3CA65;
+  border-left: 2px solid #F3CA65;
   border-radius: 0 8px 8px 0;
   font-weight: 600;
+}
+
+.sidebar-github-link {
+  color: #D1D5DB !important;
+  font-weight: 600 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin-top: 8px !important;
+  padding-top: 10px !important;
+}
+
+.sidebar-github-link:hover {
+  color: #F3CA65 !important;
+  background: rgba(243, 202, 101, 0.08) !important;
 }
 
 .nav-icon {
@@ -726,23 +752,26 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ===================== SECTION HEADERS ===================== */
 .section-header {
-  margin-bottom: 10px;
-  margin-top: 4px;
+  margin-bottom: 12px;
+  margin-top: 14px;
 }
 
 .section-label {
-  font-size: 10px;
-  color: #3A3A4A;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #F3CA65;
   text-transform: uppercase;
   letter-spacing: 0.14em;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 .section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #D0D0DC;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #F0F0F8;
   margin-top: 2px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.01em;
 }
 
 /* ===================== FORM ===================== */
@@ -1091,6 +1120,83 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 .tx-action-btn:hover { background: #1E1E28; color: #C0C0CC; }
 .tx-action-btn.danger:hover { border-color: rgba(248,113,113,0.4); color: #F87171; }
+
+/* ===================== INLINE TRANSACTION EDIT ROW ===================== */
+.tx-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: rgba(201, 168, 76, 0.05);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+  flex-wrap: wrap;
+}
+
+.edit-input,
+.edit-select {
+  background: #181824;
+  border: 1px solid #2E2E40;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #F0F0F8;
+  height: 38px;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.edit-input:focus,
+.edit-select:focus {
+  border-color: #C9A84C;
+  background: #1E1E2C;
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.2);
+}
+
+.edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.edit-save-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+  color: #0A0A0C;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.edit-save-btn:hover {
+  background: linear-gradient(135deg, #6EE7B7 0%, #34D399 100%);
+  transform: translateY(-1px);
+}
+
+.edit-cancel-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #D1D5DB;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.edit-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+}
 
 /* ===================== EMPTY STATE ===================== */
 .empty-state {

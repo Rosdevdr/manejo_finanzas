@@ -9,7 +9,6 @@ import {
   Calendar,
   AlertCircle,
   Sparkles,
-  Lightbulb,
   UserCheck,
 } from 'lucide-react'
 import {
@@ -21,7 +20,6 @@ import type { TabType } from '../../types/navigation'
 import { formatCurrency } from '../../utils/formatters'
 import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES, calculateCumulativeBalance } from '../../utils/calendar'
 import { getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
-import { getRandomDailyTip } from '../../utils/financialTips'
 
 interface DashboardViewProps {
   currentPeriod: string
@@ -56,7 +54,6 @@ export function DashboardView({
 }: DashboardViewProps) {
   const userName = userEmail ? userEmail.split('@')[0] : 'Jesús'
   const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
-  const dailyTip = getRandomDailyTip(currentPeriod)
 
   // Datos del período actual y acumulado histórico
   const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
@@ -246,21 +243,6 @@ export function DashboardView({
             <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>
               Resumen operativo para el período {currentPeriod} · Datos en vivo
             </div>
-          </div>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          background: 'rgba(255, 255, 255, 0.05)',
-          padding: '8px 14px',
-          borderRadius: 10,
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        }}>
-          <Lightbulb size={16} style={{ color: '#F59E0B', flexShrink: 0 }} />
-          <div style={{ fontSize: 11.5, color: '#E5E7EB', maxWidth: 450 }}>
-            <strong style={{ color: '#F3CA65' }}>Consejo Financiero del Día ({dailyTip.category.toUpperCase()}):</strong> {dailyTip.title} — {dailyTip.content}
           </div>
         </div>
 
