@@ -242,18 +242,16 @@ h1, h2, h3, h4, h5, h6 {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 24px 28px;
+  padding: 24px 28px 80px;
   min-height: 0;
   max-width: 100%;
-  display: flex;
-  flex-direction: column;
+  display: block; /* Permite que el contenido crezca verticalmente y active la navegación natural */
+  overscroll-behavior-y: contain;
 }
 
 .content > .fade-in {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  width: 100%;
+  display: block;
 }
 
 /* ===================== HEADER ===================== */
@@ -524,11 +522,38 @@ h1, h2, h3, h4, h5, h6 {
   color: #EF4444 !important;
 }
 
-/* ===================== CONTENT (scrollbar) ===================== */
+/* ===================== CONTENT SCROLLBAR (BARRA VERTICAL INSTITUCIONAL) ===================== */
 
-.content::-webkit-scrollbar { width: 4px; }
-.content::-webkit-scrollbar-track { background: transparent; }
-.content::-webkit-scrollbar-thumb { background: #2A2A34; border-radius: 2px; }
+.content::-webkit-scrollbar,
+.sandbox-table-wrapper::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.content::-webkit-scrollbar-track,
+.sandbox-table-wrapper::-webkit-scrollbar-track {
+  background: rgba(14, 14, 20, 0.7);
+  border-radius: 5px;
+}
+
+.content::-webkit-scrollbar-thumb,
+.sandbox-table-wrapper::-webkit-scrollbar-thumb {
+  background: #3A3A4C;
+  border-radius: 5px;
+  border: 2px solid #14141C;
+}
+
+.content::-webkit-scrollbar-thumb:hover,
+.sandbox-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #C9A84C;
+}
+
+/* Firefox standard scrollbars */
+.content,
+.sandbox-table-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #3A3A4C rgba(14, 14, 20, 0.7);
+}
 
 /* ===================== PAGE HEADER ===================== */
 .page-header {
@@ -2528,7 +2553,7 @@ select.field-select {
 /* ── Transactions Institutional Table (Sandbox Image 4) ── */
 .transactions-table-panel {
   padding: 0 !important;
-  overflow: hidden;
+  overflow: visible !important;
 }
 
 .transactions-table-panel .sandbox-panel-header {
@@ -2539,6 +2564,8 @@ select.field-select {
 
 .sandbox-table-wrapper {
   overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior-y: auto;
   width: 100%;
 }
 
