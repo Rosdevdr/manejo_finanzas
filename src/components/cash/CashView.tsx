@@ -29,6 +29,11 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
   const cashPct  = totalExp > 0 ? (totalCash / totalExp) * 100 : 0
   const hasRisk  = pCash.some(c => c.reason === 'unassigned') || cashPct > 25
 
+  const [showAllPeriods, setShowAllPeriods] = useState(false)
+  const displayedCash = showAllPeriods
+    ? [...withdrawals].sort((a, b) => b.date.localeCompare(a.date))
+    : pCash
+
   const [form, setForm] = useState({
     amount: '', reason: 'pocket_money' as CashReason,
     note: '', date: new Date().toISOString().slice(0, 10),
@@ -176,18 +181,69 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
       </form>
 
       {/* List */}
-      <div className="section-header">
-        <div className="section-label">HISTORIAL</div>
-        <div className="section-title">Retiros del período</div>
+      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <div className="section-label">HISTORIAL</div>
+          <div className="section-title">
+            {showAllPeriods ? 'Todos los retiros registrados' : `Retiros de ${currentPeriod}`} ({displayedCash.length})
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => setShowAllPeriods(false)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: !showAllPeriods ? 'rgba(243, 202, 101, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${!showAllPeriods ? '#F3CA65' : 'rgba(255, 255, 255, 0.1)'}`,
+              color: !showAllPeriods ? '#F3CA65' : '#9CA3AF',
+            }}
+          >
+            {currentPeriod} ({pCash.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAllPeriods(true)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: showAllPeriods ? 'rgba(243, 202, 101, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${showAllPeriods ? '#F3CA65' : 'rgba(255, 255, 255, 0.1)'}`,
+              color: showAllPeriods ? '#F3CA65' : '#9CA3AF',
+            }}
+          >
+            Ver Todo el Historial ({withdrawals.length})
+          </button>
+        </div>
       </div>
+
       <div className="tx-list">
         <div className="tx-header">
           <span className="tx-title">Retiros en Efectivo</span>
-          <span className="tx-count">{pCash.length} registro{pCash.length !== 1 ? 's' : ''}</span>
+          <span className="tx-count">{displayedCash.length} registro{displayedCash.length !== 1 ? 's' : ''}</span>
         </div>
-        {pCash.length === 0 ? (
-          <div className="empty-state"><p className="empty-text">Sin retiros registrados para este período</p></div>
-        ) : pCash.map(c => {
+        {displayedCash.length === 0 ? (
+          <div className="empty-state">
+            <p className="empty-text">Sin retiros registrados para este período</p>
+            {withdrawals.length > 0 && !showAllPeriods && (
+              <button
+                type="button"
+                onClick={() => setShowAllPeriods(true)}
+                className="btn btn-secondary"
+                style={{ marginTop: 10, fontSize: 11.5, color: '#F3CA65' }}
+              >
+                Ver {withdrawals.length} retiro{withdrawals.length !== 1 ? 's' : ''} de otros meses
+              </button>
+            )}
+          </div>
+        ) : displayedCash.map(c => {
           const r = REASON_MAP[c.reason]
 
           if (editingId === c.id) {
@@ -220,6 +276,11 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                     <span className="tx-badge" style={{ background: 'rgba(248,113,113,0.15)', color: '#F87171' }}>⚠ Riesgo</span>
                   )}
                   <span className="tx-date">{c.date}</span>
+                  {showAllPeriods && (
+                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 4, color: '#F3CA65', fontFamily: 'Space Mono' }}>
+                      {c.period}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="tx-right">

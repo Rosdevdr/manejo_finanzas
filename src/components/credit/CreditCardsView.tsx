@@ -133,12 +133,16 @@ export function CreditCardsView({
   const abonoAmount = customAbonoAmount ?? defaultAbono
   const setAbonoAmount = (val: string) => setCustomAbonoAmount(val)
 
-  const periodTransactions = creditTransactions.filter(t => {
-    if (selectedCardId) {
-      return t.cardId === selectedCardId && t.period === currentPeriod
-    }
-    return t.period === currentPeriod
-  })
+  const [showAllCards, setShowAllCards] = useState(false)
+  const [showAllPeriods, setShowAllPeriods] = useState(false)
+
+  const displayedTransactions = creditTransactions
+    .filter(t => {
+      const matchCard = showAllCards || !selectedCardId || t.cardId === selectedCardId
+      const matchPeriod = showAllPeriods || t.period === currentPeriod
+      return matchCard && matchPeriod
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
 
   function handleOpenAddCard() {
     setEditingCard(null)
@@ -727,25 +731,71 @@ export function CreditCardsView({
       </form>
 
       {/* Transaction History */}
-      <div className="section-header">
-        <div className="section-label">ESTADO DE CUENTA & MOVIMIENTOS</div>
-        <div className="section-title">
-          {activeCard ? `Consumos de ${activeCard.name}` : 'Consumos registrados'} ({periodTransactions.length})
+      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <div className="section-label">ESTADO DE CUENTA & MOVIMIENTOS</div>
+          <div className="section-title">
+            {showAllCards ? 'Todos los consumos' : (activeCard ? `Consumos de ${activeCard.name}` : 'Consumos registrados')} ({displayedTransactions.length})
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setShowAllCards(p => !p)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: showAllCards ? 'rgba(52, 211, 153, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${showAllCards ? '#34D399' : 'rgba(255, 255, 255, 0.1)'}`,
+              color: showAllCards ? '#34D399' : '#9CA3AF',
+            }}
+          >
+            {showAllCards ? '✓ Todas las Tarjetas' : `Solo ${activeCard?.name || 'activa'}`}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAllPeriods(p => !p)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: showAllPeriods ? 'rgba(243, 202, 101, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${showAllPeriods ? '#F3CA65' : 'rgba(255, 255, 255, 0.1)'}`,
+              color: showAllPeriods ? '#F3CA65' : '#9CA3AF',
+            }}
+          >
+            {showAllPeriods ? '✓ Todos los Meses' : `Mes: ${currentPeriod}`}
+          </button>
         </div>
       </div>
 
       <div className="tx-list">
         <div className="tx-header">
           <span className="tx-title">Cargos en Tarjeta</span>
-          <span className="tx-count">{periodTransactions.length} movimiento{periodTransactions.length !== 1 ? 's' : ''}</span>
+          <span className="tx-count">{displayedTransactions.length} movimiento{displayedTransactions.length !== 1 ? 's' : ''}</span>
         </div>
 
-        {periodTransactions.length === 0 ? (
+        {displayedTransactions.length === 0 ? (
           <div className="empty-state">
-            <p className="empty-text">Sin consumos de tarjeta registrados para este período</p>
+            <p className="empty-text">Sin consumos de tarjeta registrados con este filtro</p>
+            {creditTransactions.length > 0 && (!showAllCards || !showAllPeriods) && (
+              <button
+                type="button"
+                onClick={() => { setShowAllCards(true); setShowAllPeriods(true) }}
+                className="btn btn-secondary"
+                style={{ marginTop: 10, fontSize: 11.5, color: '#F3CA65' }}
+              >
+                Ver los {creditTransactions.length} consumos históricos de todas las tarjetas
+              </button>
+            )}
           </div>
         ) : (
-          periodTransactions.map(tx => {
+          displayedTransactions.map(tx => {
             const card = creditCards.find(c => c.id === tx.cardId)
             const c = CATEGORY_MAP[tx.category] || CATEGORY_MAP.other
 
