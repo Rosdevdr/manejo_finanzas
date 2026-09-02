@@ -22,15 +22,18 @@ const REASON_MAP: Record<CashReason, { label: string; emoji: string; badge: stri
 }
 
 export function CashView({ currentPeriod, withdrawals, expenses, availableBalance, onAddWithdrawal, onDeleteWithdrawal }: CashViewProps) {
-  const pCash    = withdrawals.filter(c => c.period === currentPeriod)
+  const getPeriod = (c: { period?: string; date?: string }) =>
+    c.period && c.period.trim().length === 7 ? c.period.trim() : (c.date ? c.date.slice(0, 7) : currentPeriod)
+
+  const pCash    = withdrawals.filter(c => getPeriod(c) === currentPeriod)
   const totalCash = pCash.reduce((s, c) => s + c.amount, 0)
-  const pExp     = expenses.filter(e => e.period === currentPeriod)
+  const pExp     = expenses.filter(e => getPeriod(e) === currentPeriod)
   const totalExp = pExp.reduce((s, e) => s + e.amount, 0)
   const cashPct  = totalExp > 0 ? (totalCash / totalExp) * 100 : 0
   const hasRisk  = pCash.some(c => c.reason === 'unassigned') || cashPct > 25
 
-  const [showAllPeriods, setShowAllPeriods] = useState(false)
-  const displayedCash = showAllPeriods
+  const [showAllPeriods, setShowAllPeriods] = useState<boolean>(() => pCash.length === 0 && withdrawals.length > 0)
+  const displayedCash = (showAllPeriods || (pCash.length === 0 && withdrawals.length > 0))
     ? [...withdrawals].sort((a, b) => b.date.localeCompare(a.date))
     : pCash
 

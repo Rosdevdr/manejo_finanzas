@@ -180,8 +180,8 @@ export function DashboardView({
   ]
 
   const recentTx = [
-    ...pInc.slice(0, 3).map(i => ({ ...i, kind: 'income' as const })),
-    ...pExp.slice(0, 4).map(e => ({ ...e, kind: 'expense' as const })),
+    ...incomes.map(i => ({ ...i, kind: 'income' as const })),
+    ...expenses.map(e => ({ ...e, kind: 'expense' as const })),
   ]
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 5)

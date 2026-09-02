@@ -19,7 +19,10 @@ const TYPE_MAP: Record<IncomeType, { label: string; badge: string; emoji: string
 }
 
 export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncome, onDeleteIncome }: IncomesViewProps) {
-  const periodIncomes = incomes.filter(i => i.period === currentPeriod)
+  const getPeriod = (i: { period?: string; date?: string }) =>
+    i.period && i.period.trim().length === 7 ? i.period.trim() : (i.date ? i.date.slice(0, 7) : currentPeriod)
+
+  const periodIncomes = incomes.filter(i => getPeriod(i) === currentPeriod)
   const totalIncome   = periodIncomes.reduce((s, i) => s + i.amount, 0)
   const salary        = periodIncomes.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0)
   const extra         = periodIncomes.filter(i => i.type !== 'salary').reduce((s, i) => s + i.amount, 0)
@@ -64,8 +67,8 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
     setEditingId(null)
   }
 
-  const [showAllPeriods, setShowAllPeriods] = useState(false)
-  const displayedIncomes = showAllPeriods 
+  const [showAllPeriods, setShowAllPeriods] = useState<boolean>(() => periodIncomes.length === 0 && incomes.length > 0)
+  const displayedIncomes = (showAllPeriods || (periodIncomes.length === 0 && incomes.length > 0))
     ? [...incomes].sort((a, b) => b.date.localeCompare(a.date))
     : periodIncomes
 

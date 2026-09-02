@@ -31,13 +31,16 @@ const PAYMENT_MAP: Record<PaymentMethod, string> = {
 }
 
 export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateExpense, onDeleteExpense }: ExpensesViewProps) {
-  const pExp     = expenses.filter(e => e.period === currentPeriod)
+  const getPeriod = (e: { period?: string; date?: string }) =>
+    e.period && e.period.trim().length === 7 ? e.period.trim() : (e.date ? e.date.slice(0, 7) : currentPeriod)
+
+  const pExp     = expenses.filter(e => getPeriod(e) === currentPeriod)
   const totalExp = pExp.reduce((s, e) => s + e.amount, 0)
   const fixedExp = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
   const varExp   = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
 
-  const [showAllPeriods, setShowAllPeriods] = useState(false)
-  const displayedExpenses = showAllPeriods
+  const [showAllPeriods, setShowAllPeriods] = useState<boolean>(() => pExp.length === 0 && expenses.length > 0)
+  const displayedExpenses = (showAllPeriods || (pExp.length === 0 && expenses.length > 0))
     ? [...expenses].sort((a, b) => b.date.localeCompare(a.date))
     : pExp
 
