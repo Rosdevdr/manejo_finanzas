@@ -179,12 +179,18 @@ export function DashboardView({
     { name: 'Efectivo', amount: paymentTotals.cash, icon: <Banknote size={13} />, color: '#FBBF24' },
   ]
 
-  const recentTx = [
-    ...incomes.map(i => ({ ...i, kind: 'income' as const })),
-    ...expenses.map(e => ({ ...e, kind: 'expense' as const })),
-  ]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 5)
+  // Mostrar transacciones del período actual; si está vacío usar las más recientes de cualquier período
+  const periodTxAll = [
+    ...pInc.map(i => ({ ...i, kind: 'income' as const })),
+    ...pExp.map(e => ({ ...e, kind: 'expense' as const })),
+  ].sort((a, b) => b.date.localeCompare(a.date))
+
+  const recentTx = periodTxAll.length > 0
+    ? periodTxAll.slice(0, 5)
+    : [
+        ...incomes.map(i => ({ ...i, kind: 'income' as const })),
+        ...expenses.map(e => ({ ...e, kind: 'expense' as const })),
+      ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)
 
   const kpis = [
     {
