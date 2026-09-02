@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, Trash2, Copy, Volume2, Sparkles, ShieldCheck, Key, Check, X } from 'lucide-react'
+import { Bot, Send, Trash2, Copy, Volume2, Sparkles, ShieldCheck, Key, Check, X, Lock } from 'lucide-react'
 import type {
   Income,
   Expense,
@@ -349,14 +349,22 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
 
   return (
     <div className="fade-in chat-view-wrapper">
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
         <div>
           <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Asistente IA</span></div>
           <h1 className="page-title">Asesor Financiero con Inteligencia Artificial</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, background: 'rgba(52, 211, 153, 0.08)', padding: '4px 10px', borderRadius: 12, border: '1px solid rgba(52, 211, 153, 0.2)' }}>
-          <ShieldCheck size={13} style={{ color: '#34D399' }} />
-          <span style={{ fontSize: 10.5, color: '#34D399', fontFamily: 'Space Mono, monospace' }}>Art. 50 UE AI Act</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, marginTop: 2 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(52, 211, 153, 0.08)', padding: '4px 10px', borderRadius: 12, border: '1px solid rgba(52, 211, 153, 0.25)' }}>
+            <ShieldCheck size={13} style={{ color: '#34D399' }} />
+            <span style={{ fontSize: 10.5, color: '#34D399', fontFamily: 'Space Mono, monospace' }}>Art. 50 UE AI Act</span>
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(201, 168, 76, 0.08)', padding: '4px 10px', borderRadius: 12, border: '1px solid rgba(201, 168, 76, 0.25)' }}>
+            <Lock size={12} style={{ color: '#F1D97E' }} />
+            <span style={{ fontSize: 10.5, color: '#F1D97E', fontFamily: 'Space Mono, monospace' }}>
+              Memoria Aislada: {userEmail || 'Modo Local'}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -374,10 +382,6 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
           </div>
 
           <div className="chat-context-pills">
-            <span className="context-pill" style={{ color: '#34D399', borderColor: 'rgba(52, 211, 153, 0.35)', background: 'rgba(52, 211, 153, 0.08)' }}>
-              <ShieldCheck size={12} style={{ display: 'inline', marginRight: 4 }} />
-              Memoria Aislada: {userEmail || 'Modo Local'}
-            </span>
             <span className="context-pill" style={{ color: '#F3CA65', borderColor: 'rgba(243, 202, 101, 0.3)' }}>
               Disponible: {formatCurrency(cumulative.totalCumulativeBalance)}
             </span>
@@ -388,8 +392,15 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
             )}
             {totalInc > 0 && <span className="context-pill">Ingresos: {formatCurrency(totalInc)}</span>}
             {totalExp > 0 && <span className="context-pill">Gastos: {formatCurrency(totalExp)}</span>}
-            <button className="btn btn-secondary" onClick={handleClearChat} style={{ padding: '6px 12px', fontSize: 11 }} title="Borrar historial privado de esta cuenta">
-              <Trash2 size={13} /> Limpiar Memoria
+            <button
+              type="button"
+              className="sandbox-btn-outline"
+              onClick={handleClearChat}
+              style={{ padding: '6px 14px', fontSize: 11.5, borderRadius: 8, gap: 6 }}
+              title="Borrar historial privado de esta cuenta"
+            >
+              <Trash2 size={13} style={{ color: '#FB7185' }} />
+              <span>Limpiar Memoria</span>
             </button>
           </div>
         </div>
