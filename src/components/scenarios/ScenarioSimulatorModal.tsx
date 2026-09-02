@@ -61,65 +61,116 @@ export function ScenarioSimulatorModal({
           </button>
         </div>
 
-        <div className="modal-body" style={{ padding: '20px 24px' }}>
-          <p style={{ fontSize: 13, color: '#9CA3AF', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+        <div className="modal-body" style={{ padding: '18px 22px' }}>
+          <p style={{ fontSize: 12.5, color: '#9CA3AF', margin: '0 0 16px 0', lineHeight: 1.5 }}>
             Experimenta cómo pequeñas decisiones u horizontes futuros alteran tu capacidad de ahorro proyectada en los próximos <strong>{projectionMonths} meses</strong>.
           </p>
 
           <div className="scenario-controls-grid">
-            <div className="slider-group">
+            <div className="scenario-control-card">
               <div className="slider-header">
-                <span>Aumento / Reducción de Ingresos</span>
-                <span className="slider-value-badge">{incomePctChange > 0 ? `+${incomePctChange}%` : `${incomePctChange}%`}</span>
+                <span className="scenario-control-label">Aumento / Reducción de Ingresos</span>
+                <span className="slider-value-badge" style={{ color: incomePctChange >= 0 ? '#34D399' : '#FB7185' }}>
+                  {incomePctChange > 0 ? `+${incomePctChange}%` : `${incomePctChange}%`}
+                </span>
               </div>
               <input
                 type="range"
                 min="-30"
                 max="50"
                 step="5"
-                className="scenario-range-input"
+                className="scenario-range-input gold"
                 value={incomePctChange}
                 onChange={(e) => setIncomePctChange(parseInt(e.target.value, 10))}
               />
+              <div className="scenario-presets">
+                {[-20, -10, 0, 15, 30].map(val => (
+                  <button
+                    key={val}
+                    type="button"
+                    className={`scenario-preset-btn ${incomePctChange === val ? 'active' : ''}`}
+                    onClick={() => setIncomePctChange(val)}
+                  >
+                    {val > 0 ? `+${val}%` : `${val}%`}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="slider-group">
+            <div className="scenario-control-card">
               <div className="slider-header">
-                <span>Reducción de Gastos Variables</span>
-                <span className="slider-value-badge">-{varExpenseCutPct}%</span>
+                <span className="scenario-control-label">Reducción de Gastos Variables</span>
+                <span className="slider-value-badge emerald">-{varExpenseCutPct}%</span>
               </div>
               <input
                 type="range"
                 min="0"
                 max="50"
                 step="5"
-                className="scenario-range-input"
+                className="scenario-range-input emerald"
                 value={varExpenseCutPct}
                 onChange={(e) => setVarExpenseCutPct(parseInt(e.target.value, 10))}
               />
+              <div className="scenario-presets">
+                {[0, 10, 20, 30, 40].map(val => (
+                  <button
+                    key={val}
+                    type="button"
+                    className={`scenario-preset-btn ${varExpenseCutPct === val ? 'active' : ''}`}
+                    onClick={() => setVarExpenseCutPct(val)}
+                  >
+                    -{val}%
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Nuevo Gasto Fijo Adicional (Mensual)</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="Ej: RD$5,000 cuota préstamo"
-                value={newFixedExpense || ''}
-                onChange={(e) => setNewFixedExpense(Math.max(0, parseFloat(e.target.value) || 0))}
-              />
+            <div className="scenario-control-card">
+              <div className="slider-header">
+                <span className="scenario-control-label">Nuevo Compromiso Fijo Mensual</span>
+                <span className="slider-value-badge" style={{ color: newFixedExpense > 0 ? '#FB7185' : '#9CA3AF' }}>
+                  {formatCurrency(newFixedExpense)}
+                </span>
+              </div>
+              <div style={{ position: 'relative', marginTop: 4 }}>
+                <input
+                  type="number"
+                  className="scenario-num-input"
+                  placeholder="0.00"
+                  min="0"
+                  step="500"
+                  value={newFixedExpense || ''}
+                  onChange={(e) => setNewFixedExpense(Math.max(0, parseFloat(e.target.value) || 0))}
+                />
+              </div>
+              <div className="scenario-presets">
+                {[0, 2500, 5000, 10000, 20000].map(val => (
+                  <button
+                    key={val}
+                    type="button"
+                    className={`scenario-preset-btn ${newFixedExpense === val ? 'active' : ''}`}
+                    onClick={() => setNewFixedExpense(val)}
+                  >
+                    {val === 0 ? 'Sin gastos' : `+RD$${(val / 1000).toFixed(0)}k`}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Horizonte Temporal Proyectado</label>
+            <div className="scenario-control-card">
+              <div className="slider-header">
+                <span className="scenario-control-label">Horizonte Temporal Proyectado</span>
+                <span className="slider-value-badge gold">{projectionMonths} meses</span>
+              </div>
               <select
-                className="form-input"
+                className="scenario-select-input"
                 value={projectionMonths}
                 onChange={(e) => setProjectionMonths(parseInt(e.target.value, 10))}
               >
-                <option value={6}>6 Meses Vista</option>
-                <option value={12}>12 Meses Vista (1 Año)</option>
-                <option value={24}>24 Meses Vista (2 Años)</option>
+                <option value={3}>3 Meses Vista (Corto Plazo)</option>
+                <option value={6}>6 Meses Vista (Medio Plazo)</option>
+                <option value={12}>12 Meses Vista (1 Año Completo)</option>
+                <option value={24}>24 Meses Vista (2 Años Estratégico)</option>
               </select>
             </div>
           </div>

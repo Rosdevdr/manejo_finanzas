@@ -12,7 +12,7 @@ import {
   HardDrive,
   ShieldCheck,
   FileText,
-  Smartphone,
+  Download,
   X,
   Bot,
   Flame,
@@ -186,7 +186,7 @@ export function Sidebar({
               }}
               style={{ color: '#34D399' }}
             >
-              <span className="nav-icon"><Smartphone size={16} /></span>
+              <span className="nav-icon"><Download size={16} /></span>
               <span>Instalar App</span>
             </button>
           )}
@@ -223,7 +223,7 @@ export function Sidebar({
             href="https://github.com/Rosdevdr/manejo_finanzas"
             target="_blank"
             rel="noopener noreferrer"
-            className="nav-item"
+            className="nav-item sidebar-github-link"
             onClick={onClose}
           >
             <span className="nav-icon"><GithubIcon size={16} /></span>
