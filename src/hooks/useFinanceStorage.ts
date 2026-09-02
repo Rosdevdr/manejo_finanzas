@@ -28,22 +28,40 @@ import {
   validateSavingsGoalInput,
 } from '../utils/bllValidator'
 
-const KEYS = {
-  incomes:            'aureus_incomes',
-  expenses:           'aureus_expenses',
-  cash:               'aureus_cash',
-  creditCards:        'aureus_credit_cards',
-  creditTransactions: 'aureus_credit_transactions',
-  categoryBudgets:    'aureus_category_budgets',
-  savingsGoals:       'aureus_savings_goals',
-} as const
+export function getStorageKeys(userId?: string | null) {
+  const prefix = userId ? `aureus_user_${userId}` : 'aureus_demo'
+  return {
+    incomes:            `${prefix}_incomes`,
+    expenses:           `${prefix}_expenses`,
+    cash:               `${prefix}_cash`,
+    creditCards:        `${prefix}_credit_cards`,
+    creditTransactions: `${prefix}_credit_transactions`,
+    categoryBudgets:    `${prefix}_category_budgets`,
+    savingsGoals:       `${prefix}_savings_goals`,
+  }
+}
+
+function cleanLegacyStorage() {
+  const legacy = [
+    'aureus_incomes',
+    'aureus_expenses',
+    'aureus_cash',
+    'aureus_credit_cards',
+    'aureus_credit_transactions',
+    'aureus_category_budgets',
+    'aureus_savings_goals',
+  ]
+  legacy.forEach(k => {
+    try { localStorage.removeItem(k) } catch {}
+  })
+}
 
 function loadLocal<T>(key: string, fallback: T[]): T[] {
   try {
     const raw = localStorage.getItem(key)
     if (!raw) return fallback
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : fallback
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : fallback
   } catch {
     return fallback
   }
@@ -58,29 +76,46 @@ function saveLocal<T>(key: string, data: T[]) {
 }
 
 const DEFAULT_INCOMES: Income[] = [
-  { id: 'inc-1', description: 'Sueldo Principal (Software Engineer)', amount: 85000, type: 'salary',     date: '2026-08-01', period: '2026-08' },
-  { id: 'inc-2', description: 'Consultoría Web Freelance',            amount: 22500, type: 'freelance',  date: '2026-08-08', period: '2026-08' },
-  { id: 'inc-3', description: 'Dividendos Fondos Indexados',          amount: 4500,  type: 'investment', date: '2026-08-10', period: '2026-08' },
-  { id: 'inc-prev-1', description: 'Sueldo Principal (Software Engineer)', amount: 85000, type: 'salary',     date: '2026-07-01', period: '2026-07' },
-  { id: 'inc-prev-2', description: 'Proyecto Freelance Frontend',         amount: 18000, type: 'freelance',  date: '2026-07-15', period: '2026-07' },
+  // Septiembre 2026 (Período actual)
+  { id: 'inc-demo-sep-1', description: 'Sueldo Principal (Senior Software Engineer)', amount: 95000, type: 'salary', date: '2026-09-01', period: '2026-09' },
+  { id: 'inc-demo-sep-2', description: 'Desarrollo App Móvil Freelance', amount: 28000, type: 'freelance', date: '2026-09-05', period: '2026-09' },
+  { id: 'inc-demo-sep-3', description: 'Rendimientos / Dividendos ETF', amount: 4500, type: 'investment', date: '2026-09-10', period: '2026-09' },
+
+  // Agosto 2026 (Mes anterior para comparativa)
+  { id: 'inc-demo-ago-1', description: 'Sueldo Principal (Senior Software Engineer)', amount: 95000, type: 'salary', date: '2026-08-01', period: '2026-08' },
+  { id: 'inc-demo-ago-2', description: 'Consultoría Web E-commerce', amount: 22500, type: 'freelance', date: '2026-08-08', period: '2026-08' },
+  { id: 'inc-demo-ago-3', description: 'Rendimientos Fondo Indexado', amount: 4200, type: 'investment', date: '2026-08-10', period: '2026-08' },
+
+  // Julio 2026 (Histórico)
+  { id: 'inc-demo-jul-1', description: 'Sueldo Principal', amount: 90000, type: 'salary', date: '2026-07-01', period: '2026-07' },
+  { id: 'inc-demo-jul-2', description: 'Proyecto Frontend Web', amount: 18000, type: 'freelance', date: '2026-07-15', period: '2026-07' },
 ]
 
 const DEFAULT_EXPENSES: Expense[] = [
-  { id: 'exp-1', description: 'Alquiler Apartamento',            amount: 28000, category: 'housing',       type: 'fixed',    paymentMethod: 'bank_transfer', date: '2026-08-02', period: '2026-08' },
-  { id: 'exp-2', description: 'Supermercado & Despensa',         amount: 14500, category: 'food',          type: 'variable', paymentMethod: 'debit_card',    date: '2026-08-04', period: '2026-08' },
-  { id: 'exp-3', description: 'Servicios (Luz, Agua, Internet)', amount: 3200,  category: 'utilities',     type: 'fixed',    paymentMethod: 'bank_transfer', date: '2026-08-05', period: '2026-08' },
-  { id: 'exp-4', description: 'Transporte / Gasolina',           amount: 6000,  category: 'transport',     type: 'variable', paymentMethod: 'credit_card',   date: '2026-08-06', period: '2026-08' },
-  { id: 'exp-5', description: 'Cena Restaurante & Salidas',      amount: 3800,  category: 'entertainment', type: 'variable', paymentMethod: 'credit_card',   date: '2026-08-07', period: '2026-08' },
-  { id: 'exp-6', description: 'Farmacia & Medicamentos',         amount: 1900,  category: 'health',        type: 'variable', paymentMethod: 'cash',          date: '2026-08-09', period: '2026-08' },
-  { id: 'exp-prev-1', description: 'Alquiler Apartamento',        amount: 28000, category: 'housing',       type: 'fixed',    paymentMethod: 'bank_transfer', date: '2026-07-02', period: '2026-07' },
-  { id: 'exp-prev-2', description: 'Supermercado',                amount: 16200, category: 'food',          type: 'variable', paymentMethod: 'debit_card',    date: '2026-07-05', period: '2026-07' },
-  { id: 'exp-prev-3', description: 'Servicios (Luz e Internet)',  amount: 3100,  category: 'utilities',     type: 'fixed',    paymentMethod: 'bank_transfer', date: '2026-07-06', period: '2026-07' },
-  { id: 'exp-prev-4', description: 'Salidas y Entretenimiento',   amount: 5200,  category: 'entertainment', type: 'variable', paymentMethod: 'credit_card',   date: '2026-07-12', period: '2026-07' },
+  // Septiembre 2026
+  { id: 'exp-demo-sep-1', description: 'Alquiler Apartamento Torre Bella Vista', amount: 28000, category: 'housing', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-09-02', period: '2026-09' },
+  { id: 'exp-demo-sep-2', description: 'Supermercado Nacional & Despensa', amount: 13500, category: 'food', type: 'variable', paymentMethod: 'debit_card', date: '2026-09-03', period: '2026-09' },
+  { id: 'exp-demo-sep-3', description: 'Servicios (Internet Fibra + Luz)', amount: 3400, category: 'utilities', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-09-04', period: '2026-09' },
+  { id: 'exp-demo-sep-4', description: 'Combustible Vehículo', amount: 5500, category: 'transport', type: 'variable', paymentMethod: 'credit_card', date: '2026-09-05', period: '2026-09' },
+  { id: 'exp-demo-sep-5', description: 'Cena Restaurante & Salida Fin de Semana', amount: 3600, category: 'entertainment', type: 'variable', paymentMethod: 'credit_card', date: '2026-09-06', period: '2026-09' },
+
+  // Agosto 2026
+  { id: 'exp-demo-ago-1', description: 'Alquiler Apartamento', amount: 28000, category: 'housing', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-08-02', period: '2026-08' },
+  { id: 'exp-demo-ago-2', description: 'Supermercado & Despensa', amount: 14500, category: 'food', type: 'variable', paymentMethod: 'debit_card', date: '2026-08-04', period: '2026-08' },
+  { id: 'exp-demo-ago-3', description: 'Servicios Básicos', amount: 3200, category: 'utilities', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-08-05', period: '2026-08' },
+  { id: 'exp-demo-ago-4', description: 'Gasolina', amount: 6000, category: 'transport', type: 'variable', paymentMethod: 'credit_card', date: '2026-08-06', period: '2026-08' },
+  { id: 'exp-demo-ago-5', description: 'Ocio y Salidas', amount: 4800, category: 'entertainment', type: 'variable', paymentMethod: 'credit_card', date: '2026-08-07', period: '2026-08' },
+
+  // Julio 2026
+  { id: 'exp-demo-jul-1', description: 'Alquiler Apartamento', amount: 28000, category: 'housing', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-07-02', period: '2026-07' },
+  { id: 'exp-demo-jul-2', description: 'Supermercado', amount: 16200, category: 'food', type: 'variable', paymentMethod: 'debit_card', date: '2026-07-05', period: '2026-07' },
+  { id: 'exp-demo-jul-3', description: 'Servicios (Luz e Internet)', amount: 3100, category: 'utilities', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-07-06', period: '2026-07' },
 ]
 
 const DEFAULT_CASH: CashWithdrawal[] = [
-  { id: 'cash-1', amount: 10000, reason: 'pocket_money', note: 'Cajero Plaza Central', date: '2026-08-03', period: '2026-08' },
-  { id: 'cash-prev-1', amount: 8000, reason: 'pocket_money', note: 'Cajero Bella Vista', date: '2026-07-04', period: '2026-07' },
+  { id: 'cash-demo-1', amount: 8000, reason: 'pocket_money', note: 'Cajero Plaza Central (Gastos menores)', date: '2026-09-02', period: '2026-09' },
+  { id: 'cash-demo-2', amount: 10000, reason: 'pocket_money', note: 'Cajero Bella Vista', date: '2026-08-03', period: '2026-08' },
+  { id: 'cash-demo-3', amount: 8000, reason: 'pocket_money', note: 'Cajero Bella Vista', date: '2026-07-04', period: '2026-07' },
 ]
 
 const DEFAULT_CARDS: CreditCard[] = [
@@ -110,37 +145,37 @@ const DEFAULT_CARDS: CreditCard[] = [
 
 const DEFAULT_CARD_TRANSACTIONS: CreditCardTransaction[] = [
   {
-    id: 'ctx-1',
+    id: 'ctx-demo-1',
     cardId: 'card-1',
-    period: '2026-08',
+    period: '2026-09',
     description: 'Boletos Aéreos Vacaciones',
-    amount: 24500,
+    amount: 18500,
     category: 'entertainment',
-    date: '2026-08-06',
+    date: '2026-09-03',
     installments: 3,
     currentInstallment: 1,
     isPaid: false,
   },
   {
-    id: 'ctx-2',
+    id: 'ctx-demo-2',
     cardId: 'card-1',
-    period: '2026-08',
-    description: 'Renovación Licencias & Software',
+    period: '2026-09',
+    description: 'Renovación Licencias & Software IDE',
     amount: 6800,
     category: 'education',
-    date: '2026-08-08',
+    date: '2026-09-05',
     installments: 1,
     currentInstallment: 1,
     isPaid: false,
   },
   {
-    id: 'ctx-3',
+    id: 'ctx-demo-3',
     cardId: 'card-2',
-    period: '2026-08',
-    description: 'Mantenimiento Vehículo',
+    period: '2026-09',
+    description: 'Mantenimiento Preventivo Vehículo',
     amount: 12500,
     category: 'transport',
-    date: '2026-08-04',
+    date: '2026-09-04',
     installments: 1,
     currentInstallment: 1,
     isPaid: false,
@@ -194,21 +229,50 @@ const DEFAULT_GOALS: SavingsGoal[] = [
 ]
 
 export function useFinanceStorage(user?: User | null) {
-  const [incomes,            setIncomesState]            = useState<Income[]>(() => !user ? loadLocal(KEYS.incomes, DEFAULT_INCOMES) : [])
-  const [expenses,           setExpensesState]           = useState<Expense[]>(() => !user ? loadLocal(KEYS.expenses, DEFAULT_EXPENSES) : [])
-  const [cash,               setCashState]               = useState<CashWithdrawal[]>(() => !user ? loadLocal(KEYS.cash, DEFAULT_CASH) : [])
-  const [creditCards,        setCreditCardsState]        = useState<CreditCard[]>(() => !user ? loadLocal(KEYS.creditCards, DEFAULT_CARDS) : [])
-  const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => !user ? loadLocal(KEYS.creditTransactions, DEFAULT_CARD_TRANSACTIONS) : [])
-  const [categoryBudgets,    setCategoryBudgetsState]    = useState<CategoryBudget[]>(() => !user ? loadLocal(KEYS.categoryBudgets, DEFAULT_BUDGETS) : [])
-  const [savingsGoals,       setSavingsGoalsState]       = useState<SavingsGoal[]>(() => !user ? loadLocal(KEYS.savingsGoals, DEFAULT_GOALS) : [])
+  const [incomes,            setIncomesState]            = useState<Income[]>(() => !user ? loadLocal(getStorageKeys(null).incomes, DEFAULT_INCOMES) : loadLocal(getStorageKeys(user.id).incomes, []))
+  const [expenses,           setExpensesState]           = useState<Expense[]>(() => !user ? loadLocal(getStorageKeys(null).expenses, DEFAULT_EXPENSES) : loadLocal(getStorageKeys(user.id).expenses, []))
+  const [cash,               setCashState]               = useState<CashWithdrawal[]>(() => !user ? loadLocal(getStorageKeys(null).cash, DEFAULT_CASH) : loadLocal(getStorageKeys(user.id).cash, []))
+  const [creditCards,        setCreditCardsState]        = useState<CreditCard[]>(() => !user ? loadLocal(getStorageKeys(null).creditCards, DEFAULT_CARDS) : loadLocal(getStorageKeys(user.id).creditCards, []))
+  const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => !user ? loadLocal(getStorageKeys(null).creditTransactions, DEFAULT_CARD_TRANSACTIONS) : loadLocal(getStorageKeys(user.id).creditTransactions, []))
+  const [categoryBudgets,    setCategoryBudgetsState]    = useState<CategoryBudget[]>(() => !user ? loadLocal(getStorageKeys(null).categoryBudgets, DEFAULT_BUDGETS) : loadLocal(getStorageKeys(user.id).categoryBudgets, []))
+  const [savingsGoals,       setSavingsGoalsState]       = useState<SavingsGoal[]>(() => !user ? loadLocal(getStorageKeys(null).savingsGoals, DEFAULT_GOALS) : loadLocal(getStorageKeys(user.id).savingsGoals, []))
 
   const isMountedRef = useRef(true)
   const channelRef = useRef<RealtimeChannel | null>(null)
+
+  // Limpiar claves legadas compartidas para evitar contaminación
+  useEffect(() => {
+    cleanLegacyStorage()
+  }, [])
+
+  // Sincronizar y aislar completamente el estado cuando el usuario inicia sesión o entra en modo Demo
+  useEffect(() => {
+    if (!user) {
+      const demoKeys = getStorageKeys(null)
+      setIncomesState(loadLocal(demoKeys.incomes, DEFAULT_INCOMES))
+      setExpensesState(loadLocal(demoKeys.expenses, DEFAULT_EXPENSES))
+      setCashState(loadLocal(demoKeys.cash, DEFAULT_CASH))
+      setCreditCardsState(loadLocal(demoKeys.creditCards, DEFAULT_CARDS))
+      setCreditTransactionsState(loadLocal(demoKeys.creditTransactions, DEFAULT_CARD_TRANSACTIONS))
+      setCategoryBudgetsState(loadLocal(demoKeys.categoryBudgets, DEFAULT_BUDGETS))
+      setSavingsGoalsState(loadLocal(demoKeys.savingsGoals, DEFAULT_GOALS))
+    } else {
+      const userKeys = getStorageKeys(user.id)
+      setIncomesState(loadLocal(userKeys.incomes, []))
+      setExpensesState(loadLocal(userKeys.expenses, []))
+      setCashState(loadLocal(userKeys.cash, []))
+      setCreditCardsState(loadLocal(userKeys.creditCards, []))
+      setCreditTransactionsState(loadLocal(userKeys.creditTransactions, []))
+      setCategoryBudgetsState(loadLocal(userKeys.categoryBudgets, []))
+      setSavingsGoalsState(loadLocal(userKeys.savingsGoals, []))
+    }
+  }, [user])
 
   // Consulta directa a Supabase
   const loadData = useCallback(async () => {
     if (!user || !supabase || !isSupabaseConfigured) return
     const userId = user.id
+    const userKeys = getStorageKeys(userId)
 
     try {
       const [incRes, expRes, cashRes, cardRes, ctxRes, budRes, goalRes] = await Promise.all([
@@ -233,7 +297,7 @@ export function useFinanceStorage(user?: User | null) {
           date: row.date,
         }))
         setIncomesState(mapped)
-        saveLocal(KEYS.incomes, mapped)
+        saveLocal(userKeys.incomes, mapped)
       }
 
       if (expRes.data) {
@@ -248,7 +312,7 @@ export function useFinanceStorage(user?: User | null) {
           date: row.date,
         }))
         setExpensesState(mapped)
-        saveLocal(KEYS.expenses, mapped)
+        saveLocal(userKeys.expenses, mapped)
       }
 
       if (cashRes.data) {
@@ -261,7 +325,7 @@ export function useFinanceStorage(user?: User | null) {
           date: row.date,
         }))
         setCashState(mapped)
-        saveLocal(KEYS.cash, mapped)
+        saveLocal(userKeys.cash, mapped)
       }
 
       if (cardRes.data) {
@@ -277,7 +341,7 @@ export function useFinanceStorage(user?: User | null) {
           color: row.color as CardThemeColor,
         }))
         setCreditCardsState(mapped)
-        saveLocal(KEYS.creditCards, mapped)
+        saveLocal(userKeys.creditCards, mapped)
       }
 
       if (ctxRes.data) {
@@ -294,7 +358,7 @@ export function useFinanceStorage(user?: User | null) {
           isPaid: Boolean(row.is_paid),
         }))
         setCreditTransactionsState(mapped)
-        saveLocal(KEYS.creditTransactions, mapped)
+        saveLocal(userKeys.creditTransactions, mapped)
       }
 
       if (budRes.data) {
@@ -305,7 +369,7 @@ export function useFinanceStorage(user?: User | null) {
           limitAmount: Number(row.limit_amount),
         }))
         setCategoryBudgetsState(mapped)
-        saveLocal(KEYS.categoryBudgets, mapped)
+        saveLocal(userKeys.categoryBudgets, mapped)
       }
 
       if (goalRes.data) {
@@ -321,7 +385,7 @@ export function useFinanceStorage(user?: User | null) {
           isCompleted: Boolean(row.is_completed),
         }))
         setSavingsGoalsState(mapped)
-        saveLocal(KEYS.savingsGoals, mapped)
+        saveLocal(userKeys.savingsGoals, mapped)
       }
     } catch (err) {
       console.error('Error al sincronizar datos con Supabase:', err)
@@ -437,10 +501,11 @@ export function useFinanceStorage(user?: User | null) {
     const cleanData = val.data
     const newId = `inc-${Date.now()}`
     const item: Income = { ...cleanData, id: newId }
+    const keys = getStorageKeys(user?.id)
 
     setIncomesState(prev => {
       const next = [item, ...prev]
-      saveLocal(KEYS.incomes, next)
+      saveLocal(keys.incomes, next)
       return next
     })
 
@@ -466,10 +531,11 @@ export function useFinanceStorage(user?: User | null) {
       return { success: false, error: val.error || 'Datos de ingreso inválidos' }
     }
     const cleanItem: Income = { ...val.data, id: updated.id }
+    const keys = getStorageKeys(user?.id)
 
     setIncomesState(prev => {
       const next = prev.map(i => i.id === updated.id ? cleanItem : i)
-      saveLocal(KEYS.incomes, next)
+      saveLocal(keys.incomes, next)
       return next
     })
 
@@ -488,9 +554,10 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteIncome = async (id: string) => {
+    const keys = getStorageKeys(user?.id)
     setIncomesState(prev => {
       const next = prev.filter(i => i.id !== id)
-      saveLocal(KEYS.incomes, next)
+      saveLocal(keys.incomes, next)
       return next
     })
     if (supabase && isSupabaseConfigured && user) {
@@ -509,10 +576,11 @@ export function useFinanceStorage(user?: User | null) {
     const cleanData = val.data
     const newId = `exp-${Date.now()}`
     const item: Expense = { ...cleanData, id: newId }
+    const keys = getStorageKeys(user?.id)
 
     setExpensesState(prev => {
       const next = [item, ...prev]
-      saveLocal(KEYS.expenses, next)
+      saveLocal(keys.expenses, next)
       return next
     })
 
@@ -540,10 +608,11 @@ export function useFinanceStorage(user?: User | null) {
       return { success: false, error: val.error || 'Datos de gasto inválidos' }
     }
     const cleanItem: Expense = { ...val.data, id: updated.id }
+    const keys = getStorageKeys(user?.id)
 
     setExpensesState(prev => {
       const next = prev.map(e => e.id === updated.id ? cleanItem : e)
-      saveLocal(KEYS.expenses, next)
+      saveLocal(keys.expenses, next)
       return next
     })
 
@@ -564,9 +633,10 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteExpense = async (id: string) => {
+    const keys = getStorageKeys(user?.id)
     setExpensesState(prev => {
       const next = prev.filter(e => e.id !== id)
-      saveLocal(KEYS.expenses, next)
+      saveLocal(keys.expenses, next)
       return next
     })
     if (supabase && isSupabaseConfigured && user) {
@@ -585,10 +655,11 @@ export function useFinanceStorage(user?: User | null) {
     const cleanData = val.data
     const newId = `cash-${Date.now()}`
     const item: CashWithdrawal = { ...cleanData, id: newId }
+    const keys = getStorageKeys(user?.id)
 
     setCashState(prev => {
       const next = [item, ...prev]
-      saveLocal(KEYS.cash, next)
+      saveLocal(keys.cash, next)
       return next
     })
 
@@ -609,9 +680,10 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteWithdrawal = async (id: string) => {
+    const keys = getStorageKeys(user?.id)
     setCashState(prev => {
       const next = prev.filter(c => c.id !== id)
-      saveLocal(KEYS.cash, next)
+      saveLocal(keys.cash, next)
       return next
     })
     if (supabase && isSupabaseConfigured && user) {
@@ -630,10 +702,11 @@ export function useFinanceStorage(user?: User | null) {
     const cleanData = val.data
     const newId = `card-${Date.now()}`
     const item: CreditCard = { ...cleanData, id: newId }
+    const keys = getStorageKeys(user?.id)
 
     setCreditCardsState(prev => {
       const next = [...prev, item]
-      saveLocal(KEYS.creditCards, next)
+      saveLocal(keys.creditCards, next)
       return next
     })
 
@@ -662,10 +735,11 @@ export function useFinanceStorage(user?: User | null) {
       return { success: false, error: val.error || 'Datos de tarjeta inválidos' }
     }
     const cleanCard: CreditCard = { ...val.data, id: updated.id }
+    const keys = getStorageKeys(user?.id)
 
     setCreditCardsState(prev => {
       const next = prev.map(c => c.id === updated.id ? cleanCard : c)
-      saveLocal(KEYS.creditCards, next)
+      saveLocal(keys.creditCards, next)
       return next
     })
 
@@ -687,14 +761,15 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteCreditCard = async (id: string) => {
+    const keys = getStorageKeys(user?.id)
     setCreditCardsState(prev => {
       const next = prev.filter(c => c.id !== id)
-      saveLocal(KEYS.creditCards, next)
+      saveLocal(keys.creditCards, next)
       return next
     })
     setCreditTransactionsState(prev => {
       const next = prev.filter(t => t.cardId !== id)
-      saveLocal(KEYS.creditTransactions, next)
+      saveLocal(keys.creditTransactions, next)
       return next
     })
 
@@ -715,10 +790,11 @@ export function useFinanceStorage(user?: User | null) {
     const cleanData = val.data
     const newId = `ctx-${Date.now()}`
     const item: CreditCardTransaction = { ...cleanData, id: newId }
+    const keys = getStorageKeys(user?.id)
 
     setCreditTransactionsState(prev => {
       const next = [item, ...prev]
-      saveLocal(KEYS.creditTransactions, next)
+      saveLocal(keys.creditTransactions, next)
       return next
     })
 
@@ -748,10 +824,11 @@ export function useFinanceStorage(user?: User | null) {
       return { success: false, error: val.error || 'Datos de consumo inválidos' }
     }
     const cleanItem: CreditCardTransaction = { ...val.data, id: updated.id }
+    const keys = getStorageKeys(user?.id)
 
     setCreditTransactionsState(prev => {
       const next = prev.map(t => t.id === updated.id ? cleanItem : t)
-      saveLocal(KEYS.creditTransactions, next)
+      saveLocal(keys.creditTransactions, next)
       return next
     })
 
@@ -774,9 +851,10 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteCreditTransaction = async (id: string) => {
+    const keys = getStorageKeys(user?.id)
     setCreditTransactionsState(prev => {
       const next = prev.filter(t => t.id !== id)
-      saveLocal(KEYS.creditTransactions, next)
+      saveLocal(keys.creditTransactions, next)
       return next
     })
 
@@ -802,12 +880,13 @@ export function useFinanceStorage(user?: User | null) {
     }
     const cleanLimit = val.data.limitAmount
     const existing = categoryBudgets.find(b => b.category === category && (b.period === period || b.period === 'default'))
+    const keys = getStorageKeys(user?.id)
 
     if (existing) {
       const updated: CategoryBudget = { ...existing, limitAmount: cleanLimit, period }
       setCategoryBudgetsState(prev => {
         const next = prev.map(b => b.id === existing.id ? updated : b)
-        saveLocal(KEYS.categoryBudgets, next)
+        saveLocal(keys.categoryBudgets, next)
         return next
       })
 
@@ -827,7 +906,7 @@ export function useFinanceStorage(user?: User | null) {
       const newBudget: CategoryBudget = { id: newId, category, limitAmount: cleanLimit, period }
       setCategoryBudgetsState(prev => {
         const next = [...prev, newBudget]
-        saveLocal(KEYS.categoryBudgets, next)
+        saveLocal(keys.categoryBudgets, next)
         return next
       })
 
@@ -848,6 +927,7 @@ export function useFinanceStorage(user?: User | null) {
 
   const setMultipleCategoryBudgets = async (budgetsMap: Record<ExpenseCategory, number>, period: string = 'default') => {
     const newBudgets: CategoryBudget[] = []
+    const keys = getStorageKeys(user?.id)
 
     for (const [cat, limit] of Object.entries(budgetsMap)) {
       const category = cat as ExpenseCategory
@@ -858,7 +938,7 @@ export function useFinanceStorage(user?: User | null) {
     }
 
     setCategoryBudgetsState(newBudgets)
-    saveLocal(KEYS.categoryBudgets, newBudgets)
+    saveLocal(keys.categoryBudgets, newBudgets)
 
     if (supabase && isSupabaseConfigured && user) {
       const rows = newBudgets.map(b => ({
@@ -883,6 +963,7 @@ export function useFinanceStorage(user?: User | null) {
     }
     const cleanData = val.data
     const newId = `goal-${Date.now()}`
+    const keys = getStorageKeys(user?.id)
 
     const item: SavingsGoal = {
       ...cleanData,
@@ -894,7 +975,7 @@ export function useFinanceStorage(user?: User | null) {
 
     setSavingsGoalsState(prev => {
       const next = [...prev, item]
-      saveLocal(KEYS.savingsGoals, next)
+      saveLocal(keys.savingsGoals, next)
       return next
     })
 
@@ -924,6 +1005,7 @@ export function useFinanceStorage(user?: User | null) {
     }
     const cleanData = val.data
     const isCompleted = cleanData.currentAmount >= cleanData.targetAmount
+    const keys = getStorageKeys(user?.id)
 
     const cleanItem: SavingsGoal = {
       ...cleanData,
@@ -935,7 +1017,7 @@ export function useFinanceStorage(user?: User | null) {
 
     setSavingsGoalsState(prev => {
       const next = prev.map(g => g.id === updated.id ? cleanItem : g)
-      saveLocal(KEYS.savingsGoals, next)
+      saveLocal(keys.savingsGoals, next)
       return next
     })
 
@@ -965,9 +1047,10 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   const deleteSavingsGoal = async (goalId: string) => {
+    const keys = getStorageKeys(user?.id)
     setSavingsGoalsState(prev => {
       const next = prev.filter(g => g.id !== goalId)
-      saveLocal(KEYS.savingsGoals, next)
+      saveLocal(keys.savingsGoals, next)
       return next
     })
 
