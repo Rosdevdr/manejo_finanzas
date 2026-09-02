@@ -2554,12 +2554,98 @@ select.field-select {
   border-radius: 2px;
 }
 
+/* ── Sandbox Bottom Grid (Transactions + Unencumbered Liquidity) ── */
+.sandbox-bottom-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 16px;
+  margin-top: 6px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .sandbox-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.unencumbered-panel {
+  background: #111117;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.unencumbered-stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+
+.unencumbered-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.unencumbered-sub {
+  font-size: 11.5px;
+  color: #34D399;
+  font-family: 'Space Mono', monospace;
+  font-weight: 600;
+}
+
+/* ── AI Compliance & Regulation Banner ── */
+.ai-compliance-banner {
+  background: linear-gradient(135deg, rgba(25, 25, 35, 0.7) 0%, rgba(16, 16, 24, 0.85) 100%);
+  border: 1px solid rgba(201, 168, 76, 0.22);
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.ai-compliance-text {
+  font-size: 11.5px;
+  color: #A0A0B2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-compliance-link {
+  font-size: 11px;
+  color: #C9A84C;
+  font-weight: 600;
+  background: rgba(201, 168, 76, 0.1);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.ai-compliance-link:hover {
+  background: rgba(201, 168, 76, 0.2);
+  color: #FFFFFF;
+}
+
 /* ── Transactions Institutional Table (Sandbox Image 4) ── */
 .transactions-table-panel {
   padding: 0 !important;
   overflow: visible !important;
-  margin-top: 10px;
-  margin-bottom: 24px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .transactions-table-panel .sandbox-panel-header {

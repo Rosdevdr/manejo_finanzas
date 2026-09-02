@@ -12,6 +12,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   ShieldCheck,
+  Shield,
+  Info,
+  X,
   Plus,
 } from 'lucide-react'
 import {
@@ -58,6 +61,9 @@ export function DashboardView({
   const userName = userEmail ? userEmail.split('@')[0] : 'Inversor'
   const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
 
+  // Modal de cumplimiento de IA
+  const [showComplianceModal, setShowComplianceModal] = useState(false)
+
   // 1. Datos estrictamente del período actual
   const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
   const pInc = incomes.filter(i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === currentPeriod)
@@ -82,7 +88,7 @@ export function DashboardView({
   const creditSummary = getConsolidatedCreditSummary(creditCards, creditTransactions)
   const monthProgress = getMonthProgress(currentPeriod)
 
-  // 4. Últimos Movimientos: ESTRICTAMENTE DEL PERÍODO ACTUAL (sin mezclar otros meses)
+  // 4. Últimos Movimientos: ESTRICTAMENTE DEL PERÍODO ACTUAL
   const recentTx = [
     ...pInc.map(i => ({ ...i, kind: 'income' as const })),
     ...pExp.map(e => ({ ...e, kind: 'expense' as const })),
@@ -124,7 +130,23 @@ export function DashboardView({
     }
   })
 
-  // 7. Métodos de Pago del Período
+  // 7. Liquidez No Comprometida (Unencumbered Liquidity - Sandbox Image 4)
+  const unencumberedLiquidity = Math.max(0, cumulative.totalCumulativeBalance - creditSummary.totalDebt)
+  const liquidityRatio = cumulative.totalCumulativeBalance > 0
+    ? (unencumberedLiquidity / cumulative.totalCumulativeBalance) * 100
+    : 0
+
+  const liquidityTrendData = last5Periods.map(p => {
+    const [, monthStr] = p.split('-')
+    const mIdx = (parseInt(monthStr, 10) || 1) - 1
+    const cum = calculateCumulativeBalance(incomes, expenses, p)
+    return {
+      label: MONTH_SHORT_NAMES[mIdx] || p,
+      liquidez: Math.round(Math.max(0, cum.totalCumulativeBalance - creditSummary.totalDebt)),
+    }
+  })
+
+  // 8. Métodos de Pago del Período
   const paymentTotals = {
     debit_card: 0,
     credit_card: 0,
@@ -162,7 +184,7 @@ export function DashboardView({
             onClick={() => onNavigateTab && onNavigateTab('chat-advisor')}
           >
             <Sparkles size={14} />
-            <span>Copilot AI</span>
+            <span>Asesor IA</span>
           </button>
           <button
             type="button"
@@ -173,6 +195,24 @@ export function DashboardView({
             <span>Registrar Movimiento</span>
           </button>
         </div>
+      </div>
+
+      {/* ── AVISO DE CUMPLIMIENTO REGULATORIO IA (GLOBAL STANDARDS) ── */}
+      <div className="ai-compliance-banner">
+        <div className="ai-compliance-text">
+          <Shield size={14} className="text-gold" />
+          <span>
+            <strong>Marco Regulatorio IA:</strong> Cumplimiento normativo ético y de privacidad algorítmica (EU AI Act & Data Privacy).
+          </span>
+        </div>
+        <button
+          type="button"
+          className="ai-compliance-link"
+          onClick={() => setShowComplianceModal(true)}
+        >
+          <Info size={12} style={{ display: 'inline', marginRight: 4 }} />
+          Ver Normativas de Uso
+        </button>
       </div>
 
       {/* ── 5-METRIC INSTITUTIONAL KPI STRIP (SANDBOX IMAGE 4) ── */}
@@ -440,76 +480,194 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* ── TABLA DE TRANSACCIONES INSTITUCIONALES (SANDBOX IMAGE 4) ── */}
-      <div className="sandbox-panel transactions-table-panel">
-        <div className="sandbox-panel-header">
-          <div>
-            <div className="sandbox-panel-title">Transactions · {formatPeriodLabel(currentPeriod)}</div>
-            <div className="sandbox-panel-sub">Movimientos certificados de capital en el período seleccionado</div>
+      {/* ── BOTTOM GRID: TRANSACTIONS + UNENCUMBERED LIQUIDITY (SANDBOX IMAGE 4) ── */}
+      <div className="sandbox-bottom-grid">
+        {/* Columna Izquierda: Tabla de Transacciones */}
+        <div className="sandbox-panel transactions-table-panel">
+          <div className="sandbox-panel-header">
+            <div>
+              <div className="sandbox-panel-title">Transactions · {formatPeriodLabel(currentPeriod)}</div>
+              <div className="sandbox-panel-sub">Movimientos certificados de capital en el período seleccionado</div>
+            </div>
+            {onNavigateTab && (
+              <button
+                type="button"
+                className="sandbox-btn-outline"
+                onClick={() => onNavigateTab('expenses')}
+              >
+                <span>Ver todos los movimientos</span>
+                <ChevronRight size={14} />
+              </button>
+            )}
           </div>
-          {onNavigateTab && (
-            <button
-              type="button"
-              className="sandbox-btn-outline"
-              onClick={() => onNavigateTab('expenses')}
-            >
-              <span>Ver todos los movimientos</span>
-              <ChevronRight size={14} />
-            </button>
+
+          {recentTx.length === 0 ? (
+            <div className="sandbox-empty">
+              No hay movimientos registrados en {formatPeriodLabel(currentPeriod)}.
+            </div>
+          ) : (
+            <div className="sandbox-table-wrapper">
+              <table className="sandbox-table">
+                <thead>
+                  <tr>
+                    <th>DATE</th>
+                    <th>ITEM / CONCEPTO</th>
+                    <th>TIPO</th>
+                    <th>TOTAL</th>
+                    <th style={{ textAlign: 'right' }}>ACCIONES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentTx.map((tx, idx) => {
+                    const isInc = tx.kind === 'income'
+                    return (
+                      <tr key={idx}>
+                        <td className="cell-date">{tx.date}</td>
+                        <td className="cell-item">
+                          <div className="item-title">{tx.description}</div>
+                        </td>
+                        <td>
+                          <span className={`sandbox-type-pill ${isInc ? 'in' : 'out'}`}>
+                            {isInc ? '+ INFLOW' : '- OUTFLOW'}
+                          </span>
+                        </td>
+                        <td className={`cell-total ${isInc ? 'text-emerald' : 'text-rose'}`}>
+                          {isInc ? '+' : '-'}{formatCurrency(tx.amount)}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            className="table-action-chevron"
+                            onClick={() => onNavigateTab && onNavigateTab(isInc ? 'incomes' : 'expenses')}
+                            title="Ver en detalle"
+                          >
+                            <ChevronRight size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
-        {recentTx.length === 0 ? (
-          <div className="sandbox-empty">
-            No hay movimientos registrados en {formatPeriodLabel(currentPeriod)}.
+        {/* Columna Derecha: Unencumbered Liquidity (Sandbox Image 4) */}
+        <div className="unencumbered-panel">
+          <div>
+            <div className="sandbox-panel-header" style={{ marginBottom: 4 }}>
+              <div>
+                <div className="sandbox-panel-title">Unencumbered Liquidity</div>
+                <div className="sandbox-panel-sub">Capital libre neto sin compromisos de deuda</div>
+              </div>
+              <div className="sandbox-pills">
+                <span className="sandbox-pill-btn active">5M</span>
+              </div>
+            </div>
+
+            <div className="unencumbered-stat-row">
+              <div className="unencumbered-val">{formatCurrency(unencumberedLiquidity)}</div>
+              <div className="unencumbered-sub">
+                {liquidityRatio.toFixed(0)}% libre
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: '#888898', marginBottom: 12 }}>
+              Pasivos descontados: {formatCurrency(creditSummary.totalDebt)} en tarjetas
+            </div>
           </div>
-        ) : (
-          <div className="sandbox-table-wrapper">
-            <table className="sandbox-table">
-              <thead>
-                <tr>
-                  <th>DATE</th>
-                  <th>ITEM / CONCEPTO</th>
-                  <th>TIPO</th>
-                  <th>TOTAL</th>
-                  <th style={{ textAlign: 'right' }}>ACCIONES</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTx.map((tx, idx) => {
-                  const isInc = tx.kind === 'income'
-                  return (
-                    <tr key={idx}>
-                      <td className="cell-date">{tx.date}</td>
-                      <td className="cell-item">
-                        <div className="item-title">{tx.description}</div>
-                      </td>
-                      <td>
-                        <span className={`sandbox-type-pill ${isInc ? 'in' : 'out'}`}>
-                          {isInc ? '+ INFLOW' : '- OUTFLOW'}
-                        </span>
-                      </td>
-                      <td className={`cell-total ${isInc ? 'text-emerald' : 'text-rose'}`}>
-                        {isInc ? '+' : '-'}{formatCurrency(tx.amount)}
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <button
-                          type="button"
-                          className="table-action-chevron"
-                          onClick={() => onNavigateTab && onNavigateTab(isInc ? 'incomes' : 'expenses')}
-                          title="Ver en detalle"
-                        >
-                          <ChevronRight size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+
+          <div style={{ width: '100%', height: 190 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={liquidityTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="unencumberedGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#E09F67" stopOpacity={0.45} />
+                    <stop offset="95%" stopColor="#E09F67" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
+                <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                <Tooltip
+                  contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                  formatter={(val) => [formatCurrency(Number(val) || 0), 'Liquidez Libre']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="liquidez"
+                  stroke="#E09F67"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#unencumberedGrad)"
+                  name="Liquidez No Comprometida"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        )}
+        </div>
       </div>
+
+      {/* ── MODAL DE CUMPLIMIENTO Y NORMATIVAS GLOBALES DE IA ── */}
+      {showComplianceModal && (
+        <div className="modal-overlay" onClick={() => setShowComplianceModal(false)}>
+          <div className="modal-card" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                <Shield size={18} className="text-gold" />
+                <span>Normativas de Inteligencia Artificial & Transparencia</span>
+              </h2>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setShowComplianceModal(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 12.5, color: '#D0D0DC', lineHeight: 1.6 }}>
+              <div style={{ background: 'rgba(201, 168, 76, 0.08)', border: '1px solid rgba(201, 168, 76, 0.25)', borderRadius: 8, padding: 12 }}>
+                <strong style={{ color: '#F3CA65' }}>Marco Regulatorio Internacional (EU AI Act & Global Digital Standards)</strong>
+                <p style={{ margin: '6px 0 0', fontSize: 12, color: '#D1D5DB' }}>
+                  El Asesor IA de AUREUS opera bajo los principios del Reglamento Europeo de Inteligencia Artificial (Reglamento UE 2024/1689), clasificado como sistema de propósito específico de <strong>riesgo limitado</strong> con obligaciones de transparencia algorítmica estricta.
+                </p>
+              </div>
+
+              <div>
+                <strong style={{ color: '#FFFFFF' }}>1. Privacidad y Soberanía de Datos</strong>
+                <p style={{ margin: '4px 0 0', color: '#9CA3AF' }}>
+                  Tus transacciones y estados financieros se procesan mediante Row Level Security (RLS) en memoria. La información nunca se utiliza para entrenar modelos LLM públicos ni se comparte con redes publicitarias de terceros.
+                </p>
+              </div>
+
+              <div>
+                <strong style={{ color: '#FFFFFF' }}>2. Exención de Asesoría Financiera Automatizada (Disclaimer)</strong>
+                <p style={{ margin: '4px 0 0', color: '#9CA3AF' }}>
+                  Los diagnósticos, presupuestos sugeridos y simulaciones matemáticas son herramientas educativas y de orientación presupuestaria personal. No constituyen asesoramiento de inversión regulada, intermediación de valores ni captación financiera.
+                </p>
+              </div>
+
+              <div>
+                <strong style={{ color: '#FFFFFF' }}>3. Supervisión Humana y Control Absoluto</strong>
+                <p style={{ margin: '4px 0 0', color: '#9CA3AF' }}>
+                  El Asesor IA jamás ejecuta pagos, transferencias o cargos automáticos en tus tarjetas. Cada decisión de registro, abono o eliminación permanece 100% bajo el control soberano del usuario.
+                </p>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ marginTop: 18 }}>
+              <button
+                type="button"
+                className="sandbox-btn-gold"
+                style={{ width: '100%' }}
+                onClick={() => setShowComplianceModal(false)}
+              >
+                Entendido y Aceptado
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
