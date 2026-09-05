@@ -1,0 +1,193 @@
+/* src/components/budgets/FireCalculatorModal.css */
+.fire-modal-card {
+  width: min(94vw, 620px) !important;
+  max-height: 90vh !important;
+  flex-direction: column;
+  overflow-y: auto !important;
+  box-sizing: border-box;
+}
+
+.fire-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.fire-control-card {
+  background: rgba(22, 22, 32, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.fire-control-card:hover {
+  border-color: rgba(201, 168, 76, 0.35);
+}
+
+.fire-control-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fire-control-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #D1D5DB;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.fire-control-val {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #F0F0F8;
+  font-family: 'Space Mono', monospace;
+}
+
+.fire-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 4px;
+  background: #2A2A38;
+  outline: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  margin: 4px 0;
+}
+
+.fire-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #F3CA65;
+  border: 2px solid #0A0A0C;
+  box-shadow: 0 0 10px rgba(243, 202, 101, 0.5);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.fire-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.fire-slider.emerald::-webkit-slider-thumb {
+  background: #34D399;
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+}
+
+.fire-slider.blue::-webkit-slider-thumb {
+  background: #60A5FA;
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+}
+
+.fire-presets {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.fire-preset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #9CA3AF;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  font-family: 'Space Mono', monospace;
+}
+
+.fire-preset-btn:hover {
+  background: rgba(243, 202, 101, 0.12);
+  color: #F3CA65;
+  border-color: rgba(243, 202, 101, 0.3);
+}
+
+.fire-preset-btn.active {
+  background: rgba(243, 202, 101, 0.2);
+  color: #F3CA65;
+  border-color: #F3CA65;
+}
+
+.fire-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0;
+  width: 100%;
+}
+
+.fire-card {
+  background: rgba(18, 18, 26, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.fire-card:hover {
+  border-color: rgba(201, 168, 76, 0.3);
+}
+
+.fire-card.gold {
+  border-color: rgba(201, 168, 76, 0.5);
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.12) 0%, rgba(18, 18, 26, 0.85) 100%);
+  box-shadow: 0 4px 16px rgba(201, 168, 76, 0.1);
+}
+
+.fire-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fire-title {
+  font-size: 13px;
+  color: #E5E7EB;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.fire-sub {
+  font-size: 11px;
+  color: #9CA3AF;
+}
+
+.fire-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #F3CA65;
+  font-family: 'Space Mono', monospace;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .fire-controls-grid {
+    grid-template-columns: 1fr;
+  }
+  .fire-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

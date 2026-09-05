@@ -1,0 +1,326 @@
+/* MIT License Modal Responsive Styles */
+.mit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(5, 5, 8, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.mit-modal-card {
+  background: #121218;
+  border: 1px solid #2A2A38;
+  border-radius: 16px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(201, 168, 76, 0.1);
+  overflow: hidden;
+  animation: mitModalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mitModalScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.mit-modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #1E1E28;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(201, 168, 76, 0.08) 0%, rgba(18, 18, 24, 0) 100%);
+}
+
+.mit-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mit-header-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(201, 168, 76, 0.12);
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #C9A84C;
+  flex-shrink: 0;
+}
+
+.mit-header-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.mit-header-sub {
+  font-size: 12px;
+  color: #888898;
+  margin: 2px 0 0;
+}
+
+.mit-close-icon-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #2A2A38;
+  color: #888898;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.mit-close-icon-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mit-modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mit-author-banner {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(201, 168, 76, 0.08);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mit-author-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.mit-repo-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #16161E;
+  border: 1px solid #2A2A38;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mit-repo-btn:hover {
+  background: #22222E;
+  border-color: #C9A84C;
+}
+
+.mit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mit-card-box {
+  padding: 14px;
+  border-radius: 10px;
+}
+
+.mit-card-box.permissions {
+  background: rgba(52, 211, 153, 0.06);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.mit-card-box.conditions {
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.mit-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.mit-card-box.permissions .mit-card-title {
+  color: #34D399;
+}
+
+.mit-card-box.conditions .mit-card-title {
+  color: #FBBF24;
+}
+
+.mit-card-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 11.5px;
+  color: #A0A0B0;
+  line-height: 1.6;
+}
+
+.mit-card-text {
+  margin: 0;
+  font-size: 11.5px;
+  color: #A0A0B0;
+  line-height: 1.5;
+}
+
+.mit-raw-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mit-raw-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #717182;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mit-raw-box {
+  padding: 14px;
+  border-radius: 10px;
+  background: #0D0D12;
+  border: 1px solid #1E1E28;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #888898;
+  line-height: 1.6;
+  max-height: 160px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.mit-modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid #1E1E28;
+  background: #0E0E14;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mit-footer-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #888898;
+}
+
+.mit-submit-btn {
+  background: linear-gradient(135deg, #F3CA65 0%, #C9A84C 100%);
+  color: #0A0A0C;
+  border: none;
+  font-weight: 700;
+  padding: 10px 28px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.mit-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(201, 168, 76, 0.35);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+  .mit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mit-author-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .mit-repo-btn {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .mit-modal-card {
+    max-height: 92vh;
+    border-radius: 14px;
+  }
+
+  .mit-modal-header {
+    padding: 14px 16px;
+  }
+
+  .mit-header-title {
+    font-size: 15px;
+  }
+
+  .mit-modal-body {
+    padding: 16px 14px;
+    gap: 14px;
+  }
+
+  .mit-modal-footer {
+    padding: 14px 16px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .mit-submit-btn {
+    width: 100%;
+    height: 44px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mit-footer-badge {
+    justify-content: center;
+    font-size: 11px;
+  }
+}

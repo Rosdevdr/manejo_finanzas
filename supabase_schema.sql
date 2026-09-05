@@ -52,11 +52,11 @@ CREATE TABLE IF NOT EXISTS public.credit_cards (
   cutoff_day INTEGER NOT NULL CHECK (cutoff_day BETWEEN 1 AND 31),
   payment_due_day INTEGER NOT NULL CHECK (payment_due_day BETWEEN 1 AND 31),
   interest_rate NUMERIC(5, 2),
-  color TEXT NOT NULL DEFAULT 'gold',
+  color TEXT DEFAULT 'gold' NOT NULL,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 5. TABLA: TRANSACCIONES / CARGOS DE TARJETA (credit_card_transactions)
+-- 5. TABLA: TRANSACCIONES DE TARJETA (credit_card_transactions)
 CREATE TABLE IF NOT EXISTS public.credit_card_transactions (
   id TEXT PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -64,16 +64,41 @@ CREATE TABLE IF NOT EXISTS public.credit_card_transactions (
   period TEXT NOT NULL,
   description TEXT NOT NULL,
   amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-  category TEXT NOT NULL CHECK (category IN ('housing', 'food', 'transport', 'utilities', 'health', 'entertainment', 'education', 'debt', 'other')),
+  category TEXT NOT NULL,
   date DATE NOT NULL,
-  installments INTEGER NOT NULL DEFAULT 1 CHECK (installments >= 1),
-  current_installment INTEGER NOT NULL DEFAULT 1 CHECK (current_installment >= 1),
-  is_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  installments INTEGER DEFAULT 1 NOT NULL,
+  current_installment INTEGER DEFAULT 1 NOT NULL,
+  is_paid BOOLEAN DEFAULT false NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 6. TABLA: PRESUPUESTOS POR CATEGORÍA (category_budgets)
+CREATE TABLE IF NOT EXISTS public.category_budgets (
+  id TEXT PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  period TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (category IN ('housing', 'food', 'transport', 'utilities', 'health', 'entertainment', 'education', 'debt', 'other')),
+  limit_amount NUMERIC(12, 2) NOT NULL CHECK (limit_amount >= 0),
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  CONSTRAINT unique_user_period_category UNIQUE (user_id, period, category)
+);
+
+-- 7. TABLA: METAS DE AHORRO & FONDOS (savings_goals)
+CREATE TABLE IF NOT EXISTS public.savings_goals (
+  id TEXT PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  target_amount NUMERIC(12, 2) NOT NULL CHECK (target_amount > 0),
+  current_amount NUMERIC(12, 2) DEFAULT 0 NOT NULL CHECK (current_amount >= 0),
+  monthly_contribution NUMERIC(12, 2) DEFAULT 0,
+  target_date DATE,
+  category TEXT NOT NULL CHECK (category IN ('emergency', 'vacation', 'car', 'home', 'investment', 'education', 'tech', 'other')),
+  color TEXT DEFAULT '#34D399',
+  is_completed BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- ==============================================================================
--- 🔒 POLÍTICAS DE SEGURIDAD (Row Level Security - RLS)
 -- Cada usuario solo puede ver, insertar, actualizar y borrar sus propios datos
 -- Se incluye WITH CHECK en UPDATE para prevenir escalamiento y reasignación de filas
 -- ==============================================================================
@@ -83,6 +108,8 @@ ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cash_withdrawals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.credit_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.credit_card_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.category_budgets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.savings_goals ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para Incomes
 CREATE POLICY "Users can view their own incomes" ON public.incomes
@@ -134,6 +161,26 @@ CREATE POLICY "Users can update their own card transactions" ON public.credit_ca
 CREATE POLICY "Users can delete their own card transactions" ON public.credit_card_transactions
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Category Budgets Policies
+CREATE POLICY "Users can view their own budgets" ON public.category_budgets
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own budgets" ON public.category_budgets
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own budgets" ON public.category_budgets
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own budgets" ON public.category_budgets
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Savings Goals Policies
+CREATE POLICY "Users can view their own savings goals" ON public.savings_goals
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own savings goals" ON public.savings_goals
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own savings goals" ON public.savings_goals
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own savings goals" ON public.savings_goals
+  FOR DELETE USING (auth.uid() = user_id);
+
 -- ==============================================================================
 -- 🚀 ÍNDICES DE RENDIMIENTO Y AISLAMIENTO DE CONSULTAS
 -- ==============================================================================
@@ -169,10 +216,13 @@ ALTER TABLE public.expenses REPLICA IDENTITY FULL;
 ALTER TABLE public.cash_withdrawals REPLICA IDENTITY FULL;
 ALTER TABLE public.credit_cards REPLICA IDENTITY FULL;
 ALTER TABLE public.credit_card_transactions REPLICA IDENTITY FULL;
+ALTER TABLE public.category_budgets REPLICA IDENTITY FULL;
+ALTER TABLE public.savings_goals REPLICA IDENTITY FULL;
 
 ALTER PUBLICATION supabase_realtime ADD TABLE public.incomes;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.cash_withdrawals;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.credit_cards;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.credit_card_transactions;
-
+ALTER PUBLICATION supabase_realtime ADD TABLE public.category_budgets;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.savings_goals;

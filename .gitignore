@@ -7,14 +7,15 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies & Build
 node_modules
 dist
 dist-ssr
-# Environment and secrets
+# Environment Variables & Secrets
 .env
-.env*.local
-.env.production
-.env.development
+.env.*
+!.env.example
+*.local
 .vercel
 *.pem
 *.key

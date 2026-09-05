@@ -1,0 +1,503 @@
+/* src/components/budgets/BudgetsAndGoalsView.css */
+
+/* ==========================================================================
+   📏 ESPACIADOS Y MÁRGENES DE TARJETAS KPI PRINCIPALES (AJUSTA AQUÍ)
+   ========================================================================== */
+.budgets-container .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  /* Espacio horizontal y vertical entre las 3 tarjetas */
+  margin-top: 6px;
+  /* Separación superior con el encabezado */
+  margin-bottom: 6px;
+  /* Separación inferior con el bloque de la regla 50/30/20 */
+}
+
+.budgets-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* Subtabs Switcher */
+.subtabs-nav {
+  display: flex;
+  background: rgba(20, 20, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.subtab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #888898;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.subtab-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.subtab-btn.active {
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.2) 0%, rgba(201, 168, 76, 0.08) 100%);
+  color: #F3CA65;
+  border: 1px solid rgba(201, 168, 76, 0.35);
+  box-shadow: 0 2px 10px rgba(201, 168, 76, 0.15);
+}
+
+/* 50/30/20 Rule Box */
+.rule-card {
+  background: linear-gradient(145deg, rgba(20, 20, 28, 0.95) 0%, rgba(13, 13, 18, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.rule-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 2.5px;
+  background: linear-gradient(180deg, #F3CA65 0%, #34D399 100%);
+  box-shadow: 0 0 10px rgba(243, 202, 101, 0.4);
+}
+
+.rule-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rule-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.rule-pillar {
+  background: rgba(26, 26, 36, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pillar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pillar-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #D0D0DC;
+}
+
+.pillar-pct {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pillar-bar-bg {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.pillar-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.pillar-target {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  color: #717182;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Category Budget Cards Grid */
+.budgets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.budget-card {
+  background: linear-gradient(145deg, rgba(20, 20, 28, 0.95) 0%, rgba(13, 13, 18, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px;
+  backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.budget-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.budget-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2.5px;
+  transition: all 0.2s;
+}
+
+.budget-card.safe::before {
+  background: #34D399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
+}
+
+.budget-card.warning::before {
+  background: #FBBF24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+}
+
+.budget-card.danger::before {
+  background: #F87171;
+  box-shadow: 0 0 8px rgba(248, 113, 113, 0.4);
+}
+
+.budget-card.exceeded::before {
+  background: #FB7185;
+  box-shadow: 0 0 12px rgba(251, 113, 133, 0.7);
+}
+
+.budget-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.budget-cat-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.budget-cat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.budget-cat-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.budget-amounts {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 2px;
+}
+
+.budget-spent {
+  font-family: 'Space Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.budget-limit {
+  font-family: 'Space Mono', monospace;
+  font-size: 11.5px;
+  color: #717182;
+}
+
+.budget-bar-bg {
+  height: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.budget-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.budget-bar-fill.safe {
+  background: linear-gradient(90deg, #059669 0%, #34D399 100%);
+}
+
+.budget-bar-fill.warning {
+  background: linear-gradient(90deg, #D97706 0%, #FBBF24 100%);
+}
+
+.budget-bar-fill.danger {
+  background: linear-gradient(90deg, #DC2626 0%, #F87171 100%);
+}
+
+.budget-bar-fill.exceeded {
+  background: linear-gradient(90deg, #E11D48 0%, #FB7185 100%);
+}
+
+.budget-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.budget-status-tag {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-tag-safe {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34D399;
+}
+
+.status-tag-warning {
+  background: rgba(251, 191, 36, 0.12);
+  color: #FBBF24;
+}
+
+.status-tag-danger {
+  background: rgba(248, 113, 113, 0.12);
+  color: #F87171;
+}
+
+.status-tag-exceeded {
+  background: rgba(251, 113, 133, 0.2);
+  color: #FB7185;
+}
+
+/* Savings Goals Grid */
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.goal-card {
+  background: linear-gradient(145deg, rgba(20, 20, 28, 0.95) 0%, rgba(13, 13, 18, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px;
+  backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.goal-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+}
+
+.goal-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2.5px;
+}
+
+.goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.goal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.goal-category-badge {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #888898;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.goal-amounts-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.goal-current-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.goal-target-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: #717182;
+}
+
+.goal-eta-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #A78BFA;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.goal-quick-deposit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.deposit-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #E0E0E8;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.deposit-btn:hover {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #34D399;
+}
+
+/* Modal Form Styles */
+.modal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.modal-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #D0D0DC;
+}
+
+.modal-input,
+.modal-select {
+  background: #111116;
+  border: 1px solid #2A2A38;
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: #FFFFFF;
+  font-family: 'Space Grotesk', sans-serif;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.modal-input:focus,
+.modal-select:focus {
+  border-color: #F3CA65;
+  box-shadow: 0 0 10px rgba(243, 202, 101, 0.2);
+}
+
+@media (max-width: 768px) {
+  .subtabs-nav {
+    width: 100%;
+  }
+
+  .subtab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}

@@ -1,32 +1,47 @@
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   TrendingUp,
-  TrendingDown,
-  Wallet,
-  PiggyBank,
-  Shuffle,
-  Lock,
   CreditCard as CardIcon,
   Calendar,
-  AlertCircle,
   Sparkles,
+  Activity,
+  CreditCard,
+  Banknote,
+  Building2,
+  ChevronRight,
+  ArrowUpRight,
+  ArrowDownRight,
+  ShieldCheck,
+  Shield,
+  Info,
+  X,
+  Plus,
+  Download,
+  FileText,
 } from 'lucide-react'
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
-  PieChart, Pie, Cell
+  ResponsiveContainer, XAxis, YAxis, Tooltip,
+  PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts'
-import type { Income, Expense, CreditCard, CreditCardTransaction } from '../../types/finance'
+import type { Income, Expense, CreditCard as CreditCardType, CreditCardTransaction, CashWithdrawal, CategoryBudget } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
 import { formatCurrency } from '../../utils/formatters'
-import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES } from '../../utils/calendar'
+import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES, calculateCumulativeBalance, formatPeriodLabel } from '../../utils/calendar'
 import { getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
+import { downloadAiRegulationDocument } from '../../utils/aiRegulationDocument'
 
 interface DashboardViewProps {
   currentPeriod: string
   incomes: Income[]
   expenses: Expense[]
-  creditCards?: CreditCard[]
+  cashWithdrawals?: CashWithdrawal[]
+  creditCards?: CreditCardType[]
   creditTransactions?: CreditCardTransaction[]
+  categoryBudgets?: CategoryBudget[]
+  userEmail?: string | null
   onNavigateTab?: (t: TabType) => void
+  onOpenTerms?: () => void
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -45,73 +60,107 @@ export function DashboardView({
   currentPeriod,
   incomes,
   expenses,
+  cashWithdrawals = [],
   creditCards = [],
   creditTransactions = [],
+  categoryBudgets = [],
+  userEmail,
   onNavigateTab,
+  onOpenTerms,
 }: DashboardViewProps) {
-  // Datos del período actual
-  const pInc  = incomes.filter(i  => i.period === currentPeriod)
-  const pExp  = expenses.filter(e => e.period === currentPeriod)
-  const totalIn  = pInc.reduce((s, i) => s + i.amount, 0)
+  const userName = userEmail ? userEmail.split('@')[0] : 'Inversor'
+  const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
+
+  // Modal de cumplimiento de IA
+  const [showComplianceModal, setShowComplianceModal] = useState(false)
+
+  // 1. Datos de TODOS los módulos estrictamente del período actual
+  const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
+  const pInc = incomes.filter(i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === currentPeriod)
+  const pExp = expenses.filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === currentPeriod)
+  const pCash = cashWithdrawals.filter(c => (c.period && c.period.trim().length === 7 ? c.period.trim() : c.date?.slice(0, 7)) === currentPeriod)
+  const pCardTxs = creditTransactions.filter(t => (t.period && t.period.trim().length === 7 ? t.period.trim() : t.date?.slice(0, 7)) === currentPeriod)
+
+  const totalIn = pInc.reduce((s, i) => s + i.amount, 0)
   const totalExp = pExp.reduce((s, e) => s + e.amount, 0)
-  const balance  = totalIn - totalExp
-  const savingRate = totalIn > 0 ? ((balance / totalIn) * 100) : 0
-  const fixedExp   = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
-  const varExp     = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
+  const balance = totalIn - totalExp
+  const savingRate = totalIn > 0 ? ((totalIn - totalExp) / totalIn) * 100 : 0
+  const fixedExp = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
+  const varExp = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
 
-  // Datos del período anterior (Cálculo matemático con calendario)
+  // 2. Comparativa contra período anterior
   const prevPeriod = getPreviousPeriod(currentPeriod)
-  const prevInc = incomes.filter(i => i.period === prevPeriod)
-  const prevExp = expenses.filter(e => e.period === prevPeriod)
-  const prevTotalIn = prevInc.reduce((s, i) => s + i.amount, 0)
-  const prevTotalExp = prevExp.reduce((s, e) => s + e.amount, 0)
-  const prevBalance = prevTotalIn - prevTotalExp
-  const prevSavingRate = prevTotalIn > 0 ? ((prevBalance / prevTotalIn) * 100) : 0
+  const prevInc = incomes.filter(i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === prevPeriod).reduce((s, i) => s + i.amount, 0)
+  const prevExp = expenses.filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === prevPeriod).reduce((s, e) => s + e.amount, 0)
 
-  // Comparativas estadísticas Mes vs Mes Anterior
-  const incDiff = totalIn - prevTotalIn
-  const incPct = prevTotalIn > 0 ? (incDiff / prevTotalIn) * 100 : (totalIn > 0 ? 100 : 0)
-  const incTrend = prevTotalIn > 0 || totalIn > 0
-    ? `${incPct >= 0 ? '+' : ''}${incPct.toFixed(1)}% vs mes ant.`
-    : undefined
-  const incTrendDir = incPct >= 0 ? 'up' : 'down'
+  const incDiff = prevInc > 0 ? ((totalIn - prevInc) / prevInc) * 100 : 0
+  const expDiff = prevExp > 0 ? ((totalExp - prevExp) / prevExp) * 100 : 0
+  const balDiff = prevInc - prevExp !== 0 ? ((balance - (prevInc - prevExp)) / Math.abs(prevInc - prevExp)) * 100 : 0
 
-  const expDiff = totalExp - prevTotalExp
-  const expPct = prevTotalExp > 0 ? (expDiff / prevTotalExp) * 100 : (totalExp > 0 ? 100 : 0)
-  const expTrend = prevTotalExp > 0 || totalExp > 0
-    ? `${expPct >= 0 ? '+' : ''}${expPct.toFixed(1)}% vs mes ant.`
-    : undefined
-  // En gastos: si baja es favorable (trend-up verde), si sube es desfavorable (trend-down rojo)
-  const expTrendDir = expPct <= 0 ? 'up' : 'down'
-
-  const balDiff = balance - prevBalance
-  const balTrend = prevTotalIn > 0 || totalIn > 0
-    ? `${balDiff >= 0 ? '+' : ''}${formatCurrency(balDiff)} vs mes ant.`
-    : undefined
-  const balTrendDir = balDiff >= 0 ? 'up' : 'down'
-
-  const rateDiff = savingRate - prevSavingRate
-  const rateTrend = prevTotalIn > 0 || totalIn > 0
-    ? `${rateDiff >= 0 ? '+' : ''}${rateDiff.toFixed(1)}% vs mes ant.`
-    : undefined
-  const rateTrendDir = rateDiff >= 0 ? 'up' : 'down'
-
-  // Resumen de Tarjetas de Crédito
+  // 3. Resumen de Deuda y Tarjetas
   const creditSummary = getConsolidatedCreditSummary(creditCards, creditTransactions)
-
-  // Diagnóstico de calendario del mes
   const monthProgress = getMonthProgress(currentPeriod)
 
-  // Pie chart data — by category
+  // 4. Últimos Movimientos Consolidados de TODOS los Módulos
+  const recentTx = [
+    ...pInc.map(i => ({
+      id: i.id,
+      date: i.date,
+      description: i.description,
+      amount: i.amount,
+      kind: 'income' as const,
+      tag: 'INGRESO',
+      typePillClass: 'in',
+      pillLabel: '+ INFLOW',
+      targetTab: 'incomes' as TabType,
+    })),
+    ...pExp.map(e => ({
+      id: e.id,
+      date: e.date,
+      description: e.description,
+      amount: e.amount,
+      kind: 'expense' as const,
+      tag: 'GASTO',
+      typePillClass: 'out',
+      pillLabel: '- OUTFLOW',
+      targetTab: 'expenses' as TabType,
+    })),
+    ...pCardTxs.map(t => ({
+      id: t.id,
+      date: t.date,
+      description: `[Tarjeta] ${t.description}`,
+      amount: t.amount,
+      kind: 'expense' as const,
+      tag: 'TARJETA',
+      typePillClass: 'card',
+      pillLabel: '💳 TARJETA',
+      targetTab: 'credit' as TabType,
+    })),
+    ...pCash.map(c => ({
+      id: c.id,
+      date: c.date,
+      description: `[Efectivo] ${c.note || 'Retiro en efectivo'}`,
+      amount: c.amount,
+      kind: 'expense' as const,
+      tag: 'EFECTIVO',
+      typePillClass: 'cash',
+      pillLabel: '💵 EFECTIVO',
+      targetTab: 'cash' as TabType,
+    })),
+  ]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 8)
+
+  // 5. Pie chart data
   const categoryTotals: Record<string, number> = {}
   pExp.forEach(e => { categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount })
   const pieData = Object.entries(categoryTotals).map(([cat, val]) => ({
     name: CATEGORY_LABELS[cat] ?? cat,
     value: val,
-    color: CATEGORY_COLORS[cat] ?? '#555'
+    color: CATEGORY_COLORS[cat] ?? '#C9A84C',
   }))
 
-  // Bar chart — 5 meses históricos reales desde el almacenamiento
+  // 6. Línea de tiempo histórica de 5 meses para gráficos Sandbox
   const last5Periods: string[] = []
   let cursor = currentPeriod
   for (let i = 0; i < 5; i++) {
@@ -119,360 +168,637 @@ export function DashboardView({
     cursor = getPreviousPeriod(cursor)
   }
 
-  const barData = last5Periods.map(p => {
+  const waveData = last5Periods.map(p => {
     const [, monthStr] = p.split('-')
     const mIdx = (parseInt(monthStr, 10) || 1) - 1
-    const pIncomes = incomes.filter(i => i.period === p)
-    const pExpenses = expenses.filter(e => e.period === p)
+    const pIncomes = incomes.filter(i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === p)
+    const pExpenses = expenses.filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === p)
     const totI = pIncomes.reduce((s, i) => s + i.amount, 0)
     const totE = pExpenses.reduce((s, e) => s + e.amount, 0)
+    const cum = calculateCumulativeBalance(incomes, expenses, p)
     return {
       label: MONTH_SHORT_NAMES[mIdx] || p,
       period: p,
-      ingresos: Math.round(totI),
-      gastos: Math.round(totE),
+      inflows: Math.round(totI),
+      outflows: Math.round(totE),
+      netWorth: Math.round(cum.totalCumulativeBalance),
     }
   })
 
-  const recentTx = [
-    ...pInc.slice(0, 3).map(i => ({ ...i, kind: 'income' as const })),
-    ...pExp.slice(0, 4).map(e => ({ ...e, kind: 'expense' as const })),
-  ]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 5)
+  // 7. Liquidez No Comprometida (Unencumbered Liquidity - Sandbox Image 4)
+  const unencumberedLiquidity = Math.max(0, cumulative.totalCumulativeBalance - creditSummary.totalDebt)
+  const liquidityRatio = cumulative.totalCumulativeBalance > 0
+    ? (unencumberedLiquidity / cumulative.totalCumulativeBalance) * 100
+    : 0
 
-  // Canales de liquidez y métodos de pago (mes)
-  const channelData = [
-    {
-      id: 'bank_transfer',
-      label: 'Transferencia Bancaria',
-      amount: pExp.filter(e => e.paymentMethod === 'bank_transfer').reduce((s, e) => s + e.amount, 0),
-      color: '#60A5FA',
-      icon: '🏦',
-    },
-    {
-      id: 'debit_card',
-      label: 'Tarjeta de Débito',
-      amount: pExp.filter(e => e.paymentMethod === 'debit_card').reduce((s, e) => s + e.amount, 0),
-      color: '#34D399',
-      icon: '💳',
-    },
-    {
-      id: 'credit_card',
-      label: 'Tarjeta de Crédito',
-      amount: pExp.filter(e => e.paymentMethod === 'credit_card').reduce((s, e) => s + e.amount, 0),
-      color: '#C9A84C',
-      icon: '💳',
-    },
-    {
-      id: 'cash',
-      label: 'Efectivo / Cajero',
-      amount: pExp.filter(e => e.paymentMethod === 'cash').reduce((s, e) => s + e.amount, 0),
-      color: '#FBBF24',
-      icon: '💵',
-    },
-  ]
+  const liquidityTrendData = last5Periods.map(p => {
+    const [, monthStr] = p.split('-')
+    const mIdx = (parseInt(monthStr, 10) || 1) - 1
+    const cum = calculateCumulativeBalance(incomes, expenses, p)
+    return {
+      label: MONTH_SHORT_NAMES[mIdx] || p,
+      liquidez: Math.round(Math.max(0, cum.totalCumulativeBalance - creditSummary.totalDebt)),
+    }
+  })
 
-  const kpis = [
-    {
-      label: 'Ingresos Totales',
-      value: formatCurrency(totalIn),
-      sub: `${pInc.length} fuente${pInc.length !== 1 ? 's' : ''}`,
-      color: 'emerald',
-      icon: <TrendingUp size={14} />,
-      trend: incTrend,
-      trendDir: incTrendDir,
-    },
-    {
-      label: 'Gastos Totales',
-      value: formatCurrency(totalExp),
-      sub: `${pExp.length} registro${pExp.length !== 1 ? 's' : ''}`,
-      color: 'red',
-      icon: <TrendingDown size={14} />,
-      trend: expTrend,
-      trendDir: expTrendDir,
-    },
-    {
-      label: 'Balance Neto',
-      value: formatCurrency(balance),
-      sub: balance >= 0 ? 'Saldo superavitario' : 'Déficit presupuestario',
-      color: balance >= 0 ? 'emerald' : 'red',
-      icon: <Wallet size={14} />,
-      trend: balTrend,
-      trendDir: balTrendDir,
-    },
-    {
-      label: 'Tasa de Ahorro',
-      value: `${savingRate.toFixed(1)}%`,
-      sub: 'Del ingreso total',
-      color: savingRate >= 20 ? 'emerald' : savingRate >= 10 ? 'amber' : 'red',
-      icon: <PiggyBank size={14} />,
-      trend: rateTrend,
-      trendDir: rateTrendDir,
-    },
-    {
-      label: 'Deuda Tarjetas',
-      value: formatCurrency(creditSummary.totalDebt),
-      sub: `${creditSummary.utilizationRate.toFixed(1)}% de cupo utilizado`,
-      color: creditSummary.utilizationRate > 50 ? 'red' : creditSummary.utilizationRate > 30 ? 'amber' : 'gold',
-      icon: <CardIcon size={14} />,
-      trend: creditSummary.cardsCount > 0 ? `${creditSummary.cardsCount} tarjeta${creditSummary.cardsCount > 1 ? 's' : ''}` : undefined,
-      trendDir: creditSummary.utilizationRate <= 30 ? 'up' : 'down',
-    },
-    {
-      label: 'Gastos Fijos',
-      value: formatCurrency(fixedExp),
-      sub: totalIn > 0 ? `${((fixedExp / totalIn) * 100).toFixed(0)}% del ingreso` : 'Compromisos',
-      color: 'gold',
-      icon: <Lock size={14} />,
-      trend: undefined,
-      trendDir: 'up',
-    },
-    {
-      label: 'Gastos Variables',
-      value: formatCurrency(varExp),
-      sub: totalIn > 0 ? `${((varExp / totalIn) * 100).toFixed(0)}% del ingreso` : '—',
-      color: 'amber',
-      icon: <Shuffle size={14} />,
-      trend: undefined,
-      trendDir: 'up',
-    },
+  // 8. Métodos de Pago del Período (Consolidando Gastos, Tarjetas y Efectivo)
+  const paymentTotals = {
+    debit_card: 0,
+    credit_card: 0,
+    bank_transfer: 0,
+    cash: 0,
+  }
+  pExp.forEach(e => {
+    if (paymentTotals[e.paymentMethod] !== undefined) {
+      paymentTotals[e.paymentMethod] += e.amount
+    }
+  })
+  // Reflejar consumos del módulo de tarjetas
+  const cardTxsSum = pCardTxs.reduce((s, t) => s + t.amount, 0)
+  if (cardTxsSum > paymentTotals.credit_card) {
+    paymentTotals.credit_card = cardTxsSum
+  }
+  // Reflejar retiros del módulo de efectivo
+  const cashWithdrawalsSum = pCash.reduce((s, c) => s + c.amount, 0)
+  if (cashWithdrawalsSum > paymentTotals.cash) {
+    paymentTotals.cash = cashWithdrawalsSum
+  }
+
+  const paymentMethodsList = [
+    { name: 'Transferencia', amount: paymentTotals.bank_transfer, icon: <Building2 size={13} />, color: '#34D399' },
+    { name: 'Débito', amount: paymentTotals.debit_card, icon: <CreditCard size={13} />, color: '#60A5FA' },
+    { name: 'Crédito', amount: paymentTotals.credit_card, icon: <CardIcon size={13} />, color: '#F3CA65' },
+    { name: 'Efectivo', amount: paymentTotals.cash, icon: <Banknote size={13} />, color: '#FBBF24' },
   ]
 
+  // Estado de selector de vista de gráfico Sandbox
+  const [chartView, setChartView] = useState<'flow' | 'networth'>('flow')
 
   return (
-    <div className="fade-in">
-      {/* Page Header */}
-      <div className="page-header">
-        <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Dashboard</span></div>
-        <h1 className="page-title">Panorama Financiero</h1>
+    <div className="fade-in sandbox-dashboard">
+      {/* ── TOP BANNER INSTITUCIONAL ── */}
+      <div className="sandbox-header-strip">
+        <div>
+          <div className="sandbox-subhead">AUREUS WEALTH ADVISOR · {formatPeriodLabel(currentPeriod).toUpperCase()}</div>
+          <h1 className="sandbox-title">Portfolio Overview</h1>
+        </div>
+        <div className="sandbox-header-actions">
+          <button
+            type="button"
+            className="sandbox-btn-outline"
+            onClick={() => onNavigateTab && onNavigateTab('chat-advisor')}
+          >
+            <Sparkles size={14} />
+            <span>Asesor IA</span>
+          </button>
+          <button
+            type="button"
+            className="sandbox-btn-gold"
+            onClick={() => onNavigateTab && onNavigateTab('expenses')}
+          >
+            <Plus size={14} />
+            <span>Registrar Movimiento</span>
+          </button>
+        </div>
       </div>
 
-      {/* Calendar Progress & End of Month Alert Banner */}
-      {monthProgress.isCurrentMonth && (
-        <div style={{
-          background: monthProgress.isMonthEndingSoon
-            ? 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(20,20,28,0.8) 100%)'
-            : 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(20,20,28,0.8) 100%)',
-          border: `1px solid ${monthProgress.isMonthEndingSoon ? 'rgba(239,68,68,0.3)' : 'rgba(201,168,76,0.25)'}`,
-          borderRadius: 14,
-          padding: '12px 18px',
-          marginBottom: 18,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 12,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: monthProgress.isMonthEndingSoon ? 'rgba(239,68,68,0.15)' : 'rgba(201,168,76,0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: monthProgress.isMonthEndingSoon ? '#F87171' : '#C9A84C',
-            }}>
-              {monthProgress.isMonthEndingSoon ? <AlertCircle size={16} /> : <Calendar size={16} />}
+      {/* ── AVISO DE CUMPLIMIENTO REGULATORIO IA (GLOBAL STANDARDS) ── */}
+      <div className="ai-compliance-banner">
+        <div className="ai-compliance-text">
+          <Shield size={14} className="text-gold" />
+          <span>
+            <strong>Marco Regulatorio IA:</strong> Cumplimiento normativo ético y de privacidad algorítmica (EU AI Act & Data Privacy).
+          </span>
+        </div>
+        <button
+          type="button"
+          className="ai-compliance-link"
+          onClick={() => setShowComplianceModal(true)}
+        >
+          <Info size={13} />
+          <span>Ver Normativas de Uso</span>
+        </button>
+      </div>
+
+      {/* ── CONEXIÓN EN VIVO CON TODOS LOS MÓDULOS ── */}
+      <div className="sandbox-modules-sync-strip">
+        <div className="sync-strip-header">
+          <Activity size={14} className="text-emerald" />
+          <span>Sincronización Total de Módulos · {formatPeriodLabel(currentPeriod)}</span>
+        </div>
+        <div className="sync-strip-pills">
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('incomes')} title="Ver Ingresos">
+            <span>Ingresos</span>
+            <strong>{pInc.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('expenses')} title="Ver Gastos">
+            <span>Gastos</span>
+            <strong>{pExp.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('credit')} title="Ver Tarjetas">
+            <span>Tarjetas</span>
+            <strong>{pCardTxs.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('cash')} title="Ver Efectivo">
+            <span>Efectivo</span>
+            <strong>{pCash.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('budgets')} title="Ver Presupuestos">
+            <span>Presupuestos</span>
+            <strong>{categoryBudgets.length}</strong>
+          </button>
+          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('chat-advisor')} title="Ir a Asesor IA">
+            <span>Asesor IA</span>
+            <strong style={{ color: '#34D399' }}>Activo</strong>
+          </button>
+        </div>
+      </div>
+
+      {/* ── 5-METRIC INSTITUTIONAL KPI STRIP (SANDBOX IMAGE 4) ── */}
+      <div className="sandbox-kpi-row">
+        <div className="sandbox-kpi-card gold-glow">
+          <div className="sandbox-kpi-header">
+            <span className="sandbox-kpi-label">Patrimonio Neto</span>
+            <span className={`sandbox-kpi-pill ${balDiff >= 0 ? 'pos' : 'neg'}`}>
+              {balDiff >= 0 ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+              {Math.abs(balDiff).toFixed(1)}%
+            </span>
+          </div>
+          <div className="sandbox-kpi-value">{formatCurrency(cumulative.totalCumulativeBalance)}</div>
+          <div className="sandbox-kpi-sub">
+            {cumulative.carriedOverBalance !== 0
+              ? `Arrastre: ${formatCurrency(cumulative.carriedOverBalance)}`
+              : 'Balance acumulado auditado'}
+          </div>
+        </div>
+
+        <div className="sandbox-kpi-card">
+          <div className="sandbox-kpi-header">
+            <span className="sandbox-kpi-label">Activos / Liquidez</span>
+            <span className="sandbox-kpi-pill pos">
+              <ArrowUpRight size={11} />
+              {incDiff >= 0 ? `+${incDiff.toFixed(1)}%` : `${incDiff.toFixed(1)}%`}
+            </span>
+          </div>
+          <div className="sandbox-kpi-value text-emerald">{formatCurrency(totalIn)}</div>
+          <div className="sandbox-kpi-sub">{pInc.length} entradas en {MONTH_SHORT_NAMES[(parseInt(currentPeriod.split('-')[1], 10) || 1) - 1]}</div>
+        </div>
+
+        <div className="sandbox-kpi-card">
+          <div className="sandbox-kpi-header">
+            <span className="sandbox-kpi-label">Pasivos / Tarjetas</span>
+            <span className={`sandbox-kpi-pill ${creditSummary.utilizationRate > 30 ? 'neg' : 'neutral'}`}>
+              {creditSummary.utilizationRate.toFixed(0)}% cupo
+            </span>
+          </div>
+          <div className="sandbox-kpi-value text-gold">{formatCurrency(creditSummary.totalDebt)}</div>
+          <div className="sandbox-kpi-sub">{creditCards.length} tarjetas asociadas</div>
+        </div>
+
+        <div className="sandbox-kpi-card">
+          <div className="sandbox-kpi-header">
+            <span className="sandbox-kpi-label">Inflows (Entradas)</span>
+            <span className="sandbox-kpi-pill pos">
+              <TrendingUp size={11} />
+              100%
+            </span>
+          </div>
+          <div className="sandbox-kpi-value text-emerald">{formatCurrency(totalIn)}</div>
+          <div className="sandbox-kpi-sub">Fijos: {formatCurrency(pInc.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0))}</div>
+        </div>
+
+        <div className="sandbox-kpi-card">
+          <div className="sandbox-kpi-header">
+            <span className="sandbox-kpi-label">Outflows (Salidas)</span>
+            <span className={`sandbox-kpi-pill ${expDiff <= 0 ? 'pos' : 'neg'}`}>
+              {expDiff >= 0 ? `+${expDiff.toFixed(1)}%` : `${expDiff.toFixed(1)}%`}
+            </span>
+          </div>
+          <div className="sandbox-kpi-value text-rose">{formatCurrency(totalExp)}</div>
+          <div className="sandbox-kpi-sub">Fijos: {formatCurrency(fixedExp)} · Var: {formatCurrency(varExp)}</div>
+        </div>
+      </div>
+
+      {/* ── DUAL HERO SHOWCASE CARDS (SANDBOX IMAGE 4 HERO) ── */}
+      <div className="sandbox-dual-hero">
+        <div className="sandbox-hero-card">
+          <div className="sandbox-hero-content">
+            <div className="sandbox-badge-gold">AUREUS GLOBAL · WEALTH CLIENT</div>
+            <h2 className="sandbox-hero-title">Gestión de Liquidez Institucional</h2>
+            <p className="sandbox-hero-desc">
+              Control integral multi-cuenta, tarjetas activas y supervisión de fondos con tasa de ahorro del {savingRate.toFixed(1)}%.
+            </p>
+            <div className="sandbox-hero-meta">
+              <span className="sandbox-meta-item">
+                <ShieldCheck size={14} className="text-emerald" /> Cuenta Protegida RLS
+              </span>
+              <span className="sandbox-meta-item">
+                <Calendar size={14} className="text-gold" /> Día {monthProgress.currentDay} de {monthProgress.totalDays} ({monthProgress.percentPassed}%)
+              </span>
             </div>
+          </div>
+          <div className="sandbox-card-mockup">
+            <div className="sandbox-metal-card">
+              <div className="metal-chip" />
+              <div className="metal-brand">AUREUS</div>
+              <div className="metal-digits">•••• •••• •••• 4821</div>
+              <div className="metal-footer">
+                <span>{capitalizedName}</span>
+                <span className="metal-gold-badge">SIGNATURE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="sandbox-hero-card strategy">
+          <div className="sandbox-hero-content">
+            <div className="sandbox-badge-sand">ESTRATEGIA PATRIMONIAL</div>
+            <h2 className="sandbox-hero-title">Rendimiento & Optimización</h2>
+            <div className="sandbox-strategy-metrics">
+              <div className="strategy-metric-item">
+                <div className="strat-label">Tasa de Ahorro</div>
+                <div className="strat-val">{savingRate.toFixed(1)}%</div>
+                <div className="strat-bar">
+                  <div className="strat-fill" style={{ width: `${Math.min(100, Math.max(0, savingRate))}%` }} />
+                </div>
+              </div>
+              <div className="strategy-metric-item">
+                <div className="strat-label">Compromiso Fijo</div>
+                <div className="strat-val">
+                  {totalIn > 0 ? ((fixedExp / totalIn) * 100).toFixed(1) : 0}%
+                </div>
+                <div className="strat-bar">
+                  <div className="strat-fill gold" style={{ width: `${Math.min(100, totalIn > 0 ? (fixedExp / totalIn) * 100 : 0)}%` }} />
+                </div>
+              </div>
+            </div>
+            <p className="sandbox-strategy-tip">
+              💡 {savingRate >= 20 ? 'Excelente capacidad de ahorro institucional.' : 'Se recomienda optimizar gastos variables para mantener tasa > 20%.'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MATRIX GRÁFICOS SANDBOX (IMAGE 4) ── */}
+      <div className="sandbox-grid-2">
+        {/* Gráfico 1: Assets : Liabilities Wave Stream */}
+        <div className="sandbox-panel">
+          <div className="sandbox-panel-header">
             <div>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#FFFFFF' }}>
-                {monthProgress.isMonthEndingSoon
-                  ? `⚡ ¡Cierre de Mes en Curso! Quedan solo ${monthProgress.daysRemaining} día${monthProgress.daysRemaining !== 1 ? 's' : ''} para finalizar el ciclo.`
-                  : `📅 Calendario Real: Día ${monthProgress.currentDay} de ${monthProgress.totalDays} (${monthProgress.percentPassed}% transcurrido).`}
-              </div>
-              <div style={{ fontSize: 11.5, color: '#888898', marginTop: 2 }}>
-                Quedan {monthProgress.daysRemaining} días calendario para cerrar este mes.
-                {creditCards.length > 0 && ` Recuerda revisar tus fechas de corte y límites de pago.`}
-              </div>
+              <div className="sandbox-panel-title">Inflows vs Outflows (Evolución)</div>
+              <div className="sandbox-panel-sub">Flujo de capital histórico consolidado</div>
+            </div>
+            <div className="sandbox-pills">
+              <button
+                type="button"
+                className={`sandbox-pill-btn ${chartView === 'flow' ? 'active' : ''}`}
+                onClick={() => setChartView('flow')}
+              >
+                Inflows/Outflows
+              </button>
+              <button
+                type="button"
+                className={`sandbox-pill-btn ${chartView === 'networth' ? 'active' : ''}`}
+                onClick={() => setChartView('networth')}
+              >
+                Patrimonio
+              </button>
             </div>
           </div>
 
-          {onNavigateTab && (
-            <button
-              type="button"
-              onClick={() => onNavigateTab('advisor')}
-              className="btn-primary"
-              style={{ padding: '6px 14px', fontSize: 11.5 }}
-            >
-              <Sparkles size={13} />
-              <span>Ver Asesor IA</span>
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* KPI Grid */}
-      <div className="kpi-grid">
-        {kpis.map(k => (
-          <div key={k.label} className={`kpi-card ${k.color}`}>
-            <div className="kpi-top">
-              <span className="kpi-label">{k.label}</span>
-              <span className="kpi-icon">{k.icon}</span>
-            </div>
-            <div className="kpi-value">{k.value}</div>
-            <div className="kpi-sub">{k.sub}</div>
-            {k.trend && (
-              <div className={`kpi-trend ${k.trendDir === 'up' ? 'trend-up' : 'trend-down'}`}>
-                {k.trendDir === 'up' ? '↑' : '↓'} {k.trend}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Charts */}
-      <div className="charts-grid">
-        <div className="chart-card">
-          <div className="chart-title">Ingresos vs Gastos Históricos</div>
-          <div className="chart-sub">Datos reales de los últimos 5 meses</div>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={barData} barSize={14} barGap={4}>
-              <XAxis dataKey="label" tick={{ fill: '#444454', fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis hide />
-              <Tooltip
-                contentStyle={{ background: '#16161E', border: '1px solid #2A2A38', borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: '#888898' }}
-                formatter={(v: unknown) => [formatCurrency(v as number), '']}
-              />
-              <Bar dataKey="ingresos" fill="#34D399" radius={[3, 3, 0, 0]} name="Ingresos" />
-              <Bar dataKey="gastos"   fill="#F87171" radius={[3, 3, 0, 0]} name="Gastos" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="chart-card">
-          <div className="chart-title">Distribución de Gastos</div>
-          <div className="chart-sub">Por categoría en este período</div>
-          {pieData.length > 0 ? (
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-              <ResponsiveContainer width={120} height={120}>
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={30} outerRadius={55} dataKey="value" strokeWidth={0}>
-                    {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
+          <div style={{ width: '100%', height: 230 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              {chartView === 'flow' ? (
+                <AreaChart data={waveData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="inflowGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#34D399" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#34D399" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="outflowGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#E09F67" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#E09F67" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
                   <Tooltip
-                    contentStyle={{ background: '#16161E', border: '1px solid #2A2A38', borderRadius: 8, fontSize: 12 }}
-                    formatter={(v: unknown) => [formatCurrency(v as number), '']}
+                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                    formatter={(val) => [formatCurrency(Number(val) || 0), '']}
                   />
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 120, overflowY: 'auto' }}>
-                {pieData.slice(0, 5).map(d => (
-                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
-                      <span style={{ color: '#888898' }}>{d.name}</span>
-                    </div>
-                    <span style={{ color: '#D0D0DC', fontFamily: 'monospace', fontWeight: 600, fontSize: 11 }}>
-                      {formatCurrency(d.value)}
-                    </span>
+                  <Area type="monotone" dataKey="inflows" stroke="#34D399" strokeWidth={2.5} fillOpacity={1} fill="url(#inflowGrad)" name="Inflows (Entradas)" />
+                  <Area type="monotone" dataKey="outflows" stroke="#E09F67" strokeWidth={2} fillOpacity={1} fill="url(#outflowGrad)" name="Outflows (Salidas)" />
+                </AreaChart>
+              ) : (
+                <AreaChart data={waveData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="patrimonioGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#C9A84C" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#C9A84C" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                  <Tooltip
+                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                    formatter={(val) => [formatCurrency(Number(val) || 0), '']}
+                  />
+                  <Area type="monotone" dataKey="netWorth" stroke="#C9A84C" strokeWidth={3} fillOpacity={1} fill="url(#patrimonioGrad)" name="Patrimonio Acumulado" />
+                </AreaChart>
+              )}
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Gráfico 2: Asset / Expense Allocation (Donut Sandbox Style) */}
+        <div className="sandbox-panel">
+          <div className="sandbox-panel-header">
+            <div>
+              <div className="sandbox-panel-title">Asset & Expense Allocation</div>
+              <div className="sandbox-panel-sub">Distribución categórica en {formatPeriodLabel(currentPeriod)}</div>
+            </div>
+          </div>
+
+          {pieData.length === 0 ? (
+            <div className="sandbox-empty">Sin egresos registrados para categorizar en este período</div>
+          ) : (
+            <div className="sandbox-allocation-body">
+              <div style={{ width: '50%', height: 210 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData} dataKey="value" cx="50%" cy="50%" innerRadius={52} outerRadius={80} paddingAngle={4}>
+                      {pieData.map((d, i) => (
+                        <Cell key={i} fill={d.color} stroke="#14141B" strokeWidth={2} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                      formatter={(val) => [formatCurrency(Number(val) || 0), '']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="sandbox-allocation-legend">
+                {pieData.map((d, i) => (
+                  <div key={i} className="sandbox-legend-row">
+                    <span className="legend-dot" style={{ background: d.color }} />
+                    <span className="legend-name">{d.name}</span>
+                    <span className="legend-val">{formatCurrency(d.value)}</span>
                   </div>
                 ))}
               </div>
             </div>
-          ) : (
-            <div className="empty-state"><p className="empty-text">Sin datos de gastos para graficar</p></div>
           )}
         </div>
       </div>
 
-      {/* Canales de Liquidez y Métodos de Pago Card (Mes) */}
-      <div className="liquidity-channels-card">
-        <div className="liquidity-channels-header">
-          <div className="liquidity-title-group">
-            <span className="pulse-indicator-dot" />
-            <div>
-              <div className="liquidity-card-title">Canales de Liquidez y Métodos de Pago (Mes)</div>
-              <div className="liquidity-card-sub">Monitoreo en tiempo real de salidas según vía de pago en {currentPeriod}</div>
-            </div>
-          </div>
-          <div className="liquidity-total-badge">
-            Total en canales: {formatCurrency(totalExp)}
-          </div>
+      {/* ── CANALES DE PAGO & LIQUIDEZ STRIP ── */}
+      <div className="sandbox-panel payment-channels">
+        <div className="sandbox-panel-title" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Activity size={15} className="text-gold" style={{ flexShrink: 0 }} />
+          <span>Canales de Liquidez & Métodos de Pago ({formatPeriodLabel(currentPeriod)})</span>
         </div>
-
-        {/* Multi-segment distribution bar */}
-        <div className="liquidity-progress-bar">
-          {totalExp > 0 ? (
-            channelData.map(ch => {
-              const pct = (ch.amount / totalExp) * 100
-              if (pct <= 0) return null
-              return (
-                <div
-                  key={ch.id}
-                  className="liquidity-bar-segment"
-                  style={{ width: `${pct}%`, backgroundColor: ch.color }}
-                  title={`${ch.label}: ${formatCurrency(ch.amount)} (${pct.toFixed(1)}%)`}
-                />
-              )
-            })
-          ) : (
-            <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)' }} />
-          )}
-        </div>
-
-        {/* Channels Grid */}
-        <div className="liquidity-channels-grid">
-          {channelData.map(ch => {
-            const pct = totalExp > 0 ? (ch.amount / totalExp) * 100 : 0
+        <div className="sandbox-payment-grid">
+          {paymentMethodsList.map((pm, i) => {
+            const pct = totalExp > 0 ? (pm.amount / totalExp) * 100 : 0
             return (
-              <div key={ch.id} className="liquidity-channel-item">
-                <div className="liquidity-channel-top">
-                  <span className="liquidity-channel-icon">{ch.icon}</span>
-                  <span className="liquidity-channel-pct" style={{ color: ch.color, backgroundColor: `${ch.color}15` }}>
-                    {pct.toFixed(1)}%
+              <div key={i} className="sandbox-payment-card">
+                <div className="pay-card-top">
+                  <span className="pay-card-name" style={{ color: pm.color }}>
+                    {pm.icon} {pm.name}
                   </span>
+                  <span className="pay-card-pct">{pct.toFixed(0)}%</span>
                 </div>
-                <div className="liquidity-channel-name">{ch.label}</div>
-                <div className="liquidity-channel-amount">{formatCurrency(ch.amount)}</div>
+                <div className="pay-card-amount">{formatCurrency(pm.amount)}</div>
+                <div className="pay-progress-bg">
+                  <div className="pay-progress-fill" style={{ width: `${pct}%`, background: pm.color }} />
+                </div>
               </div>
             )
           })}
         </div>
       </div>
 
-      {/* Recent Transactions */}
-      <div className="section-header">
-        <div className="section-label">ACTIVIDAD RECIENTE</div>
-        <div className="section-title">Últimos movimientos del período</div>
-      </div>
-      <div className="tx-list">
-        <div className="tx-header">
-          <span className="tx-title">Transacciones</span>
-          <span className="tx-count">{recentTx.length} movimientos</span>
+      {/* ── BOTTOM GRID: TRANSACTIONS + UNENCUMBERED LIQUIDITY (SANDBOX IMAGE 4) ── */}
+      <div className="sandbox-bottom-grid">
+        {/* Columna Izquierda: Tabla de Transacciones */}
+        <div className="sandbox-panel transactions-table-panel">
+          <div className="sandbox-panel-header">
+            <div>
+              <div className="sandbox-panel-title">Transactions · {formatPeriodLabel(currentPeriod)}</div>
+              <div className="sandbox-panel-sub">Movimientos certificados de capital en el período seleccionado</div>
+            </div>
+            {onNavigateTab && (
+              <button
+                type="button"
+                className="sandbox-btn-outline"
+                onClick={() => onNavigateTab('expenses')}
+              >
+                <span>Ver todos los movimientos</span>
+                <ChevronRight size={14} />
+              </button>
+            )}
+          </div>
+
+          {recentTx.length === 0 ? (
+            <div className="sandbox-empty">
+              No hay movimientos registrados en {formatPeriodLabel(currentPeriod)}.
+            </div>
+          ) : (
+            <div className="sandbox-table-wrapper">
+              <table className="sandbox-table">
+                <thead>
+                  <tr>
+                    <th>DATE</th>
+                    <th>ITEM / CONCEPTO</th>
+                    <th>TIPO</th>
+                    <th>TOTAL</th>
+                    <th style={{ textAlign: 'right' }}>ACCIONES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentTx.map((tx, idx) => {
+                    const isInc = tx.kind === 'income'
+                    return (
+                      <tr key={idx}>
+                        <td className="cell-date">{tx.date}</td>
+                        <td className="cell-item">
+                          <div className="item-title">{tx.description}</div>
+                        </td>
+                        <td>
+                          <span className={`sandbox-type-pill ${tx.typePillClass}`}>
+                            {tx.pillLabel}
+                          </span>
+                        </td>
+                        <td className={`cell-total ${isInc ? 'text-emerald' : 'text-rose'}`}>
+                          {isInc ? '+' : '-'}{formatCurrency(tx.amount)}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            className="table-action-chevron"
+                            onClick={() => onNavigateTab && onNavigateTab(tx.targetTab)}
+                            title={`Ir a ${tx.tag}`}
+                          >
+                            <ChevronRight size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-        {recentTx.length === 0 ? (
-          <div className="empty-state"><p className="empty-text">Sin movimientos para este período</p></div>
-        ) : recentTx.map(tx => (
-          <div key={tx.id} className="tx-row">
-            <div className="tx-icon"
-              style={{ background: tx.kind === 'income' ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)' }}>
-              {tx.kind === 'income' ? '↓' : '↑'}
-            </div>
-            <div className="tx-body">
-              <div className="tx-name">{tx.description}</div>
-              <div className="tx-meta">
-                <span className={`tx-badge ${tx.kind === 'income' ? 'badge-ingreso' : 'badge-variable'}`}>
-                  {tx.kind === 'income' ? 'Ingreso' : 'Gasto'}
-                </span>
-                <span className="tx-date">{tx.date}</span>
+
+        {/* Columna Derecha: Unencumbered Liquidity (Sandbox Image 4) */}
+        <div className="unencumbered-panel">
+          <div>
+            <div className="sandbox-panel-header" style={{ marginBottom: 4 }}>
+              <div>
+                <div className="sandbox-panel-title">Unencumbered Liquidity</div>
+                <div className="sandbox-panel-sub">Capital libre neto sin compromisos de deuda</div>
+              </div>
+              <div className="sandbox-pills">
+                <span className="sandbox-pill-btn active">5M</span>
               </div>
             </div>
-            <div className="tx-right">
-              <div className={`tx-amount ${tx.kind === 'income' ? 'amount-green' : 'amount-red'}`}>
-                {tx.kind === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+
+            <div className="unencumbered-stat-row">
+              <div className="unencumbered-val">{formatCurrency(unencumberedLiquidity)}</div>
+              <div className="unencumbered-sub">
+                {liquidityRatio.toFixed(0)}% libre
               </div>
+            </div>
+            <div style={{ fontSize: 11, color: '#888898', marginBottom: 12 }}>
+              Pasivos descontados: {formatCurrency(creditSummary.totalDebt)} en tarjetas
             </div>
           </div>
-        ))}
+
+          <div style={{ width: '100%', height: 190 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={liquidityTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="unencumberedGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#E09F67" stopOpacity={0.45} />
+                    <stop offset="95%" stopColor="#E09F67" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
+                <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                <Tooltip
+                  contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                  formatter={(val) => [formatCurrency(Number(val) || 0), 'Liquidez Libre']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="liquidez"
+                  stroke="#E09F67"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#unencumberedGrad)"
+                  name="Liquidez No Comprometida"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
+
+      {/* ── MODAL DE CUMPLIMIENTO Y NORMATIVAS GLOBALES DE IA (PORTAL VIEWPORT) ── */}
+      {showComplianceModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowComplianceModal(false)}>
+          <div className="modal-card" style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                <Shield size={20} className="text-gold" />
+                <span>Normativas de Inteligencia Artificial & Transparencia</span>
+              </h2>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setShowComplianceModal(false)}
+                aria-label="Cerrar modal"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 12.5, color: '#D0D0DC', lineHeight: 1.6 }}>
+              <div style={{ background: 'rgba(201, 168, 76, 0.08)', border: '1px solid rgba(201, 168, 76, 0.25)', borderRadius: 10, padding: 14 }}>
+                <strong style={{ color: '#F3CA65', display: 'block', marginBottom: 4 }}>
+                  Marco Regulatorio Internacional (EU AI Act & Global Digital Standards)
+                </strong>
+                <p style={{ margin: 0, fontSize: 12, color: '#D1D5DB' }}>
+                  El Asesor IA de AUREUS opera bajo los principios del Reglamento Europeo de Inteligencia Artificial (Reglamento UE 2024/1689), clasificado como sistema de propósito específico de <strong>riesgo limitado</strong> con obligaciones de transparencia algorítmica estricta.
+                </p>
+              </div>
+
+              <div>
+                <strong style={{ color: '#FFFFFF' }}>1. Privacidad y Soberanía de Datos</strong>
+                <p style={{ margin: '4px 0 0', color: '#9CA3AF' }}>
+                  Tus transacciones y estados financieros se procesan mediante Row Level Security (RLS) en memoria. La información nunca se utiliza para entrenar modelos LLM públicos ni se comparte con redes publicitarias de terceros.
+                </p>
+              </div>
+
+              <div>
+                <strong style={{ color: '#FFFFFF' }}>2. Exención de Asesoría Financiera Automatizada (Disclaimer)</strong>
+                <p style={{ margin: '4px 0 0', color: '#9CA3AF' }}>
+                  Los diagnósticos, presupuestos sugeridos y simulaciones matemáticas son herramientas educativas y de orientación presupuestaria personal. No constituyen asesoramiento de inversión regulada, intermediación de valores ni captación financiera.
+                </p>
+              </div>
+
+              <div>
+                <strong style={{ color: '#FFFFFF' }}>3. Supervisión Humana y Control Absoluto</strong>
+                <p style={{ margin: '4px 0 0', color: '#9CA3AF' }}>
+                  El Asesor IA jamás ejecuta pagos, transferencias o cargos automáticos en tus tarjetas. Cada decisión de registro, abono o eliminación permanece 100% bajo el control soberano del usuario.
+                </p>
+              </div>
+            </div>
+
+            {/* ── BOTONES DE ACCIÓN: DESCARGA DE NORMATIVA & TÉRMINOS Y CONDICIONES ── */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18, paddingTop: 14, borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <button
+                type="button"
+                className="sandbox-btn-outline"
+                style={{ flex: 1, minWidth: 220, justifyContent: 'center' }}
+                onClick={downloadAiRegulationDocument}
+              >
+                <Download size={14} />
+                <span>Bajar Normativa Global IA (.txt)</span>
+              </button>
+
+              {onOpenTerms && (
+                <button
+                  type="button"
+                  className="sandbox-btn-outline"
+                  style={{ flex: 1, minWidth: 220, justifyContent: 'center', borderColor: 'rgba(201, 168, 76, 0.3)', color: '#F1D97E' }}
+                  onClick={() => {
+                    setShowComplianceModal(false)
+                    onOpenTerms()
+                  }}
+                >
+                  <FileText size={14} />
+                  <span>Ver Términos y Condiciones</span>
+                </button>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ marginTop: 14, borderTop: 'none', paddingTop: 0 }}>
+              <button
+                type="button"
+                className="sandbox-btn-gold"
+                style={{ width: '100%', justifyContent: 'center' }}
+                onClick={() => setShowComplianceModal(false)}
+              >
+                Entendido y Aceptado
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
-
-
-
-

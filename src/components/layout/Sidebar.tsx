@@ -3,15 +3,24 @@ import {
   LayoutDashboard,
   ArrowDownCircle,
   ArrowUpCircle,
-  CreditCard as CardIcon,
+  CreditCard,
   Banknote,
+  Target,
   BrainCircuit,
   LogOut,
   Cloud,
   HardDrive,
-  X
+  ShieldCheck,
+  FileText,
+  Download,
+  X,
+  Bot,
+  Flame,
+  Sliders,
+  BookOpen,
 } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
+import { GithubIcon } from '../ui/GithubIcon'
 import type { TabType } from '../../types/navigation'
 
 interface SidebarProps {
@@ -19,42 +28,70 @@ interface SidebarProps {
   onTabChange: (tab: TabType) => void
   userEmail?: string | null
   isDemoMode?: boolean
+  isOpen?: boolean
+  onClose?: () => void
   onSignOut?: () => void
-  isMobileOpen?: boolean
-  onCloseMobile?: () => void
+  onOpenSecurity?: () => void
+  onOpenExport?: () => void
+  onOpenFireCalculator?: () => void
+  onOpenScenarioSimulator?: () => void
+  onOpenLicense?: () => void
+  onOpenTerms?: () => void
+  onOpenGuide?: () => void
+  isInstallable?: boolean
+  onInstallApp?: () => void
 }
 
 const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
-  { id: 'dashboard', icon: <LayoutDashboard size={15} />, label: 'Dashboard' },
-  { id: 'incomes', icon: <ArrowDownCircle size={15} />, label: 'Ingresos' },
-  { id: 'expenses', icon: <ArrowUpCircle size={15} />, label: 'Gastos' },
-  { id: 'credit', icon: <CardIcon size={15} />, label: 'Tarjetas' },
-  { id: 'cash', icon: <Banknote size={15} />, label: 'Efectivo' },
-  { id: 'advisor', icon: <BrainCircuit size={15} />, label: 'Asesor IA' },
+  { id: 'dashboard',    icon: <LayoutDashboard size={16} />, label: 'Dashboard'    },
+  { id: 'incomes',      icon: <ArrowDownCircle size={16} />, label: 'Ingresos'     },
+  { id: 'expenses',     icon: <ArrowUpCircle   size={16} />, label: 'Gastos'       },
+  { id: 'credit',       icon: <CreditCard      size={16} />, label: 'Tarjetas'     },
+  { id: 'cash',         icon: <Banknote        size={16} />, label: 'Efectivo'     },
+  { id: 'budgets',      icon: <Target          size={16} />, label: 'Presupuestos' },
+  { id: 'advisor',      icon: <BrainCircuit    size={16} />, label: 'Análisis IA'  },
+  { id: 'chat-advisor', icon: <Bot             size={16} />, label: 'Asistente IA' },
 ]
 
-export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignOut, isMobileOpen, onCloseMobile }: SidebarProps) {
+export function Sidebar({
+  activeTab,
+  onTabChange,
+  userEmail,
+  isDemoMode,
+  isOpen,
+  onClose,
+  onSignOut,
+  onOpenSecurity,
+  onOpenExport,
+  onOpenFireCalculator,
+  onOpenScenarioSimulator,
+  onOpenLicense,
+  onOpenTerms,
+  onOpenGuide,
+  isInstallable,
+  onInstallApp,
+}: SidebarProps) {
   const initials = userEmail
     ? userEmail.slice(0, 2).toUpperCase()
-    : 'JZ'
+    : 'JR'
 
   const displayName = userEmail
     ? userEmail.split('@')[0]
-    : 'José Zapata'
+    : 'Jesús Rosario'
 
   return (
     <>
       {/* Backdrop overlay for mobile drawer */}
-      {isMobileOpen && (
+      {isOpen && (
         <div
-          className="mobile-drawer-backdrop"
-          onClick={onCloseMobile}
-          aria-label="Cerrar menú"
+          className="sidebar-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
-      <nav className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
-        {/* Logo and Mobile Close Button */}
+      <nav className={`sidebar ${isOpen ? 'mobile-open' : ''}`} aria-label="Navegación principal">
+        {/* Logo & Mobile Close */}
         <div className="sidebar-logo">
           <div className="logo-mark">
             <AureusLogo size={34} />
@@ -64,74 +101,222 @@ export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignO
             </div>
           </div>
 
-          {onCloseMobile && (
+          {onClose && (
             <button
               type="button"
-              className="sidebar-close-btn"
-              onClick={onCloseMobile}
-              aria-label="Cerrar barra lateral"
+              className="sidebar-mobile-close"
+              onClick={onClose}
+              title="Cerrar menú"
+              aria-label="Cerrar menú"
             >
               <X size={18} />
             </button>
           )}
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Modules */}
         <div className="nav-section">
-          <div className="nav-label">Menu</div>
+          <div className="nav-label">Módulos</div>
           {NAV_ITEMS.map(item => (
             <button
               key={item.id}
               className={`nav-item${activeTab === item.id ? ' active' : ''}`}
               onClick={() => {
                 onTabChange(item.id)
-                onCloseMobile?.()
+                onClose?.()
               }}
             >
               <span className="nav-icon">{item.icon}</span>
-              {item.label}
+              <span>{item.label}</span>
             </button>
           ))}
         </div>
 
-      {/* Footer user & Sync Status */}
-      <div className="sidebar-footer" style={{ justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <div className="avatar">{initials}</div>
-          <div style={{ minWidth: 0 }}>
-            <div className="user-name" title={userEmail || displayName}>{displayName}</div>
-            <div className="user-status" style={{ color: isDemoMode ? '#FBBF24' : '#34D399' }}>
-              {isDemoMode ? <HardDrive size={10} /> : <Cloud size={10} />}
-              <span>{isDemoMode ? 'Modo Local' : 'Sync IRT'}</span>
-            </div>
-          </div>
+        {/* Herramientas Permanentes */}
+        <div className="nav-section">
+          <div className="nav-label">Herramientas</div>
+
+          {onOpenExport && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenExport()
+              }}
+            >
+              <span className="nav-icon" style={{ color: '#F3CA65' }}><FileText size={16} /></span>
+              <span>Exportar Reportes</span>
+            </button>
+          )}
+
+          {onOpenFireCalculator && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenFireCalculator()
+              }}
+            >
+              <span className="nav-icon" style={{ color: '#F59E0B' }}><Flame size={16} /></span>
+              <span>Calculadora FIRE</span>
+            </button>
+          )}
+
+          {onOpenScenarioSimulator && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenScenarioSimulator()
+              }}
+            >
+              <span className="nav-icon" style={{ color: '#F3CA65' }}><Sliders size={16} /></span>
+              <span>Simulador What-If</span>
+            </button>
+          )}
+
+          {isInstallable && onInstallApp && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onInstallApp()
+              }}
+              style={{ color: '#34D399' }}
+            >
+              <span className="nav-icon"><Download size={16} /></span>
+              <span>Instalar App</span>
+            </button>
+          )}
+
+          {onOpenGuide && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenGuide()
+              }}
+            >
+              <span className="nav-icon" style={{ color: '#F3CA65' }}><BookOpen size={16} /></span>
+              <span>Guía de Módulos</span>
+            </button>
+          )}
+
+          {onOpenLicense && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenLicense()
+              }}
+            >
+              <span className="nav-icon">📜</span>
+              <span>Licencia MIT</span>
+            </button>
+          )}
+
+          {onOpenTerms && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenTerms()
+              }}
+            >
+              <span className="nav-icon" style={{ color: '#60A5FA' }}><FileText size={16} /></span>
+              <span>Términos & Condiciones</span>
+            </button>
+          )}
+
+          <a
+            href="https://github.com/Rosdevdr/manejo_finanzas"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-item sidebar-github-link"
+            onClick={onClose}
+          >
+            <span className="nav-icon"><GithubIcon size={16} /></span>
+            <span>Repositorio GitHub</span>
+          </a>
         </div>
 
-        {onSignOut && (
-          <button
-            type="button"
-            onClick={onSignOut}
-            title="Cerrar Sesión"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#717182',
-              cursor: 'pointer',
-              padding: 6,
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'color 0.15s ease'
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#F87171')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#717182')}
-          >
-            <LogOut size={14} />
-          </button>
-        )}
-      </div>
-    </nav>
+        {/* Footer user & Sync Status */}
+        <div className="sidebar-footer" style={{ justifyContent: 'space-between', marginTop: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            <div className="avatar">{initials}</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="user-name" title={userEmail || displayName}>{displayName}</div>
+              <div className="user-status" style={{ color: isDemoMode ? '#FBBF24' : '#34D399' }}>
+                {isDemoMode ? <HardDrive size={10} /> : <Cloud size={10} />}
+                <span>{isDemoMode ? 'Modo Local' : 'Sync IRT'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {onOpenSecurity && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose?.()
+                  onOpenSecurity()
+                }}
+                title="Seguridad & 2FA"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#717182',
+                  cursor: 'pointer',
+                  padding: 6,
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'color 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#F3CA65')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#717182')}
+              >
+                <ShieldCheck size={15} />
+              </button>
+            )}
+
+            {onSignOut && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose?.()
+                  onSignOut()
+                }}
+                title="Cerrar Sesión"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#717182',
+                  cursor: 'pointer',
+                  padding: 6,
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'color 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#F87171')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#717182')}
+              >
+                <LogOut size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
     </>
   )
 }

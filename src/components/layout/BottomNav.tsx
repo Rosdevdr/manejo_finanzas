@@ -1,11 +1,4 @@
-import {
-  LayoutDashboard,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  CreditCard as CardIcon,
-  Banknote,
-  BrainCircuit,
-} from 'lucide-react'
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, CreditCard, Banknote, Target, BrainCircuit } from 'lucide-react'
 import type { TabType } from '../../types/navigation'
 
 interface BottomNavProps {
@@ -14,12 +7,13 @@ interface BottomNavProps {
 }
 
 const NAV_ITEMS: { id: TabType; icon: React.ComponentType<{ size?: number }>; label: string }[] = [
-  { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { id: 'dashboard', icon: LayoutDashboard, label: 'Panel'     },
   { id: 'incomes',   icon: ArrowDownCircle, label: 'Ingresos'  },
   { id: 'expenses',  icon: ArrowUpCircle,   label: 'Gastos'    },
-  { id: 'credit',    icon: CardIcon,        label: 'Tarjetas'  },
+  { id: 'credit',    icon: CreditCard,      label: 'Tarjetas'  },
   { id: 'cash',      icon: Banknote,        label: 'Efectivo'  },
-  { id: 'advisor',   icon: BrainCircuit,    label: 'Asesor'    },
+  { id: 'budgets',   icon: Target,          label: 'Metas'     },
+  { id: 'advisor',   icon: BrainCircuit,    label: 'Asesor IA' },
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
@@ -35,7 +29,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             onClick={() => onTabChange(id)}
             aria-current={isActive ? 'page' : undefined}
           >
-            <Icon size={20} />
+            <Icon size={17} />
             <span className="mobile-nav-label">{label}</span>
             {isActive && <span className="mobile-nav-indicator" />}
           </button>
