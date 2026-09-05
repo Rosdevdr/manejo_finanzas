@@ -252,6 +252,8 @@ export function useFinanceStorage(user?: User | null) {
 
   const isMountedRef = useRef(true)
   const channelRef = useRef<RealtimeChannel | null>(null)
+  const budgetsTableAvailableRef = useRef(true)
+  const goalsTableAvailableRef = useRef(true)
 
   // Limpiar claves legadas compartidas para evitar contaminación
   useEffect(() => {
@@ -288,14 +290,13 @@ export function useFinanceStorage(user?: User | null) {
     const userKeys = getStorageKeys(userId)
 
     try {
-      const [incRes, expRes, cashRes, cardRes, ctxRes, budRes, goalRes] = await Promise.all([
+      // 1. Consultar tablas principales existentes
+      const [incRes, expRes, cashRes, cardRes, ctxRes] = await Promise.all([
         supabase.from('incomes').select('*').eq('user_id', userId).order('date', { ascending: false }),
         supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }),
         supabase.from('cash_withdrawals').select('*').eq('user_id', userId).order('date', { ascending: false }),
         supabase.from('credit_cards').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
         supabase.from('credit_card_transactions').select('*').eq('user_id', userId).order('date', { ascending: false }),
-        supabase.from('category_budgets').select('*').eq('user_id', userId),
-        supabase.from('savings_goals').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
       ])
 
       if (!isMountedRef.current) return
@@ -374,31 +375,55 @@ export function useFinanceStorage(user?: User | null) {
         saveLocal(userKeys.creditTransactions, mapped)
       }
 
-      if (budRes.data) {
-        const mapped = budRes.data.map(row => ({
-          id: row.id,
-          period: row.period,
-          category: row.category as ExpenseCategory,
-          limitAmount: Number(row.limit_amount),
-        }))
-        setCategoryBudgetsState(mapped)
-        saveLocal(userKeys.categoryBudgets, mapped)
+      // 2. Presupuestos por categoría (solo consultar si la tabla existe en Supabase)
+      if (budgetsTableAvailableRef.current) {
+        try {
+          const budRes = await supabase.from('category_budgets').select('*').eq('user_id', userId)
+          if (budRes.error) {
+            if (budRes.status === 404 || budRes.error.code === '42P01' || budRes.error.message?.includes('relation') || budRes.error.message?.includes('not found')) {
+              budgetsTableAvailableRef.current = false
+            }
+          } else if (budRes.data) {
+            const mapped = budRes.data.map(row => ({
+              id: row.id,
+              period: row.period,
+              category: row.category as ExpenseCategory,
+              limitAmount: Number(row.limit_amount),
+            }))
+            setCategoryBudgetsState(mapped)
+            saveLocal(userKeys.categoryBudgets, mapped)
+          }
+        } catch {
+          budgetsTableAvailableRef.current = false
+        }
       }
 
-      if (goalRes.data) {
-        const mapped = goalRes.data.map(row => ({
-          id: row.id,
-          name: row.name,
-          targetAmount: Number(row.target_amount),
-          currentAmount: Number(row.current_amount || 0),
-          monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
-          targetDate: row.target_date ?? undefined,
-          category: row.category as GoalCategory,
-          color: row.color || '#34D399',
-          isCompleted: Boolean(row.is_completed),
-        }))
-        setSavingsGoalsState(mapped)
-        saveLocal(userKeys.savingsGoals, mapped)
+      // 3. Metas de ahorro (solo consultar si la tabla existe en Supabase)
+      if (goalsTableAvailableRef.current) {
+        try {
+          const goalRes = await supabase.from('savings_goals').select('*').eq('user_id', userId).order('created_at', { ascending: true })
+          if (goalRes.error) {
+            if (goalRes.status === 404 || goalRes.error.code === '42P01' || goalRes.error.message?.includes('relation') || goalRes.error.message?.includes('not found')) {
+              goalsTableAvailableRef.current = false
+            }
+          } else if (goalRes.data) {
+            const mapped = goalRes.data.map(row => ({
+              id: row.id,
+              name: row.name,
+              targetAmount: Number(row.target_amount),
+              currentAmount: Number(row.current_amount || 0),
+              monthlyContribution: row.monthly_contribution ? Number(row.monthly_contribution) : undefined,
+              targetDate: row.target_date ?? undefined,
+              category: row.category as GoalCategory,
+              color: row.color || '#34D399',
+              isCompleted: Boolean(row.is_completed),
+            }))
+            setSavingsGoalsState(mapped)
+            saveLocal(userKeys.savingsGoals, mapped)
+          }
+        } catch {
+          goalsTableAvailableRef.current = false
+        }
       }
     } catch (err) {
       console.error('Error al sincronizar datos con Supabase:', err)
@@ -492,7 +517,7 @@ export function useFinanceStorage(user?: User | null) {
     }
   }, [user, loadData])
 
-  // Heartbeat Polling: refetch de respaldo cada 4 segundos cuando la app está visible en pantalla
+  // Heartbeat Polling: refetch de respaldo suave cada 60 segundos solo si la app está visible en pantalla
   useEffect(() => {
     if (!user || !supabase || !isSupabaseConfigured) return
 
@@ -500,7 +525,7 @@ export function useFinanceStorage(user?: User | null) {
       if (document.visibilityState === 'visible') {
         void loadData()
       }
-    }, 4000)
+    }, 60000)
 
     return () => clearInterval(timer)
   }, [user, loadData])
@@ -903,16 +928,24 @@ export function useFinanceStorage(user?: User | null) {
         return next
       })
 
-      if (supabase && isSupabaseConfigured && user) {
-        await supabase.from('category_budgets').upsert({
-          id: existing.id,
-          user_id: user.id,
-          period,
-          category,
-          limit_amount: cleanLimit,
-        })
-        notifyMutation('category_budgets')
-        void loadData()
+      if (supabase && isSupabaseConfigured && user && budgetsTableAvailableRef.current) {
+        try {
+          const res = await supabase.from('category_budgets').upsert({
+            id: existing.id,
+            user_id: user.id,
+            period,
+            category,
+            limit_amount: cleanLimit,
+          })
+          if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+            budgetsTableAvailableRef.current = false
+          } else {
+            notifyMutation('category_budgets')
+            void loadData()
+          }
+        } catch {
+          budgetsTableAvailableRef.current = false
+        }
       }
     } else {
       const newId = `bud-${Date.now()}-${category}`
@@ -923,16 +956,24 @@ export function useFinanceStorage(user?: User | null) {
         return next
       })
 
-      if (supabase && isSupabaseConfigured && user) {
-        await supabase.from('category_budgets').insert({
-          id: newId,
-          user_id: user.id,
-          period,
-          category,
-          limit_amount: cleanLimit,
-        })
-        notifyMutation('category_budgets')
-        void loadData()
+      if (supabase && isSupabaseConfigured && user && budgetsTableAvailableRef.current) {
+        try {
+          const res = await supabase.from('category_budgets').insert({
+            id: newId,
+            user_id: user.id,
+            period,
+            category,
+            limit_amount: cleanLimit,
+          })
+          if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+            budgetsTableAvailableRef.current = false
+          } else {
+            notifyMutation('category_budgets')
+            void loadData()
+          }
+        } catch {
+          budgetsTableAvailableRef.current = false
+        }
       }
     }
     return { success: true }
@@ -953,17 +994,25 @@ export function useFinanceStorage(user?: User | null) {
     setCategoryBudgetsState(newBudgets)
     saveLocal(keys.categoryBudgets, newBudgets)
 
-    if (supabase && isSupabaseConfigured && user) {
-      const rows = newBudgets.map(b => ({
-        id: b.id,
-        user_id: user.id,
-        period: b.period,
-        category: b.category,
-        limit_amount: b.limitAmount,
-      }))
-      await supabase.from('category_budgets').upsert(rows)
-      notifyMutation('category_budgets')
-      void loadData()
+    if (supabase && isSupabaseConfigured && user && budgetsTableAvailableRef.current) {
+      try {
+        const rows = newBudgets.map(b => ({
+          id: b.id,
+          user_id: user.id,
+          period: b.period,
+          category: b.category,
+          limit_amount: b.limitAmount,
+        }))
+        const res = await supabase.from('category_budgets').upsert(rows)
+        if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+          budgetsTableAvailableRef.current = false
+        } else {
+          notifyMutation('category_budgets')
+          void loadData()
+        }
+      } catch {
+        budgetsTableAvailableRef.current = false
+      }
     }
     return { success: true }
   }
@@ -992,21 +1041,29 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('savings_goals').insert({
-        id: newId,
-        user_id: user.id,
-        name: cleanData.name,
-        target_amount: cleanData.targetAmount,
-        current_amount: cleanData.currentAmount,
-        monthly_contribution: cleanData.monthlyContribution ?? null,
-        target_date: g.targetDate ?? null,
-        category: cleanData.category,
-        color: g.color || '#34D399',
-        is_completed: item.isCompleted,
-      })
-      notifyMutation('savings_goals')
-      void loadData()
+    if (supabase && isSupabaseConfigured && user && goalsTableAvailableRef.current) {
+      try {
+        const res = await supabase.from('savings_goals').insert({
+          id: newId,
+          user_id: user.id,
+          name: cleanData.name,
+          target_amount: cleanData.targetAmount,
+          current_amount: cleanData.currentAmount,
+          monthly_contribution: cleanData.monthlyContribution ?? null,
+          target_date: g.targetDate ?? null,
+          category: cleanData.category,
+          color: g.color || '#34D399',
+          is_completed: item.isCompleted,
+        })
+        if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+          goalsTableAvailableRef.current = false
+        } else {
+          notifyMutation('savings_goals')
+          void loadData()
+        }
+      } catch {
+        goalsTableAvailableRef.current = false
+      }
     }
     return { success: true }
   }
@@ -1034,19 +1091,27 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('savings_goals').update({
-        name: cleanData.name,
-        target_amount: cleanData.targetAmount,
-        current_amount: cleanData.currentAmount,
-        monthly_contribution: cleanData.monthlyContribution ?? null,
-        target_date: updated.targetDate ?? null,
-        category: cleanData.category,
-        color: updated.color || '#34D399',
-        is_completed: isCompleted,
-      }).eq('id', updated.id).eq('user_id', user.id)
-      notifyMutation('savings_goals')
-      void loadData()
+    if (supabase && isSupabaseConfigured && user && goalsTableAvailableRef.current) {
+      try {
+        const res = await supabase.from('savings_goals').update({
+          name: cleanData.name,
+          target_amount: cleanData.targetAmount,
+          current_amount: cleanData.currentAmount,
+          monthly_contribution: cleanData.monthlyContribution ?? null,
+          target_date: updated.targetDate ?? null,
+          category: cleanData.category,
+          color: updated.color || '#34D399',
+          is_completed: isCompleted,
+        }).eq('id', updated.id).eq('user_id', user.id)
+        if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+          goalsTableAvailableRef.current = false
+        } else {
+          notifyMutation('savings_goals')
+          void loadData()
+        }
+      } catch {
+        goalsTableAvailableRef.current = false
+      }
     }
     return { success: true }
   }
@@ -1067,10 +1132,18 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('savings_goals').delete().eq('id', goalId).eq('user_id', user.id)
-      notifyMutation('savings_goals')
-      void loadData()
+    if (supabase && isSupabaseConfigured && user && goalsTableAvailableRef.current) {
+      try {
+        const res = await supabase.from('savings_goals').delete().eq('id', goalId).eq('user_id', user.id)
+        if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+          goalsTableAvailableRef.current = false
+        } else {
+          notifyMutation('savings_goals')
+          void loadData()
+        }
+      } catch {
+        goalsTableAvailableRef.current = false
+      }
     }
   }
 

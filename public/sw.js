@@ -32,11 +32,14 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
   const url = new URL(event.request.url)
-  // Ignorar WebSockets, Supabase, Vercel analytics o peticiones externas
+  // Ignorar peticiones de otros orígenes (Google Fonts, Supabase, Vercel, etc.)
+  if (url.origin !== self.location.origin) {
+    return
+  }
+
+  // Ignorar APIs dinámicas
   if (
-    url.origin.includes('supabase.co') ||
-    url.pathname.includes('/rest/v1') ||
-    url.pathname.includes('/realtime/v1') ||
+    url.pathname.includes('/api/') ||
     url.pathname.includes('_vercel')
   ) {
     return

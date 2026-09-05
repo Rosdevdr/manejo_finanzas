@@ -593,8 +593,10 @@ export function DashboardView({
                 type="button"
                 className="sandbox-btn-outline"
                 onClick={() => onNavigateTab('expenses')}
+                title="Ver todos los movimientos"
+                style={{ flexShrink: 0 }}
               >
-                <span>Ver todos los movimientos</span>
+                <span>Ver todos</span>
                 <ChevronRight size={14} />
               </button>
             )}

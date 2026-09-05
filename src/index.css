@@ -2557,15 +2557,22 @@ select.field-select {
 /* ── Sandbox Bottom Grid (Transactions + Unencumbered Liquidity) ── */
 .sandbox-bottom-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 16px;
   margin-top: 6px;
   margin-bottom: 24px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 @media (max-width: 1024px) {
   .sandbox-bottom-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 }
 
@@ -2577,6 +2584,11 @@ select.field-select {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .unencumbered-stat-row {
@@ -2713,26 +2725,40 @@ select.field-select {
 /* ── Transactions Institutional Table (Sandbox Image 4) ── */
 .transactions-table-panel {
   padding: 0 !important;
-  overflow: visible !important;
+  overflow: hidden !important;
   margin-top: 0;
   margin-bottom: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 14px;
 }
 
 .transactions-table-panel .sandbox-panel-header {
   padding: 18px 20px 14px;
   margin-bottom: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .sandbox-table-wrapper {
   overflow-x: auto;
-  overflow-y: visible;
-  overscroll-behavior-y: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: block;
 }
 
 .sandbox-table {
   width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -3091,6 +3117,130 @@ select.field-select {
   .sandbox-allocation-body {
     flex-direction: column;
   }
+}
+
+/* ── Mobile Layout Polish for Tables & Bottom Cards ── */
+@media (max-width: 768px) {
+  .sandbox-bottom-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .transactions-table-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .transactions-table-panel .sandbox-panel-header {
+    padding: 14px 14px 10px !important;
+    gap: 8px !important;
+  }
+
+  .transactions-table-panel .sandbox-panel-header .sandbox-panel-title {
+    font-size: 15px !important;
+  }
+
+  .transactions-table-panel .sandbox-panel-header .sandbox-btn-outline {
+    padding: 6px 12px !important;
+    font-size: 11.5px !important;
+  }
+
+  .unencumbered-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 16px 14px !important;
+    box-sizing: border-box !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+  }
+
+  .sandbox-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(201, 168, 76, 0.4) transparent;
+  }
+
+  .sandbox-table-wrapper::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .sandbox-table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.35);
+    border-radius: 4px;
+  }
+
+  .sandbox-table {
+    min-width: 530px !important;
+  }
+
+  .sandbox-table th,
+  .sandbox-table td {
+    padding: 10px 12px !important;
+  }
+}
+
+/* =========================================================================
+   AUREUS THEMATIC CANCEL & SECONDARY BUTTONS (PREMIUM DARK GOLD/GLASS)
+   ========================================================================= */
+
+.btn-secondary,
+.btn.btn-secondary,
+.sandbox-btn-cancel,
+.modal-btn-cancel,
+.edit-cancel-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  background: rgba(22, 22, 30, 0.85) !important;
+  border: 1px solid rgba(201, 168, 76, 0.28) !important;
+  color: #D1D1DE !important;
+  font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  text-decoration: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  outline: none !important;
+  white-space: nowrap !important;
+}
+
+.btn-secondary:hover,
+.btn.btn-secondary:hover,
+.sandbox-btn-cancel:hover,
+.modal-btn-cancel:hover,
+.edit-cancel-btn:hover {
+  background: rgba(201, 168, 76, 0.12) !important;
+  border-color: rgba(201, 168, 76, 0.55) !important;
+  color: #F3CA65 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(201, 168, 76, 0.15) !important;
+}
+
+.btn-secondary:active,
+.btn.btn-secondary:active,
+.sandbox-btn-cancel:active,
+.modal-btn-cancel:active,
+.edit-cancel-btn:active {
+  transform: scale(0.97) !important;
+  background: rgba(201, 168, 76, 0.2) !important;
 }
 
 /* =========================================================================
