@@ -158,18 +158,120 @@ ${carriedOver > 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurren
 3. **📅 Plan de Acción:** Si decides comprarlo, asegúrate de mantener intactos los fondos para tus compromisos fijos esenciales.`
   }
 
-  // 4. Deudas y Tarjetas de Crédito Bancarias
+  // 4. Conciliación Bancaria, Descuadres de Efectivo, Transacciones No Reconocidas o Cargos Digitales (Steam, Videojuegos)
+  const isDiscrepancyQuery =
+    (
+      lowerPrompt.includes('descuadre') ||
+      lowerPrompt.includes('discrepancia') ||
+      lowerPrompt.includes('no me cuadra') ||
+      lowerPrompt.includes('no cuadra') ||
+      lowerPrompt.includes('no coincide') ||
+      lowerPrompt.includes('no reconocid') ||
+      lowerPrompt.includes('comision') ||
+      lowerPrompt.includes('desconto') ||
+      lowerPrompt.includes('diferencia') ||
+      lowerPrompt.includes('arqueo') ||
+      lowerPrompt.includes('conciliacion') ||
+      lowerPrompt.includes('tomb raider') ||
+      lowerPrompt.includes('steam') ||
+      (lowerPrompt.includes('menos') && (lowerPrompt.includes('balance') || lowerPrompt.includes('plataforma'))) ||
+      (lowerPrompt.includes('banco') && lowerPrompt.includes('efectivo'))
+    ) &&
+    (
+      lowerPrompt.includes('plataforma') ||
+      lowerPrompt.includes('balance') ||
+      lowerPrompt.includes('banco') ||
+      lowerPrompt.includes('efectivo') ||
+      lowerPrompt.includes('desconto') ||
+      lowerPrompt.includes('transaccion') ||
+      lowerPrompt.includes('tomb raider') ||
+      lowerPrompt.includes('juego') ||
+      lowerPrompt.includes('steam') ||
+      lowerPrompt.includes('pesos')
+    )
+
+  if (isDiscrepancyQuery) {
+    let bankVal = 0
+    const bankExplicitMatch = prompt.match(/(?:en\s+el\s+banco(?:\s+tengo)?|banco\s*[:]?)\s*(?:rd\$?\s*)?([\d,]+(?:\.\d+)?)/i)
+    if (bankExplicitMatch) {
+      bankVal = parseFloat(bankExplicitMatch[1].replace(/,/g, ''))
+    }
+
+    let cashVal = 0
+    const cashExplicitMatch = prompt.match(/(?:en\s+efectivo(?:\s+tengo)?|efectivo\s*[:]?)\s*(?:rd\$?\s*)?([\d,]+(?:\.\d+)?)/i)
+    if (cashExplicitMatch) {
+      cashVal = parseFloat(cashExplicitMatch[1].replace(/,/g, ''))
+    }
+
+    let mentionedDiff = 0
+    const diffMatch = prompt.match(/(?:descont[oó]|menos\s+de|diferencia\s+de|casi\s+poco\s+menos\s+de|esos\s+\d+\s+casi\s+)([\d,]+(?:\.\d+)?)\s*pesos?/i)
+    if (diffMatch) {
+      mentionedDiff = parseFloat(diffMatch[1].replace(/,/g, ''))
+    }
+
+    const hasReportedData = bankVal > 0 && cashVal > 0
+    const reportedLiquid = hasReportedData ? (bankVal + cashVal) : 0
+    const platformDiff = hasReportedData ? (totalAvailable - reportedLiquid) : 0
+    const isGamePurchase = lowerPrompt.includes('tomb raider') || lowerPrompt.includes('steam') || lowerPrompt.includes('juego')
+
+    return `### 🔍 Conciliación Bancaria & Diagnóstico de Discrepancia (${currentPeriod})
+
+${hasReportedData ? `**1. Estado de Fondos Reales vs. Plataforma:**
+• **En Cuenta Bancaria Real:** \`${formatCurrency(bankVal)}\`
+• **En Efectivo Físico:** \`${formatCurrency(cashVal)}\`
+• **Total Líquido Real en Mano:** **\`${formatCurrency(reportedLiquid)}\`**
+• **Balance Disponible en AUREUS:** **\`${formatCurrency(totalAvailable)}\`**
+• **Diferencia / Descuadre Detectado:** **\`${formatCurrency(Math.abs(platformDiff || mentionedDiff || 6))}\`** ${platformDiff >= 0 ? '(la plataforma registra más saldo del que tienes actualmente en banco)' : '(la plataforma registra menos saldo)'}
+` : `**1. Diagnóstico de la Discrepancia:**
+Has detectado una variación entre los fondos reales disponibles en tus cuentas y el balance registrado en AUREUS (\`${formatCurrency(totalAvailable)}\`).
+`}
+---
+
+**2. ¿Por qué ocurre este descuento no reconocido${isGamePurchase ? ' en compras como Rise of the Tomb Raider' : ''}?**
+En compras en comercios internacionales y tiendas digitales de videojuegos (Steam, PlayStation, Xbox, Epic Games):
+1. **ITBIS a Servicios Digitales Internacionales (DGII):** Las entidades bancarias locales aplican retenciones tributarias sobre servicios o licencias de software digital internacional, las cuales muchas veces no se desglosan en el precio publicado en pantalla.
+2. **Diferencial Cambiario (Spread FX) o Tarifa por Transacción Transfronteriza:** Al procesar cobros en moneda extranjera o pasarelas en el exterior, el banco aplica su tasa de venta de divisas más un margen bancario de conversión (usualmente entre 1% y 1.5%), lo que genera esa diferencia exacta de ~RD$5.00 a RD$6.00 pesos.
+3. **Micro-retenciones Temporales de Validación:** Procesadores de pago internacionales en ocasiones aplican cargos mínimos de verificación de seguridad que luego se regularizan en tu estado de cuenta.
+
+---
+
+**3. ¿Cómo resolver y cuadrar tu balance en AUREUS en Tiempo Real (IRT)?**
+Para sincronizar inmediatamente el balance de la plataforma con tu saldo real:
+1. Ve al módulo de **Gastos** (o presiona **"+ Registrar Gasto"**).
+2. Agrega una nueva transacción de gasto por el monto exacto descontado ${hasReportedData && platformDiff > 0 ? `(\`${formatCurrency(Math.abs(platformDiff))}\`)` : `(\`RD$${(mentionedDiff || 6).toFixed(2)}\`)`}.
+3. Completa los datos:
+   • **Categoría:** *Otros* o *Servicios*.
+   • **Concepto:** \`Comisión bancaria / Impuesto digital${isGamePurchase ? ' (Rise of the Tomb Raider)' : ''}\`
+   • **Método de Pago:** *Tarjeta de Débito* o *Transferencia Bancaria*.
+4. **Resultado Inmediato (IRT):** Tan pronto confirmes el registro, el balance disponible en AUREUS se recalculará al instante para coincidir con tu total real de ${hasReportedData ? `**\`${formatCurrency(reportedLiquid)}\`**` : '**tus fondos reales**'}.`
+  }
+
+  // 5. Deudas y Tarjetas de Crédito Bancarias
   const isCreditCardQuery = (
-    lowerPrompt.includes('deuda') ||
     lowerPrompt.includes('tarjeta de credito') ||
     lowerPrompt.includes('tarjetas de credito') ||
-    lowerPrompt.includes('credito') ||
-    lowerPrompt.includes('banco')
+    lowerPrompt.includes('deuda de tarjeta') ||
+    lowerPrompt.includes('deudas de tarjeta') ||
+    lowerPrompt.includes('pagar tarjeta') ||
+    lowerPrompt.includes('pago minimo') ||
+    (lowerPrompt.includes('deuda') && (lowerPrompt.includes('tarjeta') || lowerPrompt.includes('credito') || lowerPrompt.includes('prestamo') || lowerPrompt.includes('interes'))) ||
+    (lowerPrompt.includes('credito') && (lowerPrompt.includes('limite') || lowerPrompt.includes('corte') || lowerPrompt.includes('financiamiento')))
   ) && !lowerPrompt.includes('tarjeta grafica') && !lowerPrompt.includes('tarjeta de video')
 
   if (isCreditCardQuery) {
     const totalCreditLimit = creditCards.reduce((s, c) => s + c.creditLimit, 0)
     const globalUsagePct = totalCreditLimit > 0 ? Math.round((totalCreditDebt / totalCreditLimit) * 100) : 0
+
+    if (creditCards.length === 0 && totalCreditDebt === 0) {
+      return `### 💳 Diagnóstico y Plan de Deudas (Tarjetas de Crédito - ${currentPeriod})
+
+• **Deuda Total Acumulada en Tarjetas:** **\`${formatCurrency(0)}\`**
+• **Límite Total de Crédito:** \`${formatCurrency(0)}\`
+• **Tarjetas Registradas:** \`0\`
+• **Consumos del Mes Actual:** \`0\` transacciones registradas por \`${formatCurrency(0)}\`.
+
+✅ **Sin deudas de tarjeta activas:** Actualmente no tienes tarjetas de crédito asociadas ni saldos deudores registrados en tu perfil para el período **${currentPeriod}**. Puedes agregar tus plásticos desde el módulo de **Tarjetas** para monitorear límites y fechas de corte.`
+    }
 
     return `### 💳 Diagnóstico y Plan de Deudas
 

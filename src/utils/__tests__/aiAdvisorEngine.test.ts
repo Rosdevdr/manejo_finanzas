@@ -73,4 +73,49 @@ describe('aiAdvisorEngine', () => {
     const res = generateAiFinancialResponse('Analiza mi salud financiera general', emptySnapshot)
     expect(res).toContain('Score de Salud Financiera')
   })
+
+  it('generates accurate bank reconciliation and digital purchase discrepancy analysis for user Tomb Raider query', () => {
+    const userPrompt = 'Me compré el Rise Of The Tomb Raider y el banco me descontó casi poco menos de 6 pesos en transacciones no reconocidas. En el banco tengo 4878.29 y en efectivo 1250, dando esos 5 casi 6 pesos menos con el balance disponible en la plataforma.'
+    const res = generateAiFinancialResponse(userPrompt, emptySnapshot)
+    expect(res).toContain('Conciliación Bancaria & Diagnóstico de Discrepancia')
+    expect(res).toContain('RD$4,878.29')
+    expect(res).toContain('RD$1,250.00')
+    expect(res).toContain('RD$6,128.29')
+    expect(res).toContain('Rise of the Tomb Raider')
+    expect(res).toContain('ITBIS a Servicios Digitales Internacionales')
+    expect(res).toContain('Diferencial Cambiario (Spread FX)')
+    expect(res).not.toContain('Diagnóstico y Plan de Deudas')
+    expect(res).not.toContain('Método Avalancha')
+  })
+
+  it('generates zero-debt credit card message when no cards are registered', () => {
+    const res = generateAiFinancialResponse('¿Cuál es el estado de mi deuda de tarjeta de credito?', emptySnapshot)
+    expect(res).toContain('Diagnóstico y Plan de Deudas (Tarjetas de Crédito')
+    expect(res).toContain('Sin deudas de tarjeta activas')
+    expect(res).not.toContain('Método Avalancha')
+  })
+
+  it('generates avalanche debt strategy when credit cards with debt are present', () => {
+    const snapshotWithDebt = {
+      ...emptySnapshot,
+      creditCards: [
+        {
+          id: 'card-1',
+          name: 'Visa Gold',
+          bank: 'Banco Popular',
+          lastFourDigits: '1234',
+          creditLimit: 50000,
+          currentBalance: 15000,
+          cutoffDay: 15,
+          paymentDueDay: 5,
+          interestRate: 28,
+          color: 'gold' as const,
+        },
+      ],
+    }
+    const res = generateAiFinancialResponse('¿Cómo liquido mis deudas de tarjeta de crédito?', snapshotWithDebt)
+    expect(res).toContain('Diagnóstico y Plan de Deudas')
+    expect(res).toContain('Método Avalancha')
+  })
 })
+
