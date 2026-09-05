@@ -247,12 +247,12 @@ export function useFinanceStorage(user?: User | null) {
     loadData()
 
 
-    // Suscripción Realtime vía WebSockets (IRT)
+    // Suscripción Realtime vía WebSockets (IRT) con aislamiento estricto por user_id
     const channel = supabase
       .channel(`realtime-finance-${userId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'incomes' },
+        { event: '*', schema: 'public', table: 'incomes', filter: `user_id=eq.${userId}` },
         (payload) => {
           if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
             const deletedId = (payload.old as { id: string }).id
@@ -264,7 +264,7 @@ export function useFinanceStorage(user?: User | null) {
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'expenses' },
+        { event: '*', schema: 'public', table: 'expenses', filter: `user_id=eq.${userId}` },
         (payload) => {
           if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
             const deletedId = (payload.old as { id: string }).id
@@ -276,7 +276,7 @@ export function useFinanceStorage(user?: User | null) {
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'cash_withdrawals' },
+        { event: '*', schema: 'public', table: 'cash_withdrawals', filter: `user_id=eq.${userId}` },
         (payload) => {
           if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
             const deletedId = (payload.old as { id: string }).id
@@ -288,7 +288,7 @@ export function useFinanceStorage(user?: User | null) {
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'credit_cards' },
+        { event: '*', schema: 'public', table: 'credit_cards', filter: `user_id=eq.${userId}` },
         (payload) => {
           if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
             const deletedId = (payload.old as { id: string }).id
@@ -300,7 +300,7 @@ export function useFinanceStorage(user?: User | null) {
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'credit_card_transactions' },
+        { event: '*', schema: 'public', table: 'credit_card_transactions', filter: `user_id=eq.${userId}` },
         (payload) => {
           if (payload.eventType === 'DELETE' && payload.old && (payload.old as { id?: string }).id) {
             const deletedId = (payload.old as { id: string }).id
@@ -365,7 +365,7 @@ export function useFinanceStorage(user?: User | null) {
         type: updated.type,
         date: updated.date,
         period: updated.period,
-      }).eq('id', updated.id)
+      }).eq('id', updated.id).eq('user_id', user.id)
     }
   }
 
@@ -373,7 +373,7 @@ export function useFinanceStorage(user?: User | null) {
     setIncomesState(prev => prev.filter(i => i.id !== id))
 
     if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('incomes').delete().eq('id', id)
+      await supabase.from('incomes').delete().eq('id', id).eq('user_id', user.id)
     }
   }
 
@@ -415,7 +415,7 @@ export function useFinanceStorage(user?: User | null) {
         payment_method: updated.paymentMethod,
         date: updated.date,
         period: updated.period,
-      }).eq('id', updated.id)
+      }).eq('id', updated.id).eq('user_id', user.id)
     }
   }
 
@@ -423,7 +423,7 @@ export function useFinanceStorage(user?: User | null) {
     setExpensesState(prev => prev.filter(e => e.id !== id))
 
     if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('expenses').delete().eq('id', id)
+      await supabase.from('expenses').delete().eq('id', id).eq('user_id', user.id)
     }
   }
 
@@ -452,7 +452,7 @@ export function useFinanceStorage(user?: User | null) {
     setCashState(prev => prev.filter(c => c.id !== id))
 
     if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('cash_withdrawals').delete().eq('id', id)
+      await supabase.from('cash_withdrawals').delete().eq('id', id).eq('user_id', user.id)
     }
   }
 
@@ -521,7 +521,7 @@ export function useFinanceStorage(user?: User | null) {
         payment_due_day: cleanCard.paymentDueDay,
         interest_rate: updated.interestRate ?? null,
         color: updated.color,
-      }).eq('id', updated.id)
+      }).eq('id', updated.id).eq('user_id', user.id)
     }
   }
 
@@ -530,8 +530,8 @@ export function useFinanceStorage(user?: User | null) {
     setCreditTransactionsState(prev => prev.filter(t => t.cardId !== id))
 
     if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('credit_cards').delete().eq('id', id)
-      await supabase.from('credit_card_transactions').delete().eq('card_id', id)
+      await supabase.from('credit_cards').delete().eq('id', id).eq('user_id', user.id)
+      await supabase.from('credit_card_transactions').delete().eq('card_id', id).eq('user_id', user.id)
     }
   }
 
@@ -577,7 +577,7 @@ export function useFinanceStorage(user?: User | null) {
         installments: updated.installments,
         current_installment: updated.currentInstallment,
         is_paid: updated.isPaid,
-      }).eq('id', updated.id)
+      }).eq('id', updated.id).eq('user_id', user.id)
     }
   }
 
@@ -585,7 +585,7 @@ export function useFinanceStorage(user?: User | null) {
     setCreditTransactionsState(prev => prev.filter(t => t.id !== id))
 
     if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('credit_card_transactions').delete().eq('id', id)
+      await supabase.from('credit_card_transactions').delete().eq('id', id).eq('user_id', user.id)
     }
   }
 

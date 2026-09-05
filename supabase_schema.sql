@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS public.credit_cards (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   bank TEXT NOT NULL,
-  last_four_digits VARCHAR(4) NOT NULL DEFAULT '0000',
+  last_four_digits VARCHAR(4) NOT NULL DEFAULT '0000' CHECK (last_four_digits ~ '^[0-9]{4}$'),
   credit_limit NUMERIC(12, 2) NOT NULL CHECK (credit_limit > 0),
   cutoff_day INTEGER NOT NULL CHECK (cutoff_day BETWEEN 1 AND 31),
   payment_due_day INTEGER NOT NULL CHECK (payment_due_day BETWEEN 1 AND 31),
@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS public.credit_card_transactions (
 -- ==============================================================================
 -- 🔒 POLÍTICAS DE SEGURIDAD (Row Level Security - RLS)
 -- Cada usuario solo puede ver, insertar, actualizar y borrar sus propios datos
+-- Se incluye WITH CHECK en UPDATE para prevenir escalamiento y reasignación de filas
 -- ==============================================================================
 
 ALTER TABLE public.incomes ENABLE ROW LEVEL SECURITY;
@@ -89,7 +90,7 @@ CREATE POLICY "Users can view their own incomes" ON public.incomes
 CREATE POLICY "Users can insert their own incomes" ON public.incomes
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own incomes" ON public.incomes
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own incomes" ON public.incomes
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -99,7 +100,7 @@ CREATE POLICY "Users can view their own expenses" ON public.expenses
 CREATE POLICY "Users can insert their own expenses" ON public.expenses
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own expenses" ON public.expenses
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own expenses" ON public.expenses
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -109,17 +110,17 @@ CREATE POLICY "Users can view their own cash withdrawals" ON public.cash_withdra
 CREATE POLICY "Users can insert their own cash withdrawals" ON public.cash_withdrawals
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own cash withdrawals" ON public.cash_withdrawals
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own cash withdrawals" ON public.cash_withdrawals
   FOR DELETE USING (auth.uid() = user_id);
 
--- Políticas para Credit Cards
+-- Políticas para Credit Cards (Protección PCI-DSS & Privacidad Bancaria)
 CREATE POLICY "Users can view their own credit cards" ON public.credit_cards
   FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert their own credit cards" ON public.credit_cards
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own credit cards" ON public.credit_cards
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own credit cards" ON public.credit_cards
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -129,9 +130,35 @@ CREATE POLICY "Users can view their own card transactions" ON public.credit_card
 CREATE POLICY "Users can insert their own card transactions" ON public.credit_card_transactions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own card transactions" ON public.credit_card_transactions
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own card transactions" ON public.credit_card_transactions
   FOR DELETE USING (auth.uid() = user_id);
+
+-- ==============================================================================
+-- 🚀 ÍNDICES DE RENDIMIENTO Y AISLAMIENTO DE CONSULTAS
+-- ==============================================================================
+CREATE INDEX IF NOT EXISTS idx_incomes_user_period ON public.incomes(user_id, period);
+CREATE INDEX IF NOT EXISTS idx_expenses_user_period ON public.expenses(user_id, period);
+CREATE INDEX IF NOT EXISTS idx_cash_user_period ON public.cash_withdrawals(user_id, period);
+CREATE INDEX IF NOT EXISTS idx_credit_cards_user ON public.credit_cards(user_id);
+CREATE INDEX IF NOT EXISTS idx_credit_tx_user_card ON public.credit_card_transactions(user_id, card_id, is_paid);
+
+-- ==============================================================================
+-- 🛡️ TABLA DE AUDITORÍA DE SEGURIDAD (Audit Trail)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  action TEXT NOT NULL,
+  table_name TEXT NOT NULL,
+  record_id TEXT,
+  details JSONB,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view their own audit logs" ON public.audit_logs
+  FOR SELECT USING (auth.uid() = user_id);
 
 -- ==============================================================================
 -- ⚡ SINCRONIZACIÓN EN TIEMPO REAL (Realtime Publications)
@@ -148,3 +175,4 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.cash_withdrawals;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.credit_cards;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.credit_card_transactions;
+

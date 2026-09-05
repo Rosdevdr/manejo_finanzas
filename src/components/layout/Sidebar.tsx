@@ -8,7 +8,8 @@ import {
   BrainCircuit,
   LogOut,
   Cloud,
-  HardDrive
+  HardDrive,
+  X
 } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import type { TabType } from '../../types/navigation'
@@ -19,6 +20,8 @@ interface SidebarProps {
   userEmail?: string | null
   isDemoMode?: boolean
   onSignOut?: () => void
+  isMobileOpen?: boolean
+  onCloseMobile?: () => void
 }
 
 const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
@@ -30,7 +33,7 @@ const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
   { id: 'advisor', icon: <BrainCircuit size={15} />, label: 'Asesor IA' },
 ]
 
-export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignOut }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignOut, isMobileOpen, onCloseMobile }: SidebarProps) {
   const initials = userEmail
     ? userEmail.slice(0, 2).toUpperCase()
     : 'JZ'
@@ -40,32 +43,56 @@ export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignO
     : 'José Zapata'
 
   return (
-    <nav className="sidebar">
-      {/* Logo */}
-      <div className="sidebar-logo">
-        <div className="logo-mark">
-          <AureusLogo size={34} />
-          <div>
-            <div className="logo-name">AUREUS</div>
-            <div className="logo-sub">WEALTH ADVISOR</div>
-          </div>
-        </div>
-      </div>
+    <>
+      {/* Backdrop overlay for mobile drawer */}
+      {isMobileOpen && (
+        <div
+          className="mobile-drawer-backdrop"
+          onClick={onCloseMobile}
+          aria-label="Cerrar menú"
+        />
+      )}
 
-      {/* Navigation */}
-      <div className="nav-section">
-        <div className="nav-label">Menu</div>
-        {NAV_ITEMS.map(item => (
-          <button
-            key={item.id}
-            className={`nav-item${activeTab === item.id ? ' active' : ''}`}
-            onClick={() => onTabChange(item.id)}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            {item.label}
-          </button>
-        ))}
-      </div>
+      <nav className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
+        {/* Logo and Mobile Close Button */}
+        <div className="sidebar-logo">
+          <div className="logo-mark">
+            <AureusLogo size={34} />
+            <div>
+              <div className="logo-name">AUREUS</div>
+              <div className="logo-sub">WEALTH ADVISOR</div>
+            </div>
+          </div>
+
+          {onCloseMobile && (
+            <button
+              type="button"
+              className="sidebar-close-btn"
+              onClick={onCloseMobile}
+              aria-label="Cerrar barra lateral"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <div className="nav-section">
+          <div className="nav-label">Menu</div>
+          {NAV_ITEMS.map(item => (
+            <button
+              key={item.id}
+              className={`nav-item${activeTab === item.id ? ' active' : ''}`}
+              onClick={() => {
+                onTabChange(item.id)
+                onCloseMobile?.()
+              }}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </div>
 
       {/* Footer user & Sync Status */}
       <div className="sidebar-footer" style={{ justifyContent: 'space-between' }}>
@@ -105,5 +132,6 @@ export function Sidebar({ activeTab, onTabChange, userEmail, isDemoMode, onSignO
         )}
       </div>
     </nav>
+    </>
   )
 }

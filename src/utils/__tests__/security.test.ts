@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { sanitizeString, sanitizeAmount, isValidPeriod } from '../security'
+import { sanitizeString, sanitizeAmount, isValidPeriod, isValidCardLastFour, sanitizeCardLastFour } from '../security'
 import { checkRateLimit, recordFailedAttempt, resetRateLimit } from '../rateLimiter'
 
 describe('Security - Input Sanitization', () => {
@@ -30,6 +30,20 @@ describe('Security - Input Sanitization', () => {
     expect(isValidPeriod('2026-08')).toBe(true)
     expect(isValidPeriod('2026-13')).toBe(false)
     expect(isValidPeriod('invalid')).toBe(false)
+  })
+
+  it('validates and sanitizes credit card last four digits securely (PCI-DSS)', () => {
+    expect(isValidCardLastFour('4521')).toBe(true)
+    expect(isValidCardLastFour('0000')).toBe(true)
+    expect(isValidCardLastFour('452')).toBe(false)
+    expect(isValidCardLastFour('45211')).toBe(false)
+    expect(isValidCardLastFour('abcd')).toBe(false)
+
+    expect(sanitizeCardLastFour('4521')).toBe('4521')
+    expect(sanitizeCardLastFour('452')).toBe('0452')
+    expect(sanitizeCardLastFour('1234567890123456')).toBe('3456') // Truncates full PAN to last 4
+    expect(sanitizeCardLastFour('')).toBe('0000')
+    expect(sanitizeCardLastFour(null)).toBe('0000')
   })
 })
 

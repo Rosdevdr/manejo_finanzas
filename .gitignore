@@ -10,7 +10,15 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-*.local
+# Environment and secrets
+.env
+.env*.local
+.env.production
+.env.development
+.vercel
+*.pem
+*.key
+*.cert
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +30,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+

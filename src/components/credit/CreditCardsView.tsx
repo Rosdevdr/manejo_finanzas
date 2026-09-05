@@ -22,6 +22,7 @@ import type {
 } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { evaluateCardHealth, getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
+import { sanitizeCardLastFour } from '../../utils/security'
 import './CreditCardsView.css'
 
 interface CreditCardsViewProps {
@@ -178,12 +179,13 @@ export function CreditCardsView({
     e.preventDefault()
     if (!cardForm.name || !cardForm.creditLimit) return
 
+    const cleanLastFour = sanitizeCardLastFour(cardForm.lastFourDigits)
     if (editingCard) {
       onUpdateCard({
         ...editingCard,
         name: cardForm.name,
         bank: cardForm.bank || 'Banco',
-        lastFourDigits: cardForm.lastFourDigits || '0000',
+        lastFourDigits: cleanLastFour,
         creditLimit: parseFloat(cardForm.creditLimit),
         cutoffDay: Number(cardForm.cutoffDay),
         paymentDueDay: Number(cardForm.paymentDueDay),
@@ -194,7 +196,7 @@ export function CreditCardsView({
       onAddCard({
         name: cardForm.name,
         bank: cardForm.bank || 'Banco',
-        lastFourDigits: cardForm.lastFourDigits || '0000',
+        lastFourDigits: cleanLastFour,
         creditLimit: parseFloat(cardForm.creditLimit),
         cutoffDay: Number(cardForm.cutoffDay),
         paymentDueDay: Number(cardForm.paymentDueDay),
@@ -904,13 +906,18 @@ export function CreditCardsView({
                 </div>
 
                 <div>
-                  <label className="field-label">Últimos 4 Dígitos</label>
+                  <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span>Últimos 4 Dígitos</span>
+                    <span style={{ fontSize: 9.5, color: '#C9A84C' }} title="Protección PCI-DSS: Nunca ingreses número completo ni CVV">🔒 Seguro</span>
+                  </label>
                   <input
                     className="field-input"
                     maxLength={4}
+                    inputMode="numeric"
+                    pattern="[0-9]{4}"
                     placeholder="4821"
                     value={cardForm.lastFourDigits}
-                    onChange={e => setCardForm(p => ({ ...p, lastFourDigits: e.target.value }))}
+                    onChange={e => setCardForm(p => ({ ...p, lastFourDigits: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
                   />
                 </div>
 

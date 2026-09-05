@@ -141,6 +141,38 @@ export function DashboardView({
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 5)
 
+  // Canales de liquidez y métodos de pago (mes)
+  const channelData = [
+    {
+      id: 'bank_transfer',
+      label: 'Transferencia Bancaria',
+      amount: pExp.filter(e => e.paymentMethod === 'bank_transfer').reduce((s, e) => s + e.amount, 0),
+      color: '#60A5FA',
+      icon: '🏦',
+    },
+    {
+      id: 'debit_card',
+      label: 'Tarjeta de Débito',
+      amount: pExp.filter(e => e.paymentMethod === 'debit_card').reduce((s, e) => s + e.amount, 0),
+      color: '#34D399',
+      icon: '💳',
+    },
+    {
+      id: 'credit_card',
+      label: 'Tarjeta de Crédito',
+      amount: pExp.filter(e => e.paymentMethod === 'credit_card').reduce((s, e) => s + e.amount, 0),
+      color: '#C9A84C',
+      icon: '💳',
+    },
+    {
+      id: 'cash',
+      label: 'Efectivo / Cajero',
+      amount: pExp.filter(e => e.paymentMethod === 'cash').reduce((s, e) => s + e.amount, 0),
+      color: '#FBBF24',
+      icon: '💵',
+    },
+  ]
+
   const kpis = [
     {
       label: 'Ingresos Totales',
@@ -344,6 +376,61 @@ export function DashboardView({
           ) : (
             <div className="empty-state"><p className="empty-text">Sin datos de gastos para graficar</p></div>
           )}
+        </div>
+      </div>
+
+      {/* Canales de Liquidez y Métodos de Pago Card (Mes) */}
+      <div className="liquidity-channels-card">
+        <div className="liquidity-channels-header">
+          <div className="liquidity-title-group">
+            <span className="pulse-indicator-dot" />
+            <div>
+              <div className="liquidity-card-title">Canales de Liquidez y Métodos de Pago (Mes)</div>
+              <div className="liquidity-card-sub">Monitoreo en tiempo real de salidas según vía de pago en {currentPeriod}</div>
+            </div>
+          </div>
+          <div className="liquidity-total-badge">
+            Total en canales: {formatCurrency(totalExp)}
+          </div>
+        </div>
+
+        {/* Multi-segment distribution bar */}
+        <div className="liquidity-progress-bar">
+          {totalExp > 0 ? (
+            channelData.map(ch => {
+              const pct = (ch.amount / totalExp) * 100
+              if (pct <= 0) return null
+              return (
+                <div
+                  key={ch.id}
+                  className="liquidity-bar-segment"
+                  style={{ width: `${pct}%`, backgroundColor: ch.color }}
+                  title={`${ch.label}: ${formatCurrency(ch.amount)} (${pct.toFixed(1)}%)`}
+                />
+              )
+            })
+          ) : (
+            <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)' }} />
+          )}
+        </div>
+
+        {/* Channels Grid */}
+        <div className="liquidity-channels-grid">
+          {channelData.map(ch => {
+            const pct = totalExp > 0 ? (ch.amount / totalExp) * 100 : 0
+            return (
+              <div key={ch.id} className="liquidity-channel-item">
+                <div className="liquidity-channel-top">
+                  <span className="liquidity-channel-icon">{ch.icon}</span>
+                  <span className="liquidity-channel-pct" style={{ color: ch.color, backgroundColor: `${ch.color}15` }}>
+                    {pct.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="liquidity-channel-name">{ch.label}</div>
+                <div className="liquidity-channel-amount">{formatCurrency(ch.amount)}</div>
+              </div>
+            )
+          })}
         </div>
       </div>
 

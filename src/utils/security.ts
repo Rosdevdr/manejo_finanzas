@@ -48,3 +48,23 @@ export function sanitizeAmount(amount: unknown): number {
 export function isValidPeriod(period: string): boolean {
   return /^\d{4}-(0[1-9]|1[0-2])$/.test(period)
 }
+
+/**
+ * Validates that card last-four digits format matches PCI-DSS safe standard (exactly 4 numeric digits).
+ */
+export function isValidCardLastFour(digits: unknown): boolean {
+  if (typeof digits !== 'string') return false
+  return /^[0-9]{4}$/.test(digits)
+}
+
+/**
+ * Strips non-digits and ensures exactly 4 numeric characters for credit card identification.
+ * Never stores full PAN (16 digits) to maintain zero-knowledge card security.
+ */
+export function sanitizeCardLastFour(input: unknown): string {
+  if (typeof input !== 'string' && typeof input !== 'number') return '0000'
+  const digits = String(input).replace(/\D/g, '')
+  if (digits.length === 0) return '0000'
+  return digits.slice(-4).padStart(4, '0')
+}
+

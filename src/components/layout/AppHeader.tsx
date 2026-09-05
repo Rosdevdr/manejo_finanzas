@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Cloud, HardDrive, Scale } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Cloud, HardDrive, Scale, Menu } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 
 interface AppHeaderProps {
@@ -11,6 +11,7 @@ interface AppHeaderProps {
   balancePositive: boolean
   isDemoMode?: boolean
   onOpenLicense?: () => void
+  onOpenMobileMenu?: () => void
 }
 
 export function AppHeader({
@@ -23,9 +24,23 @@ export function AppHeader({
   balancePositive,
   isDemoMode,
   onOpenLicense,
+  onOpenMobileMenu,
 }: AppHeaderProps) {
   return (
     <header className="header">
+      {/* Mobile Hamburger Drawer Trigger */}
+      {onOpenMobileMenu && (
+        <button
+          type="button"
+          onClick={onOpenMobileMenu}
+          className="mobile-menu-btn"
+          aria-label="Abrir menú de navegación"
+          title="Menú"
+        >
+          <Menu size={18} />
+        </button>
+      )}
+
       <div className="month-nav">
         <button className="month-btn" onClick={onPrev} disabled={prevDisabled} title="Mes anterior">
           <ChevronLeft size={14} />

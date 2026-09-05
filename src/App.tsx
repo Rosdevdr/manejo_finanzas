@@ -28,6 +28,7 @@ export function App() {
   const [activeTab, setActiveTab]         = useState<TabType>('dashboard')
   const [currentPeriod, setCurrentPeriod] = useState<string>(() => getCurrentSystemPeriod())
   const [showLicenseModal, setShowLicenseModal] = useState(false)
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false)
 
   const { toasts, show: showToast, dismiss } = useToast()
 
@@ -86,6 +87,8 @@ export function App() {
         userEmail={user?.email}
         isDemoMode={isDemoMode}
         onSignOut={signOut}
+        isMobileOpen={isMobileDrawerOpen}
+        onCloseMobile={() => setIsMobileDrawerOpen(false)}
       />
 
       <div className="main">
@@ -97,6 +100,7 @@ export function App() {
           balancePositive={available >= 0}
           isDemoMode={isDemoMode}
           onOpenLicense={() => setShowLicenseModal(true)}
+          onOpenMobileMenu={() => setIsMobileDrawerOpen(true)}
         />
 
         <div className="content">

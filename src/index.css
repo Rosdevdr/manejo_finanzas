@@ -45,6 +45,13 @@
   --glow-gold:     0 0 24px rgba(201,168,76,0.18);
   --glow-purple:   0 0 24px rgba(139,92,246,0.22);
   --glow-green:    0 0 20px rgba(52,211,153,0.15);
+
+  /* Physics & motion — Emil Kowalski spring easing */
+  --ease-spring:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out:      cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 240ms;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -259,6 +266,29 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0 24px;
   gap: 12px;
   flex-shrink: 0;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s var(--ease-spring);
+  flex-shrink: 0;
+}
+.mobile-menu-btn:hover {
+  color: var(--gold);
+  border-color: rgba(201,168,76,0.35);
+  background: var(--gold-dim);
+}
+.mobile-menu-btn:active {
+  transform: scale(0.92);
 }
 
 .month-nav {
@@ -1172,6 +1202,186 @@ select.field-select {
   padding-right: 34px;
 }
 
+/* ===================== CANALES DE LIQUIDEZ Y MÉTODOS DE PAGO ===================== */
+.liquidity-channels-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 22px;
+  transition: border-color 0.2s, box-shadow 0.22s var(--ease-spring);
+}
+
+.liquidity-channels-card:hover {
+  border-color: var(--border-soft);
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+}
+
+.liquidity-channels-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.liquidity-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pulse-indicator-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  flex-shrink: 0;
+  display: inline-block;
+  animation: pulseGlow 2.2s infinite var(--ease-spring);
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 8px var(--green);
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+    box-shadow: 0 0 16px var(--green);
+  }
+}
+
+.liquidity-card-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.liquidity-card-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.liquidity-total-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-family: 'Space Grotesk', monospace;
+}
+
+.liquidity-progress-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  margin-bottom: 16px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.liquidity-bar-segment {
+  height: 100%;
+  transition: width 0.4s var(--ease-spring);
+}
+
+.liquidity-channels-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.liquidity-channel-item {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.liquidity-channel-item:hover {
+  border-color: var(--border-soft);
+  transform: translateY(-1px);
+}
+
+.liquidity-channel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.liquidity-channel-icon {
+  font-size: 16px;
+}
+
+.liquidity-channel-pct {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: 'Space Grotesk', monospace;
+}
+
+.liquidity-channel-name {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.liquidity-channel-amount {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ===================== MOBILE DRAWER SYSTEM ===================== */
+.mobile-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 6, 12, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1100;
+  animation: fadeIn 0.2s ease;
+}
+
+.sidebar-close-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.15s ease;
+}
+
+.sidebar-close-btn:hover {
+  color: var(--red);
+  border-color: rgba(248,113,113,0.3);
+}
+
+@keyframes slideInDrawer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
 /* ===================== MOBILE BOTTOM NAVIGATION ===================== */
 .mobile-bottom-nav {
   display: none;
@@ -1179,13 +1389,13 @@ select.field-select {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 66px;
-  background: rgba(11,12,20,0.94);
+  height: calc(62px + env(safe-area-inset-bottom, 0px));
+  padding: 0 8px env(safe-area-inset-bottom, 0px);
+  background: rgba(11,12,20,0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-subtle);
-  z-index: 100;
-  padding: 0 8px;
+  z-index: 1000;
   align-items: center;
   justify-content: space-around;
 }
@@ -1205,10 +1415,14 @@ select.field-select {
   border-radius: 12px;
   cursor: pointer;
   position: relative;
-  transition: all 0.18s;
+  transition: all 0.18s var(--ease-spring);
   flex: 1;
   max-width: 72px;
   text-decoration: none;
+}
+
+.mobile-nav-item:active {
+  transform: scale(0.92);
 }
 
 .mobile-nav-item.active {
@@ -1231,43 +1445,148 @@ select.field-select {
   box-shadow: 0 0 10px var(--gold);
 }
 
+/* ===================== MICRO-ANIMATIONS (EMIL KOWALSKI / TASTE) ===================== */
+button,
+.btn-primary,
+.btn-gold,
+.btn-expense,
+.btn-cash,
+.btn-income,
+.nav-item,
+.month-btn {
+  transition: transform 0.18s var(--ease-spring), background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+button:active,
+.btn-primary:active,
+.btn-gold:active,
+.btn-expense:active,
+.btn-cash:active,
+.btn-income:active {
+  transform: scale(0.97);
+}
+
+@keyframes itemSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tx-row {
+  animation: itemSlideUp 0.26s var(--ease-spring) backwards;
+  transition: transform 0.18s var(--ease-spring), background 0.15s ease, border-color 0.15s ease;
+}
+
+.tx-row:hover {
+  transform: translateX(2px);
+}
+
+.tx-row:nth-child(1) { animation-delay: 0.02s; }
+.tx-row:nth-child(2) { animation-delay: 0.05s; }
+.tx-row:nth-child(3) { animation-delay: 0.08s; }
+.tx-row:nth-child(4) { animation-delay: 0.11s; }
+.tx-row:nth-child(5) { animation-delay: 0.14s; }
+
+/* Focus glow on inputs */
+.field-input:focus,
+.field-select:focus,
+.edit-input:focus,
+.edit-select:focus,
+.auth-input:focus {
+  border-color: rgba(201,168,76,0.5) !important;
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.12), 0 0 16px rgba(139,92,246,0.08);
+}
+
 /* ===================== RESPONSIVE BREAKPOINTS ===================== */
 @media (max-width: 1024px) {
-  .kpi-grid    { grid-template-columns: repeat(2, 1fr) !important; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
   .charts-grid { grid-template-columns: 1fr !important; }
-  .advisor-grid{ grid-template-columns: 1fr !important; }
+  .advisor-grid { grid-template-columns: 1fr !important; }
+  .liquidity-channels-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
 @media (max-width: 768px) {
   .app-shell {
     flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
   }
-  .sidebar { display: none !important; }
-  .mobile-bottom-nav { display: flex; }
+
+  .sidebar {
+    display: none !important;
+  }
+
+  .sidebar.mobile-open {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 275px;
+    max-width: 82vw;
+    z-index: 1200;
+    box-shadow: 12px 0 40px rgba(0,0,0,0.85);
+    animation: slideInDrawer 0.25s var(--ease-spring);
+  }
+
+  .sidebar-close-btn {
+    display: flex;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
   .main {
-    height: calc(100vh - 66px);
     width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto;
+    display: flex;
+    flex-direction: column;
     padding-bottom: 0;
+    overflow-y: visible;
   }
+
   .content {
-    padding: 16px 14px 28px;
+    flex: 1;
+    overflow-y: visible;
+    padding: 14px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
   }
+
   .header {
-    padding: 0 14px;
+    padding: 0 12px;
     height: 58px;
     gap: 8px;
   }
+
   .month-badge { font-size: 12px; padding: 4px 8px; }
   .balance-pill { font-size: 11px; padding: 4px 10px; }
-  .page-title { font-size: 21px; }
+  .page-title { font-size: 20px; }
+
   .kpi-grid {
     grid-template-columns: 1fr !important;
     gap: 10px;
   }
+
   .kpi-card { padding: 14px 16px; }
   .kpi-value { font-size: 20px; }
+
+  .liquidity-channels-card { padding: 16px 14px; }
+  .liquidity-channels-grid { grid-template-columns: 1fr !important; gap: 8px; }
+
   .form-card { padding: 16px 14px; }
   .form-grid {
     grid-template-columns: 1fr !important;
@@ -1283,6 +1602,7 @@ select.field-select {
     width: 100%;
     padding-top: 8px;
   }
+
   .btn-primary,
   .btn-gold,
   .btn-expense,
@@ -1292,6 +1612,7 @@ select.field-select {
     height: 46px;
     font-size: 13px;
   }
+
   .tx-row { padding: 12px 14px; gap: 10px; }
   .tx-actions { opacity: 1; }
   .tx-edit-row {
@@ -1299,12 +1620,14 @@ select.field-select {
     align-items: stretch;
     gap: 8px;
   }
+
   .edit-input,
   .edit-select {
     max-width: 100% !important;
     min-width: 100% !important;
     height: 40px;
   }
+
   .edit-actions { justify-content: flex-end; margin-top: 4px; }
   .edit-save-btn,
   .edit-cancel-btn { height: 38px; padding: 0 18px; }
@@ -1313,7 +1636,7 @@ select.field-select {
 @media (max-width: 480px) {
   .header { gap: 6px; }
   .month-badge {
-    max-width: 130px;
+    max-width: 115px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1322,6 +1645,18 @@ select.field-select {
   .month-btn { width: 22px; height: 22px; }
   .balance-pill { padding: 3px 8px; font-size: 10px; }
   .pill-dot { width: 5px; height: 5px; }
+}
+
+/* ===================== ACCESSIBILITY & PREFERS-REDUCED-MOTION ===================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ===================== IOS SAFARI AUTO-ZOOM PREVENTION ===================== */
