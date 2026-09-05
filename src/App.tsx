@@ -56,10 +56,14 @@ export function App() {
     isDemoMode,
     isSupabaseConfigured,
     isPasswordRecovery,
+    needsMfa,
+    mfaFactorId,
     clearPasswordRecovery,
     signIn,
     signUp,
     signOut,
+    verifyMfa,
+    cancelMfa,
     sendPasswordReset,
     updateUserPassword,
     enterDemoMode,
@@ -111,8 +115,8 @@ export function App() {
     }
   }, [activeTab])
 
-  // Mostrar pantalla de Login si no hay usuario ni modo demo (o si está en flujo de recuperación de contraseña)
-  if ((!authLoading && !user && !isDemoMode) || isPasswordRecovery) {
+  // Mostrar pantalla de Login si no hay usuario ni modo demo (o si está en flujo de recuperación de contraseña o reto MFA)
+  if ((!authLoading && (!user || needsMfa) && !isDemoMode) || isPasswordRecovery) {
     return (
       <>
         <LoginView
@@ -124,6 +128,10 @@ export function App() {
           isSupabaseConfigured={isSupabaseConfigured}
           isPasswordRecovery={isPasswordRecovery}
           onClearPasswordRecovery={clearPasswordRecovery}
+          needsMfa={needsMfa}
+          mfaFactorId={mfaFactorId}
+          onVerifyMfa={verifyMfa}
+          onCancelMfa={cancelMfa}
         />
         <ToastContainer toasts={toasts} onDismiss={dismiss} />
         <Analytics />

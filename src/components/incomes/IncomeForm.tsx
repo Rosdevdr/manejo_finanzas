@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { PlusCircle, CheckCircle2, X } from 'lucide-react'
+import { PlusCircle, CheckCircle2, X, Calendar } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { getTodayDateString } from '../../utils/formatters'
 
@@ -145,7 +145,8 @@ export function IncomeForm({ currentPeriod, incomeToEdit, onSave, onCancelEdit }
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-        <div className="w-full sm:w-auto">
+        <div className="w-full sm:w-auto flex items-center gap-2">
+          <Calendar size={14} className="text-[#F3CA65] flex-shrink-0" />
           <input
             type="date"
             value={date}

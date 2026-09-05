@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Banknote, AlertTriangle, Info, AlertOctagon, CheckCircle, PlusCircle } from 'lucide-react'
+import { Banknote, AlertTriangle, Info, AlertOctagon, CheckCircle, PlusCircle, Calendar } from 'lucide-react'
 import type { CashWithdrawal, CashReason } from '../../types/finance'
 import { evaluateCashWithdrawal } from '../../utils/cashAdvisor'
 import { getTodayDateString } from '../../utils/formatters'
@@ -116,8 +116,9 @@ export function CashWithdrawalForm({
         </div>
 
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#71717A] mb-2.5 block">
-            Fecha
+          <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#71717A] mb-2.5 flex items-center gap-1.5">
+            <Calendar size={12} className="text-[#F3CA65]" />
+            <span>Fecha</span>
           </label>
           <input
             type="date"

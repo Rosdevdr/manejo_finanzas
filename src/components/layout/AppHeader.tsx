@@ -164,7 +164,9 @@ export function AppHeader({
           </button>
 
           {tipOpen && (
-            <div className="profile-dropdown tip-dropdown fade-in" style={{ width: 300, padding: 14 }}>
+            <>
+              <div className="tip-mobile-backdrop" onClick={() => setTipOpen(false)} />
+              <div className="profile-dropdown tip-dropdown fade-in">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#F3CA65' }}>
                   <Sparkles size={14} />
@@ -230,7 +232,8 @@ export function AppHeader({
                 </button>
               </div>
             </div>
-          )}
+          </>
+        )}
         </div>
 
         {/* Pill de Saldo Disponible */}

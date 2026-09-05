@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TrendingDown, Lock, Shuffle, Plus, Trash2, Pencil, X, Check } from 'lucide-react'
+import { TrendingDown, Lock, Shuffle, Plus, Trash2, Pencil, X, Check, Calendar } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
@@ -428,7 +428,10 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
               </div>
 
               <div className="modal-form-group">
-                <label className="modal-label">Fecha del Gasto</label>
+                <label className="modal-label">
+                  <Calendar size={13} className="text-gold" />
+                  <span>Fecha del Gasto</span>
+                </label>
                 <input
                   type="date"
                   className="modal-input"

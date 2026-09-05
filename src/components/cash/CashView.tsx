@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banknote, AlertTriangle, Plus, Trash2, Pencil, X } from 'lucide-react'
+import { Banknote, AlertTriangle, Plus, Trash2, Pencil, X, Calendar } from 'lucide-react'
 import type { CashWithdrawal, CashReason, Expense } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
@@ -361,7 +361,10 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
               </div>
 
               <div className="modal-form-group">
-                <label className="modal-label">Fecha</label>
+                <label className="modal-label">
+                  <Calendar size={13} className="text-gold" />
+                  <span>Fecha</span>
+                </label>
                 <input
                   type="date"
                   className="modal-input"

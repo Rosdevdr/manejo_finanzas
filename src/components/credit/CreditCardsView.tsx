@@ -748,7 +748,10 @@ export function CreditCardsView({
               </div>
 
               <div className="modal-form-group">
-                <label className="modal-label">Fecha</label>
+                <label className="modal-label">
+                  <Calendar size={13} className="text-gold" />
+                  <span>Fecha</span>
+                </label>
                 <input
                   type="date"
                   className="modal-input"

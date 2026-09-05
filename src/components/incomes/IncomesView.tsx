@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Wallet, Briefcase, TrendingUp, Plus, Trash2, Pencil, X, Check } from 'lucide-react'
+import { Wallet, Briefcase, TrendingUp, Plus, Trash2, Pencil, X, Check, Calendar } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
@@ -358,7 +358,10 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
               </div>
 
               <div className="modal-form-group">
-                <label className="modal-label">Fecha de Entrada</label>
+                <label className="modal-label">
+                  <Calendar size={13} className="text-gold" />
+                  <span>Fecha de Entrada</span>
+                </label>
                 <input
                   type="date"
                   className="modal-input"

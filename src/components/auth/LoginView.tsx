@@ -22,7 +22,7 @@ import { supabase } from '../../lib/supabase'
 import './LoginView.css'
 
 interface LoginViewProps {
-  onSignIn: (email: string, password: string) => Promise<{ error: Error | null }>
+  onSignIn: (email: string, password: string) => Promise<{ error: Error | null; needsMfa?: boolean }>
   onSignUp: (email: string, password: string) => Promise<{ error: Error | null }>
   onSendPasswordReset?: (email: string) => Promise<{ error: Error | null }>
   onUpdateUserPassword?: (newPassword: string) => Promise<{ error: Error | null }>
@@ -30,6 +30,10 @@ interface LoginViewProps {
   isSupabaseConfigured: boolean
   isPasswordRecovery?: boolean
   onClearPasswordRecovery?: () => void
+  needsMfa?: boolean
+  mfaFactorId?: string | null
+  onVerifyMfa?: (code: string) => Promise<{ error: Error | null }>
+  onCancelMfa?: () => Promise<void>
 }
 
 type AuthTab = 'login' | 'register' | 'forgot' | 'update-password' | 'mfa'
@@ -43,17 +47,53 @@ export function LoginView({
   isSupabaseConfigured,
   isPasswordRecovery,
   onClearPasswordRecovery,
+  needsMfa,
+  mfaFactorId: propMfaFactorId,
+  onVerifyMfa,
+  onCancelMfa,
 }: LoginViewProps) {
-  const [tab, setTab] = useState<AuthTab>(() => (isPasswordRecovery ? 'update-password' : 'login'))
+  const [tab, setTab] = useState<AuthTab>(() => (isPasswordRecovery ? 'update-password' : needsMfa ? 'mfa' : 'login'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [mfaCode, setMfaCode] = useState('')
-  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null)
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(propMfaFactorId || null)
+  const [hasRecoveryMfa, setHasRecoveryMfa] = useState(false)
+  const [recoveryFactorId, setRecoveryFactorId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [lockSeconds, setLockSeconds] = useState(() => checkRateLimit('login_auth').remainingSeconds)
+
+  useEffect(() => {
+    if (propMfaFactorId) {
+      setMfaFactorId(propMfaFactorId)
+    }
+  }, [propMfaFactorId])
+
+  useEffect(() => {
+    if (needsMfa) {
+      setTab('mfa')
+      setError(null)
+    } else if (isPasswordRecovery) {
+      setTab('update-password')
+    }
+  }, [needsMfa, isPasswordRecovery])
+
+  // Detectar si la cuenta en recuperación tiene factor MFA activo
+  useEffect(() => {
+    if (tab === 'update-password' && supabase) {
+      supabase.auth.mfa.listFactors().then(({ data, error: factorsErr }) => {
+        if (!factorsErr && data) {
+          const verified = data.totp?.find(f => f.status === 'verified')
+          if (verified) {
+            setHasRecoveryMfa(true)
+            setRecoveryFactorId(verified.id)
+          }
+        }
+      }).catch(() => {})
+    }
+  }, [tab])
 
 
   useEffect(() => {
@@ -121,8 +161,39 @@ export function LoginView({
         setError('Las contraseñas no coinciden.')
         return
       }
+      if (hasRecoveryMfa) {
+        const cleanMfa = mfaCode.replace(/\D/g, '')
+        if (cleanMfa.length !== 6) {
+          setError('Ingresa el código de 6 dígitos de tu aplicación autenticadora (Google o iOS).')
+          return
+        }
+      }
       setLoading(true)
       try {
+        if (hasRecoveryMfa && supabase) {
+          const factorId = recoveryFactorId || mfaFactorId || propMfaFactorId
+          if (factorId) {
+            const { data: challengeData, error: challengeErr } = await supabase.auth.mfa.challenge({
+              factorId,
+            })
+            if (challengeErr) {
+              setError(challengeErr.message)
+              setLoading(false)
+              return
+            }
+            const { error: verifyErr } = await supabase.auth.mfa.verify({
+              factorId,
+              challengeId: challengeData.id,
+              code: mfaCode.trim(),
+            })
+            if (verifyErr) {
+              setError('Código 2FA incorrecto o expirado. No se autorizó el cambio de contraseña.')
+              setLoading(false)
+              return
+            }
+          }
+        }
+
         if (onUpdateUserPassword) {
           const { error: err } = await onUpdateUserPassword(password)
           if (err) {
@@ -143,34 +214,54 @@ export function LoginView({
 
     // 3. MFA 2FA Challenge Verification Flow
     if (tab === 'mfa') {
-      if (!supabase || !mfaFactorId || mfaCode.length !== 6) {
-        setError('Ingresa el código de 6 dígitos de tu aplicación autenticadora.')
+      const cleanMfa = mfaCode.replace(/\D/g, '')
+      if (cleanMfa.length !== 6) {
+        setError('Ingresa el código de 6 dígitos de tu aplicación autenticadora (Google / iOS).')
         return
       }
       setLoading(true)
       try {
-        const { data: challengeData, error: challengeErr } = await supabase.auth.mfa.challenge({
-          factorId: mfaFactorId,
-        })
-        if (challengeErr) {
-          setError(challengeErr.message)
-          setLoading(false)
-          return
+        if (onVerifyMfa) {
+          const { error: verifyErr } = await onVerifyMfa(cleanMfa)
+          if (verifyErr) {
+            setError(verifyErr.message)
+            setLoading(false)
+            return
+          }
+          resetRateLimit('login_auth')
+        } else if (supabase) {
+          const activeFactor = mfaFactorId || propMfaFactorId
+          let factorIdToUse = activeFactor
+          if (!factorIdToUse) {
+            const { data: factorData } = await supabase.auth.mfa.listFactors()
+            const verifiedTotp = factorData?.totp?.find(f => f.status === 'verified')
+            if (!verifiedTotp) {
+              setError('No se encontró un factor 2FA configurado.')
+              setLoading(false)
+              return
+            }
+            factorIdToUse = verifiedTotp.id
+          }
+          const { data: challengeData, error: challengeErr } = await supabase.auth.mfa.challenge({
+            factorId: factorIdToUse,
+          })
+          if (challengeErr) {
+            setError(challengeErr.message)
+            setLoading(false)
+            return
+          }
+          const { error: verifyErr } = await supabase.auth.mfa.verify({
+            factorId: factorIdToUse,
+            challengeId: challengeData.id,
+            code: cleanMfa,
+          })
+          if (verifyErr) {
+            setError('Código 2FA incorrecto o expirado. Intenta de nuevo.')
+            setLoading(false)
+            return
+          }
+          resetRateLimit('login_auth')
         }
-
-        const { error: verifyErr } = await supabase.auth.mfa.verify({
-          factorId: mfaFactorId,
-          challengeId: challengeData.id,
-          code: mfaCode.trim(),
-        })
-
-        if (verifyErr) {
-          setError('Código 2FA incorrecto o expirado. Intenta de nuevo.')
-          setLoading(false)
-          return
-        }
-
-        resetRateLimit('login_auth')
       } catch {
         setError('Error al verificar código 2FA.')
       } finally {
@@ -504,6 +595,50 @@ export function LoginView({
             ) : tab === 'update-password' ? (
               /* Password update fields */
               <>
+                {hasRecoveryMfa && (
+                  <div className="auth-field">
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: 'rgba(243, 202, 101, 0.12)',
+                      border: '1px solid rgba(243, 202, 101, 0.3)',
+                      borderRadius: 8,
+                      color: '#F3CA65',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      marginBottom: 10,
+                    }}>
+                      <ShieldCheck size={16} style={{ flexShrink: 0 }} />
+                      <span>Verificación 2FA Requerida (Google / iOS Authenticator)</span>
+                    </div>
+                    <label className="auth-label">Código de 6 Dígitos de tu Aplicación Autenticadora</label>
+                    <div className="auth-input-wrapper">
+                      <KeyRound size={16} className="auth-input-icon" />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={6}
+                        placeholder="000000"
+                        value={mfaCode}
+                        onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                        className="auth-input"
+                        style={{
+                          fontFamily: 'JetBrains Mono, monospace',
+                          letterSpacing: '6px',
+                          fontSize: 18,
+                          fontWeight: 700,
+                          textAlign: 'center',
+                        }}
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="auth-field">
                   <label className="auth-label">Nueva Contraseña</label>
                   <div className="auth-input-wrapper">
@@ -647,19 +782,50 @@ export function LoginView({
             {tab === 'mfa' && (
               <button
                 type="button"
-                onClick={() => { setTab('login'); setMfaCode(''); setError(null) }}
+                onClick={async () => {
+                  if (onCancelMfa) await onCancelMfa()
+                  setTab('login')
+                  setMfaCode('')
+                  setError(null)
+                }}
+                className="btn btn-secondary"
                 style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#888898',
-                  fontSize: 12,
-                  marginTop: 6,
-                  cursor: 'pointer',
-                  textAlign: 'center',
                   width: '100%',
+                  marginTop: 10,
+                  height: 42,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 13,
                 }}
               >
                 ← Cancelar e iniciar con otra cuenta
+              </button>
+            )}
+
+            {tab === 'update-password' && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onClearPasswordRecovery) onClearPasswordRecovery()
+                  setTab('login')
+                  setPassword('')
+                  setConfirmPassword('')
+                  setMfaCode('')
+                  setError(null)
+                }}
+                className="btn btn-secondary"
+                style={{
+                  width: '100%',
+                  marginTop: 10,
+                  height: 42,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 13,
+                }}
+              >
+                ← Cancelar y volver al inicio
               </button>
             )}
           </form>

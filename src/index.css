@@ -461,6 +461,64 @@ h1, h2, h3, h4, h5, h6 {
   gap: 4px;
 }
 
+/* ── Popover del Consejo del Día ── */
+.tip-dropdown {
+  width: 320px !important;
+  padding: 14px !important;
+  background: #12121A !important;
+  border: 1px solid rgba(243, 202, 101, 0.3) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(243, 202, 101, 0.1) !important;
+  z-index: 1000 !important;
+}
+
+.tip-mobile-backdrop {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .tip-mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 999;
+    animation: fadeInBackdrop 0.18s ease-out;
+  }
+
+  .tip-dropdown {
+    position: fixed !important;
+    top: 68px !important;
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+    max-width: 380px !important;
+    margin: 0 auto !important;
+    z-index: 1000 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(243, 202, 101, 0.16) !important;
+    animation: tipSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+}
+
+@keyframes tipSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .profile-header {
   padding: 6px 8px 8px;
   font-family: 'Space Grotesk', sans-serif;
@@ -903,26 +961,35 @@ h1, h2, h3, h4, h5, h6 {
 
 .field-input::placeholder { color: #4A4A5A; }
 
-/* Selector de fecha con ícono blanco visible */
+/* Selector de fecha temático Aureus con ícono dorado de lujo */
 input[type="date"].field-input,
-input[type="date"] {
+input[type="date"],
+.modal-input[type="date"] {
   color-scheme: dark;
   cursor: pointer;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
+input[type="date"]::-webkit-calendar-picker-indicator,
+.modal-input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  filter: invert(1) brightness(1.25);
-  opacity: 0.9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23F3CA65' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='4' rx='3' ry='3'/%3E%3Cline x1='16' x2='16' y1='2' y2='6'/%3E%3Cline x1='8' x2='8' y1='2' y2='6'/%3E%3Cline x1='3' x2='21' y1='10' y2='10'/%3E%3Cpath d='m9 16 2 2 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px 16px;
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 0 4px rgba(243, 202, 101, 0.4));
+  opacity: 0.95;
   padding: 3px;
-  border-radius: 4px;
-  transition: opacity 0.15s ease, transform 0.15s ease, filter 0.15s ease;
+  border-radius: 6px;
+  transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.modal-input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
-  transform: scale(1.15);
-  filter: invert(1) brightness(1.6);
+  transform: scale(1.18);
+  filter: drop-shadow(0 0 8px rgba(243, 202, 101, 0.8));
 }
 
 .form-actions,
@@ -1565,11 +1632,13 @@ select.field-select {
   background: #121218 !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 16px !important;
-  padding: 24px !important;
+  padding: 20px 22px !important;
   width: 100% !important;
-  max-width: 520px !important;
-  max-height: 90vh !important;
+  max-width: 480px !important;
+  max-height: 92vh !important;
   overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(243, 202, 101, 0.25) transparent !important;
   box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.85), 0 0 40px rgba(243, 202, 101, 0.08) !important;
   animation: globalModalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
   position: relative !important;
@@ -1594,8 +1663,8 @@ select.field-select {
   align-items: center !important;
   justify-content: space-between !important;
   gap: 12px !important;
-  margin-bottom: 16px !important;
-  padding-bottom: 12px !important;
+  margin-bottom: 14px !important;
+  padding-bottom: 10px !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -1638,17 +1707,17 @@ select.field-select {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
-  gap: 12px !important;
-  margin-top: 20px !important;
-  padding-top: 14px !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+  padding-top: 12px !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .modal-form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: 5px;
+  margin-bottom: 11px;
 }
 
 .modal-label {
@@ -1656,6 +1725,9 @@ select.field-select {
   font-size: 12px;
   font-weight: 600;
   color: #D0D0DC;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .modal-input, .modal-select {
@@ -1949,15 +2021,57 @@ select.field-select {
   .page-title { font-size: 18px; }
   .content    { padding: 12px 10px 80px !important; }
 
-  /* Modals */
-  .modal-card     { padding: 18px 14px !important; border-radius: 14px !important; }
-  .modal-footer   { flex-direction: column-reverse !important; gap: 10px !important; width: 100% !important; }
+  /* Modals: Mobile Bottom Sheet con flujo en cascada sin scrollbar */
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .modal-card {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    margin: 0 !important;
+    border-bottom: none !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8) !important;
+    animation: modalSheetSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  .modal-card::-webkit-scrollbar {
+    display: none !important;
+  }
+  .modal-footer {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin-top: 12px !important;
+    padding-top: 10px !important;
+  }
   .modal-footer .btn,
   .modal-footer button {
-    width: 100% !important; height: 44px !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 14px !important;
+    width: 100% !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13.5px !important;
   }
+
+@keyframes modalSheetSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
   /* Misc header tokens */
   .github-shortcut, .header-sync-pill { display: none !important; }

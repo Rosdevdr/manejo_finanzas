@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { PlusCircle, CheckCircle2, X } from 'lucide-react'
+import { PlusCircle, CheckCircle2, X, Calendar } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { CATEGORY_MAP } from '../../utils/categoryHelpers'
 import { getTodayDateString } from '../../utils/formatters'
@@ -187,7 +187,8 @@ export function ExpenseForm({ currentPeriod, expenseToEdit, onSave, onCancelEdit
 
       {/* Fila 3: Fecha + Botón Submit */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
-        <div className="w-full sm:w-auto">
+        <div className="w-full sm:w-auto flex items-center gap-2">
+          <Calendar size={14} className="text-[#F3CA65] flex-shrink-0" />
           <input
             type="date"
             value={date}
