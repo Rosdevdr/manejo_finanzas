@@ -3062,7 +3062,12 @@ select.field-select {
   display: flex;
   gap: 14px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding-top: 10px;
+  margin-top: -10px;
+  padding-bottom: 12px;
+  padding-left: 4px;
+  padding-right: 4px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .credit-card-vault-item {
@@ -3076,8 +3081,15 @@ select.field-select {
   min-height: 145px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
+}
+
+.credit-card-vault-item:hover {
+  border-color: rgba(201, 168, 76, 0.55);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.65), 0 0 18px rgba(201, 168, 76, 0.2);
+  transform: translateY(-3px);
+  z-index: 2;
 }
 
 .credit-card-vault-item.theme-gold {
@@ -3107,8 +3119,9 @@ select.field-select {
 
 .credit-card-vault-item.active-card-selected {
   border-color: #C9A84C !important;
-  box-shadow: 0 0 16px rgba(201, 168, 76, 0.25);
-  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.3), 0 10px 24px -4px rgba(0, 0, 0, 0.5);
+  transform: translateY(-3px);
+  z-index: 3;
 }
 
 .card-top-row {
