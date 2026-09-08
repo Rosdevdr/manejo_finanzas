@@ -1,0 +1,194 @@
+/* ============================================ */
+/* OVERLAY & CONTENEDOR                         */
+/* ============================================ */
+.splash-screen-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, #15151F 0%, #0A0A0C 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: splashFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+}
+
+.splash-screen-overlay.exiting {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.splash-screen-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px;
+}
+
+/* ============================================ */
+/* LOGO AUREUS ANIMADO                         */
+/* ============================================ */
+.splash-logo-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-logo-halo {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 168, 76, 0.25) 0%, transparent 70%);
+  animation: splashHaloPulse 2.4s ease-in-out infinite;
+}
+
+.splash-logo-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 25px rgba(201, 168, 76, 0.5));
+  animation: splashLogoPulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+/* ============================================ */
+/* LOADER RING (ANILLO CIRCULAR DORADO)        */
+/* ============================================ */
+.splash-loader-ring {
+  position: relative;
+  width: 54px;
+  height: 54px;
+}
+
+.loader-ring {
+  width: 100%;
+  height: 100%;
+  border: 3.5px solid rgba(201, 168, 76, 0.15);
+  border-top-color: #F1D97E;
+  border-right-color: #C9A84C;
+  border-radius: 50%;
+  animation: loaderRingSpin 1s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.3);
+}
+
+/* ============================================ */
+/* TEXTO INFORMATIVO                           */
+/* ============================================ */
+.splash-text {
+  text-align: center;
+  animation: splashTextFadeIn 0.5s ease-out 0.2s both;
+}
+
+.splash-loading-text {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  color: #F1D97E;
+  margin: 0;
+  letter-spacing: -0.01em;
+  text-shadow: 0 0 16px rgba(201, 168, 76, 0.3);
+}
+
+.splash-subtext {
+  font-size: 13px;
+  color: #9CA3AF;
+  margin: 8px 0 0 0;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================ */
+/* ANIMACIONES KEYFRAME                         */
+/* ============================================ */
+@keyframes splashFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes splashLogoPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.4));
+  }
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 35px rgba(201, 168, 76, 0.65));
+  }
+}
+
+@keyframes splashHaloPulse {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
+}
+
+@keyframes loaderRingSpin {
+  from {
+    transform: rotateZ(0deg);
+  }
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+@keyframes splashTextFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================ */
+/* RESPONSIVE (< 640px)                         */
+/* ============================================ */
+@media (max-width: 640px) {
+  .splash-logo-wrapper {
+    width: 110px;
+    height: 110px;
+  }
+  .splash-loader-ring {
+    width: 44px;
+    height: 44px;
+  }
+  .splash-loading-text {
+    font-size: 17px;
+  }
+  .splash-subtext {
+    font-size: 12px;
+  }
+}
+
+/* ============================================ */
+/* ACCESIBILIDAD Y REDUCED MOTION               */
+/* ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .splash-screen-overlay,
+  .splash-logo-svg,
+  .splash-logo-halo,
+  .loader-ring,
+  .splash-text {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

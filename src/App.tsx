@@ -33,10 +33,17 @@ import {
 } from './utils/calendar'
 
 import { TermsAndConditionsModal } from './components/legal/TermsAndConditionsModal'
+import { SplashScreenLoader } from './components/common/SplashScreenLoader'
 
 export function App() {
   const [activeTab, setActiveTab]               = useState<TabType>('dashboard')
   const [currentPeriod, setCurrentPeriod]       = useState<string>(() => getCurrentSystemPeriod())
+  const [isModuleLoading, setIsModuleLoading]   = useState(true)
+  const [isExitingSplash, setIsExitingSplash]   = useState(false)
+  const [splashText, setSplashText]             = useState({
+    message: 'Cargando AUREUS',
+    subtext: 'Inicializando módulos financieros...',
+  })
   const [showLicenseModal, setShowLicenseModal] = useState(false)
   const [showTermsModal, setShowTermsModal]     = useState(false)
   const [isSecurityOpen, setIsSecurityOpen]     = useState(false)
@@ -115,6 +122,49 @@ export function App() {
     }
   }, [activeTab])
 
+  // Splash inicial estilo Stripe al montar la plataforma
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsExitingSplash(true)
+      setTimeout(() => {
+        setIsModuleLoading(false)
+        setIsExitingSplash(false)
+      }, 400)
+    }, 1250)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Carga de módulos con micro-transición institucional
+  const handleTabChange = (tab: TabType) => {
+    if (tab === activeTab) return
+    const titles: Record<TabType, string> = {
+      dashboard: 'Dashboard General',
+      incomes: 'Control de Ingresos',
+      expenses: 'Gestión de Egresos',
+      credit: 'Tarjetas de Crédito',
+      cash: 'Flujo de Efectivo',
+      budgets: 'Presupuestos y Metas',
+      advisor: 'Análisis Inteligente',
+      'chat-advisor': 'Asistente IA AUREUS',
+    }
+
+    setSplashText({
+      message: titles[tab] || 'Cargando AUREUS',
+      subtext: 'Sincronizando registros y balance...',
+    })
+    setIsModuleLoading(true)
+    setIsExitingSplash(false)
+    setActiveTab(tab)
+
+    setTimeout(() => {
+      setIsExitingSplash(true)
+      setTimeout(() => {
+        setIsModuleLoading(false)
+        setIsExitingSplash(false)
+      }, 350)
+    }, 1100)
+  }
+
   // Mostrar pantalla de Login si no hay usuario ni modo demo (o si está en flujo de recuperación de contraseña o reto MFA)
   if ((!authLoading && (!user || needsMfa) && !isDemoMode) || isPasswordRecovery) {
     return (
@@ -143,7 +193,7 @@ export function App() {
     <div className="app-shell">
       <Sidebar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         userEmail={user?.email}
         isDemoMode={isDemoMode}
         isOpen={isMobileMenuOpen}
@@ -196,7 +246,7 @@ export function App() {
               creditTransactions={creditTransactions}
               categoryBudgets={categoryBudgets}
               userEmail={user?.email}
-              onNavigateTab={setActiveTab}
+              onNavigateTab={handleTabChange}
               onOpenTerms={() => setShowTermsModal(true)}
             />
           )}
@@ -386,6 +436,13 @@ export function App() {
         onClose={() => setShowGuideModal(false)}
         initialModule={guideInitialModule}
       />
+      {isModuleLoading && (
+        <SplashScreenLoader
+          message={splashText.message}
+          subtext={splashText.subtext}
+          isExiting={isExitingSplash}
+        />
+      )}
       <Analytics />
     </div>
   )

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { TrendingDown, Lock, Shuffle, Plus, Trash2, Pencil, X, Check, Calendar } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
+import { TransactionConfirmationFlow } from '../common/TransactionConfirmationFlow'
 
 interface ExpensesViewProps {
   currentPeriod: string
@@ -42,11 +43,32 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
 
   // Modal de registro
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [pendingConfirmation, setPendingConfirmation] = useState<{
+    description: string
+    amount: number
+    category: ExpenseCategory
+    type: ExpenseType
+    paymentMethod: PaymentMethod
+    date: string
+    period: string
+  } | null>(null)
+
   const [form, setForm] = useState({
     description: '', amount: '', category: 'food' as ExpenseCategory,
     type: 'variable' as ExpenseType, paymentMethod: 'debit_card' as PaymentMethod,
     date: new Date().toISOString().slice(0, 10),
   })
+
+  // Escuchar tecla Escape para cerrar modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isModalOpen) {
+        setIsModalOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isModalOpen])
 
   // Filtro de períodos
   const [showAllPeriods, setShowAllPeriods] = useState(false)
@@ -64,8 +86,28 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.description || !form.amount) return
+    const parsedAmount = parseFloat(form.amount)
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return
+
     const computedPeriod = form.date ? form.date.slice(0, 7) : currentPeriod
-    onAddExpense({ ...form, amount: parseFloat(form.amount), period: computedPeriod })
+    const expenseData = {
+      description: form.description.trim(),
+      amount: parsedAmount,
+      category: form.category,
+      type: form.type,
+      paymentMethod: form.paymentMethod,
+      date: form.date,
+      period: computedPeriod,
+    }
+
+    // Si el monto supera el umbral de control de riesgo (>= RD$ 25,000), activar fricción intencional
+    if (parsedAmount >= 25000) {
+      setPendingConfirmation(expenseData)
+      setIsModalOpen(false)
+      return
+    }
+
+    onAddExpense(expenseData)
     setForm({ description: '', amount: '', category: 'food', type: 'variable', paymentMethod: 'debit_card', date: new Date().toISOString().slice(0, 10) })
     setIsModalOpen(false)
   }
@@ -457,6 +499,24 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
             </form>
           </div>
         </div>
+      )}
+
+      {pendingConfirmation && (
+        <TransactionConfirmationFlow
+          amount={pendingConfirmation.amount}
+          category={CATEGORY_MAP[pendingConfirmation.category]?.label || 'Egreso'}
+          concept={pendingConfirmation.description}
+          date={pendingConfirmation.date}
+          paymentMethod={PAYMENT_MAP[pendingConfirmation.paymentMethod] || pendingConfirmation.paymentMethod}
+          onConfirm={() => {
+            onAddExpense(pendingConfirmation)
+            setPendingConfirmation(null)
+            setForm({ description: '', amount: '', category: 'food', type: 'variable', paymentMethod: 'debit_card', date: new Date().toISOString().slice(0, 10) })
+          }}
+          onCancel={() => {
+            setPendingConfirmation(null)
+          }}
+        />
       )}
     </div>
   )

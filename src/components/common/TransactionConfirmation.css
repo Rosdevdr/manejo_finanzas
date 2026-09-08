@@ -1,0 +1,450 @@
+/* ============================================ */
+/* OVERLAY & FONDOS                             */
+/* ============================================ */
+.transaction-confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 12, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  padding: 16px;
+}
+
+/* ============================================ */
+/* CONTENEDOR MODAL DE CONFIRMACIÓN            */
+/* ============================================ */
+.transaction-flow-card {
+  background: #141419;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), 0 0 40px rgba(201, 168, 76, 0.08);
+  position: relative;
+  overflow: hidden;
+  animation: slideInCard 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.transaction-flow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.transaction-security-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(201, 168, 76, 0.1);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  color: #F1D97E;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.security-dot-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #C9A84C;
+  box-shadow: 0 0 6px #C9A84C;
+  animation: dotPulse 1.6s ease-in-out infinite;
+}
+
+/* ============================================ */
+/* PASO 1: RESUMEN DE TRANSACCIÓN              */
+/* ============================================ */
+.transaction-summary {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.summary-rows-container {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  opacity: 0;
+  animation: fadeInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row[data-row="1"] { animation-delay: 0.08s; }
+.summary-row[data-row="2"] { animation-delay: 0.18s; }
+.summary-row[data-row="3"] { animation-delay: 0.28s; }
+.summary-row[data-row="4"] { animation-delay: 0.38s; }
+
+.summary-label {
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
+.summary-value {
+  color: #F5F5F5;
+  font-weight: 600;
+}
+
+.summary-amount-block {
+  text-align: center;
+  padding: 18px 12px;
+  background: radial-gradient(circle at 50% 50%, rgba(201, 168, 76, 0.08) 0%, transparent 80%);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.summary-amount-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #A1A1AA;
+  margin-bottom: 4px;
+}
+
+.summary-amount {
+  font-size: 28px;
+  font-weight: 800;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  color: #F1D97E;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px rgba(201, 168, 76, 0.35);
+}
+
+/* ============================================ */
+/* PASO 2: AUTORIZACIÓN CON INTENCIONALIDAD     */
+/* ============================================ */
+.transaction-authorization {
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.authorization-icon-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(201, 168, 76, 0.12);
+  border: 1.5px solid rgba(201, 168, 76, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #F1D97E;
+  animation: pulseRings 2s ease-in-out infinite;
+}
+
+.authorization-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #F5F5F5;
+  margin-bottom: 8px;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+.authorization-message {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #9CA3AF;
+  margin-bottom: 24px;
+}
+
+.authorization-warning-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: #FCA5A5;
+  font-size: 12px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.authorization-buttons {
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+}
+
+@media (min-width: 480px) {
+  .authorization-buttons {
+    flex-direction: row;
+  }
+}
+
+.btn-confirm-transaction {
+  flex: 1.3;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #F1D97E 0%, #C9A84C 100%);
+  color: #0A0A0C;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 18px rgba(201, 168, 76, 0.25);
+}
+
+.btn-confirm-transaction:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(201, 168, 76, 0.4);
+  filter: brightness(1.05);
+}
+
+.btn-confirm-transaction:active {
+  transform: scale(0.97) !important;
+}
+
+.btn-cancel-transaction {
+  flex: 1;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #D1D5DB;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-cancel-transaction:hover {
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #F87171;
+}
+
+.btn-cancel-transaction:active {
+  transform: scale(0.97) !important;
+}
+
+/* ============================================ */
+/* PASO 3: SELLO DORADO ANIMADO                */
+/* ============================================ */
+.transaction-seal-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0 12px;
+  min-height: 280px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.transaction-seal {
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(241, 217, 126, 0.25), rgba(201, 168, 76, 0.08));
+  border: 3px solid #C9A84C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 
+    0 0 0 8px rgba(201, 168, 76, 0.12),
+    0 0 45px rgba(201, 168, 76, 0.45),
+    inset 0 0 35px rgba(201, 168, 76, 0.2);
+  animation: sealSpin 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.seal-ring-orbit {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(201, 168, 76, 0.35);
+  animation: sealOrbitSpin 8s linear infinite;
+}
+
+.seal-checkmark {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #F1D97E;
+  filter: drop-shadow(0 0 8px rgba(201, 168, 76, 0.7));
+  animation: checkmarkPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+.seal-confirmation-message {
+  margin-top: 24px;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  color: #F5F5F5;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  animation: fadeInUp 0.4s ease-out 0.4s both;
+}
+
+.seal-transaction-details {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #9CA3AF;
+  text-align: center;
+  animation: fadeInUp 0.4s ease-out 0.55s both;
+}
+
+.seal-status-badge {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #34D399;
+  font-size: 11.5px;
+  font-weight: 600;
+  animation: fadeInUp 0.4s ease-out 0.65s both;
+}
+
+/* ============================================ */
+/* ANIMACIONES KEYFRAME                         */
+/* ============================================ */
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInCard {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes sealSpin {
+  0% {
+    opacity: 0;
+    transform: scale(0.75) rotateZ(-180deg);
+    filter: blur(4px);
+  }
+  70% {
+    transform: scale(1.08) rotateZ(15deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateZ(0deg);
+    filter: blur(0px);
+  }
+}
+
+@keyframes sealOrbitSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes checkmarkPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  70% {
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+@keyframes pulseRings {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(201, 168, 76, 0);
+  }
+}
+
+/* ============================================ */
+/* ACCESIBILIDAD Y REDUCED MOTION               */
+/* ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .transaction-confirmation-overlay,
+  .transaction-flow-card,
+  .transaction-seal,
+  .seal-checkmark,
+  .summary-row,
+  .seal-orbit-spin {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

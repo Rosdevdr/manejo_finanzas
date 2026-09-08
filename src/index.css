@@ -2,6 +2,13 @@
 
 :root {
   color-scheme: dark;
+  --gold-primary: #C9A84C;
+  --gold-hover: #F1D97E;
+  --gold-light: #FCE592;
+  --card-bg: #141419;
+  --card-border: rgba(201, 168, 76, 0.2);
+  --text-primary: #F5F5F5;
+  --text-secondary: #9CA3AF;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

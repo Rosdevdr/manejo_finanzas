@@ -3,7 +3,7 @@ import { PlusCircle, CheckCircle2, X, Calendar } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { CATEGORY_MAP } from '../../utils/categoryHelpers'
 import { getTodayDateString } from '../../utils/formatters'
-import { HighRiskConfirmModal } from '../ui/HighRiskConfirmModal'
+import { TransactionConfirmationFlow } from '../common/TransactionConfirmationFlow'
 import { triggerHaptic } from '../../utils/haptics'
 
 interface ExpenseFormProps {
@@ -240,12 +240,10 @@ export function ExpenseForm({ currentPeriod, expenseToEdit, onSave, onCancelEdit
       </div>
 
       {pendingHighRisk && (
-        <HighRiskConfirmModal
-          isOpen={true}
+        <TransactionConfirmationFlow
           amount={pendingHighRisk.amount}
           concept={pendingHighRisk.concept}
-          categoryLabel={pendingHighRisk.categoryLabel}
-          currentAvailable={0}
+          category={pendingHighRisk.categoryLabel}
           onConfirm={handleConfirmHighRisk}
           onCancel={() => setPendingHighRisk(null)}
         />
