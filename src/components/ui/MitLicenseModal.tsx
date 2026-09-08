@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Scale, X, ExternalLink, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react'
 import { AureusLogo } from './AureusLogo'
 import { GithubIcon } from './GithubIcon'
@@ -9,6 +10,15 @@ interface MitLicenseModalProps {
 }
 
 export function MitLicenseModal({ isOpen, onClose }: MitLicenseModalProps) {
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (

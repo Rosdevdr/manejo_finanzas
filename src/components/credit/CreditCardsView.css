@@ -4,7 +4,7 @@
 
 .credit-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -251,4 +251,23 @@
 
 .tx-paid-badge:hover {
   transform: scale(1.04);
+}
+
+.tx-paid-badge:active {
+  transform: scale(0.96);
+}
+
+@media (max-width: 480px) {
+  .credit-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .virtual-card {
+    height: 180px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+  .card-number {
+    font-size: 14px !important;
+  }
 }

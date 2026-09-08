@@ -3215,26 +3215,60 @@ select.field-select {
   }
 }
 
-@media (max-width: 600px) {
-  .sandbox-kpi-row {
-    grid-template-columns: 1fr;
-  }
-  .sandbox-hero-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .sandbox-card-mockup {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
-  .sandbox-allocation-body {
-    flex-direction: column;
-  }
-}
-
-/* ── Mobile Layout Polish for Tables & Bottom Cards ── */
 @media (max-width: 768px) {
+  .sandbox-header-strip {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .sandbox-header-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .sandbox-header-actions .sandbox-btn-gold,
+  .sandbox-header-actions .sandbox-btn-outline {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 9px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .sandbox-modules-sync-strip {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+    border-radius: 12px !important;
+  }
+  .sync-strip-header {
+    font-size: 11px !important;
+  }
+  .sync-strip-pills {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .sync-module-pill {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    min-height: 38px !important;
+    flex: 1 1 calc(33.333% - 6px) !important;
+    min-width: 90px !important;
+    justify-content: space-between !important;
+  }
+
+  .ai-compliance-banner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+  .ai-compliance-link {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 8px 12px !important;
+  }
+
   .sandbox-bottom-grid {
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 14px !important;
@@ -3307,6 +3341,30 @@ select.field-select {
   }
 }
 
+@media (max-width: 600px) {
+  .sandbox-kpi-row {
+    grid-template-columns: 1fr;
+  }
+  .sandbox-hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sandbox-card-mockup {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .sandbox-allocation-body {
+    flex-direction: column;
+  }
+  .sandbox-payment-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .sync-module-pill {
+    flex: 1 1 calc(50% - 6px) !important;
+  }
+}
+
 /* =========================================================================
    AUREUS THEMATIC CANCEL & SECONDARY BUTTONS (PREMIUM DARK GOLD/GLASS)
    ========================================================================= */
@@ -3358,14 +3416,16 @@ select.field-select {
 }
 
 /* =========================================================================
-   EMIL KOWALSKI / TASTE MICRO-ANIMATIONS & INTERACTION REFINEMENTS
+   EMIL KOWALSKI / LINEAR TACTILE MICRO-INTERACTIONS & MOTION ENGINE
    ========================================================================= */
 
 :root {
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --gold-glow-focus: 0 0 0 3px rgba(201, 168, 76, 0.22), 0 0 16px rgba(201, 168, 76, 0.08);
 }
 
 button,
+.btn,
 .btn-primary,
 .btn-gold,
 .btn-expense,
@@ -3376,11 +3436,17 @@ button,
 .sandbox-btn-icon,
 .nav-item,
 .month-btn,
-.sync-module-pill {
+.sync-module-pill,
+.terms-tab-btn,
+.subtab-btn,
+.modal-close,
+.nav-btn,
+.table-action-chevron {
   transition: transform 0.18s var(--ease-spring), background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
 
 button:active,
+.btn:active,
 .btn-primary:active,
 .btn-gold:active,
 .btn-expense:active,
@@ -3389,8 +3455,29 @@ button:active,
 .sandbox-btn-gold:active,
 .sandbox-btn-outline:active,
 .sandbox-btn-icon:active,
-.sync-module-pill:active {
-  transform: scale(0.97);
+.sync-module-pill:active,
+.terms-tab-btn:active,
+.subtab-btn:active,
+.modal-close:active,
+.nav-btn:active {
+  transform: scale(0.97) !important;
+}
+
+/* ── Interactive Card Elevations ── */
+.sandbox-kpi-card,
+.stat-card,
+.budget-card,
+.export-action-card,
+.rule-card {
+  transition: transform 0.22s var(--ease-spring), border-color 0.2s ease, box-shadow 0.22s ease !important;
+}
+
+.sandbox-kpi-card:hover,
+.stat-card:hover,
+.export-action-card:hover {
+  transform: translateY(-2.5px);
+  border-color: rgba(201, 168, 76, 0.35) !important;
+  box-shadow: 0 10px 28px -6px rgba(0, 0, 0, 0.6), 0 0 20px rgba(201, 168, 76, 0.08) !important;
 }
 
 @keyframes itemSlideUp {
@@ -3413,21 +3500,111 @@ button:active,
 .tx-row:hover,
 .sandbox-table tbody tr:hover {
   transform: translateX(2px);
+  background: rgba(201, 168, 76, 0.03) !important;
 }
 
-/* Input focus glow enhancements */
+.sandbox-table tbody tr:hover .table-action-chevron {
+  transform: translateX(3px);
+  color: #F3CA65;
+}
+
+/* ── Universal Input Focus Halo ── */
+input:focus,
+select:focus,
+textarea:focus,
 .field-input:focus,
 .field-select:focus,
+.form-input:focus,
+.form-select:focus,
 .edit-input:focus,
 .edit-select:focus,
 .auth-input:focus,
 .modal-input:focus,
 .modal-select:focus {
-  border-color: rgba(201, 168, 76, 0.5) !important;
-  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.12), 0 0 16px rgba(139, 92, 246, 0.08) !important;
+  border-color: #C9A84C !important;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.22), 0 0 16px rgba(201, 168, 76, 0.08) !important;
+  outline: none !important;
 }
 
-/* Accessibility & Prefers-reduced-motion */
+/* ── Sello Dorado de Transacción ── */
+.transaction-seal {
+  animation: sealSpin 0.75s var(--ease-spring) forwards !important;
+  box-shadow: 0 0 35px rgba(201, 168, 76, 0.55) !important;
+}
+
+@keyframes sealSpin {
+  0% {
+    transform: scale(0.92) rotate(-6deg);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.08) rotate(3deg);
+    filter: brightness(1.3);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1.15);
+  }
+}
+
+/* ── Intentional Positive Friction Step Sequence ── */
+@keyframes slideInStep {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.confirm-transaction-step {
+  animation: slideInStep 0.35s var(--ease-spring) both;
+}
+.confirm-transaction-step[data-step="1"] { animation-delay: 0.05s; }
+.confirm-transaction-step[data-step="2"] { animation-delay: 0.2s; }
+.confirm-transaction-step[data-step="3"] { animation-delay: 0.35s; }
+
+/* ── Reactive Gold Pulse ── */
+.pulse-gold-confirm {
+  animation: pulseGoldConfirm 0.85s var(--ease-spring);
+}
+
+@keyframes pulseGoldConfirm {
+  0% {
+    box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(201, 168, 76, 0);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(201, 168, 76, 0);
+    transform: scale(1);
+  }
+}
+
+/* ── Golden Shimmer Skeletons ── */
+.skeleton-gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    #111117 0%,
+    rgba(201, 168, 76, 0.14) 50%,
+    #111117 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerGold 2s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+@keyframes shimmerGold {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Accessibility & Prefers-reduced-motion ── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -3438,4 +3615,5 @@ button:active,
     scroll-behavior: auto !important;
   }
 }
+
 

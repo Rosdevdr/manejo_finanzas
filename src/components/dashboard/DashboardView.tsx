@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   TrendingUp,
@@ -30,6 +30,8 @@ import { formatCurrency } from '../../utils/formatters'
 import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES, calculateCumulativeBalance, formatPeriodLabel } from '../../utils/calendar'
 import { getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
 import { downloadAiRegulationDocument } from '../../utils/aiRegulationDocument'
+import { AnimatedCurrency } from '../ui/AnimatedCurrency'
+import { triggerHaptic } from '../../utils/haptics'
 
 interface DashboardViewProps {
   currentPeriod: string
@@ -73,6 +75,16 @@ export function DashboardView({
 
   // Modal de cumplimiento de IA
   const [showComplianceModal, setShowComplianceModal] = useState(false)
+
+  // Cierre de modal con Escape
+  useEffect(() => {
+    if (!showComplianceModal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowComplianceModal(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showComplianceModal])
 
   // 1. Datos de TODOS los módulos estrictamente del período actual
   const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
@@ -287,27 +299,75 @@ export function DashboardView({
           <span>Sincronización Total de Módulos · {formatPeriodLabel(currentPeriod)}</span>
         </div>
         <div className="sync-strip-pills">
-          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('incomes')} title="Ver Ingresos">
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('incomes')
+            }}
+            title="Ver Ingresos"
+          >
             <span>Ingresos</span>
             <strong>{pInc.length}</strong>
           </button>
-          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('expenses')} title="Ver Gastos">
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('expenses')
+            }}
+            title="Ver Gastos"
+          >
             <span>Gastos</span>
             <strong>{pExp.length}</strong>
           </button>
-          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('credit')} title="Ver Tarjetas">
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('credit')
+            }}
+            title="Ver Tarjetas"
+          >
             <span>Tarjetas</span>
             <strong>{pCardTxs.length}</strong>
           </button>
-          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('cash')} title="Ver Efectivo">
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('cash')
+            }}
+            title="Ver Efectivo"
+          >
             <span>Efectivo</span>
             <strong>{pCash.length}</strong>
           </button>
-          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('budgets')} title="Ver Presupuestos">
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('budgets')
+            }}
+            title="Ver Presupuestos"
+          >
             <span>Presupuestos</span>
             <strong>{categoryBudgets.length}</strong>
           </button>
-          <button type="button" className="sync-module-pill" onClick={() => onNavigateTab && onNavigateTab('chat-advisor')} title="Ir a Asesor IA">
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('chat-advisor')
+            }}
+            title="Ir a Asesor IA"
+          >
             <span>Asesor IA</span>
             <strong style={{ color: '#34D399' }}>Activo</strong>
           </button>
@@ -324,7 +384,9 @@ export function DashboardView({
               {Math.abs(balDiff).toFixed(1)}%
             </span>
           </div>
-          <div className="sandbox-kpi-value">{formatCurrency(cumulative.totalCumulativeBalance)}</div>
+          <div className="sandbox-kpi-value">
+            <AnimatedCurrency value={cumulative.totalCumulativeBalance} />
+          </div>
           <div className="sandbox-kpi-sub">
             {cumulative.carriedOverBalance !== 0
               ? `Arrastre: ${formatCurrency(cumulative.carriedOverBalance)}`
@@ -340,7 +402,9 @@ export function DashboardView({
               {incDiff >= 0 ? `+${incDiff.toFixed(1)}%` : `${incDiff.toFixed(1)}%`}
             </span>
           </div>
-          <div className="sandbox-kpi-value text-emerald">{formatCurrency(totalIn)}</div>
+          <div className="sandbox-kpi-value text-emerald">
+            <AnimatedCurrency value={totalIn} />
+          </div>
           <div className="sandbox-kpi-sub">{pInc.length} entradas en {MONTH_SHORT_NAMES[(parseInt(currentPeriod.split('-')[1], 10) || 1) - 1]}</div>
         </div>
 
@@ -351,7 +415,9 @@ export function DashboardView({
               {creditSummary.utilizationRate.toFixed(0)}% cupo
             </span>
           </div>
-          <div className="sandbox-kpi-value text-gold">{formatCurrency(creditSummary.totalDebt)}</div>
+          <div className="sandbox-kpi-value text-gold">
+            <AnimatedCurrency value={creditSummary.totalDebt} />
+          </div>
           <div className="sandbox-kpi-sub">{creditCards.length} tarjetas asociadas</div>
         </div>
 
@@ -363,7 +429,9 @@ export function DashboardView({
               100%
             </span>
           </div>
-          <div className="sandbox-kpi-value text-emerald">{formatCurrency(totalIn)}</div>
+          <div className="sandbox-kpi-value text-emerald">
+            <AnimatedCurrency value={totalIn} />
+          </div>
           <div className="sandbox-kpi-sub">Fijos: {formatCurrency(pInc.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0))}</div>
         </div>
 
@@ -374,7 +442,9 @@ export function DashboardView({
               {expDiff >= 0 ? `+${expDiff.toFixed(1)}%` : `${expDiff.toFixed(1)}%`}
             </span>
           </div>
-          <div className="sandbox-kpi-value text-rose">{formatCurrency(totalExp)}</div>
+          <div className="sandbox-kpi-value text-rose">
+            <AnimatedCurrency value={totalExp} />
+          </div>
           <div className="sandbox-kpi-sub">Fijos: {formatCurrency(fixedExp)} · Var: {formatCurrency(varExp)}</div>
         </div>
       </div>
@@ -668,7 +738,9 @@ export function DashboardView({
             </div>
 
             <div className="unencumbered-stat-row">
-              <div className="unencumbered-val">{formatCurrency(unencumberedLiquidity)}</div>
+              <div className="unencumbered-val">
+                <AnimatedCurrency value={unencumberedLiquidity} />
+              </div>
               <div className="unencumbered-sub">
                 {liquidityRatio.toFixed(0)}% libre
               </div>

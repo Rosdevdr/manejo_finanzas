@@ -3,6 +3,8 @@ import { PlusCircle, CheckCircle2, X, Calendar } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { CATEGORY_MAP } from '../../utils/categoryHelpers'
 import { getTodayDateString } from '../../utils/formatters'
+import { HighRiskConfirmModal } from '../ui/HighRiskConfirmModal'
+import { triggerHaptic } from '../../utils/haptics'
 
 interface ExpenseFormProps {
   currentPeriod: string;
@@ -20,6 +22,14 @@ export function ExpenseForm({ currentPeriod, expenseToEdit, onSave, onCancelEdit
   const [date, setDate] = useState(expenseToEdit?.date ?? getTodayDateString())
   const [error, setError] = useState<string | null>(null)
   const [prevEditId, setPrevEditId] = useState<string | null | undefined>(expenseToEdit?.id)
+
+  // Estado para confirmación de alto riesgo (> RD$ 25,000)
+  const [pendingHighRisk, setPendingHighRisk] = useState<{
+    amount: number
+    concept: string
+    categoryLabel: string
+    data: Omit<Expense, 'id'> | Expense
+  } | null>(null)
 
   if (expenseToEdit?.id !== prevEditId) {
     setPrevEditId(expenseToEdit?.id)
@@ -42,6 +52,14 @@ export function ExpenseForm({ currentPeriod, expenseToEdit, onSave, onCancelEdit
     setError(null)
   }
 
+  const handleConfirmHighRisk = () => {
+    if (pendingHighRisk) {
+      onSave(pendingHighRisk.data)
+      setPendingHighRisk(null)
+      resetForm()
+    }
+  }
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
 
@@ -56,27 +74,35 @@ export function ExpenseForm({ currentPeriod, expenseToEdit, onSave, onCancelEdit
       return
     }
 
+    const expensePayload = {
+      description: description.trim(),
+      amount: parsedAmount,
+      category,
+      type,
+      paymentMethod,
+      date,
+      period: currentPeriod,
+    }
+
+    // Si el monto es igual o mayor a RD$ 25,000 y no es edición simple, activar fricción positiva de seguridad
+    if (parsedAmount >= 25000 && !expenseToEdit) {
+      setPendingHighRisk({
+        amount: parsedAmount,
+        concept: description.trim(),
+        categoryLabel: CATEGORY_MAP[category]?.label || 'Egreso',
+        data: expensePayload,
+      })
+      return
+    }
+
     if (expenseToEdit) {
       onSave({
         ...expenseToEdit,
-        description: description.trim(),
-        amount: parsedAmount,
-        category,
-        type,
-        paymentMethod,
-        date,
-        period: currentPeriod,
+        ...expensePayload,
       })
     } else {
-      onSave({
-        description: description.trim(),
-        amount: parsedAmount,
-        category,
-        type,
-        paymentMethod,
-        date,
-        period: currentPeriod,
-      })
+      triggerHaptic('success')
+      onSave(expensePayload)
       resetForm()
     }
   }
@@ -212,6 +238,18 @@ export function ExpenseForm({ currentPeriod, expenseToEdit, onSave, onCancelEdit
           )}
         </button>
       </div>
+
+      {pendingHighRisk && (
+        <HighRiskConfirmModal
+          isOpen={true}
+          amount={pendingHighRisk.amount}
+          concept={pendingHighRisk.concept}
+          categoryLabel={pendingHighRisk.categoryLabel}
+          currentAvailable={0}
+          onConfirm={handleConfirmHighRisk}
+          onCancel={() => setPendingHighRisk(null)}
+        />
+      )}
     </form>
   )
 }

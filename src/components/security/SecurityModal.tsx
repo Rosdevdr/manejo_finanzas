@@ -90,7 +90,7 @@ export function SecurityModal({
     }
   }, [isOpen])
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setError(null)
     setSuccess(null)
     setPasswordSuccess(null)
@@ -98,7 +98,16 @@ export function SecurityModal({
     setEnrollingFactor(null)
     setVerificationCode('')
     onClose()
-  }
+  }, [onClose])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, handleClose])
 
   if (!isOpen) return null
 

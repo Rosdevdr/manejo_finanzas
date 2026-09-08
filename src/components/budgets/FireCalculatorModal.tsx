@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Flame, TrendingUp, Percent, DollarSign, PiggyBank, Wallet } from 'lucide-react'
 import { formatCurrency } from '../../utils/formatters'
 import './FireCalculatorModal.css'
@@ -20,6 +20,15 @@ export function FireCalculatorModal({
   const [monthlySavings, setMonthlySavings]   = useState(15000)
   const [returnRate, setReturnRate]           = useState(8) // 8% anual promedio
   const [currentInvested, setCurrentInvested] = useState(() => Math.round(currentSavings) || 50000)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 

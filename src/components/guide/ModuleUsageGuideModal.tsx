@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   X,
   BookOpen,
@@ -153,6 +153,15 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
 export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashboard' }: ModuleUsageGuideModalProps) {
   const [selectedId, setSelectedId] = useState(initialModule)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 

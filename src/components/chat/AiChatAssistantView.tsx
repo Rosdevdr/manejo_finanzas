@@ -20,6 +20,7 @@ import {
   setStoredGeminiModel,
   queryGeminiFinancialAdvisor,
 } from '../../utils/geminiClient'
+import { triggerHaptic } from '../../utils/haptics'
 import './AiChatAssistantView.css'
 
 function createId(prefix: string): string {
@@ -349,12 +350,12 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
 
   return (
     <div className="fade-in chat-view-wrapper">
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
+      <div className="chat-page-header">
         <div>
           <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Asistente IA</span></div>
           <h1 className="page-title">Asesor Financiero con Inteligencia Artificial</h1>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, marginTop: 2 }}>
+        <div className="chat-header-badges">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(52, 211, 153, 0.08)', padding: '4px 10px', borderRadius: 12, border: '1px solid rgba(52, 211, 153, 0.25)' }}>
             <ShieldCheck size={13} style={{ color: '#34D399' }} />
             <span style={{ fontSize: 10.5, color: '#34D399', fontFamily: 'Space Mono, monospace' }}>Art. 50 UE AI Act</span>
@@ -381,26 +382,31 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
             </div>
           </div>
 
-          <div className="chat-context-pills">
-            <span className="context-pill" style={{ color: '#F3CA65', borderColor: 'rgba(243, 202, 101, 0.3)' }}>
-              Disponible: {formatCurrency(cumulative.totalCumulativeBalance)}
-            </span>
-            {cumulative.carriedOverBalance !== 0 && (
-              <span className="context-pill" style={{ color: '#34D399', borderColor: 'rgba(52, 211, 153, 0.3)' }}>
-                Arrastre: {formatCurrency(cumulative.carriedOverBalance)}
+          <div className="chat-header-actions">
+            <div className="chat-context-pills">
+              <span className="context-pill" style={{ color: '#F3CA65', borderColor: 'rgba(243, 202, 101, 0.3)' }}>
+                Disponible: {formatCurrency(cumulative.totalCumulativeBalance)}
               </span>
-            )}
-            {totalInc > 0 && <span className="context-pill">Ingresos: {formatCurrency(totalInc)}</span>}
-            {totalExp > 0 && <span className="context-pill">Gastos: {formatCurrency(totalExp)}</span>}
+              {cumulative.carriedOverBalance !== 0 && (
+                <span className="context-pill" style={{ color: '#34D399', borderColor: 'rgba(52, 211, 153, 0.3)' }}>
+                  Arrastre: {formatCurrency(cumulative.carriedOverBalance)}
+                </span>
+              )}
+              {totalInc > 0 && <span className="context-pill">Ingresos: {formatCurrency(totalInc)}</span>}
+              {totalExp > 0 && <span className="context-pill">Gastos: {formatCurrency(totalExp)}</span>}
+            </div>
             <button
               type="button"
-              className="sandbox-btn-outline"
-              onClick={handleClearChat}
-              style={{ padding: '6px 14px', fontSize: 11.5, borderRadius: 8, gap: 6 }}
+              className="sandbox-btn-outline chat-clear-btn"
+              onClick={() => {
+                triggerHaptic('warning')
+                handleClearChat()
+              }}
+              style={{ padding: '6px 12px', fontSize: 11.5, borderRadius: 8, gap: 6 }}
               title="Borrar historial privado de esta cuenta"
             >
               <Trash2 size={13} style={{ color: '#FB7185' }} />
-              <span>Limpiar Memoria</span>
+              <span className="chat-clear-btn-text">Limpiar Memoria</span>
             </button>
           </div>
         </div>

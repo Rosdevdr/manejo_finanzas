@@ -17,6 +17,7 @@ import { GithubIcon } from '../ui/GithubIcon'
 import { CardAlertsPopover } from '../alerts/CardAlertsPopover'
 import type { CreditCard, CreditCardTransaction } from '../../types/finance'
 import { getRandomDailyTip, FINANCIAL_TIPS_BANK } from '../../utils/financialTips'
+import { triggerHaptic } from '../../utils/haptics'
 
 interface AppHeaderProps {
   periodLabel: string
@@ -75,14 +76,28 @@ export function AppHeader({
   })
   const tipRef = useRef<HTMLDivElement>(null)
 
+  // Pulso dorado reactivo en Saldo Disponible
+  const [balancePulse, setBalancePulse] = useState(false)
+  const prevBalanceRef = useRef(balanceLabel)
+
+  useEffect(() => {
+    if (prevBalanceRef.current !== balanceLabel) {
+      prevBalanceRef.current = balanceLabel
+      setBalancePulse(true)
+      const timer = setTimeout(() => setBalancePulse(false), 900)
+      return () => clearTimeout(timer)
+    }
+  }, [balanceLabel])
+
   const activeTip = FINANCIAL_TIPS_BANK[tipIndex] || FINANCIAL_TIPS_BANK[0]
 
   const handleNextTip = (e: React.MouseEvent) => {
     e.stopPropagation()
+    triggerHaptic('light')
     setTipIndex(prev => (prev + 1) % FINANCIAL_TIPS_BANK.length)
   }
 
-  // Cerrar menús al hacer clic fuera
+  // Cerrar menús al hacer clic fuera o presionar Escape
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -92,8 +107,20 @@ export function AppHeader({
         setTipOpen(false)
       }
     }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setProfileOpen(false)
+        setTipOpen(false)
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
   }, [])
 
   return (
@@ -236,9 +263,9 @@ export function AppHeader({
         )}
         </div>
 
-        {/* Pill de Saldo Disponible */}
+        {/* Pill de Saldo Disponible con Pulso Reactivo */}
         <div
-          className="balance-pill"
+          className={`balance-pill ${balancePulse ? 'pulse-gold-confirm' : ''}`}
           title={
             carriedOverBalance !== undefined && carriedOverBalance !== 0
               ? `Balance Acumulado Total: ${balanceLabel}\n• Saldo arrastrado de meses previos: ${carriedOverBalance >= 0 ? '+' : ''}${carriedOverBalance.toLocaleString('es-DO', { style: 'currency', currency: 'DOP' })}\n• Flujo neto de este mes: ${(monthNetFlow ?? 0).toLocaleString('es-DO', { style: 'currency', currency: 'DOP' })}`
@@ -281,7 +308,10 @@ export function AppHeader({
           <button
             type="button"
             className="profile-trigger"
-            onClick={() => setProfileOpen(prev => !prev)}
+            onClick={() => {
+              triggerHaptic('light')
+              setProfileOpen(prev => !prev)
+            }}
             title={userEmail || 'Perfil de Usuario'}
             aria-label="Menú de perfil"
             aria-expanded={profileOpen}
@@ -305,6 +335,28 @@ export function AppHeader({
                       <Cloud size={11} /> <span>Supabase Conectado</span>
                     </>
                   )}
+                </div>
+              </div>
+
+              {/* Indicador de Seguridad Institucional Estilo Revolut */}
+              <div
+                style={{
+                  background: 'rgba(52, 211, 153, 0.08)',
+                  border: '1px solid rgba(52, 211, 153, 0.25)',
+                  borderRadius: 8,
+                  padding: '7px 10px',
+                  margin: '8px 12px 6px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, fontWeight: 700, color: '#34D399' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34D399', boxShadow: '0 0 6px #34D399' }} />
+                  <span>Conexión Cifrada TLS 256-bit</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: '#9CA3AF', paddingLeft: 12 }}>
+                  Row Level Security (RLS) Activo
                 </div>
               </div>
 

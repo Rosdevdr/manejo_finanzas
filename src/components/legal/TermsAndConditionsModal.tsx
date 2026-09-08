@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   FileText,
@@ -12,6 +12,7 @@ import {
   Clock,
 } from 'lucide-react'
 import { downloadTermsAndConditionsDocument } from '../../utils/termsDocument'
+import { triggerHaptic } from '../../utils/haptics'
 import './TermsAndConditionsModal.css'
 
 interface TermsAndConditionsModalProps {
@@ -23,6 +24,15 @@ type TabKey = 'summary' | 'service' | 'ai' | 'privacy' | 'rights'
 
 export function TermsAndConditionsModal({ isOpen, onClose }: TermsAndConditionsModalProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('summary')
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 
@@ -66,7 +76,10 @@ export function TermsAndConditionsModal({ isOpen, onClose }: TermsAndConditionsM
           <button
             type="button"
             className={`terms-tab-btn ${activeTab === 'summary' ? 'active' : ''}`}
-            onClick={() => setActiveTab('summary')}
+            onClick={() => {
+              triggerHaptic('light')
+              setActiveTab('summary')
+            }}
           >
             <Sparkles size={13} />
             <span>Resumen Amigable</span>
@@ -74,7 +87,10 @@ export function TermsAndConditionsModal({ isOpen, onClose }: TermsAndConditionsM
           <button
             type="button"
             className={`terms-tab-btn ${activeTab === 'service' ? 'active' : ''}`}
-            onClick={() => setActiveTab('service')}
+            onClick={() => {
+              triggerHaptic('light')
+              setActiveTab('service')
+            }}
           >
             <ShieldCheck size={13} />
             <span>Naturaleza del Servicio</span>
@@ -82,7 +98,10 @@ export function TermsAndConditionsModal({ isOpen, onClose }: TermsAndConditionsM
           <button
             type="button"
             className={`terms-tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
-            onClick={() => setActiveTab('ai')}
+            onClick={() => {
+              triggerHaptic('light')
+              setActiveTab('ai')
+            }}
           >
             <Sparkles size={13} />
             <span>Uso de IA & Disclaimer</span>
@@ -90,7 +109,10 @@ export function TermsAndConditionsModal({ isOpen, onClose }: TermsAndConditionsM
           <button
             type="button"
             className={`terms-tab-btn ${activeTab === 'privacy' ? 'active' : ''}`}
-            onClick={() => setActiveTab('privacy')}
+            onClick={() => {
+              triggerHaptic('light')
+              setActiveTab('privacy')
+            }}
           >
             <Lock size={13} />
             <span>Privacidad & RLS</span>
@@ -98,7 +120,10 @@ export function TermsAndConditionsModal({ isOpen, onClose }: TermsAndConditionsM
           <button
             type="button"
             className={`terms-tab-btn ${activeTab === 'rights' ? 'active' : ''}`}
-            onClick={() => setActiveTab('rights')}
+            onClick={() => {
+              triggerHaptic('light')
+              setActiveTab('rights')
+            }}
           >
             <UserCheck size={13} />
             <span>Tus Derechos</span>

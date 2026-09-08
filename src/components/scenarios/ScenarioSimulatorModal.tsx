@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Sliders, TrendingUp, ArrowRightLeft, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { formatCurrency } from '../../utils/formatters'
 import type { Income, Expense } from '../../types/finance'
@@ -23,6 +23,15 @@ export function ScenarioSimulatorModal({
   const [varExpenseCutPct, setVarExpenseCutPct] = useState(0) // 0% a 50%
   const [newFixedExpense, setNewFixedExpense] = useState(0) // Monto de nuevo compromiso
   const [projectionMonths, setProjectionMonths] = useState(12) // 6 o 12 meses
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FileText,
   FileSpreadsheet,
@@ -18,6 +18,7 @@ import type {
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
 import { exportTransactionsToCSV, printExecutiveFinancialReport, type ReportData } from '../../utils/exportReports'
+import { triggerHaptic } from '../../utils/haptics'
 import './ReportExportModal.css'
 
 interface ReportExportModalProps {
@@ -51,6 +52,15 @@ export function ReportExportModal({
 }: ReportExportModalProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<string>(currentPeriod)
 
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   // Calcular períodos disponibles basados en ingresos y gastos registrados
@@ -83,11 +93,13 @@ export function ReportExportModal({
   const savingsRate = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0
 
   const handleExportPDF = () => {
+    triggerHaptic('success')
     printExecutiveFinancialReport(reportData)
     onShowToast('📄 Vista de impresión / PDF generada', 'success')
   }
 
   const handleExportCSV = () => {
+    triggerHaptic('success')
     exportTransactionsToCSV(reportData)
     onShowToast('📊 Archivo CSV descargado con éxito', 'success')
   }
