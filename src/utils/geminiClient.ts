@@ -24,10 +24,10 @@ export function setStoredGeminiApiKey(key: string): void {
 }
 
 export function getStoredGeminiModel(): string {
-  if (typeof window === 'undefined') return 'gemini-3.5-flash'
+  if (typeof window === 'undefined') return 'gemini-2.5-flash'
   const stored = localStorage.getItem(GEMINI_MODEL_STORAGE)
-  if (!stored || stored === 'gemini-1.5-flash' || stored === 'gemini-2.0-flash') {
-    return 'gemini-3.5-flash'
+  if (!stored) {
+    return 'gemini-2.5-flash'
   }
   return stored
 }
@@ -124,7 +124,14 @@ export async function queryGeminiFinancialAdvisor(
   }
 
   const selectedModel = getStoredGeminiModel()
-  const candidateModels = [selectedModel, 'gemini-3.5-flash', 'gemma-4-31b-it', 'gemini-2.5-flash']
+  const candidateModels = [
+    selectedModel,
+    'gemini-2.5-flash',
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-flash-latest',
+    'gemini-3.5-flash',
+  ]
   const uniqueModels = Array.from(new Set(candidateModels))
 
   const systemInstruction = buildSystemPrompt(snapshot)
@@ -158,6 +165,8 @@ export async function queryGeminiFinancialAdvisor(
     },
   }
 
+  let lastErrorMsg = ''
+
   // 1. Intentar a través del endpoint serverless de la app (evita bloqueos de Brave Shields y CORS)
   try {
     const proxyRes = await fetch('/api/gemini', {
@@ -170,33 +179,32 @@ export async function queryGeminiFinancialAdvisor(
       }),
     })
 
-    if (proxyRes.ok) {
-      const data = await proxyRes.json()
-      const parts = data?.candidates?.[0]?.content?.parts
-      const candidate = parts
-        ? parts.map((p: any) => p.text || '').filter(Boolean).join('\n')
-        : data?.candidates?.[0]?.content?.parts?.[0]?.text
+    const contentType = proxyRes.headers.get('content-type') || ''
+    if (contentType.includes('application/json')) {
+      if (proxyRes.ok) {
+        const data = await proxyRes.json()
+        const parts = data?.candidates?.[0]?.content?.parts
+        const candidate = parts
+          ? parts.map((p: any) => p.text || '').filter(Boolean).join('\n')
+          : data?.candidates?.[0]?.content?.parts?.[0]?.text
 
-      if (candidate) {
-        if (data.usedModel) setStoredGeminiModel(data.usedModel)
-        return candidate
-      }
-    } else {
-      const errData = await proxyRes.json().catch(() => ({}))
-      if (errData?.error?.message) {
-        throw new Error(errData.error.message)
+        if (candidate) {
+          if (data.usedModel) setStoredGeminiModel(data.usedModel)
+          return candidate
+        }
+      } else {
+        const errData = await proxyRes.json().catch(() => ({}))
+        if (errData?.error?.message) {
+          lastErrorMsg = errData.error.message
+        }
       }
     }
   } catch (proxyErr: any) {
-    if (proxyErr.message && !proxyErr.message.includes('404') && !proxyErr.message.includes('Failed to fetch')) {
-      throw proxyErr
-    }
-    // Si falla por ser entorno local sin API proxy, intentar llamada directa
+    // Si falla el endpoint serverless (en local sin Vercel o timeout), registrar y pasar al respaldo directo
+    lastErrorMsg = proxyErr.message || ''
   }
 
-  // 2. Llamada directa de respaldo
-  let lastErrorMsg = ''
-
+  // 2. Llamada directa de respaldo (usando endpoint oficial con CSP configurado)
   for (const model of uniqueModels) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
 
