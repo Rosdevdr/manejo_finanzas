@@ -2,22 +2,33 @@ export const config = {
   runtime: 'edge',
 }
 
-const CORS_HEADERS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || ''
+  const isAllowed =
+    origin.startsWith('http://localhost:') ||
+    origin.startsWith('http://127.0.0.1:') ||
+    origin.endsWith('.vercel.app')
+
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': isAllowed ? origin : 'https://manejo-finanzas.vercel.app',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
+  }
 }
 
 export default async function handler(req: Request) {
+  const headers = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: CORS_HEADERS })
+    return new Response(null, { status: 204, headers })
   }
 
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: { message: 'Método no permitido' } }), {
       status: 405,
-      headers: CORS_HEADERS,
+      headers,
     })
   }
 
@@ -28,7 +39,7 @@ export default async function handler(req: Request) {
     if (!apiKey) {
       return new Response(JSON.stringify({ error: { message: 'Falta la clave API de Gemini' } }), {
         status: 400,
-        headers: CORS_HEADERS,
+        headers,
       })
     }
 
@@ -58,7 +69,7 @@ export default async function handler(req: Request) {
           const data = await googleRes.json()
           return new Response(JSON.stringify({ ...data, usedModel: m }), {
             status: 200,
-            headers: CORS_HEADERS,
+            headers,
           })
         } else {
           const errData = await googleRes.json().catch(() => ({}))
@@ -71,12 +82,12 @@ export default async function handler(req: Request) {
 
     return new Response(JSON.stringify({ error: { message: lastError || 'Error al conectar con Google Gemini' } }), {
       status: 500,
-      headers: CORS_HEADERS,
+      headers,
     })
   } catch (error: any) {
     return new Response(JSON.stringify({ error: { message: error.message || 'Error interno del servidor' } }), {
       status: 500,
-      headers: CORS_HEADERS,
+      headers,
     })
   }
 }

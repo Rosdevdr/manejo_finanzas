@@ -46,10 +46,17 @@ const PAYMENT_METHODS: Record<string, string> = {
 
 /**
  * Escapa comillas y caracteres especiales para formato CSV estándar.
+ * Mitiga CSV / Formula Injection (CWE-1236) neutralizando celdas que inicien con =, +, -, @, \t o \r.
  */
 function escapeCsv(val: string | number | undefined | null): string {
   if (val === undefined || val === null) return '""'
-  const str = String(val).replace(/"/g, '""')
+  if (typeof val === 'number') return `"${val}"`
+  let str = String(val)
+  // Mitigación contra CSV / Formula Injection (CWE-1236)
+  if (/^[=@\t\r]/.test(str) || (/^[+\-]/.test(str) && !/^[+\-]?\d+(\.\d+)?$/.test(str.trim()))) {
+    str = `'${str}`
+  }
+  str = str.replace(/"/g, '""')
   return `"${str}"`
 }
 
