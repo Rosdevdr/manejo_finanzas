@@ -34,6 +34,7 @@ interface LoginViewProps {
   mfaFactorId?: string | null
   onVerifyMfa?: (code: string) => Promise<{ error: Error | null }>
   onCancelMfa?: () => Promise<void>
+  onOpenTerms?: () => void
 }
 
 type AuthTab = 'login' | 'register' | 'forgot' | 'update-password' | 'mfa'
@@ -51,6 +52,7 @@ export function LoginView({
   mfaFactorId: propMfaFactorId,
   onVerifyMfa,
   onCancelMfa,
+  onOpenTerms,
 }: LoginViewProps) {
   const [tab, setTab] = useState<AuthTab>(() => (isPasswordRecovery ? 'update-password' : needsMfa ? 'mfa' : 'login'))
   const [email, setEmail] = useState('')
@@ -844,6 +846,35 @@ export function LoginView({
                 <Sparkles size={14} className="text-[#C9A84C]" />
               </button>
             </>
+          )}
+
+          {onOpenTerms && (
+            <div style={{
+              marginTop: 18,
+              textAlign: 'center',
+              fontSize: 11,
+              color: '#71717A',
+              lineHeight: 1.45,
+            }}>
+              Protección de datos conforme a la <strong>Ley No. 172-13 (RD)</strong> y <strong>GDPR</strong>.
+              Plataforma no bancaria (<strong>Ley No. 183-02</strong>).{' '}
+              <button
+                type="button"
+                onClick={onOpenTerms}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#C9A84C',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                Ver Términos y Condiciones
+              </button>
+            </div>
           )}
         </div>
       </div>

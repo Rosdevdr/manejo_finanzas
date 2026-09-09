@@ -87,7 +87,33 @@ export function App() {
     addCreditTransaction, updateCreditTransaction, deleteCreditTransaction, toggleTransactionPaid,
     setCategoryBudget, setMultipleCategoryBudgets,
     addSavingsGoal, updateSavingsGoal, depositToGoal, deleteSavingsGoal,
+    purgeAllUserData,
   } = useFinanceStorage(user)
+
+  // Derecho al Olvido (Ley No. 172-13 RD / Art. 17 GDPR)
+  const handleDeleteAccount = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await purgeAllUserData()
+      if (!res.success) {
+        return res
+      }
+      // Limpiar claves locales de sesión, IA y finanzas
+      try {
+        const keysToRemove = Object.keys(localStorage).filter(
+          k => k.startsWith('aureus_chat_') || k.startsWith('aureus_user_') || k.startsWith('aureus_demo') || k.startsWith('aureus_')
+        )
+        keysToRemove.forEach(k => localStorage.removeItem(k))
+        sessionStorage.clear()
+      } catch {}
+
+      await signOut()
+      setIsSecurityOpen(false)
+      showToast('Tu cuenta y todos tus datos han sido destruidos permanentemente conforme a la Ley 172-13.', 'success')
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error al procesar la eliminación' }
+    }
+  }
 
   const cumulativeSummary = useMemo(
     () => calculateCumulativeBalance(incomes, expenses, currentPeriod),
@@ -184,6 +210,12 @@ export function App() {
           mfaFactorId={mfaFactorId}
           onVerifyMfa={verifyMfa}
           onCancelMfa={cancelMfa}
+          onOpenTerms={() => setShowTermsModal(true)}
+        />
+        <TermsAndConditionsModal
+          isOpen={showTermsModal}
+          onClose={() => setShowTermsModal(false)}
+          onOpenSecurity={() => setIsSecurityOpen(true)}
         />
         <ToastContainer toasts={toasts} onDismiss={dismiss} />
         <Analytics />
@@ -427,12 +459,18 @@ export function App() {
         isOpen={isSecurityOpen}
         onClose={() => setIsSecurityOpen(false)}
         userEmail={user?.email}
+        isDemoMode={isDemoMode}
         onUpdatePassword={updateUserPassword}
+        onDeleteAccount={handleDeleteAccount}
       />
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <MitLicenseModal isOpen={showLicenseModal} onClose={() => setShowLicenseModal(false)} />
-      <TermsAndConditionsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onOpenSecurity={() => setIsSecurityOpen(true)}
+      />
       <ModuleUsageGuideModal
         isOpen={showGuideModal}
         onClose={() => setShowGuideModal(false)}

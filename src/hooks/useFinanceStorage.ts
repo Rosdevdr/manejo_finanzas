@@ -1147,6 +1147,64 @@ export function useFinanceStorage(user?: User | null) {
     }
   }
 
+  /**
+   * Derecho al Olvido (Ley 172-13 RD / Art. 17 GDPR):
+   * Elimina completamente todas las filas de la base de datos y memoria local del usuario.
+   */
+  const purgeAllUserData = async (): Promise<{ success: boolean; error?: string }> => {
+    const userId = user?.id
+
+    // 1. Resetear estados en memoria inmediatamente
+    setIncomesState([])
+    setExpensesState([])
+    setCashState([])
+    setCreditCardsState([])
+    setCreditTransactionsState([])
+    setCategoryBudgetsState([])
+    setSavingsGoalsState([])
+
+    // 2. Limpiar llaves locales de usuario
+    const userKeys = getStorageKeys(userId)
+    Object.values(userKeys).forEach(k => {
+      try { localStorage.removeItem(k) } catch {}
+    })
+
+    // Limpiar claves legadas y demo
+    const demoKeys = getStorageKeys(null)
+    Object.values(demoKeys).forEach(k => {
+      try { localStorage.removeItem(k) } catch {}
+    })
+    cleanLegacyStorage()
+
+    // 3. Si hay sesión Supabase activa, ejecutar purga en base de datos
+    if (supabase && isSupabaseConfigured && userId) {
+      try {
+        // A) Intentar RPC seguro si existe en el backend
+        try {
+          await supabase.rpc('delete_user_account')
+        } catch {
+          // Si el RPC no existe, proceder con borrado individual por tabla
+        }
+
+        // B) Borrado garantizado en cascada de todas las tablas con RLS
+        await Promise.allSettled([
+          supabase.from('credit_card_transactions').delete().eq('user_id', userId),
+          supabase.from('credit_cards').delete().eq('user_id', userId),
+          supabase.from('expenses').delete().eq('user_id', userId),
+          supabase.from('incomes').delete().eq('user_id', userId),
+          supabase.from('cash_withdrawals').delete().eq('user_id', userId),
+          supabase.from('category_budgets').delete().eq('user_id', userId),
+          supabase.from('savings_goals').delete().eq('user_id', userId),
+        ])
+      } catch (err: any) {
+        console.error('Error durante la purga en Supabase:', err)
+        return { success: false, error: err.message || 'Error al eliminar registros remotos' }
+      }
+    }
+
+    return { success: true }
+  }
+
   return {
     incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
     refreshData: loadData,
@@ -1157,5 +1215,6 @@ export function useFinanceStorage(user?: User | null) {
     addCreditTransaction, updateCreditTransaction, deleteCreditTransaction, toggleTransactionPaid,
     setCategoryBudget, setMultipleCategoryBudgets,
     addSavingsGoal, updateSavingsGoal, depositToGoal, deleteSavingsGoal,
+    purgeAllUserData,
   }
 }

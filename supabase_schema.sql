@@ -226,3 +226,22 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.credit_cards;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.credit_card_transactions;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.category_budgets;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.savings_goals;
+
+-- ==============================================================================
+-- ⚖️ DERECHO AL OLVIDO Y CANCELACIÓN TOTAL DE CUENTA (Ley 172-13 RD / GDPR Art. 17)
+-- ==============================================================================
+-- Permite al usuario autenticado eliminar de forma definitiva e irreversible su
+-- cuenta de auth.users, lo que dispara ON DELETE CASCADE en todas sus tablas asociadas.
+CREATE OR REPLACE FUNCTION public.delete_user_account()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Borra el registro del usuario autenticado en auth.users
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$;
+
+-- Otorga permisos de ejecución a los usuarios autenticados
+GRANT EXECUTE ON FUNCTION public.delete_user_account() TO authenticated;

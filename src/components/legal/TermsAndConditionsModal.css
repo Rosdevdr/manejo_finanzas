@@ -357,6 +357,41 @@
   background: rgba(201, 168, 76, 0.06);
 }
 
+.terms-highlight-box.blue {
+  border-left-color: #38BDF8;
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.terms-highlight-box.red-tint {
+  border-left-color: #EF4444;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-left-width: 4px;
+}
+
+.terms-btn-danger-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #F87171;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.terms-btn-danger-shortcut:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #EF4444;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
 .terms-rights-list {
   list-style: none;
   padding: 0;

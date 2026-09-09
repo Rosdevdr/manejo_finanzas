@@ -10,6 +10,8 @@ import {
   Smartphone,
   AlertCircle,
   RefreshCw,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 import './SecurityModal.css'
@@ -18,7 +20,9 @@ interface SecurityModalProps {
   isOpen: boolean
   onClose: () => void
   userEmail?: string | null
+  isDemoMode?: boolean
   onUpdatePassword: (newPassword: string) => Promise<{ error: Error | null }>
+  onDeleteAccount: () => Promise<{ success: boolean; error?: string }>
 }
 
 interface Factor {
@@ -32,7 +36,9 @@ export function SecurityModal({
   isOpen,
   onClose,
   userEmail,
+  isDemoMode,
   onUpdatePassword,
+  onDeleteAccount,
 }: SecurityModalProps) {
   const [factors, setFactors] = useState<Factor[]>([])
   const [loadingFactors, setLoadingFactors] = useState(true)
@@ -54,6 +60,16 @@ export function SecurityModal({
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
+
+  // Right to be Forgotten / Derecho al Olvido state (Ley 172-13 RD / GDPR Art. 17)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const isDeleteConfirmed =
+    deleteConfirmationText.trim().toUpperCase() === 'ELIMINAR MI CUENTA' ||
+    deleteConfirmationText.trim().toUpperCase() === 'ELIMINAR'
 
   const hasVerified2FA = factors.some(f => f.status === 'verified')
 
@@ -97,6 +113,9 @@ export function SecurityModal({
     setPasswordError(null)
     setEnrollingFactor(null)
     setVerificationCode('')
+    setShowDeleteConfirm(false)
+    setDeleteConfirmationText('')
+    setDeleteError(null)
     onClose()
   }, [onClose])
 
@@ -242,6 +261,25 @@ export function SecurityModal({
     }
   }
 
+  const handleDeleteAccount = async () => {
+    if (!isDeleteConfirmed || isDeletingAccount) return
+    setIsDeletingAccount(true)
+    setDeleteError(null)
+
+    try {
+      const res = await onDeleteAccount()
+      if (!res.success) {
+        setDeleteError(res.error || 'Error al eliminar la cuenta')
+        setIsDeletingAccount(false)
+      } else {
+        handleClose()
+      }
+    } catch (err: any) {
+      setDeleteError(err.message || 'Error inesperado al procesar la eliminación')
+      setIsDeletingAccount(false)
+    }
+  }
+
   return (
     <div className="security-modal-overlay" onClick={handleClose}>
       <div className="security-modal-card fade-in" onClick={e => e.stopPropagation()}>
@@ -252,8 +290,8 @@ export function SecurityModal({
               <ShieldCheck size={20} />
             </div>
             <div>
-              <h3>Seguridad & Autenticación 2FA</h3>
-              <p className="security-subtitle">{userEmail || 'Usuario Aureus'}</p>
+              <h3>Seguridad, Privacidad & 2FA</h3>
+              <p className="security-subtitle">{userEmail || (isDemoMode ? 'Modo Demo (Local)' : 'Usuario AUREUS')}</p>
             </div>
           </div>
           <button type="button" className="security-close-btn" onClick={handleClose}>
@@ -450,8 +488,118 @@ export function SecurityModal({
               </button>
             </form>
           </div>
+
+          <div className="security-divider" />
+
+          {/* ================= DANGER ZONE: RIGHT TO BE FORGOTTEN / LEY 172-13 ================= */}
+          <div className="security-section danger-zone-section">
+            <div className="section-header">
+              <div className="section-title-wrap">
+                <Trash2 size={16} className="section-icon text-red" />
+                <h4 className="text-red">Zona de Peligro: Cancelación y Derecho al Olvido</h4>
+              </div>
+              <div className="status-badge danger">
+                Ley 172-13 RD · GDPR Art. 17
+              </div>
+            </div>
+
+            <p className="section-desc">
+              De conformidad con la <strong>Ley No. 172-13 sobre Protección de Datos Personales (República Dominicana)</strong> y
+              el <strong>Art. 17 del RGPD (GDPR)</strong>, tienes el derecho incondicional y gratuito de solicitar la supresión total,
+              inmediata e irreversible de tu cuenta y de la totalidad de tus datos patrimoniales y financieros.
+            </p>
+
+            {deleteError && (
+              <div className="security-alert error">
+                <AlertCircle size={15} />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            {!showDeleteConfirm ? (
+              <div className="danger-zone-action-box">
+                <div className="danger-zone-info">
+                  <AlertTriangle size={20} className="text-red flex-shrink-0" />
+                  <span className="danger-zone-sub">
+                    Al ejecutar esta acción se destruirán permanentemente tus ingresos, gastos, tarjetas, retiros en efectivo,
+                    presupuestos, metas de ahorro e historial con el Asesor IA. Esta acción no se puede deshacer.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="btn-danger-start"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <Trash2 size={15} />
+                  <span>Eliminar Cuenta y Todos Mis Datos</span>
+                </button>
+              </div>
+            ) : (
+              <div className="danger-confirm-card fade-in">
+                <div className="danger-confirm-warning">
+                  <AlertTriangle size={22} className="text-red flex-shrink-0" />
+                  <div>
+                    <h5 className="danger-confirm-title">Confirmación de Supresión Total e Irreversible</h5>
+                    <p className="danger-confirm-text">
+                      Estás a punto de destruir definitivamente tu cuenta {userEmail ? `(${userEmail})` : ''} y todos los registros asociados.
+                      No existirá ninguna copia de respaldo para recuperar tu historial.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="danger-confirm-input-wrap">
+                  <label className="danger-confirm-label">
+                    Para confirmar tu consentimiento, escribe <strong className="text-red">ELIMINAR MI CUENTA</strong> a continuación:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ELIMINAR MI CUENTA"
+                    value={deleteConfirmationText}
+                    onChange={e => setDeleteConfirmationText(e.target.value)}
+                    className="danger-confirm-input"
+                    disabled={isDeletingAccount}
+                    autoFocus
+                  />
+                </div>
+
+                <div className="danger-confirm-buttons">
+                  <button
+                    type="button"
+                    className="btn-danger-cancel"
+                    onClick={() => {
+                      setShowDeleteConfirm(false)
+                      setDeleteConfirmationText('')
+                      setDeleteError(null)
+                    }}
+                    disabled={isDeletingAccount}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-danger-execute"
+                    disabled={!isDeleteConfirmed || isDeletingAccount}
+                    onClick={handleDeleteAccount}
+                  >
+                    {isDeletingAccount ? (
+                      <>
+                        <RefreshCw size={14} className="spin" />
+                        <span>Destruyendo datos de forma permanente...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={14} />
+                        <span>Confirmar y Destruir Todos Mis Datos</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   )
 }
+

@@ -470,3 +470,194 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ================= DANGER ZONE / DERECHO AL OLVIDO (LEY 172-13) ================= */
+.danger-zone-section {
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  background: rgba(239, 68, 68, 0.03) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+}
+
+.text-red {
+  color: #F87171 !important;
+}
+
+.status-badge.danger {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #F87171 !important;
+  font-size: 10px !important;
+}
+
+.danger-zone-action-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  background: rgba(20, 10, 10, 0.4);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.danger-zone-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.danger-zone-sub {
+  font-size: 12px;
+  color: #D1D5DB;
+  line-height: 1.45;
+}
+
+.btn-danger-start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #F87171;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  align-self: flex-start;
+}
+
+.btn-danger-start:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #EF4444;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+}
+
+.danger-confirm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(30, 10, 10, 0.6);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.12);
+}
+
+.danger-confirm-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.danger-confirm-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #F87171;
+  margin: 0 0 4px;
+}
+
+.danger-confirm-text {
+  font-size: 12px;
+  color: #E2E2EA;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.danger-confirm-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.danger-confirm-label {
+  font-size: 12px;
+  color: #D1D5DB;
+}
+
+.danger-confirm-input {
+  background: #0E0A0A;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.danger-confirm-input:focus {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+.danger-confirm-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-danger-cancel {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #A0A0B0;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-danger-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+}
+
+.btn-danger-execute {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #FFFFFF;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.btn-danger-execute:hover:not(:disabled) {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+}
+
+.btn-danger-execute:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .btn-danger-start,
+  .btn-danger-cancel,
+  .btn-danger-execute {
+    width: 100%;
+    justify-content: center;
+    min-height: 42px;
+  }
+}
