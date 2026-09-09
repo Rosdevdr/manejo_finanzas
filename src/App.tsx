@@ -34,6 +34,7 @@ import {
 
 import { TermsAndConditionsModal } from './components/legal/TermsAndConditionsModal'
 import { SplashScreenLoader } from './components/common/SplashScreenLoader'
+import { InstallAppModal } from './components/ui/InstallAppModal'
 
 export function App() {
   const [activeTab, setActiveTab]               = useState<TabType>('dashboard')
@@ -53,6 +54,7 @@ export function App() {
   const [showGuideModal, setShowGuideModal] = useState(false)
   const [guideInitialModule, setGuideInitialModule] = useState('dashboard')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showInstallModal, setShowInstallModal] = useState(false)
 
   const { toasts, show: showToast, dismiss } = useToast()
   const { isInstallable, installApp } = usePwaInstall()
@@ -210,7 +212,7 @@ export function App() {
           setShowGuideModal(true)
         }}
         isInstallable={isInstallable}
-        onInstallApp={installApp}
+        onInstallApp={() => setShowInstallModal(true)}
       />
 
       <div className="main">
@@ -231,7 +233,7 @@ export function App() {
           onOpenSecurity={() => setIsSecurityOpen(true)}
           onOpenLicense={() => setShowLicenseModal(true)}
           isInstallable={isInstallable}
-          onInstallApp={installApp}
+          onInstallApp={() => setShowInstallModal(true)}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
 
@@ -435,6 +437,12 @@ export function App() {
         isOpen={showGuideModal}
         onClose={() => setShowGuideModal(false)}
         initialModule={guideInitialModule}
+      />
+      <InstallAppModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+        isInstallable={isInstallable}
+        onInstallPwa={installApp}
       />
       {isModuleLoading && (
         <SplashScreenLoader

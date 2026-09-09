@@ -68,7 +68,6 @@ export function Sidebar({
   onOpenLicense,
   onOpenTerms,
   onOpenGuide,
-  isInstallable,
   onInstallApp,
 }: SidebarProps) {
   const initials = userEmail
@@ -178,7 +177,7 @@ export function Sidebar({
             </button>
           )}
 
-          {isInstallable && onInstallApp && (
+          {onInstallApp && (
             <button
               type="button"
               className="nav-item"
