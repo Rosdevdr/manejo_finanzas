@@ -262,6 +262,20 @@ h1, h2, h3, h4, h5, h6 {
   gap: 20px !important;
 }
 
+.content.content-chat-mode {
+  padding: 16px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content.content-chat-mode > .fade-in {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  gap: 12px !important;
+}
+
 /* ===================== HEADER ===================== */
 .app-header {
   height: 54px;
@@ -1927,13 +1941,43 @@ select.field-select {
   /* Main / content */
   .main {
     flex: 1;
-    height: 100%;
-    width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+    min-width: 0;
+    max-width: 100%;
+    position: relative;
   }
-  .content { padding: 16px 14px 80px !important; }
+  .app-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 99 !important;
+    flex-shrink: 0 !important;
+    background: #0E0E12 !important;
+    padding-top: max(8px, env(safe-area-inset-top, 0px)) !important;
+  }
+  .content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain;
+    padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .content.content-chat-mode {
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  .content.content-chat-mode > .fade-in {
+    flex: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    gap: 8px !important;
+  }
 
   /* Typography */
   .page-title { font-size: 20px; }
@@ -1980,7 +2024,8 @@ select.field-select {
 /* ── Small tablet / large phone (481 – 768px) ───────── */
 @media (max-width: 768px) {
   .kpi-grid     { grid-template-columns: 1fr 1fr !important; gap: 10px; }
-  .content      { padding: 14px 12px 80px !important; }
+  .content      { padding: 14px 12px calc(24px + env(safe-area-inset-bottom, 0px)) !important; }
+  .content.content-chat-mode { padding: 8px 10px calc(6px + env(safe-area-inset-bottom, 0px)) !important; }
 
   /* Forms: single column */
   .form-grid    { grid-template-columns: 1fr !important; gap: 10px; }
@@ -2026,7 +2071,8 @@ select.field-select {
   .kpi-grid   { grid-template-columns: 1fr !important; gap: 8px; }
   .kpi-value  { font-size: 18px; }
   .page-title { font-size: 18px; }
-  .content    { padding: 12px 10px 80px !important; }
+  .content    { padding: 12px 10px calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
+  .content.content-chat-mode { padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)) !important; }
 
   /* Modals: Mobile Bottom Sheet con flujo en cascada sin scrollbar */
   .modal-overlay {
@@ -2092,7 +2138,7 @@ select.field-select {
   .period-label   { max-width: 72px; font-size: 10px; }
   .nav-btn        { width: 24px; height: 24px; }
   .kpi-value      { font-size: 16px; }
-  .content        { padding: 10px 8px 80px !important; }
+  .content        { padding: 10px 8px calc(18px + env(safe-area-inset-bottom, 0px)) !important; }
 }
 
 /* ===================== IOS SAFARI AUTO-ZOOM PREVENTION =====================
@@ -2100,16 +2146,24 @@ select.field-select {
    We set font-size via CSS var so layout calc in components still uses
    the design-token value; only the rendered size is bumped for iOS.
    ========================================================================= */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 768px), (pointer: coarse) {
   input[type="text"],
   input[type="number"],
   input[type="email"],
   input[type="password"],
   input[type="date"],
   input[type="search"],
+  input,
   textarea,
-  select {
-    font-size: max(16px, 1em) !important;
+  select,
+  .chat-input-field,
+  .modal-input,
+  .modal-select,
+  .edit-input,
+  .edit-select,
+  .field-input,
+  .field-select {
+    font-size: 16px !important;
     touch-action: manipulation;
   }
 

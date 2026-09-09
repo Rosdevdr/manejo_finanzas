@@ -235,7 +235,7 @@ export function App() {
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <div ref={contentRef} className="content">
+        <div ref={contentRef} className={`content ${activeTab === 'chat-advisor' ? 'content-chat-mode' : ''}`}>
           {activeTab === 'dashboard' && (
             <DashboardView
               currentPeriod={currentPeriod}
