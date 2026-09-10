@@ -21,7 +21,8 @@ import {
 } from 'lucide-react'
 import {
   ResponsiveContainer, XAxis, YAxis, Tooltip,
-  PieChart, Pie, Cell, AreaChart, Area
+  PieChart, Pie, Cell, AreaChart, Area,
+  BarChart, Bar
 } from 'recharts'
 import type { Income, Expense, CreditCard as CreditCardType, CreditCardTransaction, CashWithdrawal, CategoryBudget } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
@@ -196,19 +197,27 @@ export function DashboardView({
     }
   })
 
-  // 7. Liquidez No Comprometida (Unencumbered Liquidity - Sandbox Image 4)
+  // 7. Liquidez No Comprometida (Unencumbered Liquidity - Fintech Intelligence)
   const unencumberedLiquidity = Math.max(0, cumulative.totalCumulativeBalance - creditSummary.totalDebt)
   const liquidityRatio = cumulative.totalCumulativeBalance > 0
     ? (unencumberedLiquidity / cumulative.totalCumulativeBalance) * 100
     : 0
+  const debtCoverage = creditSummary.totalDebt > 0
+    ? (cumulative.totalCumulativeBalance / creditSummary.totalDebt).toFixed(1)
+    : 'Sin deuda'
 
   const liquidityTrendData = last5Periods.map(p => {
     const [, monthStr] = p.split('-')
     const mIdx = (parseInt(monthStr, 10) || 1) - 1
     const cum = calculateCumulativeBalance(incomes, expenses, p)
+    const tot = Math.round(cum.totalCumulativeBalance)
+    const free = Math.round(Math.max(0, cum.totalCumulativeBalance - creditSummary.totalDebt))
+    const debt = Math.round(Math.min(tot, creditSummary.totalDebt))
     return {
       label: MONTH_SHORT_NAMES[mIdx] || p,
-      liquidez: Math.round(Math.max(0, cum.totalCumulativeBalance - creditSummary.totalDebt)),
+      liquidez: free,
+      totalCapital: tot,
+      deuda: debt,
     }
   })
 
@@ -242,8 +251,9 @@ export function DashboardView({
     { name: 'Efectivo', amount: paymentTotals.cash, icon: <Banknote size={13} />, color: '#FBBF24' },
   ]
 
-  // Estado de selector de vista de gráfico Sandbox
+  // Estado de selector de vista de gráficos
   const [chartView, setChartView] = useState<'flow' | 'networth'>('flow')
+  const [unencumberedView, setUnencumberedView] = useState<'trend' | 'breakdown'>('trend')
 
   return (
     <div className="fade-in sandbox-dashboard">
@@ -713,57 +723,147 @@ export function DashboardView({
           )}
         </div>
 
-        {/* Columna Derecha: Unencumbered Liquidity (Sandbox Image 4) */}
+        {/* Columna Derecha: Unencumbered Liquidity (Fintech Command Hub) */}
         <div className="unencumbered-panel">
-          <div>
-            <div className="sandbox-panel-header" style={{ marginBottom: 4 }}>
-              <div>
-                <div className="sandbox-panel-title">Unencumbered Liquidity</div>
-                <div className="sandbox-panel-sub">Capital libre neto sin compromisos de deuda</div>
-              </div>
-              <div className="sandbox-pills">
-                <span className="sandbox-pill-btn active">5M</span>
-              </div>
+          <div className="sandbox-panel-header" style={{ marginBottom: 2 }}>
+            <div>
+              <div className="sandbox-panel-title">Unencumbered Liquidity</div>
+              <div className="sandbox-panel-sub">Capital libre neto sin compromisos de deuda</div>
             </div>
-
-            <div className="unencumbered-stat-row">
-              <div className="unencumbered-val">
-                <AnimatedCurrency value={unencumberedLiquidity} />
-              </div>
-              <div className="unencumbered-sub">
-                {liquidityRatio.toFixed(0)}% libre
-              </div>
-            </div>
-            <div style={{ fontSize: 11, color: '#888898', marginBottom: 12 }}>
-              Pasivos descontados: {formatCurrency(creditSummary.totalDebt)} en tarjetas
+            <div className="sandbox-pills">
+              <button
+                type="button"
+                className={`sandbox-pill-btn ${unencumberedView === 'trend' ? 'active' : ''}`}
+                onClick={() => setUnencumberedView('trend')}
+              >
+                Evolución
+              </button>
+              <button
+                type="button"
+                className={`sandbox-pill-btn ${unencumberedView === 'breakdown' ? 'active' : ''}`}
+                onClick={() => setUnencumberedView('breakdown')}
+              >
+                Solvencia
+              </button>
             </div>
           </div>
 
-          <div style={{ width: '100%', height: 190 }}>
+          <div className="unencumbered-stat-row">
+            <div className="unencumbered-val">
+              <AnimatedCurrency value={unencumberedLiquidity} />
+            </div>
+            <span className={`sandbox-kpi-pill ${liquidityRatio >= 60 ? 'pos' : 'neutral'}`}>
+              {liquidityRatio.toFixed(0)}% libre
+            </span>
+          </div>
+
+          {/* Barra de Distribución Proporcional (Ramp / Mercury style) */}
+          <div className="unencumbered-allocation-block">
+            <div className="unencumbered-ratio-bar">
+              <div
+                className="unencumbered-bar-fill free"
+                style={{ width: `${Math.min(100, Math.max(0, liquidityRatio))}%` }}
+                title={`Capital Libre: ${formatCurrency(unencumberedLiquidity)} (${liquidityRatio.toFixed(1)}%)`}
+              />
+              <div
+                className="unencumbered-bar-fill debt"
+                style={{ width: `${Math.min(100, Math.max(0, 100 - liquidityRatio))}%` }}
+                title={`Pasivos Tarjetas: ${formatCurrency(creditSummary.totalDebt)} (${(100 - liquidityRatio).toFixed(1)}%)`}
+              />
+            </div>
+            <div className="unencumbered-ratio-legend">
+              <div className="ratio-legend-item">
+                <span className="ratio-dot free" />
+                <span className="ratio-name">Libre disponible</span>
+                <strong className="ratio-amount">{formatCurrency(unencumberedLiquidity)}</strong>
+              </div>
+              <div className="ratio-legend-item">
+                <span className="ratio-dot debt" />
+                <span className="ratio-name">Pasivos tarjetas</span>
+                <strong className="ratio-amount">{formatCurrency(creditSummary.totalDebt)}</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Fichas de Indicadores Clave */}
+          <div className="unencumbered-metrics-row">
+            <div className="unencumbered-metric-chip">
+              <span className="chip-label">Patrimonio Total</span>
+              <span className="chip-val">{formatCurrency(cumulative.totalCumulativeBalance)}</span>
+            </div>
+            <div className="unencumbered-metric-chip">
+              <span className="chip-label">Cobertura Deuda</span>
+              <span className="chip-val text-emerald">
+                {debtCoverage === 'Sin deuda' ? '100% Solvente' : `${debtCoverage}x`}
+              </span>
+            </div>
+            <div className="unencumbered-metric-chip">
+              <span className="chip-label">Estado</span>
+              <span className="chip-val text-gold">
+                {liquidityRatio >= 70 ? 'Óptimo' : liquidityRatio >= 40 ? 'Estable' : 'Ajustado'}
+              </span>
+            </div>
+          </div>
+
+          {/* Gráfico Dinámico que llena el espacio restante */}
+          <div className="unencumbered-chart-container">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={liquidityTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="unencumberedGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#E09F67" stopOpacity={0.45} />
-                    <stop offset="95%" stopColor="#E09F67" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
-                <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
-                <Tooltip
-                  contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
-                  formatter={(val) => [formatCurrency(Number(val) || 0), 'Liquidez Libre']}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="liquidez"
-                  stroke="#E09F67"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#unencumberedGrad)"
-                  name="Liquidez No Comprometida"
-                />
-              </AreaChart>
+              {unencumberedView === 'trend' ? (
+                <AreaChart data={liquidityTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="unencumberedGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#F3CA65" stopOpacity={0.45} />
+                      <stop offset="95%" stopColor="#F3CA65" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="totalCapGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#34D399" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#34D399" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                  <Tooltip
+                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                    formatter={(val, name) => [
+                      formatCurrency(Number(val) || 0),
+                      name === 'liquidez' ? 'Liquidez Libre' : 'Patrimonio Total'
+                    ]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="totalCapital"
+                    stroke="rgba(255,255,255,0.25)"
+                    strokeDasharray="4 4"
+                    strokeWidth={1.5}
+                    fillOpacity={1}
+                    fill="url(#totalCapGrad)"
+                    name="totalCapital"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="liquidez"
+                    stroke="#F3CA65"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#unencumberedGrad)"
+                    name="liquidez"
+                  />
+                </AreaChart>
+              ) : (
+                <BarChart data={liquidityTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                  <Tooltip
+                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                    formatter={(val, name) => [
+                      formatCurrency(Number(val) || 0),
+                      name === 'liquidez' ? 'Capital Libre' : 'Pasivos Tarjeta'
+                    ]}
+                  />
+                  <Bar dataKey="liquidez" fill="#34D399" radius={[4, 4, 0, 0]} name="liquidez" />
+                  <Bar dataKey="deuda" fill="#FB7185" radius={[4, 4, 0, 0]} name="deuda" />
+                </BarChart>
+              )}
             </ResponsiveContainer>
           </div>
         </div>

@@ -2932,7 +2932,7 @@ select.field-select {
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 12px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -2945,9 +2945,10 @@ select.field-select {
 
 .unencumbered-stat-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  margin: 10px 0 14px;
+  margin: 2px 0 2px;
 }
 
 .unencumbered-val {
@@ -2956,13 +2957,128 @@ select.field-select {
   font-weight: 700;
   color: #FFFFFF;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
-.unencumbered-sub {
-  font-size: 11.5px;
-  color: #34D399;
+.unencumbered-allocation-block {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.unencumbered-ratio-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+}
+
+.unencumbered-bar-fill.free {
+  background: linear-gradient(90deg, #34D399 0%, #10B981 100%);
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.unencumbered-bar-fill.debt {
+  background: linear-gradient(90deg, #FB7185 0%, #F43F5E 100%);
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.unencumbered-ratio-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+
+.ratio-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ratio-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ratio-dot.free {
+  background: #34D399;
+}
+
+.ratio-dot.debt {
+  background: #FB7185;
+}
+
+.ratio-name {
+  color: #94A3B8;
+  font-size: 11px;
+}
+
+.ratio-amount {
   font-family: 'Space Mono', monospace;
-  font-weight: 600;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.unencumbered-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .unencumbered-metrics-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.unencumbered-metric-chip {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chip-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #888898;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chip-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.unencumbered-chart-container {
+  flex: 1;
+  min-height: 190px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
 }
 
 /* ── AI Compliance & Regulation Banner ── */
