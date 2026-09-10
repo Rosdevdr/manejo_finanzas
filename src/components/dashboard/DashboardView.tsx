@@ -14,7 +14,6 @@ import {
   ArrowDownRight,
   ShieldCheck,
   Shield,
-  Info,
   X,
   Plus,
   Download,
@@ -248,19 +247,109 @@ export function DashboardView({
 
   return (
     <div className="fade-in sandbox-dashboard">
-      {/* ── TOP BANNER INSTITUCIONAL ── */}
-      <div className="sandbox-header-strip">
-        <div>
-          <div className="sandbox-subhead">AUREUS WEALTH ADVISOR · {formatPeriodLabel(currentPeriod).toUpperCase()}</div>
-          <h1 className="sandbox-title">Portfolio Overview</h1>
+      {/* ── UNIFIED MERCURY-STYLE COMMAND CENTER ── */}
+      <div className="sandbox-command-center">
+        <div className="command-left">
+          <div className="command-branding">
+            <div className="command-subhead">
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F3CA65', display: 'inline-block' }} />
+              AUREUS WEALTH · {formatPeriodLabel(currentPeriod).toUpperCase()}
+            </div>
+            <h1 className="command-title">Portfolio Overview</h1>
+          </div>
+
+          <div className="command-sync-pills">
+            <button
+              type="button"
+              className="sync-module-pill"
+              onClick={() => {
+                triggerHaptic('light')
+                onNavigateTab && onNavigateTab('incomes')
+              }}
+              title="Ver Ingresos"
+            >
+              <span>Ingresos</span>
+              <strong>{pInc.length}</strong>
+            </button>
+            <button
+              type="button"
+              className="sync-module-pill"
+              onClick={() => {
+                triggerHaptic('light')
+                onNavigateTab && onNavigateTab('expenses')
+              }}
+              title="Ver Gastos"
+            >
+              <span>Gastos</span>
+              <strong>{pExp.length}</strong>
+            </button>
+            <button
+              type="button"
+              className="sync-module-pill"
+              onClick={() => {
+                triggerHaptic('light')
+                onNavigateTab && onNavigateTab('credit')
+              }}
+              title="Ver Tarjetas"
+            >
+              <span>Tarjetas</span>
+              <strong>{pCardTxs.length}</strong>
+            </button>
+            <button
+              type="button"
+              className="sync-module-pill"
+              onClick={() => {
+                triggerHaptic('light')
+                onNavigateTab && onNavigateTab('cash')
+              }}
+              title="Ver Efectivo"
+            >
+              <span>Efectivo</span>
+              <strong>{pCash.length}</strong>
+            </button>
+            <button
+              type="button"
+              className="sync-module-pill"
+              onClick={() => {
+                triggerHaptic('light')
+                onNavigateTab && onNavigateTab('budgets')
+              }}
+              title="Ver Presupuestos"
+            >
+              <span>Presupuestos</span>
+              <strong>{categoryBudgets.length}</strong>
+            </button>
+            <button
+              type="button"
+              className="sync-module-pill"
+              onClick={() => {
+                triggerHaptic('light')
+                onNavigateTab && onNavigateTab('chat-advisor')
+              }}
+              title="Ir a Asesor IA"
+            >
+              <span>Asesor IA</span>
+              <strong style={{ color: '#34D399' }}>Activo</strong>
+            </button>
+          </div>
         </div>
-        <div className="sandbox-header-actions">
+
+        <div className="command-right">
+          <button
+            type="button"
+            className="ai-compliance-link"
+            onClick={() => setShowComplianceModal(true)}
+            title="Normativas de Inteligencia Artificial & Transparencia"
+          >
+            <Shield size={13} />
+            <span>Normativa IA</span>
+          </button>
           <button
             type="button"
             className="sandbox-btn-outline"
             onClick={() => onNavigateTab && onNavigateTab('chat-advisor')}
           >
-            <Sparkles size={14} />
+            <Sparkles size={14} className="text-gold" />
             <span>Asesor IA</span>
           </button>
           <button
@@ -270,106 +359,6 @@ export function DashboardView({
           >
             <Plus size={14} />
             <span>Registrar Movimiento</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── AVISO DE CUMPLIMIENTO REGULATORIO IA (GLOBAL STANDARDS) ── */}
-      <div className="ai-compliance-banner">
-        <div className="ai-compliance-text">
-          <Shield size={14} className="text-gold" />
-          <span>
-            <strong>Marco Regulatorio IA:</strong> Cumplimiento normativo ético y de privacidad algorítmica (EU AI Act & Data Privacy).
-          </span>
-        </div>
-        <button
-          type="button"
-          className="ai-compliance-link"
-          onClick={() => setShowComplianceModal(true)}
-        >
-          <Info size={13} />
-          <span>Ver Normativas de Uso</span>
-        </button>
-      </div>
-
-      {/* ── CONEXIÓN EN VIVO CON TODOS LOS MÓDULOS ── */}
-      <div className="sandbox-modules-sync-strip">
-        <div className="sync-strip-header">
-          <Activity size={14} className="text-emerald" />
-          <span>Sincronización Total de Módulos · {formatPeriodLabel(currentPeriod)}</span>
-        </div>
-        <div className="sync-strip-pills">
-          <button
-            type="button"
-            className="sync-module-pill"
-            onClick={() => {
-              triggerHaptic('light')
-              onNavigateTab && onNavigateTab('incomes')
-            }}
-            title="Ver Ingresos"
-          >
-            <span>Ingresos</span>
-            <strong>{pInc.length}</strong>
-          </button>
-          <button
-            type="button"
-            className="sync-module-pill"
-            onClick={() => {
-              triggerHaptic('light')
-              onNavigateTab && onNavigateTab('expenses')
-            }}
-            title="Ver Gastos"
-          >
-            <span>Gastos</span>
-            <strong>{pExp.length}</strong>
-          </button>
-          <button
-            type="button"
-            className="sync-module-pill"
-            onClick={() => {
-              triggerHaptic('light')
-              onNavigateTab && onNavigateTab('credit')
-            }}
-            title="Ver Tarjetas"
-          >
-            <span>Tarjetas</span>
-            <strong>{pCardTxs.length}</strong>
-          </button>
-          <button
-            type="button"
-            className="sync-module-pill"
-            onClick={() => {
-              triggerHaptic('light')
-              onNavigateTab && onNavigateTab('cash')
-            }}
-            title="Ver Efectivo"
-          >
-            <span>Efectivo</span>
-            <strong>{pCash.length}</strong>
-          </button>
-          <button
-            type="button"
-            className="sync-module-pill"
-            onClick={() => {
-              triggerHaptic('light')
-              onNavigateTab && onNavigateTab('budgets')
-            }}
-            title="Ver Presupuestos"
-          >
-            <span>Presupuestos</span>
-            <strong>{categoryBudgets.length}</strong>
-          </button>
-          <button
-            type="button"
-            className="sync-module-pill"
-            onClick={() => {
-              triggerHaptic('light')
-              onNavigateTab && onNavigateTab('chat-advisor')
-            }}
-            title="Ir a Asesor IA"
-          >
-            <span>Asesor IA</span>
-            <strong style={{ color: '#34D399' }}>Activo</strong>
           </button>
         </div>
       </div>
