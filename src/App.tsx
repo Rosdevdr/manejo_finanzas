@@ -23,6 +23,7 @@ import { useFinanceStorage } from './hooks/useFinanceStorage'
 import { useAuth }           from './hooks/useAuth'
 import { useToast }          from './hooks/useToast'
 import { usePwaInstall }     from './hooks/usePwaInstall'
+import { useTheme }          from './hooks/useTheme'
 import { formatCurrency }    from './utils/formatters'
 import {
   getPreviousPeriod,
@@ -58,6 +59,7 @@ export function App() {
 
   const { toasts, show: showToast, dismiss } = useToast()
   const { isInstallable, installApp } = usePwaInstall()
+  const { theme, toggleTheme } = useTheme()
 
   const {
     user,
@@ -267,6 +269,8 @@ export function App() {
           isInstallable={isInstallable}
           onInstallApp={() => setShowInstallModal(true)}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
 
         <div ref={contentRef} className={`content ${activeTab === 'chat-advisor' ? 'content-chat-mode' : ''}`}>

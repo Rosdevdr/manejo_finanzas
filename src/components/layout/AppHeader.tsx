@@ -12,6 +12,8 @@ import {
   Lightbulb,
   Sparkles,
   RefreshCw,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 import { CardAlertsPopover } from '../alerts/CardAlertsPopover'
@@ -40,6 +42,8 @@ interface AppHeaderProps {
   isInstallable?: boolean
   onInstallApp?: () => void
   onOpenMenu?: () => void
+  theme?: 'dark' | 'light'
+  onToggleTheme?: () => void
 }
 
 export function AppHeader({
@@ -63,6 +67,8 @@ export function AppHeader({
   isInstallable,
   onInstallApp,
   onOpenMenu,
+  theme = 'dark',
+  onToggleTheme,
 }: AppHeaderProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
@@ -303,6 +309,26 @@ export function AppHeader({
           <GithubIcon size={16} />
         </a>
 
+        {/* Conmutador de Modo Claro / Oscuro */}
+        {onToggleTheme && (
+          <button
+            type="button"
+            className="theme-toggle-btn"
+            onClick={() => {
+              triggerHaptic('light')
+              onToggleTheme()
+            }}
+            title={theme === 'light' ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro'}
+            aria-label="Cambiar tema de visualización"
+          >
+            {theme === 'light' ? (
+              <Moon size={16} className="theme-icon-moon text-gold" />
+            ) : (
+              <Sun size={16} className="theme-icon-sun text-gold" />
+            )}
+          </button>
+        )}
+
         {/* Perfil del Usuario / Menu Dropdown */}
         <div className="profile-wrapper" ref={profileRef}>
           <button
@@ -388,6 +414,21 @@ export function AppHeader({
                 >
                   <ShieldCheck size={14} />
                   <span>Seguridad & 2FA</span>
+                </button>
+              )}
+
+              {onToggleTheme && (
+                <button
+                  type="button"
+                  className="dropdown-item"
+                  onClick={() => {
+                    triggerHaptic('light')
+                    onToggleTheme()
+                    setProfileOpen(false)
+                  }}
+                >
+                  {theme === 'light' ? <Moon size={14} className="text-gold" /> : <Sun size={14} className="text-gold" />}
+                  <span>{theme === 'light' ? 'Modo Oscuro' : 'Modo Claro'}</span>
                 </button>
               )}
 
