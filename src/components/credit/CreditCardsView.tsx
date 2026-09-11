@@ -8,6 +8,7 @@ import {
   Calendar,
   AlertTriangle,
   CheckCircle2,
+  Check,
   Clock,
   Zap,
   ArrowDownCircle,
@@ -573,20 +574,24 @@ export function CreditCardsView({
                           />
                         </td>
                         <td style={{ textAlign: 'right' }}>
-                          <button
-                            type="button"
-                            className="sandbox-btn-save"
-                            onClick={() => saveEditTx(tx)}
-                          >
-                            ✓
-                          </button>
-                          <button
-                            type="button"
-                            className="sandbox-btn-cancel"
-                            onClick={() => setEditingTxId(null)}
-                          >
-                            ✕
-                          </button>
+                          <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                            <button
+                              type="button"
+                              className="sandbox-btn-save"
+                              onClick={() => saveEditTx(tx)}
+                              title="Guardar"
+                            >
+                              <Check size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              className="sandbox-btn-cancel"
+                              onClick={() => setEditingTxId(null)}
+                              title="Cancelar"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -627,7 +632,7 @@ export function CreditCardsView({
                         -{formatCurrency(tx.amount)}
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: 4 }}>
+                        <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
                           <button
                             type="button"
                             className="table-action-btn"

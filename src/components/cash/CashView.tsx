@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banknote, AlertTriangle, Plus, Trash2, Pencil, X, Calendar } from 'lucide-react'
+import { Banknote, AlertTriangle, Plus, Trash2, Pencil, X, Check, Calendar } from 'lucide-react'
 import type { CashWithdrawal, CashReason, Expense } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
@@ -222,20 +222,24 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                           />
                         </td>
                         <td style={{ textAlign: 'right' }}>
-                          <button
-                            type="button"
-                            className="sandbox-btn-save"
-                            onClick={() => saveEdit(c)}
-                          >
-                            ✓
-                          </button>
-                          <button
-                            type="button"
-                            className="sandbox-btn-cancel"
-                            onClick={() => setEditingId(null)}
-                          >
-                            ✕
-                          </button>
+                          <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                            <button
+                              type="button"
+                              className="sandbox-btn-save"
+                              onClick={() => saveEdit(c)}
+                              title="Guardar"
+                            >
+                              <Check size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              className="sandbox-btn-cancel"
+                              onClick={() => setEditingId(null)}
+                              title="Cancelar"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -259,7 +263,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                         -{formatCurrency(c.amount)}
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: 4 }}>
+                        <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
                           <button
                             type="button"
                             className="table-action-btn"

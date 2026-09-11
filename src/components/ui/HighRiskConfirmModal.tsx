@@ -230,7 +230,7 @@ export function HighRiskConfirmModal({
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button
             type="button"
-            className="sandbox-btn-cancel"
+            className="modal-btn-cancel"
             onClick={onCancel}
             style={{ flex: 1, height: 42, justifyContent: 'center' }}
           >
