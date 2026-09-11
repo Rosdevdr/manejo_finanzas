@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  TrendingUp,
+  TrendingUp as _TrendingUp,
   CreditCard as CardIcon,
   Calendar,
   Sparkles,
@@ -98,7 +98,6 @@ export function DashboardView({
   const balance = totalIn - totalExp
   const savingRate = totalIn > 0 ? ((totalIn - totalExp) / totalIn) * 100 : 0
   const fixedExp = pExp.filter(e => e.type === 'fixed').reduce((s, e) => s + e.amount, 0)
-  const varExp = pExp.filter(e => e.type === 'variable').reduce((s, e) => s + e.amount, 0)
 
   // 2. Comparativa contra período anterior
   const prevPeriod = getPreviousPeriod(currentPeriod)
@@ -373,78 +372,88 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* ── 5-METRIC INSTITUTIONAL KPI STRIP (SANDBOX IMAGE 4) ── */}
-      <div className="sandbox-kpi-row">
-        <div className="sandbox-kpi-card gold-glow">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Patrimonio Neto</span>
-            <span className={`sandbox-kpi-pill ${balDiff >= 0 ? 'pos' : 'neg'}`}>
-              {balDiff >= 0 ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+      {/* ── MERCURY HERO BALANCE — Dominant number, 52px ── */}
+      <div className="dash-hero">
+        <div className="dash-hero-label">Patrimonio Neto Acumulado</div>
+        <div className="dash-balance">
+          <span className="dash-balance-currency">RD$</span>
+          <span className="dash-balance-main">
+            {Math.floor(Math.abs(cumulative.totalCumulativeBalance)).toLocaleString('es-DO')}
+          </span>
+          <span className="dash-balance-cents">
+            .{Math.round((Math.abs(cumulative.totalCumulativeBalance) % 1) * 100).toString().padStart(2, '0')}
+          </span>
+          {balDiff !== 0 && (
+            <span className={`dash-balance-change ${balDiff >= 0 ? 'pos' : 'neg'}`}>
+              {balDiff >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
               {Math.abs(balDiff).toFixed(1)}%
             </span>
-          </div>
-          <div className="sandbox-kpi-value">
-            <AnimatedCurrency value={cumulative.totalCumulativeBalance} />
-          </div>
-          <div className="sandbox-kpi-sub">
-            {cumulative.carriedOverBalance !== 0
-              ? `Arrastre: ${formatCurrency(cumulative.carriedOverBalance)}`
-              : 'Balance acumulado auditado'}
-          </div>
+          )}
         </div>
-
-        <div className="sandbox-kpi-card">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Activos / Liquidez</span>
-            <span className="sandbox-kpi-pill pos">
-              <ArrowUpRight size={11} />
-              {incDiff >= 0 ? `+${incDiff.toFixed(1)}%` : `${incDiff.toFixed(1)}%`}
-            </span>
+        <div className="dash-hero-meta">
+          <div className="dash-hero-meta-item">
+            <ShieldCheck size={13} style={{ color: '#22C55E' }} />
+            <span>Cuenta Protegida RLS</span>
           </div>
-          <div className="sandbox-kpi-value text-emerald">
+          <div className="dash-hero-meta-item">
+            <Calendar size={13} style={{ color: '#C9A84C' }} />
+            <span>Día <strong>{monthProgress.currentDay}</strong> de <strong>{monthProgress.totalDays}</strong> · {monthProgress.percentPassed}%</span>
+          </div>
+          {cumulative.carriedOverBalance !== 0 && (
+            <div className="dash-hero-meta-item">
+              <Activity size={13} style={{ color: '#8B8FA8' }} />
+              <span>Arrastre: <strong>{formatCurrency(cumulative.carriedOverBalance)}</strong></span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── 4 UNIFORM KPI CARDS (Mercury-style, equal size, semantic color only on amounts) ── */}
+      <div className="dash-kpi-strip">
+        {/* Ingresos del Período */}
+        <div className="dash-kpi-card">
+          <div className="dash-kpi-label">Ingresos</div>
+          <div className="dash-kpi-value" style={{ color: '#22C55E' }}>
             <AnimatedCurrency value={totalIn} />
           </div>
-          <div className="sandbox-kpi-sub">{pInc.length} entradas en {MONTH_SHORT_NAMES[(parseInt(currentPeriod.split('-')[1], 10) || 1) - 1]}</div>
+          <div className={`dash-kpi-sub ${incDiff >= 0 ? 'pos' : 'neg'}`}>
+            {incDiff >= 0 ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+            {Math.abs(incDiff).toFixed(1)}% vs mes ant.
+          </div>
         </div>
 
-        <div className="sandbox-kpi-card">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Pasivos / Tarjetas</span>
-            <span className={`sandbox-kpi-pill ${creditSummary.utilizationRate > 30 ? 'neg' : 'neutral'}`}>
-              {creditSummary.utilizationRate.toFixed(0)}% cupo
-            </span>
-          </div>
-          <div className="sandbox-kpi-value text-gold">
-            <AnimatedCurrency value={creditSummary.totalDebt} />
-          </div>
-          <div className="sandbox-kpi-sub">{creditCards.length} tarjetas asociadas</div>
-        </div>
-
-        <div className="sandbox-kpi-card">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Inflows (Entradas)</span>
-            <span className="sandbox-kpi-pill pos">
-              <TrendingUp size={11} />
-              100%
-            </span>
-          </div>
-          <div className="sandbox-kpi-value text-emerald">
-            <AnimatedCurrency value={totalIn} />
-          </div>
-          <div className="sandbox-kpi-sub">Fijos: {formatCurrency(pInc.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0))}</div>
-        </div>
-
-        <div className="sandbox-kpi-card">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Outflows (Salidas)</span>
-            <span className={`sandbox-kpi-pill ${expDiff <= 0 ? 'pos' : 'neg'}`}>
-              {expDiff >= 0 ? `+${expDiff.toFixed(1)}%` : `${expDiff.toFixed(1)}%`}
-            </span>
-          </div>
-          <div className="sandbox-kpi-value text-rose">
+        {/* Gastos del Período */}
+        <div className="dash-kpi-card">
+          <div className="dash-kpi-label">Gastos</div>
+          <div className="dash-kpi-value" style={{ color: '#EF4444' }}>
             <AnimatedCurrency value={totalExp} />
           </div>
-          <div className="sandbox-kpi-sub">Fijos: {formatCurrency(fixedExp)} · Var: {formatCurrency(varExp)}</div>
+          <div className={`dash-kpi-sub ${expDiff <= 0 ? 'pos' : 'neg'}`}>
+            {expDiff >= 0 ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+            {Math.abs(expDiff).toFixed(1)}% vs mes ant.
+          </div>
+        </div>
+
+        {/* Liquidez Libre */}
+        <div className="dash-kpi-card">
+          <div className="dash-kpi-label">Liquidez Libre</div>
+          <div className="dash-kpi-value">
+            <AnimatedCurrency value={unencumberedLiquidity} />
+          </div>
+          <div className={`dash-kpi-sub ${liquidityRatio >= 70 ? 'pos' : liquidityRatio >= 40 ? 'warn' : 'neg'}`}>
+            {liquidityRatio.toFixed(0)}% del patrimonio
+          </div>
+        </div>
+
+        {/* Pasivos / Tarjetas */}
+        <div className="dash-kpi-card">
+          <div className="dash-kpi-label">Deuda Tarjetas</div>
+          <div className="dash-kpi-value" style={{ color: creditSummary.utilizationRate > 30 ? '#EF4444' : '#F1F2F4' }}>
+            <AnimatedCurrency value={creditSummary.totalDebt} />
+          </div>
+          <div className={`dash-kpi-sub ${creditSummary.utilizationRate > 30 ? 'neg' : creditSummary.utilizationRate > 15 ? 'warn' : 'pos'}`}>
+            {creditSummary.utilizationRate.toFixed(0)}% utilización · {creditCards.length} tarjeta{creditCards.length !== 1 ? 's' : ''}
+          </div>
         </div>
       </div>
 
