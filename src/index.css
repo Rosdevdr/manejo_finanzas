@@ -2,34 +2,65 @@
 
 :root {
   color-scheme: dark;
-  --gold-primary: #C9A84C;
-  --gold-hover: #F1D97E;
+  /* Sovereign Gold & Luxury Fintech Palette */
+  --gold-primary: #D4AF37;
+  --gold-hover: #F3CA65;
   --gold-light: #FCE592;
-  --card-bg: #141419;
-  --card-border: rgba(201, 168, 76, 0.2);
-  --text-primary: #F5F5F5;
-  --text-secondary: #9CA3AF;
+  --gold-glow: rgba(212, 175, 55, 0.25);
+  --gold-subtle: rgba(212, 175, 55, 0.08);
+
+  /* Deep Tier-1 Surfaces (Stripe / Revolut dark standard) */
+  --bg-root: #08080C;
+  --bg-surface: #0E0E14;
+  --bg-card: #13131D;
+  --bg-card-hover: #181826;
+  --bg-input: #101017;
+
+  /* Crisp Borders & Separators */
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-focus: rgba(212, 175, 55, 0.5);
+  --border-card: rgba(255, 255, 255, 0.08);
+  --card-border: rgba(212, 175, 55, 0.18);
+  --card-bg: #13131D;
+
+  /* Typography & High-Trust Contrast */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  /* Status Accents */
+  --emerald-success: #10B981;
+  --emerald-glow: rgba(16, 185, 129, 0.2);
+  --rose-danger: #F43F5E;
+  --rose-glow: rgba(244, 63, 94, 0.2);
+  --indigo-accent: #6366F1;
+  --indigo-glow: rgba(99, 102, 241, 0.2);
+  --amber-warning: #F59E0B;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
   color-scheme: dark;
-  background: #0A0A0C;
-  color: #F5F5F5;
+  background: #08080C;
+  color: #F8FAFC;
   min-height: 100vh;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   max-width: 100%;
 }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
+  font-weight: 700;
 }
 
 /* ===================== APP SHELL ===================== */
@@ -37,10 +68,11 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   height: 100vh;
   height: 100dvh;
-  background: #0A0A0C;
+  background: #08080C;
   overflow: hidden;
   max-width: 100vw;
   width: 100%;
+  position: relative;
 }
 
 /* ===================== SIDEBAR ===================== */
@@ -1864,6 +1896,8 @@ select.field-select {
     background: #0E0E14 !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     padding: 0 !important;
+    padding-top: max(14px, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: max(14px, env(safe-area-inset-bottom, 0px)) !important;
   }
   .sidebar.mobile-open {
     transform: translateX(0) !important;
@@ -1955,8 +1989,14 @@ select.field-select {
     top: 0 !important;
     z-index: 99 !important;
     flex-shrink: 0 !important;
-    background: #0E0E12 !important;
-    padding-top: max(8px, env(safe-area-inset-top, 0px)) !important;
+    background: #0E0E14 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding-top: max(14px, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: 10px !important;
+    padding-left: max(14px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
+    min-height: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    height: auto !important;
   }
   .content {
     flex: 1 !important;
@@ -1964,10 +2004,10 @@ select.field-select {
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-y: contain;
-    padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 16px 14px max(24px, env(safe-area-inset-bottom, 0px)) !important;
   }
   .content.content-chat-mode {
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 8px 10px max(8px, env(safe-area-inset-bottom, 0px)) !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
@@ -2037,8 +2077,11 @@ select.field-select {
   /* AppHeader */
   .app-header {
     height: auto !important;
-    min-height: 50px;
-    padding: 6px 10px !important;
+    min-height: calc(52px + env(safe-area-inset-top, 0px)) !important;
+    padding-top: max(14px, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: 8px !important;
+    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
     gap: 6px !important;
     flex-wrap: nowrap;
   }
@@ -2275,27 +2318,33 @@ select.field-select {
 .sandbox-kpi-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .sandbox-kpi-card {
-  background: #111117;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  padding: 16px 18px;
+  background: linear-gradient(180deg, #13131D 0%, #0F0F17 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 104px;
-  transition: border-color 0.15s ease;
+  min-height: 112px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .sandbox-kpi-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(212, 175, 55, 0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), 0 0 24px rgba(212, 175, 55, 0.07);
 }
 
 .sandbox-kpi-card.gold-glow {
-  border-color: rgba(201, 168, 76, 0.25);
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 20px rgba(212, 175, 55, 0.1);
 }
 
 .sandbox-kpi-header {
@@ -2562,11 +2611,12 @@ select.field-select {
 }
 
 .sandbox-panel {
-  background: #111117;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, #13131D 0%, #0F0F17 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 18px 20px;
   margin-bottom: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .sandbox-panel-header {
@@ -2752,8 +2802,8 @@ select.field-select {
 }
 
 .unencumbered-panel {
-  background: #111117;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, #13131D 0%, #0F0F17 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 18px 20px;
   display: flex;
@@ -2764,6 +2814,7 @@ select.field-select {
   min-width: 0;
   box-sizing: border-box;
   overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .unencumbered-stat-row {
@@ -2785,6 +2836,51 @@ select.field-select {
   color: #34D399;
   font-family: 'Space Mono', monospace;
   font-weight: 600;
+}
+
+/* ── Liquidity Breakdown Micro-Metrics (Stripe/Revolut standard) ── */
+.liquidity-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0 14px;
+}
+
+.liquidity-metric-tile {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: all 0.15s ease;
+}
+
+.liquidity-metric-tile:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.liq-tile-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888898;
+}
+
+.liq-tile-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.liq-tile-sub {
+  font-size: 10px;
+  color: #64748B;
 }
 
 /* ── AI Compliance & Regulation Banner ── */
@@ -2899,6 +2995,8 @@ select.field-select {
 
 /* ── Transactions Institutional Table (Sandbox Image 4) ── */
 .transactions-table-panel {
+  background: linear-gradient(180deg, #13131D 0%, #0F0F17 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   padding: 0 !important;
   overflow: hidden !important;
   margin-top: 0;
@@ -2908,6 +3006,7 @@ select.field-select {
   min-width: 0;
   box-sizing: border-box;
   border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .transactions-table-panel .sandbox-panel-header {

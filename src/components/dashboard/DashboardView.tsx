@@ -745,12 +745,39 @@ export function DashboardView({
                 {liquidityRatio.toFixed(0)}% libre
               </div>
             </div>
-            <div style={{ fontSize: 11, color: '#888898', marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: '#888898', marginBottom: 6 }}>
               Pasivos descontados: {formatCurrency(creditSummary.totalDebt)} en tarjetas
+            </div>
+
+            {/* Micro-métricas institucionales para eliminar el vacío y enriquecer el panel */}
+            <div className="liquidity-metrics-grid">
+              <div className="liquidity-metric-tile">
+                <span className="liq-tile-title">Cobertura</span>
+                <span className="liq-tile-value">
+                  {creditSummary.totalDebt > 0
+                    ? `${(unencumberedLiquidity / creditSummary.totalDebt).toFixed(1)}x`
+                    : '∞'}
+                </span>
+                <span className="liq-tile-sub">Sobre pasivos</span>
+              </div>
+              <div className="liquidity-metric-tile">
+                <span className="liq-tile-title">Deuda Tarjetas</span>
+                <span className="liq-tile-value" style={{ color: '#FB7185' }}>
+                  {formatCurrency(creditSummary.totalDebt)}
+                </span>
+                <span className="liq-tile-sub">Comprometido</span>
+              </div>
+              <div className="liquidity-metric-tile">
+                <span className="liq-tile-title">Solvencia</span>
+                <span className="liq-tile-value" style={{ color: '#34D399' }}>
+                  {liquidityRatio >= 70 ? 'Óptima' : liquidityRatio >= 40 ? 'Media' : 'Alerta'}
+                </span>
+                <span className="liq-tile-sub">{liquidityRatio.toFixed(0)}% libre</span>
+              </div>
             </div>
           </div>
 
-          <div style={{ width: '100%', height: 190 }}>
+          <div style={{ width: '100%', flex: 1, minHeight: 220, marginTop: 4 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={liquidityTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
