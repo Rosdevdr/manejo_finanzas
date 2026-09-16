@@ -30,6 +30,31 @@ export interface ChatMessage {
   text: string
   timestamp: string
   suggestedActions?: string[]
+  source?: 'gemini' | 'local'
+}
+
+export function extractNumbersFromText(text: string): number[] {
+  const matches = text.match(/\b\d+(?:[.,]\d+)*\b/g) || []
+  return matches
+    .map(raw => {
+      if (raw.includes(',') && raw.includes('.')) {
+        if (raw.indexOf(',') < raw.indexOf('.')) {
+          return parseFloat(raw.replace(/,/g, ''))
+        } else {
+          return parseFloat(raw.replace(/\./g, '').replace(',', '.'))
+        }
+      }
+      if (raw.includes(',')) {
+        const parts = raw.split(',')
+        if (parts[1] && parts[1].length === 3) {
+          return parseFloat(raw.replace(/,/g, ''))
+        } else {
+          return parseFloat(raw.replace(',', '.'))
+        }
+      }
+      return parseFloat(raw)
+    })
+    .filter(n => !isNaN(n) && n > 0)
 }
 
 export function generateAiFinancialResponse(prompt: string, snapshot: FinancialSnapshot): string {
@@ -113,24 +138,111 @@ Siguiendo las mejores prácticas financieras internacionales (Regla 50/30/20):
 3. **Metas Corto Plazo:** Automátiza depósitos mensuales a tus metas activas en la sección de Presupuestos.`
   }
 
+  // 2.5 Venta de Bienes Usados, Liquidación de Activos y Depósitos de Efectivo a Banco
+  const isSellingOrAssetLiquidation =
+    (
+      lowerPrompt.includes('venta') ||
+      lowerPrompt.includes('vendi') ||
+      lowerPrompt.includes('vendo') ||
+      lowerPrompt.includes('vender') ||
+      lowerPrompt.includes('deshacerme') ||
+      lowerPrompt.includes('liquide')
+    ) &&
+    (
+      lowerPrompt.includes('ingreso') ||
+      lowerPrompt.includes('ingresos') ||
+      lowerPrompt.includes('banco') ||
+      lowerPrompt.includes('efectivo') ||
+      lowerPrompt.includes('cuenta') ||
+      lowerPrompt.includes('registro') ||
+      lowerPrompt.includes('pongo') ||
+      lowerPrompt.includes('meter') ||
+      lowerPrompt.includes('meti') ||
+      lowerPrompt.includes('como')
+    )
+
+  const isDepositOrTransferQuery =
+    !isSellingOrAssetLiquidation &&
+    (
+      (lowerPrompt.includes('meti') && (lowerPrompt.includes('banco') || lowerPrompt.includes('cuenta'))) ||
+      (lowerPrompt.includes('deposite') && (lowerPrompt.includes('banco') || lowerPrompt.includes('cuenta'))) ||
+      (lowerPrompt.includes('traspaso') && (lowerPrompt.includes('banco') || lowerPrompt.includes('efectivo') || lowerPrompt.includes('cuenta'))) ||
+      (lowerPrompt.includes('transferi') && lowerPrompt.includes('efectivo'))
+    ) &&
+    (lowerPrompt.includes('ingreso') || lowerPrompt.includes('ingresos') || lowerPrompt.includes('pongo') || lowerPrompt.includes('registro'))
+
+  if (isSellingOrAssetLiquidation || isDepositOrTransferQuery) {
+    const foundNums = extractNumbersFromText(prompt)
+    const amountVal = foundNums.length > 0 ? foundNums[0] : 3500
+
+    const itemMentioned = lowerPrompt.includes('tarjeta grafica') || lowerPrompt.includes('tarjeta de video') || lowerPrompt.includes('gpu')
+      ? 'la tarjeta gráfica'
+      : lowerPrompt.includes('telefono') || lowerPrompt.includes('celular') || lowerPrompt.includes('iphone')
+        ? 'el teléfono móvil'
+        : lowerPrompt.includes('laptop') || lowerPrompt.includes('computadora') || lowerPrompt.includes('pc')
+          ? 'el equipo de cómputo'
+          : 'el bien o artículo'
+
+    const newAvailableIfIncome = totalAvailable + amountVal
+
+    return `### 💼 Criterio Contable: Venta de Bienes y Depósito Bancario (${currentPeriod})
+
+Analizando tu consulta sobre los **\`${formatCurrency(amountVal)}\`** producto de la venta de ${itemMentioned} y su depósito en el banco:
+
+---
+
+### 📌 ¿Debes registrarlo como Ingreso? Regla de Decisión Contable:
+
+1. **✅ SÍ, regístralo como Ingreso (Caso recomendado para este escenario):**
+   • **Condición:** Si la venta de ${itemMentioned} **no había sido anotada previamente** en AUREUS.
+   • **Motivo Contable:** Vender un bien de tu propiedad convierte un activo físico en liquidez financiera nueva en tu patrimonio. Si metiste esos \`${formatCurrency(amountVal)}\` a tu cuenta bancaria y no los registras en la plataforma, tu cuenta bancaria real tendrá \`${formatCurrency(amountVal)}\` más que lo que muestra AUREUS, provocando un descuadre en tu balance.
+   • **Impacto en tus Números:** Tu disponible actual de \`${formatCurrency(totalAvailable)}\` ascenderá a **\`${formatCurrency(newAvailableIfIncome)}\`**, cuadrando al 100% con tu saldo bancario real.
+
+2. **⚠️ NO lo registres como nuevo ingreso si el efectivo YA estaba contabilizado en AUREUS:**
+   • **Condición:** Si esos \`${formatCurrency(amountVal)}\` ya figuraban previamente en tu balance de efectivo (por ejemplo, si anotaste la venta al momento de cobrarla en mano o procedía de un retiro previo registrado).
+   • **Motivo Contable:** Meter efectivo previamente registrado al banco no es un nuevo ingreso neto, sino un **traspaso de fondos** (cambio de custodia de billetera física a banco). Si lo registraras como ingreso de nuevo, duplicarías artificialmente tus ingresos.
+
+---
+
+### 📝 Cómo registrarlo correctamente en AUREUS (Paso a Paso):
+Si aplica el **Caso 1 (no estaba registrado)**:
+1. Ve al módulo de **Ingresos** (o presiona el botón **"+ Registrar Ingreso"**).
+2. Introduce el monto exacto: **\`${formatCurrency(amountVal)}\`**.
+3. Selecciona:
+   • **Tipo de Ingreso:** *Extraordinario* o *Venta de Activos*.
+   • **Concepto / Descripción:** \`Venta de ${itemMentioned} (Depósito en Banco)\`.
+   • **Fecha:** La fecha en la que realizaste el depósito en el banco.
+4. **Resultado Inmediato (IRT):** Tu saldo disponible en AUREUS se actualizará al instante para reflejar con exactitud el dinero real de tu cuenta bancaria.`
+  }
+
   // 3. Evaluación de Decisión de Compra (Hardware, Ocio, Tecnología, Desembolsos)
-  if (
+  const isPurchaseExplicit =
     lowerPrompt.includes('comprar') ||
     lowerPrompt.includes('comprarme') ||
     lowerPrompt.includes('factible') ||
     lowerPrompt.includes('adquirir') ||
+    lowerPrompt.includes('gastar en') ||
+    lowerPrompt.includes('compro')
+
+  const hasHardwareKeyword =
     lowerPrompt.includes('tarjeta grafica') ||
     lowerPrompt.includes('tarjeta de video') ||
-    lowerPrompt.includes('diferencia') ||
     lowerPrompt.includes('audifonos')
-  ) {
+
+  const isPurchaseQuery =
+    (isPurchaseExplicit || (hasHardwareKeyword && (lowerPrompt.includes('diferencia') || lowerPrompt.includes('precio') || lowerPrompt.includes('costo')))) &&
+    !lowerPrompt.includes('pongo como ingreso') &&
+    !lowerPrompt.includes('pongo como ingresos') &&
+    !lowerPrompt.includes('lo pongo como ingreso') &&
+    !lowerPrompt.includes('como ingreso') &&
+    !lowerPrompt.includes('como ingresos')
+
+  if (isPurchaseQuery) {
     const availableFunds = cumulative.totalCumulativeBalance
     const carriedOver = cumulative.carriedOverBalance
 
     // Extraer montos numéricos relevantes de la consulta
-    const foundNumbers = prompt.match(/\b\d{1,3}(?:[.,]\d{3})*(?:\.\d+)?\b/g)
-      ?.map(n => parseFloat(n.replace(/,/g, '')))
-      ?.filter(n => !isNaN(n) && n >= 500) || []
+    const foundNumbers = extractNumbersFromText(prompt).filter(n => n >= 500)
 
     const targetAmount = foundNumbers.length > 0 ? foundNumbers[0] : 5000
     const secondAmount = foundNumbers.length > 1 ? foundNumbers[1] : undefined
@@ -175,9 +287,7 @@ ${carriedOver > 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurren
     (lowerPrompt.includes('cargo') && (lowerPrompt.includes('hacer') || lowerPrompt.includes('cuenta') || lowerPrompt.includes('monto')))
 
   if (isEmergencyOrUnexpected) {
-    const foundNums = prompt.match(/\b\d{1,3}(?:[.,]\d{3})*(?:\.\d+)?\b/g)
-      ?.map(n => parseFloat(n.replace(/,/g, '')))
-      ?.filter(n => !isNaN(n) && n > 0) || []
+    const foundNums = extractNumbersFromText(prompt)
     const charge = foundNums.length > 0 ? foundNums[0] : 2731
 
     return `### 🚨 Plan de Contingencia y Supervivencia Financiera (${currentPeriod})
@@ -422,17 +532,116 @@ Basado en habilidades estratégicas de compras y negociación de servicios:
 3. Revisa tus tarjetas de crédito y asegúrate de pagar la totalidad de la fecha de corte.`
   }
 
-  // 9. Orientación Financiera Conversacional Inteligente
-  return `### 💡 Orientación del Asesor AUREUS (${currentPeriod})
+  // 9. Evaluador Semántico y Estructurado de Consultas Financieras Generales
+  // Si la pregunta no coincidió con una plantilla estricta, evaluar profundamente el mensaje del usuario
+  const foundNums = extractNumbersFromText(prompt)
+  const mentionedAmount = foundNums.length > 0 ? foundNums[0] : null
 
-Analizando tu consulta: **"${prompt}"** en relación con tus finanzas del período **${currentPeriod}**:
+  // Identificar el vector temático financiero de la pregunta
+  const isInvestment =
+    lowerPrompt.includes('invertir') ||
+    lowerPrompt.includes('inversion') ||
+    lowerPrompt.includes('acciones') ||
+    lowerPrompt.includes('bolsa') ||
+    lowerPrompt.includes('certificado') ||
+    lowerPrompt.includes('rendimiento') ||
+    lowerPrompt.includes('interes compuesto') ||
+    lowerPrompt.includes('patrimonio') ||
+    lowerPrompt.includes('fondos mutuos')
 
-• **Balance Neto Libre del Período:** **\`${formatCurrency(netBalance)}\`**
-• **Total Disponible Acumulado en Cartera:** **\`${formatCurrency(totalAvailable)}\`**
-• **Ingresos Registrados:** \`${formatCurrency(totalIncome)}\` | **Gastos Totales:** \`${formatCurrency(totalExpense)}\`
+  const isDebtOrLoan =
+    lowerPrompt.includes('prestamo') ||
+    lowerPrompt.includes('financiamiento') ||
+    lowerPrompt.includes('tasa') ||
+    lowerPrompt.includes('cuota') ||
+    lowerPrompt.includes('hipoteca') ||
+    lowerPrompt.includes('interes') ||
+    lowerPrompt.includes('deuda') ||
+    lowerPrompt.includes('banco')
 
-**🎯 Recomendaciones Clave del Asesor:**
-1. **Control de Flujo de Caja:** Si estás enfrentando un gasto no planeado o evaluando una decisión de compra, prioriza mantener un colchón mínimo de seguridad para cubrir transporte y necesidades básicas hasta tu próximo ingreso.
-2. **Registro Inmediato:** Cada movimiento que anotas en el módulo de **Gastos** o **Ingresos** sincroniza al instante tu balance general y las recomendaciones del Asesor.
-3. **Conversación Abierta:** Puedes consultarme con naturalidad sobre factibilidad de compras, planes de contingencia, conciliación bancaria con tu extracto, o cómo recortar gastos variables.`
+  const isIncomeStrategy =
+    lowerPrompt.includes('ingreso') ||
+    lowerPrompt.includes('sueldo') ||
+    lowerPrompt.includes('salario') ||
+    lowerPrompt.includes('aumento') ||
+    lowerPrompt.includes('cobro') ||
+    lowerPrompt.includes('freelance') ||
+    lowerPrompt.includes('negocio') ||
+    lowerPrompt.includes('emprender') ||
+    lowerPrompt.includes('ventas')
+
+  const isExpenseOptimization =
+    lowerPrompt.includes('gasto') ||
+    lowerPrompt.includes('reducir') ||
+    lowerPrompt.includes('recortar') ||
+    lowerPrompt.includes('ahorrar') ||
+    lowerPrompt.includes('vivienda') ||
+    lowerPrompt.includes('comida') ||
+    lowerPrompt.includes('delivery') ||
+    lowerPrompt.includes('servicios') ||
+    lowerPrompt.includes('presupuesto')
+
+  let topicTitle = 'Evaluación y Diagnóstico Financiero'
+  let keyAdvice: string[] = []
+
+  if (isInvestment) {
+    topicTitle = 'Estrategia de Inversión y Formación de Patrimonio'
+    keyAdvice = [
+      `**Fondo de Seguridad Primero:** Antes de invertir ${mentionedAmount ? `\`${formatCurrency(mentionedAmount)}\`` : 'en instrumentos de capital'}, asegúrate de tener cubiertos al menos 3 meses de gastos fijos (\`${formatCurrency(totalExpense * 3)}\`).`,
+      `**Instrumentos de Renta Fija Local:** En República Dominicana, los Certificados Financieros del Banco Central y fondos de inversión de mercado de dinero ofrecen rendimientos estables con bajo riesgo.`,
+      `**Separación Operativa:** Nunca inviertas dinero asignado a compromisos fijos esenciales o pagos de tarjetas de este mes.`,
+    ]
+  } else if (isDebtOrLoan) {
+    topicTitle = 'Evaluación de Endeudamiento, Préstamos y Crédito'
+    keyAdvice = [
+      `**Capacidad de Endeudamiento:** Tu cuota de deuda mensual no debería superar el 30% de tus ingresos netos (\`${formatCurrency(totalIncome * 0.30)}\`).`,
+      `**Costo Total del Crédito:** Compara siempre la Tasa de Interés Efectiva Anual (TEA) más comisiones de desembolso antes de tomar financiamiento.`,
+      `**Prioridad de Amortización:** Si mantienes deudas activas, destina excedentes de tu saldo disponible (\`${formatCurrency(Math.max(0, netBalance))}\`) a abonar directamente al capital de la obligación con mayor tasa.`,
+    ]
+  } else if (isIncomeStrategy) {
+    topicTitle = 'Estrategia de Optimización y Registro de Ingresos'
+    keyAdvice = [
+      `**Trazabilidad Inmediata:** Cualquier ingreso percibido (fijo, variable o extraordinario) debe anotarse en AUREUS en la fecha exacta de cobro para alimentar la predicción de liquidez.`,
+      `**Regla de Retención de Ahorro:** Al recibir nuevos ingresos ${mentionedAmount ? `de \`${formatCurrency(mentionedAmount)}\`` : ''}, separa automáticamente el 20% antes de iniciar cualquier ciclo de gasto corriente.`,
+      `**Diversificación:** Si posees ingresos extraordinarios o de consultoría, mantén una reserva para compromisos tributarios o imprevistos.`,
+    ]
+  } else if (isExpenseOptimization) {
+    topicTitle = 'Optimización de Estructura de Gastos y Flujo de Caja'
+    keyAdvice = [
+      `**Auditoría de Gastos Hormiga:** Revisa consumos diarios en delivery, snacks o compras digitales que acumulados impactan tu margen neto (\`${formatCurrency(netBalance)}\`).`,
+      `**Tope del 50% en Necesidades:** Mantén tus costos fijos esenciales por debajo del 50% de tus ingresos (\`${formatCurrency(totalIncome * 0.50)}\`).`,
+      `**Margen de Maniobra:** Conserva un colchón mínimo de seguridad disponible en cuenta para emergencias imprevistas.`,
+    ]
+  } else {
+    topicTitle = 'Orientación y Planificación Financiera Integral'
+    keyAdvice = [
+      `**Principio de Liquidez Real:** Mantén siempre alineado el balance disponible en AUREUS (\`${formatCurrency(totalAvailable)}\`) con los fondos reales depositados en tus cuentas bancarias y efectivo físico.`,
+      `**Criterio de Decisión Financiera:** Antes de cualquier desembolso o movimiento ${mentionedAmount ? `de \`${formatCurrency(mentionedAmount)}\`` : ''}, verifica que no comprometa tu fondo de gastos fijos del mes.`,
+      `**Automatización y Hábito:** Registrar cada transacción el mismo día garantiza reportes 100% confiables y advertencias preventivas del Asesor IA.`,
+    ]
+  }
+
+  return `### 💡 ${topicTitle} (${currentPeriod})
+
+Analizando tu consulta: **"${prompt}"** con base en tus finanzas reales:
+
+---
+
+### 📊 Radiografía de tus Finanzas en AUREUS:
+• **Total Disponible Real Acumulado:** **\`${formatCurrency(totalAvailable)}\`**
+${cumulative.carriedOverBalance !== 0 ? `• **Saldo Arrastrado del Mes Anterior:** \`${formatCurrency(cumulative.carriedOverBalance)}\` (Fondo de reserva base)\n` : ''}• **Ingresos Registrados del Mes:** \`${formatCurrency(totalIncome)}\` (${pIncomes.length} movimientos)
+• **Gastos Acumulados del Mes:** \`${formatCurrency(totalExpense)}\` (${pExpenses.length} movimientos)
+• **Balance Neto Mensual (Ahorro/Flujo Libre):** **\`${formatCurrency(netBalance)}\`**
+${mentionedAmount ? `• **Monto Analizado en tu Consulta:** **\`${formatCurrency(mentionedAmount)}\`**\n` : ''}
+---
+
+### 🧠 Criterio y Recomendaciones del Asesor:
+${keyAdvice.map((adv, i) => `${i + 1}. ${adv}`).join('\n')}
+
+---
+
+### 📝 Plan de Acción en la Plataforma:
+1. **Verificación de Datos:** Asegúrate de que todos tus ingresos, compras y gastos fijos de **${currentPeriod}** estén debidamente anotados.
+2. **Sincronización:** Si este movimiento implica una entrada de capital, regístralo en **Ingresos**; si es un desembolso, anótalo en **Gastos**.
+3. **Consulta Continua:** Puedes hacerme preguntas específicas sobre viabilidad de compras, fechas de corte de tarjetas o cómo optimizar tus presupuestos mensuales.`
 }

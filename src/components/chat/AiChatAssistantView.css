@@ -209,6 +209,89 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* Engine Source Badges & Status */
+.chat-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10.5px;
+  font-family: 'Space Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  background: transparent;
+  text-decoration: none;
+}
+
+.chat-status-badge.gemini-active {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #34D399;
+}
+
+.chat-status-badge.gemini-active:hover {
+  background: rgba(52, 211, 153, 0.18);
+  transform: translateY(-1px);
+}
+
+.chat-status-badge.offline-mode {
+  background: rgba(243, 202, 101, 0.1);
+  border-color: rgba(243, 202, 101, 0.4);
+  color: #F3CA65;
+  animation: pulseBadge 3s infinite;
+}
+
+.chat-status-badge.offline-mode:hover {
+  background: rgba(243, 202, 101, 0.2);
+  transform: translateY(-1px);
+}
+
+@keyframes pulseBadge {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(243, 202, 101, 0); }
+  50% { box-shadow: 0 0 10px 2px rgba(243, 202, 101, 0.25); }
+}
+
+.chat-config-btn {
+  transition: all 0.2s ease;
+}
+
+.chat-config-btn:hover {
+  transform: translateY(-1px);
+}
+
+.message-footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  gap: 8px;
+}
+
+.engine-source-tag {
+  font-size: 9.5px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Space Mono', monospace;
+}
+
+.engine-source-tag.gemini {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34D399;
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.engine-source-tag.local {
+  background: rgba(243, 202, 101, 0.1);
+  color: #F3CA65;
+  border: 1px solid rgba(243, 202, 101, 0.25);
+}
+
 /* Markdown Formatting for Chat Messages */
 .chat-md-body {
   display: flex;
