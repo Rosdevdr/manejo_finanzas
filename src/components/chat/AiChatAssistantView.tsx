@@ -625,10 +625,11 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
                     fontSize: 13,
                   }}
                 >
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recomendado - Oficial, ultra rápido e inteligente)</option>
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (Alta velocidad y máxima cuota gratuita - 15 RPM / 1,500 día)</option>
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (Baja latencia)</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (Máximo razonamiento financiero y analítico)</option>
+                  <option value="gemini-flash-latest">Gemini Flash Oficial (Recomendado - Ultra rápido y máxima estabilidad)</option>
+                  <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (Alta disponibilidad y velocidad)</option>
+                  <option value="gemma-4-31b-it">Gemma 4 31B Instruct (Alto razonamiento analítico)</option>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                  <option value="gemini-pro-latest">Gemini Pro Latest (Máxima capacidad analítica)</option>
                 </select>
               </div>
 

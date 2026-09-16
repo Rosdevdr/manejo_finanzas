@@ -144,5 +144,17 @@ describe('aiAdvisorEngine', () => {
     expect(res).toContain('RD$50,000.00')
     expect(res).toContain('Capacidad de Endeudamiento')
   })
+
+  it('correctly celebrates savings achievement and bank funds without falsely routing to debt evaluation', () => {
+    const userPrompt = 'Ya tengo los 33,500 ahorrados en el banco.'
+    const res = generateAiFinancialResponse(userPrompt, emptySnapshot)
+    expect(res).toContain('Hito de Ahorro y Disciplina Financiera')
+    expect(res).toContain('RD$33,500.00')
+    expect(res).toContain('Fondo Ahorrado en Banco')
+    expect(res).toContain('Cobertura de Emergencia')
+    expect(res).not.toContain('Evaluación de Endeudamiento, Préstamos y Crédito')
+    expect(res).not.toContain('Capacidad de Endeudamiento')
+    expect(res).not.toContain('Costo Total del Crédito')
+  })
 })
 

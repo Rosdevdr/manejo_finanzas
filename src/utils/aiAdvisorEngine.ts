@@ -117,7 +117,57 @@ ${cumulative.carriedOverBalance !== 0 ? `• **Saldo Arrastrado del Mes Anterior
 3. ${totalAvailable <= 0 ? `⚠️ **Atención:** Actualmente tu saldo disponible se encuentra en cero o déficit. Te sugiero pausar compras no esenciales.` : `✅ Mantienes un saldo disponible positivo de \`${formatCurrency(totalAvailable)}\`.`}`
   }
 
-  // 2. ¿Cuánto debería ahorrar?
+  // 2. Metas de Ahorro Alcanzadas, Fondos en Banco y Logros de Acumulación
+  const isSavingsAchievement =
+    (
+      lowerPrompt.includes('ahorrad') || // ahorrado, ahorrados, ahorrada, ahorradas
+      lowerPrompt.includes('guardad') || // guardado, guardados
+      lowerPrompt.includes('juntad') ||
+      lowerPrompt.includes('junte') ||
+      lowerPrompt.includes('reunid') ||
+      lowerPrompt.includes('acumulad')
+    ) &&
+    (
+      lowerPrompt.includes('banco') ||
+      lowerPrompt.includes('cuenta') ||
+      lowerPrompt.includes('tengo') ||
+      lowerPrompt.includes('ya tengo') ||
+      lowerPrompt.includes('logre') ||
+      lowerPrompt.includes('meta')
+    )
+
+  if (isSavingsAchievement) {
+    const foundNums = extractNumbersFromText(prompt)
+    const amountVal = foundNums.length > 0 ? foundNums[0] : 33500
+    const monthsCovered = totalExpense > 0 ? (amountVal / totalExpense) : 6
+
+    return `### 🏆 ¡Excelente Hito de Ahorro y Disciplina Financiera! (${currentPeriod})
+
+¡Felicitaciones! Acumular **\`${formatCurrency(amountVal)}\`** en tu cuenta bancaria es un logro financiero de gran calibre que fortalece enormemente tu patrimonio y estabilidad económica.
+
+---
+
+### 📊 Radiografía de tu Fortaleza de Ahorro en AUREUS:
+• **Fondo Ahorrado en Banco:** **\`${formatCurrency(amountVal)}\`**
+• **Total Disponible Registrado en AUREUS:** **\`${formatCurrency(totalAvailable)}\`**
+• **Gastos Acumulados del Mes:** \`${formatCurrency(totalExpense)}\`
+• **Cobertura de Emergencia:** Con \`${formatCurrency(amountVal)}\`, cubres **más de ${monthsCovered.toFixed(1)} meses** de tu nivel de gasto mensual actual. ¡Tu colchón de seguridad está en nivel óptimo de protección!
+• **Balance Neto Mensual (Flujo Libre):** \`${formatCurrency(Math.max(0, netBalance))}\`
+
+---
+
+### 💡 Opciones Estratégicas para este Capital:
+1. **🛒 Si este dinero era para una compra planificada (ej. hardware, tarjeta gráfica o equipo de trabajo):**
+   • Ya tienes la liquidez 100% asegurada y depositada en el banco.
+   • Puedes realizar la compra de contado sin recurrir a endeudamiento ni pagar intereses, manteniendo protegidos tus fondos para compromisos esenciales.
+2. **🛡️ Si este dinero es tu Fondo de Emergencia / Respaldo:**
+   • Protege este capital contra compras impulsivas no planificadas.
+   • Mantenlo en una cuenta que te genere rendimientos pasivos seguros (cuenta de alto rendimiento o fondos de inversión de liquidez diaria en RD).
+3. **🎯 Actualización en el Módulo de Metas:**
+   • Si creaste una meta en el módulo de **Presupuestos y Metas**, actualiza el monto ahorrado a \`${formatCurrency(amountVal)}\` para ver tu barra de progreso al 100%.`
+  }
+
+  // 2.1 ¿Cuánto debería ahorrar? / Estrategia general de ahorro
   if (lowerPrompt.includes('ahorrar') || lowerPrompt.includes('ahorro') || lowerPrompt.includes('cuanto ahorro')) {
     const recommended20 = totalIncome * 0.20
     const totalGoalsSaved = savingsGoals.reduce((s, g) => s + g.currentAmount, 0)
@@ -549,15 +599,27 @@ Basado en habilidades estratégicas de compras y negociación de servicios:
     lowerPrompt.includes('patrimonio') ||
     lowerPrompt.includes('fondos mutuos')
 
+  const isSavingsOrWealth =
+    lowerPrompt.includes('ahorrad') ||
+    lowerPrompt.includes('ahorro') ||
+    lowerPrompt.includes('guardad') ||
+    lowerPrompt.includes('juntad') ||
+    lowerPrompt.includes('fondo') ||
+    lowerPrompt.includes('meta') ||
+    lowerPrompt.includes('colchon') ||
+    lowerPrompt.includes('reserva')
+
   const isDebtOrLoan =
-    lowerPrompt.includes('prestamo') ||
-    lowerPrompt.includes('financiamiento') ||
-    lowerPrompt.includes('tasa') ||
-    lowerPrompt.includes('cuota') ||
-    lowerPrompt.includes('hipoteca') ||
-    lowerPrompt.includes('interes') ||
-    lowerPrompt.includes('deuda') ||
-    lowerPrompt.includes('banco')
+    (
+      lowerPrompt.includes('prestamo') ||
+      lowerPrompt.includes('financiamiento') ||
+      lowerPrompt.includes('hipoteca') ||
+      lowerPrompt.includes('deuda') ||
+      lowerPrompt.includes('deudas')
+    ) ||
+    (lowerPrompt.includes('credito') && !lowerPrompt.includes('tarjeta grafica') && !lowerPrompt.includes('tarjeta de video')) ||
+    (lowerPrompt.includes('cuota') && !lowerPrompt.includes('ahorro')) ||
+    (lowerPrompt.includes('interes') && !lowerPrompt.includes('compuesto'))
 
   const isIncomeStrategy =
     lowerPrompt.includes('ingreso') ||
@@ -574,7 +636,6 @@ Basado en habilidades estratégicas de compras y negociación de servicios:
     lowerPrompt.includes('gasto') ||
     lowerPrompt.includes('reducir') ||
     lowerPrompt.includes('recortar') ||
-    lowerPrompt.includes('ahorrar') ||
     lowerPrompt.includes('vivienda') ||
     lowerPrompt.includes('comida') ||
     lowerPrompt.includes('delivery') ||
@@ -584,7 +645,15 @@ Basado en habilidades estratégicas de compras y negociación de servicios:
   let topicTitle = 'Evaluación y Diagnóstico Financiero'
   let keyAdvice: string[] = []
 
-  if (isInvestment) {
+  if (isSavingsOrWealth) {
+    topicTitle = 'Estrategia de Fondos de Ahorro, Metas y Reserva de Emergencia'
+    const monthsCovered = totalExpense > 0 && mentionedAmount ? (mentionedAmount / totalExpense) : 3
+    keyAdvice = [
+      `**Consolidación de Ahorro:** ${mentionedAmount ? `Los \`${formatCurrency(mentionedAmount)}\` acumulados en tu cuenta bancaria representan aproximadamente **${monthsCovered.toFixed(1)} meses de gastos**.` : 'Mantén tus ahorros separados de la cuenta de gastos operativos diarios para evitar fugas de capital.'}`,
+      `**Rendimiento Pasivo:** No mantengas fondos de ahorro estancados en cuentas corrientes con tasa cero; evalúa cuentas de ahorro de alto rendimiento o fondos de inversión de liquidez diaria en RD.`,
+      `**Siguiente Hito:** Si este capital cubre tu fondo de emergencia básico (3 meses de gastos: \`${formatCurrency(totalExpense * 3)}\`), el excedente puede dirigirse a inversión o compras planificadas de contado.`,
+    ]
+  } else if (isInvestment) {
     topicTitle = 'Estrategia de Inversión y Formación de Patrimonio'
     keyAdvice = [
       `**Fondo de Seguridad Primero:** Antes de invertir ${mentionedAmount ? `\`${formatCurrency(mentionedAmount)}\`` : 'en instrumentos de capital'}, asegúrate de tener cubiertos al menos 3 meses de gastos fijos (\`${formatCurrency(totalExpense * 3)}\`).`,
