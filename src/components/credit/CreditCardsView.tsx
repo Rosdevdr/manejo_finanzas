@@ -72,6 +72,20 @@ export function CreditCardsView({
   const [customAbonoAmount, setCustomAbonoAmount] = useState<string | null>(null)
   const [abonoConfirmed, setAbonoConfirmed] = useState(false)
 
+  // Cerrar cualquier modal al presionar la tecla Escape
+  useEffect(() => {
+    if (!showCardModal && !showTxModal && !showAbonoModal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowCardModal(false)
+        setShowTxModal(false)
+        setShowAbonoModal(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showCardModal, showTxModal, showAbonoModal])
+
   // Card Form
   const [cardForm, setCardForm] = useState<{
     name: string

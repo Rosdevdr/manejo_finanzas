@@ -135,9 +135,10 @@
 }
 
 .pillar-pct {
-  font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  font-weight: 700;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  font-weight: 800;
 }
 
 .pillar-bar-bg {
@@ -154,8 +155,10 @@
 }
 
 .pillar-target {
-  font-family: 'Space Mono', monospace;
-  font-size: 10.5px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 600;
   color: #717182;
   display: flex;
   justify-content: space-between;
@@ -257,14 +260,17 @@
 }
 
 .budget-spent {
-  font-family: 'Space Mono', monospace;
-  font-size: 15px;
-  font-weight: 700;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'tnum', 'cv02', 'cv03', 'cv04';
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  font-weight: 800;
 }
 
 .budget-limit {
-  font-family: 'Space Mono', monospace;
-  font-size: 11.5px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
   color: #717182;
 }
 
@@ -403,13 +409,17 @@
 }
 
 .goal-current-val {
-  font-family: 'Space Mono', monospace;
-  font-size: 18px;
-  font-weight: 700;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'tnum', 'cv02', 'cv03', 'cv04';
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .goal-target-val {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
   font-size: 12px;
   color: #717182;
 }
@@ -442,8 +452,9 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #E0E0E8;
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Wallet, Briefcase, TrendingUp, Plus, Trash2, Pencil, X, Check, Calendar } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -20,8 +20,7 @@ const TYPE_MAP: Record<IncomeType, { label: string; badge: string; emoji: string
 }
 
 export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncome, onDeleteIncome }: IncomesViewProps) {
-  const getPeriod = (i: { period?: string; date?: string }) =>
-    i.period && i.period.trim().length === 7 ? i.period.trim() : (i.date ? i.date.slice(0, 7) : currentPeriod)
+  const getPeriod = (inc: Income) => inc.period ?? inc.date?.slice(0, 7) ?? currentPeriod
 
   const periodIncomes = incomes.filter(i => getPeriod(i) === currentPeriod)
   const totalIncome   = periodIncomes.reduce((s, i) => s + i.amount, 0)
@@ -34,6 +33,16 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
     description: '', amount: '', type: 'salary' as IncomeType,
     date: new Date().toISOString().slice(0, 10),
   })
+
+  // Escuchar tecla Escape para cerrar modal
+  useEffect(() => {
+    if (!isModalOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsModalOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isModalOpen])
 
   // Filtro de períodos
   const [showAllPeriods, setShowAllPeriods] = useState(false)

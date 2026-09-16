@@ -114,6 +114,20 @@ export function BudgetsAndGoalsView({
   const [depositGoalId, setDepositGoalId] = useState<string | null>(null)
   const [depositAmount, setDepositAmount] = useState('')
 
+  // Cerrar cualquier modal al presionar la tecla Escape
+  useEffect(() => {
+    if (!editingCategory && !isGoalModalOpen && !depositGoalId) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setEditingCategory(null)
+        setIsGoalModalOpen(false)
+        setDepositGoalId(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [editingCategory, isGoalModalOpen, depositGoalId])
+
   // Cálculos globales
   const periodIncomes = incomes.filter(i => i.period === currentPeriod)
   const periodExpenses = expenses.filter(e => e.period === currentPeriod)

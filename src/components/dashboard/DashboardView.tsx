@@ -58,6 +58,18 @@ const CATEGORY_COLORS: Record<string, string> = {
   education: '#22D3EE', debt: '#F97316', other: '#9CA3AF',
 }
 
+const luxuryTooltipStyle: React.CSSProperties = {
+  background: 'rgba(15, 15, 23, 0.94)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid rgba(212, 175, 55, 0.28)',
+  borderRadius: '12px',
+  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+  fontSize: '12px',
+  color: '#FFFFFF',
+  fontFamily: "'Inter', sans-serif",
+}
+
 export function DashboardView({
   currentPeriod,
   incomes,
@@ -373,6 +385,107 @@ export function DashboardView({
         </div>
       </div>
 
+      {/* ── AVISO DE CUMPLIMIENTO REGULATORIO IA (GLOBAL STANDARDS) ── */}
+      <div className="ai-compliance-banner">
+        <div className="ai-compliance-text">
+          <span className="compliance-beacon" />
+          <Shield size={14} className="text-gold" />
+          <span>
+            <strong>Marco Regulatorio IA:</strong> Cumplimiento normativo ético y de privacidad algorítmica (EU AI Act & Data Privacy).
+          </span>
+        </div>
+        <button
+          type="button"
+          className="ai-compliance-link"
+          onClick={() => setShowComplianceModal(true)}
+        >
+          <Info size={13} />
+          <span>Ver Normativas de Uso</span>
+        </button>
+      </div>
+
+      {/* ── CONEXIÓN EN VIVO CON TODOS LOS MÓDULOS ── */}
+      <div className="sandbox-modules-sync-strip">
+        <div className="sync-strip-header">
+          <Activity size={14} className="text-emerald" />
+          <span>Sincronización Total de Módulos · {formatPeriodLabel(currentPeriod)}</span>
+        </div>
+        <div className="sync-strip-pills">
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('incomes')
+            }}
+            title="Ver Ingresos"
+          >
+            <span>Ingresos</span>
+            <strong>{pInc.length}</strong>
+          </button>
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('expenses')
+            }}
+            title="Ver Gastos"
+          >
+            <span>Gastos</span>
+            <strong>{pExp.length}</strong>
+          </button>
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('credit')
+            }}
+            title="Ver Tarjetas"
+          >
+            <span>Tarjetas</span>
+            <strong>{pCardTxs.length}</strong>
+          </button>
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('cash')
+            }}
+            title="Ver Efectivo"
+          >
+            <span>Efectivo</span>
+            <strong>{pCash.length}</strong>
+          </button>
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('budgets')
+            }}
+            title="Ver Presupuestos"
+          >
+            <span>Presupuestos</span>
+            <strong>{categoryBudgets.length}</strong>
+          </button>
+          <button
+            type="button"
+            className="sync-module-pill"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('chat-advisor')
+            }}
+            title="Ir a Asesor IA"
+          >
+            <span>Asesor IA</span>
+            <strong style={{ color: '#34D399' }}>Activo</strong>
+          </button>
+        </div>
+      </div>
+
       {/* ── 5-METRIC INSTITUTIONAL KPI STRIP (SANDBOX IMAGE 4) ── */}
       <div className="sandbox-kpi-row">
         <div className="sandbox-kpi-card gold-glow">
@@ -552,7 +665,9 @@ export function DashboardView({
                   <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
                   <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
                   <Tooltip
-                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                    contentStyle={luxuryTooltipStyle}
+                    itemStyle={{ color: '#FFFFFF', fontWeight: 700, fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                    labelStyle={{ color: '#C9A84C', fontSize: 11, fontWeight: 700, marginBottom: 4, letterSpacing: '0.04em' }}
                     formatter={(val) => [formatCurrency(Number(val) || 0), '']}
                   />
                   <Area type="monotone" dataKey="inflows" stroke="#34D399" strokeWidth={2.5} fillOpacity={1} fill="url(#inflowGrad)" name="Inflows (Entradas)" />
@@ -569,7 +684,9 @@ export function DashboardView({
                   <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
                   <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
                   <Tooltip
-                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                    contentStyle={luxuryTooltipStyle}
+                    itemStyle={{ color: '#FFFFFF', fontWeight: 700, fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                    labelStyle={{ color: '#C9A84C', fontSize: 11, fontWeight: 700, marginBottom: 4, letterSpacing: '0.04em' }}
                     formatter={(val) => [formatCurrency(Number(val) || 0), '']}
                   />
                   <Area type="monotone" dataKey="netWorth" stroke="#C9A84C" strokeWidth={3} fillOpacity={1} fill="url(#patrimonioGrad)" name="Patrimonio Acumulado" />
@@ -601,7 +718,9 @@ export function DashboardView({
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                      contentStyle={luxuryTooltipStyle}
+                      itemStyle={{ color: '#FFFFFF', fontWeight: 700, fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                      labelStyle={{ color: '#C9A84C', fontSize: 11, fontWeight: 700, marginBottom: 4, letterSpacing: '0.04em' }}
                       formatter={(val) => [formatCurrency(Number(val) || 0), '']}
                     />
                   </PieChart>
@@ -730,140 +849,74 @@ export function DashboardView({
               <div className="sandbox-panel-title">Unencumbered Liquidity</div>
               <div className="sandbox-panel-sub">Capital libre neto sin compromisos de deuda</div>
             </div>
-            <div className="sandbox-pills">
-              <button
-                type="button"
-                className={`sandbox-pill-btn ${unencumberedView === 'trend' ? 'active' : ''}`}
-                onClick={() => setUnencumberedView('trend')}
-              >
-                Evolución
-              </button>
-              <button
-                type="button"
-                className={`sandbox-pill-btn ${unencumberedView === 'breakdown' ? 'active' : ''}`}
-                onClick={() => setUnencumberedView('breakdown')}
-              >
-                Solvencia
-              </button>
-            </div>
-          </div>
 
-          <div className="unencumbered-stat-row">
-            <div className="unencumbered-val">
-              <AnimatedCurrency value={unencumberedLiquidity} />
-            </div>
-            <span className={`sandbox-kpi-pill ${liquidityRatio >= 60 ? 'pos' : 'neutral'}`}>
-              {liquidityRatio.toFixed(0)}% libre
-            </span>
-          </div>
-
-          {/* Barra de Distribución Proporcional (Ramp / Mercury style) */}
-          <div className="unencumbered-allocation-block">
-            <div className="unencumbered-ratio-bar">
-              <div
-                className="unencumbered-bar-fill free"
-                style={{ width: `${Math.min(100, Math.max(0, liquidityRatio))}%` }}
-                title={`Capital Libre: ${formatCurrency(unencumberedLiquidity)} (${liquidityRatio.toFixed(1)}%)`}
-              />
-              <div
-                className="unencumbered-bar-fill debt"
-                style={{ width: `${Math.min(100, Math.max(0, 100 - liquidityRatio))}%` }}
-                title={`Pasivos Tarjetas: ${formatCurrency(creditSummary.totalDebt)} (${(100 - liquidityRatio).toFixed(1)}%)`}
-              />
-            </div>
-            <div className="unencumbered-ratio-legend">
-              <div className="ratio-legend-item">
-                <span className="ratio-dot free" />
-                <span className="ratio-name">Libre disponible</span>
-                <strong className="ratio-amount">{formatCurrency(unencumberedLiquidity)}</strong>
+            <div className="unencumbered-stat-row">
+              <div className="unencumbered-val">
+                <AnimatedCurrency value={unencumberedLiquidity} />
               </div>
-              <div className="ratio-legend-item">
-                <span className="ratio-dot debt" />
-                <span className="ratio-name">Pasivos tarjetas</span>
-                <strong className="ratio-amount">{formatCurrency(creditSummary.totalDebt)}</strong>
+              <div className="unencumbered-sub">
+                {liquidityRatio.toFixed(0)}% libre
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: '#888898', marginBottom: 6 }}>
+              Pasivos descontados: {formatCurrency(creditSummary.totalDebt)} en tarjetas
+            </div>
+
+            {/* Micro-métricas institucionales para eliminar el vacío y enriquecer el panel */}
+            <div className="liquidity-metrics-grid">
+              <div className="liquidity-metric-tile">
+                <span className="liq-tile-title">Cobertura</span>
+                <span className="liq-tile-value">
+                  {creditSummary.totalDebt > 0
+                    ? `${(unencumberedLiquidity / creditSummary.totalDebt).toFixed(1)}x`
+                    : '∞'}
+                </span>
+                <span className="liq-tile-sub">Sobre pasivos</span>
+              </div>
+              <div className="liquidity-metric-tile">
+                <span className="liq-tile-title">Deuda Tarjetas</span>
+                <span className="liq-tile-value" style={{ color: '#FB7185' }}>
+                  {formatCurrency(creditSummary.totalDebt)}
+                </span>
+                <span className="liq-tile-sub">Comprometido</span>
+              </div>
+              <div className="liquidity-metric-tile">
+                <span className="liq-tile-title">Solvencia</span>
+                <span className="liq-tile-value" style={{ color: '#34D399' }}>
+                  {liquidityRatio >= 70 ? 'Óptima' : liquidityRatio >= 40 ? 'Media' : 'Alerta'}
+                </span>
+                <span className="liq-tile-sub">{liquidityRatio.toFixed(0)}% libre</span>
               </div>
             </div>
           </div>
 
-          {/* Fichas de Indicadores Clave */}
-          <div className="unencumbered-metrics-row">
-            <div className="unencumbered-metric-chip">
-              <span className="chip-label">Patrimonio Total</span>
-              <span className="chip-val">{formatCurrency(cumulative.totalCumulativeBalance)}</span>
-            </div>
-            <div className="unencumbered-metric-chip">
-              <span className="chip-label">Cobertura Deuda</span>
-              <span className="chip-val text-emerald">
-                {debtCoverage === 'Sin deuda' ? '100% Solvente' : `${debtCoverage}x`}
-              </span>
-            </div>
-            <div className="unencumbered-metric-chip">
-              <span className="chip-label">Estado</span>
-              <span className="chip-val text-gold">
-                {liquidityRatio >= 70 ? 'Óptimo' : liquidityRatio >= 40 ? 'Estable' : 'Ajustado'}
-              </span>
-            </div>
-          </div>
-
-          {/* Gráfico Dinámico que llena el espacio restante */}
-          <div className="unencumbered-chart-container">
+          <div style={{ width: '100%', flex: 1, minHeight: 220, marginTop: 4 }}>
             <ResponsiveContainer width="100%" height="100%">
-              {unencumberedView === 'trend' ? (
-                <AreaChart data={liquidityTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="unencumberedGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#F3CA65" stopOpacity={0.45} />
-                      <stop offset="95%" stopColor="#F3CA65" stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id="totalCapGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#34D399" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#34D399" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
-                  <Tooltip
-                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
-                    formatter={(val, name) => [
-                      formatCurrency(Number(val) || 0),
-                      name === 'liquidez' ? 'Liquidez Libre' : 'Patrimonio Total'
-                    ]}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="totalCapital"
-                    stroke="rgba(255,255,255,0.25)"
-                    strokeDasharray="4 4"
-                    strokeWidth={1.5}
-                    fillOpacity={1}
-                    fill="url(#totalCapGrad)"
-                    name="totalCapital"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="liquidez"
-                    stroke="#F3CA65"
-                    strokeWidth={2.5}
-                    fillOpacity={1}
-                    fill="url(#unencumberedGrad)"
-                    name="liquidez"
-                  />
-                </AreaChart>
-              ) : (
-                <BarChart data={liquidityTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
-                  <Tooltip
-                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
-                    formatter={(val, name) => [
-                      formatCurrency(Number(val) || 0),
-                      name === 'liquidez' ? 'Capital Libre' : 'Pasivos Tarjeta'
-                    ]}
-                  />
-                  <Bar dataKey="liquidez" fill="#34D399" radius={[4, 4, 0, 0]} name="liquidez" />
-                  <Bar dataKey="deuda" fill="#FB7185" radius={[4, 4, 0, 0]} name="deuda" />
-                </BarChart>
-              )}
+              <AreaChart data={liquidityTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="unencumberedGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#E09F67" stopOpacity={0.45} />
+                    <stop offset="95%" stopColor="#E09F67" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
+                <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                <Tooltip
+                  contentStyle={luxuryTooltipStyle}
+                  itemStyle={{ color: '#FFFFFF', fontWeight: 700, fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                  labelStyle={{ color: '#C9A84C', fontSize: 11, fontWeight: 700, marginBottom: 4, letterSpacing: '0.04em' }}
+                  formatter={(val) => [formatCurrency(Number(val) || 0), 'Liquidez Libre']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="liquidez"
+                  stroke="#E09F67"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#unencumberedGrad)"
+                  name="Liquidez No Comprometida"
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>

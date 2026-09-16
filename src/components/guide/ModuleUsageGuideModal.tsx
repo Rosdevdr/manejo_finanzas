@@ -175,6 +175,7 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
         style={{
           maxWidth: 820,
           width: '94%',
+          height: 'min(620px, 90vh)',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
@@ -194,6 +195,7 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
           justifyContent: 'space-between',
           alignItems: 'center',
           background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.12) 0%, rgba(14, 14, 20, 0.95) 100%)',
+          flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
@@ -239,7 +241,7 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
         </div>
 
         {/* Modal Body: Sidebar Selector + Content Pane */}
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 460 }}>
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
           {/* Module Nav Tabs (Left side) */}
           <div style={{
             width: 240,
@@ -268,69 +270,100 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
                     padding: '9px 12px',
                     borderRadius: 10,
                     border: 'none',
-                    textAlign: 'left',
+                    background: isSelected
+                      ? 'linear-gradient(90deg, rgba(243, 202, 101, 0.16) 0%, rgba(201, 168, 76, 0.06) 100%)'
+                      : 'transparent',
+                    color: isSelected ? '#F3CA65' : '#9CA3AF',
                     cursor: 'pointer',
+                    textAlign: 'left',
+                    width: '100%',
+                    fontFamily: 'Space Grotesk',
                     fontSize: 12,
                     fontWeight: isSelected ? 700 : 500,
-                    fontFamily: 'Space Grotesk',
-                    background: isSelected ? 'rgba(243, 202, 101, 0.12)' : 'transparent',
-                    color: isSelected ? '#F3CA65' : '#D1D5DB',
                     transition: 'all 0.15s ease',
+                    borderLeft: isSelected ? '3px solid #F3CA65' : '3px solid transparent',
                   }}
                 >
-                  <span style={{ flexShrink: 0 }}>{sec.icon}</span>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sec.title.split('(')[0].trim()}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{sec.icon}</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sec.title.split(' (')[0]}</span>
                 </button>
               )
             })}
           </div>
 
-          {/* Module Content Details (Right side) */}
-          <div style={{ flex: 1, padding: 22, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Header info */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: '#F3CA65',
-                  background: 'rgba(243, 202, 101, 0.12)',
-                  border: '1px solid rgba(243, 202, 101, 0.25)',
-                  padding: '2px 8px',
-                  borderRadius: 6,
-                  textTransform: 'uppercase',
-                }}>
-                  {activeSection.badge}
-                </span>
-              </div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#FFFFFF', margin: '4px 0 8px', fontFamily: 'Space Grotesk' }}>
-                {activeSection.title}
-              </h2>
-              <p style={{ fontSize: 12.5, color: '#D1D5DB', lineHeight: 1.55, margin: 0 }}>
-                {activeSection.description}
-              </p>
+          {/* Module Detailed Content (Right side) */}
+          <div style={{
+            flex: 1,
+            padding: '20px 24px',
+            overflowY: 'auto',
+            background: 'rgba(14, 14, 20, 0.4)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+          }}>
+            {/* Header section badge & title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{
+                fontSize: 10.5,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                padding: '3px 8px',
+                borderRadius: 6,
+                background: 'rgba(243, 202, 101, 0.15)',
+                color: '#F3CA65',
+                border: '1px solid rgba(243, 202, 101, 0.3)',
+              }}>
+                {activeSection.badge}
+              </span>
             </div>
 
-            {/* Best Practices */}
-            <div style={{ background: 'rgba(52, 211, 153, 0.05)', border: '1px solid rgba(52, 211, 153, 0.18)', borderRadius: 12, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#34D399', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <CheckCircle2 size={15} /> Buenas Prácticas Recomendadas
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#FFFFFF', margin: '0 0 10px 0', fontFamily: 'Space Grotesk' }}>
+              {activeSection.title}
+            </h3>
+
+            <p style={{ fontSize: 13, color: '#A0A0B2', lineHeight: 1.55, margin: '0 0 18px 0' }}>
+              {activeSection.description}
+            </p>
+
+            {/* Best practices */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: 12,
+              padding: '14px 16px',
+              marginBottom: 14,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <CheckCircle2 size={16} style={{ color: '#34D399' }} />
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: '#34D399', fontFamily: 'Space Grotesk' }}>
+                  Buenas Prácticas Recomendadas
+                </span>
               </div>
               <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#E5E7EB', lineHeight: 1.6 }}>
                 {activeSection.bestPractices.map((bp, idx) => (
-                  <li key={idx}>{bp}</li>
+                  <li key={idx} style={{ marginBottom: 4 }}>{bp}</li>
                 ))}
               </ul>
             </div>
 
-            {/* Common Mistakes */}
-            <div style={{ background: 'rgba(248, 113, 113, 0.05)', border: '1px solid rgba(248, 113, 113, 0.18)', borderRadius: 12, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#F87171', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <AlertTriangle size={15} /> Errores Comunes a Evitar
+            {/* Common mistakes */}
+            <div style={{
+              background: 'rgba(248, 113, 113, 0.04)',
+              border: '1px solid rgba(248, 113, 113, 0.15)',
+              borderRadius: 12,
+              padding: '14px 16px',
+              marginBottom: 14,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <AlertTriangle size={16} style={{ color: '#F87171' }} />
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: '#F87171', fontFamily: 'Space Grotesk' }}>
+                  Errores Comunes a Evitar
+                </span>
               </div>
               <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#E5E7EB', lineHeight: 1.6 }}>
                 {activeSection.commonMistakes.map((cm, idx) => (
-                  <li key={idx}>{cm}</li>
+                  <li key={idx} style={{ marginBottom: 4 }}>{cm}</li>
                 ))}
               </ul>
             </div>
@@ -355,11 +388,13 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
 
         {/* Modal Footer */}
         <div style={{
-          padding: '12px 20px',
+          padding: '14px 22px',
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           justifyContent: 'flex-end',
+          alignItems: 'center',
           background: '#0B0B10',
+          flexShrink: 0,
         }}>
           <button
             type="button"
@@ -369,13 +404,16 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
               color: '#0B0B0F',
               border: 'none',
               borderRadius: 10,
-              padding: '8px 20px',
-              fontSize: 12.5,
+              padding: '9px 24px',
+              fontSize: 13,
               fontWeight: 700,
               fontFamily: 'Space Grotesk',
               cursor: 'pointer',
               boxShadow: '0 4px 16px rgba(243, 202, 101, 0.25)',
               transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             Entendido, ¡gracias!

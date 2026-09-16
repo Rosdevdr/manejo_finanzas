@@ -180,6 +180,17 @@ export function AiChatAssistantView({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [tempApiKey, setTempApiKey] = useState(apiKey)
   const [tempModel, setTempModel] = useState(selectedModel)
+
+  // Cerrar modal de configuración con Escape
+  useEffect(() => {
+    if (!isSettingsOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSettingsOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isSettingsOpen])
+
   // Clave de memoria conversacional completamente aislada por usuario
   const userKey = userEmail ? userEmail.toLowerCase().trim() : 'demo_user'
   const CHAT_STORAGE_KEY = `aureus_chat_history_${userKey}`
@@ -473,6 +484,9 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
             placeholder="Pregúntale al Asistente IA (ej: ¿cuánto puedo gastar este mes?)..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            onFocus={() => {
+              setTimeout(scrollToBottom, 250)
+            }}
           />
           <button type="submit" className="send-btn" disabled={!inputText.trim() || isTyping}>
             <Send size={18} />
