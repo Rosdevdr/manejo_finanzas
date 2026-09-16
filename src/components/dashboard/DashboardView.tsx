@@ -14,6 +14,7 @@ import {
   ArrowDownRight,
   ShieldCheck,
   Shield,
+  Info,
   X,
   Plus,
   Download,
@@ -21,8 +22,7 @@ import {
 } from 'lucide-react'
 import {
   ResponsiveContainer, XAxis, YAxis, Tooltip,
-  PieChart, Pie, Cell, AreaChart, Area,
-  BarChart, Bar
+  PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts'
 import type { Income, Expense, CreditCard as CreditCardType, CreditCardTransaction, CashWithdrawal, CategoryBudget } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
@@ -209,27 +209,19 @@ export function DashboardView({
     }
   })
 
-  // 7. Liquidez No Comprometida (Unencumbered Liquidity - Fintech Intelligence)
+  // 7. Liquidez No Comprometida (Unencumbered Liquidity - Sandbox Image 4)
   const unencumberedLiquidity = Math.max(0, cumulative.totalCumulativeBalance - creditSummary.totalDebt)
   const liquidityRatio = cumulative.totalCumulativeBalance > 0
     ? (unencumberedLiquidity / cumulative.totalCumulativeBalance) * 100
     : 0
-  const debtCoverage = creditSummary.totalDebt > 0
-    ? (cumulative.totalCumulativeBalance / creditSummary.totalDebt).toFixed(1)
-    : 'Sin deuda'
 
   const liquidityTrendData = last5Periods.map(p => {
     const [, monthStr] = p.split('-')
     const mIdx = (parseInt(monthStr, 10) || 1) - 1
     const cum = calculateCumulativeBalance(incomes, expenses, p)
-    const tot = Math.round(cum.totalCumulativeBalance)
-    const free = Math.round(Math.max(0, cum.totalCumulativeBalance - creditSummary.totalDebt))
-    const debt = Math.round(Math.min(tot, creditSummary.totalDebt))
     return {
       label: MONTH_SHORT_NAMES[mIdx] || p,
-      liquidez: free,
-      totalCapital: tot,
-      deuda: debt,
+      liquidez: Math.round(Math.max(0, cum.totalCumulativeBalance - creditSummary.totalDebt)),
     }
   })
 
@@ -263,115 +255,24 @@ export function DashboardView({
     { name: 'Efectivo', amount: paymentTotals.cash, icon: <Banknote size={13} />, color: '#FBBF24' },
   ]
 
-  // Estado de selector de vista de gráficos
+  // Estado de selector de vista de gráfico Sandbox
   const [chartView, setChartView] = useState<'flow' | 'networth'>('flow')
-  const [unencumberedView, setUnencumberedView] = useState<'trend' | 'breakdown'>('trend')
 
   return (
     <div className="fade-in sandbox-dashboard">
-      {/* ── UNIFIED MERCURY-STYLE COMMAND CENTER ── */}
-      <div className="sandbox-command-center">
-        <div className="command-left">
-          <div className="command-branding">
-            <div className="command-subhead">
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F3CA65', display: 'inline-block' }} />
-              AUREUS WEALTH · {formatPeriodLabel(currentPeriod).toUpperCase()}
-            </div>
-            <h1 className="command-title">Portfolio Overview</h1>
-          </div>
-
-          <div className="command-sync-pills">
-            <button
-              type="button"
-              className="sync-module-pill"
-              onClick={() => {
-                triggerHaptic('light')
-                onNavigateTab && onNavigateTab('incomes')
-              }}
-              title="Ver Ingresos"
-            >
-              <span>Ingresos</span>
-              <strong>{pInc.length}</strong>
-            </button>
-            <button
-              type="button"
-              className="sync-module-pill"
-              onClick={() => {
-                triggerHaptic('light')
-                onNavigateTab && onNavigateTab('expenses')
-              }}
-              title="Ver Gastos"
-            >
-              <span>Gastos</span>
-              <strong>{pExp.length}</strong>
-            </button>
-            <button
-              type="button"
-              className="sync-module-pill"
-              onClick={() => {
-                triggerHaptic('light')
-                onNavigateTab && onNavigateTab('credit')
-              }}
-              title="Ver Tarjetas"
-            >
-              <span>Tarjetas</span>
-              <strong>{pCardTxs.length}</strong>
-            </button>
-            <button
-              type="button"
-              className="sync-module-pill"
-              onClick={() => {
-                triggerHaptic('light')
-                onNavigateTab && onNavigateTab('cash')
-              }}
-              title="Ver Efectivo"
-            >
-              <span>Efectivo</span>
-              <strong>{pCash.length}</strong>
-            </button>
-            <button
-              type="button"
-              className="sync-module-pill"
-              onClick={() => {
-                triggerHaptic('light')
-                onNavigateTab && onNavigateTab('budgets')
-              }}
-              title="Ver Presupuestos"
-            >
-              <span>Presupuestos</span>
-              <strong>{categoryBudgets.length}</strong>
-            </button>
-            <button
-              type="button"
-              className="sync-module-pill"
-              onClick={() => {
-                triggerHaptic('light')
-                onNavigateTab && onNavigateTab('chat-advisor')
-              }}
-              title="Ir a Asesor IA"
-            >
-              <span>Asesor IA</span>
-              <strong style={{ color: '#34D399' }}>Activo</strong>
-            </button>
-          </div>
+      {/* ── TOP BANNER INSTITUCIONAL ── */}
+      <div className="sandbox-header-strip">
+        <div>
+          <div className="sandbox-subhead">AUREUS WEALTH ADVISOR · {formatPeriodLabel(currentPeriod).toUpperCase()}</div>
+          <h1 className="sandbox-title">Portfolio Overview</h1>
         </div>
-
-        <div className="command-right">
-          <button
-            type="button"
-            className="ai-compliance-link"
-            onClick={() => setShowComplianceModal(true)}
-            title="Normativas de Inteligencia Artificial & Transparencia"
-          >
-            <Shield size={13} />
-            <span>Normativa IA</span>
-          </button>
+        <div className="sandbox-header-actions">
           <button
             type="button"
             className="sandbox-btn-outline"
             onClick={() => onNavigateTab && onNavigateTab('chat-advisor')}
           >
-            <Sparkles size={14} className="text-gold" />
+            <Sparkles size={14} />
             <span>Asesor IA</span>
           </button>
           <button
@@ -842,12 +743,17 @@ export function DashboardView({
           )}
         </div>
 
-        {/* Columna Derecha: Unencumbered Liquidity (Fintech Command Hub) */}
+        {/* Columna Derecha: Unencumbered Liquidity (Sandbox Image 4) */}
         <div className="unencumbered-panel">
-          <div className="sandbox-panel-header" style={{ marginBottom: 2 }}>
-            <div>
-              <div className="sandbox-panel-title">Unencumbered Liquidity</div>
-              <div className="sandbox-panel-sub">Capital libre neto sin compromisos de deuda</div>
+          <div>
+            <div className="sandbox-panel-header" style={{ marginBottom: 4 }}>
+              <div>
+                <div className="sandbox-panel-title">Unencumbered Liquidity</div>
+                <div className="sandbox-panel-sub">Capital libre neto sin compromisos de deuda</div>
+              </div>
+              <div className="sandbox-pills">
+                <span className="sandbox-pill-btn active">5M</span>
+              </div>
             </div>
 
             <div className="unencumbered-stat-row">
