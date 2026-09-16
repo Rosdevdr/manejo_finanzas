@@ -58,6 +58,18 @@ const CATEGORY_COLORS: Record<string, string> = {
   education: '#22D3EE', debt: '#F97316', other: '#9CA3AF',
 }
 
+const luxuryTooltipStyle: React.CSSProperties = {
+  background: 'rgba(15, 15, 23, 0.94)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid rgba(212, 175, 55, 0.28)',
+  borderRadius: '12px',
+  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+  fontSize: '12px',
+  color: '#FFFFFF',
+  fontFamily: "'Inter', sans-serif",
+}
+
 export function DashboardView({
   currentPeriod,
   incomes,
@@ -277,6 +289,7 @@ export function DashboardView({
       {/* ── AVISO DE CUMPLIMIENTO REGULATORIO IA (GLOBAL STANDARDS) ── */}
       <div className="ai-compliance-banner">
         <div className="ai-compliance-text">
+          <span className="compliance-beacon" />
           <Shield size={14} className="text-gold" />
           <span>
             <strong>Marco Regulatorio IA:</strong> Cumplimiento normativo ético y de privacidad algorítmica (EU AI Act & Data Privacy).
@@ -553,7 +566,9 @@ export function DashboardView({
                   <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
                   <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
                   <Tooltip
-                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                    contentStyle={luxuryTooltipStyle}
+                    itemStyle={{ color: '#FFFFFF', fontWeight: 700, fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                    labelStyle={{ color: '#C9A84C', fontSize: 11, fontWeight: 700, marginBottom: 4, letterSpacing: '0.04em' }}
                     formatter={(val) => [formatCurrency(Number(val) || 0), '']}
                   />
                   <Area type="monotone" dataKey="inflows" stroke="#34D399" strokeWidth={2.5} fillOpacity={1} fill="url(#inflowGrad)" name="Inflows (Entradas)" />
@@ -570,7 +585,9 @@ export function DashboardView({
                   <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
                   <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
                   <Tooltip
-                    contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                    contentStyle={luxuryTooltipStyle}
+                    itemStyle={{ color: '#FFFFFF', fontWeight: 700, fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                    labelStyle={{ color: '#C9A84C', fontSize: 11, fontWeight: 700, marginBottom: 4, letterSpacing: '0.04em' }}
                     formatter={(val) => [formatCurrency(Number(val) || 0), '']}
                   />
                   <Area type="monotone" dataKey="netWorth" stroke="#C9A84C" strokeWidth={3} fillOpacity={1} fill="url(#patrimonioGrad)" name="Patrimonio Acumulado" />
@@ -602,7 +619,9 @@ export function DashboardView({
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                      contentStyle={luxuryTooltipStyle}
+                      itemStyle={{ color: '#FFFFFF', fontWeight: 700, fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                      labelStyle={{ color: '#C9A84C', fontSize: 11, fontWeight: 700, marginBottom: 4, letterSpacing: '0.04em' }}
                       formatter={(val) => [formatCurrency(Number(val) || 0), '']}
                     />
                   </PieChart>
@@ -789,7 +808,9 @@ export function DashboardView({
                 <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
                 <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
                 <Tooltip
-                  contentStyle={{ background: '#121217', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                  contentStyle={luxuryTooltipStyle}
+                  itemStyle={{ color: '#FFFFFF', fontWeight: 700, fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                  labelStyle={{ color: '#C9A84C', fontSize: 11, fontWeight: 700, marginBottom: 4, letterSpacing: '0.04em' }}
                   formatter={(val) => [formatCurrency(Number(val) || 0), 'Liquidez Libre']}
                 />
                 <Area

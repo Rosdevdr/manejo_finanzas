@@ -3,7 +3,7 @@
  * Permite al usuario ver su plan actual, comparar planes y suscribirse vía Stripe.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   X,
@@ -107,6 +107,16 @@ export function SubscriptionModal({
 }: SubscriptionModalProps) {
   const [loadingPlan, setLoadingPlan] = useState<PlanType | null>(null)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+
+  // Cerrar modal al presionar la tecla Escape
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 

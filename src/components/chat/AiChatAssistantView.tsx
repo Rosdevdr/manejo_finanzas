@@ -180,6 +180,17 @@ export function AiChatAssistantView({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [tempApiKey, setTempApiKey] = useState(apiKey)
   const [tempModel, setTempModel] = useState(selectedModel)
+
+  // Cerrar modal de configuración con Escape
+  useEffect(() => {
+    if (!isSettingsOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSettingsOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isSettingsOpen])
+
   // Clave de memoria conversacional completamente aislada por usuario
   const userKey = userEmail ? userEmail.toLowerCase().trim() : 'demo_user'
   const CHAT_STORAGE_KEY = `aureus_chat_history_${userKey}`

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Banknote, AlertTriangle, Plus, Trash2, Pencil, X, Calendar } from 'lucide-react'
 import type { CashWithdrawal, CashReason, Expense } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -38,6 +38,16 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
     amount: '', reason: 'pocket_money' as CashReason,
     note: '', date: new Date().toISOString().slice(0, 10),
   })
+
+  // Escuchar tecla Escape para cerrar modal
+  useEffect(() => {
+    if (!isModalOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsModalOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isModalOpen])
 
   const [showAllPeriods, setShowAllPeriods] = useState(false)
   const displayedCash = (showAllPeriods || (pCash.length === 0 && withdrawals.length > 0))
