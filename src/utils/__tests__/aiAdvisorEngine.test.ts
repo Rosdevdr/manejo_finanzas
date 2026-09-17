@@ -117,5 +117,44 @@ describe('aiAdvisorEngine', () => {
     expect(res).toContain('Diagnóstico y Plan de Deudas')
     expect(res).toContain('Método Avalancha')
   })
+
+  it('correctly handles graphic card sale and bank deposit query without confusing it with a purchase', () => {
+    const userPrompt = 'Tenía 3,500 en efectivos como parte del dinero de la venta de la tarjeta grafica y los metí en el banco, los pongo como ingresos?'
+    const res = generateAiFinancialResponse(userPrompt, emptySnapshot)
+    expect(res).toContain('Criterio Contable: Venta de Bienes y Depósito Bancario')
+    expect(res).toContain('RD$3,500.00')
+    expect(res).toContain('tarjeta gráfica')
+    expect(res).toContain('SÍ, regístralo como Ingreso')
+    expect(res).toContain('NO lo registres como nuevo ingreso si el efectivo YA estaba contabilizado')
+    expect(res).not.toContain('Evaluación de Factibilidad de Compra')
+    expect(res).not.toContain('Desembolso Estimado')
+  })
+
+  it('evaluates generalized investment question with structured financial engine', () => {
+    const res = generateAiFinancialResponse('¿Debería invertir 10000 en un certificado financiero o guardarlo?', emptySnapshot)
+    expect(res).toContain('Estrategia de Inversión y Formación de Patrimonio')
+    expect(res).toContain('RD$10,000.00')
+    expect(res).toContain('Fondo de Seguridad Primero')
+    expect(res).toContain('Radiografía de tus Finanzas en AUREUS')
+  })
+
+  it('evaluates generalized loan inquiry with structured financial engine', () => {
+    const res = generateAiFinancialResponse('Me ofrecieron un préstamo de 50000 en el banco con tasa fija, ¿me conviene tomarlo?', emptySnapshot)
+    expect(res).toContain('Evaluación de Endeudamiento, Préstamos y Crédito')
+    expect(res).toContain('RD$50,000.00')
+    expect(res).toContain('Capacidad de Endeudamiento')
+  })
+
+  it('correctly celebrates savings achievement and bank funds without falsely routing to debt evaluation', () => {
+    const userPrompt = 'Ya tengo los 33,500 ahorrados en el banco.'
+    const res = generateAiFinancialResponse(userPrompt, emptySnapshot)
+    expect(res).toContain('Hito de Ahorro y Disciplina Financiera')
+    expect(res).toContain('RD$33,500.00')
+    expect(res).toContain('Fondo Ahorrado en Banco')
+    expect(res).toContain('Cobertura de Emergencia')
+    expect(res).not.toContain('Evaluación de Endeudamiento, Préstamos y Crédito')
+    expect(res).not.toContain('Capacidad de Endeudamiento')
+    expect(res).not.toContain('Costo Total del Crédito')
+  })
 })
 

@@ -180,6 +180,17 @@ export function AiChatAssistantView({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [tempApiKey, setTempApiKey] = useState(apiKey)
   const [tempModel, setTempModel] = useState(selectedModel)
+
+  // Cerrar modal de configuración con Escape
+  useEffect(() => {
+    if (!isSettingsOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSettingsOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isSettingsOpen])
+
   // Clave de memoria conversacional completamente aislada por usuario
   const userKey = userEmail ? userEmail.toLowerCase().trim() : 'demo_user'
   const CHAT_STORAGE_KEY = `aureus_chat_history_${userKey}`
@@ -286,6 +297,7 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
           sender: 'assistant',
           text: responseText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          source: 'gemini',
         }
         setMessages(prev => [...prev, aiMsg])
       } catch (err: any) {
@@ -293,8 +305,9 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
         const aiMsg: ChatMessage = {
           id: createId('msg-ai'),
           sender: 'assistant',
-          text: `*(Google Gemini no disponible: ${err.message || 'Error de conexión'}. Mostrando análisis local)*\n\n${fallback}`,
+          text: `*(Google Gemini temporalmente no disponible: ${err.message || 'Error de conexión'}. Mostrando análisis de reglas locales AUREUS)*\n\n${fallback}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          source: 'local',
         }
         setMessages(prev => [...prev, aiMsg])
       } finally {
@@ -308,6 +321,7 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
           sender: 'assistant',
           text: responseText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          source: 'local',
         }
         setMessages(prev => [...prev, aiMsg])
         setIsTyping(false)
@@ -360,6 +374,30 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
             <ShieldCheck size={13} style={{ color: '#34D399' }} />
             <span style={{ fontSize: 10.5, color: '#34D399', fontFamily: 'Space Mono, monospace' }}>Art. 50 UE AI Act</span>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setTempApiKey(apiKey)
+              setTempModel(selectedModel)
+              setIsSettingsOpen(true)
+            }}
+            className={`chat-status-badge ${apiKey ? 'gemini-active' : 'offline-mode'}`}
+            title={apiKey ? `Google Gemini AI está activo (${selectedModel}). Clic para configurar.` : 'Clic para conectar tu clave gratuita de Google AI Studio (1,500 consultas/día gratis).'}
+          >
+            {apiKey ? (
+              <>
+                <Sparkles size={12} style={{ color: '#34D399' }} />
+                <span>Gemini AI Activo ({selectedModel})</span>
+              </>
+            ) : (
+              <>
+                <Key size={12} style={{ color: '#F3CA65' }} />
+                <span>Modo Local (Offline) · Conectar Gemini Gratis</span>
+              </>
+            )}
+          </button>
+
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(201, 168, 76, 0.08)', padding: '4px 10px', borderRadius: 12, border: '1px solid rgba(201, 168, 76, 0.25)' }}>
             <Lock size={12} style={{ color: '#F1D97E' }} />
             <span style={{ fontSize: 10.5, color: '#F1D97E', fontFamily: 'Space Mono, monospace' }}>
@@ -395,6 +433,33 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
               {totalInc > 0 && <span className="context-pill">Ingresos: {formatCurrency(totalInc)}</span>}
               {totalExp > 0 && <span className="context-pill">Gastos: {formatCurrency(totalExp)}</span>}
             </div>
+
+            <button
+              type="button"
+              className={`sandbox-btn-outline chat-config-btn`}
+              onClick={() => {
+                triggerHaptic('light')
+                setTempApiKey(apiKey)
+                setTempModel(selectedModel)
+                setIsSettingsOpen(true)
+              }}
+              style={{
+                padding: '6px 12px',
+                fontSize: 11.5,
+                borderRadius: 8,
+                gap: 6,
+                display: 'inline-flex',
+                alignItems: 'center',
+                borderColor: apiKey ? 'rgba(52, 211, 153, 0.3)' : 'rgba(243, 202, 101, 0.4)',
+                color: apiKey ? '#34D399' : '#F3CA65',
+                background: apiKey ? 'rgba(52, 211, 153, 0.08)' : 'rgba(243, 202, 101, 0.12)',
+              }}
+              title="Configurar Google Gemini API Key"
+            >
+              <Key size={13} />
+              <span>{apiKey ? 'Configurar Gemini' : '⚡ Conectar Gemini'}</span>
+            </button>
+
             <button
               type="button"
               className="sandbox-btn-outline chat-clear-btn"
@@ -427,7 +492,14 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
 
               <div className="message-bubble">
                 <FormattedChatMessage text={msg.text} />
-                <span className="message-time">{msg.timestamp}</span>
+                <div className="message-footer-meta">
+                  <span className="message-time">{msg.timestamp}</span>
+                  {msg.sender === 'assistant' && (
+                    <span className={`engine-source-tag ${msg.source === 'gemini' ? 'gemini' : 'local'}`}>
+                      {msg.source === 'gemini' ? '✨ Gemini AI' : '🛡️ Motor Local AUREUS'}
+                    </span>
+                  )}
+                </div>
 
                 {msg.sender === 'assistant' && (
                   <div className="message-actions">
@@ -473,6 +545,9 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
             placeholder="Pregúntale al Asistente IA (ej: ¿cuánto puedo gastar este mes?)..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            onFocus={() => {
+              setTimeout(scrollToBottom, 250)
+            }}
           />
           <button type="submit" className="send-btn" disabled={!inputText.trim() || isTyping}>
             <Send size={18} />
@@ -550,14 +625,22 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
                     fontSize: 13,
                   }}
                 >
-                  <option value="gemini-3.5-flash">Gemini 3.5 Flash (Recomendado - Ultra rápido y preciso)</option>
-                  <option value="gemma-4-31b-it">Gemma 4 31B Instruct (Alta capacidad analítica)</option>
+                  <option value="gemini-flash-latest">Gemini Flash Oficial (Recomendado - Ultra rápido y máxima estabilidad)</option>
+                  <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (Alta disponibilidad y velocidad)</option>
+                  <option value="gemma-4-31b-it">Gemma 4 31B Instruct (Alto razonamiento analítico)</option>
                   <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                  <option value="gemini-pro-latest">Gemini Pro Latest (Máxima capacidad analítica)</option>
                 </select>
               </div>
 
-              <div style={{ background: 'rgba(243, 202, 101, 0.08)', border: '1px solid rgba(243, 202, 101, 0.2)', padding: '10px 14px', borderRadius: 8, fontSize: 11.5, color: '#D1D5DB' }}>
-                💡 <strong>¿Cómo funciona?</strong> Al activar Gemini, AUREUS le suministra a la IA todo tu contexto financiero (ingresos, gastos, balance arrastrado, tarjetas, metas y regla 50/30/20) para que actúe como tu Director Financiero (CFO) personal.
+              <div style={{ background: 'rgba(52, 211, 153, 0.08)', border: '1px solid rgba(52, 211, 153, 0.25)', padding: '12px 14px', borderRadius: 8, fontSize: 11.5, color: '#D1D5DB', lineHeight: 1.55 }}>
+                🟢 <strong>Plan 100% GRATIS de Google AI Studio:</strong>
+                <ul style={{ margin: '6px 0 0 0', paddingLeft: 18 }}>
+                  <li><strong>Costo:</strong> RD$0.00 / US$0.00. No requiere pagar ningún plan ni suscripción a Google.</li>
+                  <li><strong>Capacidad:</strong> 15 consultas por minuto y hasta 1,500 consultas por día sin costo.</li>
+                  <li><strong>¿Cómo obtenerla?:</strong> Ingresa a <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: '#34D399', textDecoration: 'underline' }}>aistudio.google.com/app/apikey</a> con tu cuenta Google y pulsa <em>"Create API Key in new project"</em>.</li>
+                  <li><strong>Permanente:</strong> También puedes colocar <code style={{ color: '#F3CA65' }}>VITE_GEMINI_API_KEY=tu_clave</code> en el archivo <code style={{ color: '#F3CA65' }}>.env.local</code> para que nunca expire en este equipo.</li>
+                </ul>
               </div>
             </div>
 

@@ -44,12 +44,12 @@ export default async function handler(req: Request) {
     }
 
     const candidateModels = [
-      model || 'gemini-2.5-flash',
-      'gemini-2.5-flash',
-      'gemini-1.5-flash',
-      'gemini-2.0-flash',
+      model || 'gemini-flash-latest',
       'gemini-flash-latest',
-      'gemini-3.5-flash',
+      'gemini-3.1-flash-lite',
+      'gemma-4-31b-it',
+      'gemini-2.5-flash',
+      'gemini-pro-latest',
     ]
     const uniqueModels = Array.from(new Set(candidateModels))
 

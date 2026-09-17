@@ -24,10 +24,10 @@ export function setStoredGeminiApiKey(key: string): void {
 }
 
 export function getStoredGeminiModel(): string {
-  if (typeof window === 'undefined') return 'gemini-2.5-flash'
+  if (typeof window === 'undefined') return 'gemini-flash-latest'
   const stored = localStorage.getItem(GEMINI_MODEL_STORAGE)
-  if (!stored) {
-    return 'gemini-2.5-flash'
+  if (!stored || stored === 'gemini-1.5-flash' || stored === 'gemini-3.5-flash') {
+    return 'gemini-flash-latest'
   }
   return stored
 }
@@ -126,11 +126,11 @@ export async function queryGeminiFinancialAdvisor(
   const selectedModel = getStoredGeminiModel()
   const candidateModels = [
     selectedModel,
-    'gemini-2.5-flash',
-    'gemini-1.5-flash',
-    'gemini-2.0-flash',
     'gemini-flash-latest',
-    'gemini-3.5-flash',
+    'gemini-3.1-flash-lite',
+    'gemma-4-31b-it',
+    'gemini-2.5-flash',
+    'gemini-pro-latest',
   ]
   const uniqueModels = Array.from(new Set(candidateModels))
 

@@ -18,6 +18,7 @@ import {
   Flame,
   Sliders,
   BookOpen,
+  Zap,
 } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
@@ -40,6 +41,8 @@ interface SidebarProps {
   onOpenGuide?: () => void
   isInstallable?: boolean
   onInstallApp?: () => void
+  onOpenSubscription?: () => void
+  currentPlan?: 'free' | 'personal' | 'pro'
 }
 
 const NAV_ITEMS: { id: TabType; icon: ReactNode; label: string }[] = [
@@ -69,7 +72,11 @@ export function Sidebar({
   onOpenTerms,
   onOpenGuide,
   onInstallApp,
+  onOpenSubscription,
+  currentPlan = 'free',
 }: SidebarProps) {
+  const PLAN_LABELS: Record<string, string> = { free: 'Free', personal: 'Personal', pro: 'Pro ⚡' }
+  const PLAN_COLORS: Record<string, string> = { free: '#71717A', personal: '#F59E0B', pro: '#818CF8' }
   const initials = userEmail
     ? userEmail.slice(0, 2).toUpperCase()
     : 'JR'
@@ -203,6 +210,38 @@ export function Sidebar({
             >
               <span className="nav-icon" style={{ color: '#F3CA65' }}><BookOpen size={16} /></span>
               <span>Guía de Módulos</span>
+            </button>
+          )}
+
+          {/* ── BOTÓN DE SUSCRIPCIÓN ── */}
+          {onOpenSubscription && (
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                onClose?.()
+                onOpenSubscription()
+              }}
+              style={{ marginTop: 2 }}
+            >
+              <span className="nav-icon" style={{ color: PLAN_COLORS[currentPlan] || '#F59E0B' }}>
+                <Zap size={16} />
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                Mi Plan
+                <span style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: '1px 6px',
+                  borderRadius: 100,
+                  background: `${PLAN_COLORS[currentPlan]}22`,
+                  border: `1px solid ${PLAN_COLORS[currentPlan]}44`,
+                  color: PLAN_COLORS[currentPlan],
+                  letterSpacing: '0.05em',
+                }}>
+                  {isDemoMode ? 'DEMO' : PLAN_LABELS[currentPlan]}
+                </span>
+              </span>
             </button>
           )}
 
