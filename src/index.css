@@ -4029,82 +4029,66 @@ textarea:focus,
 }
 
 /* ==========================================================================
-   MERCURY-STYLE DASHBOARD — Command Center Reset + Hero Balance
+   NEXT-GEN SILICON VALLEY FINTECH ARCHITECTURE (RAMP × APPLE WALLET)
+   Titanium Obsidian Glassmorphism with Precision Gold Discipline
    ========================================================================== */
 
-.sandbox-command-center {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 0 4px 0 !important;
+/* ── Container ── */
+.fintech-vault-container {
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 12px 20px 48px;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.command-sync-pills { display: none !important; }
-
-.command-branding .command-title {
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-  color: var(--text-primary) !important;
-}
-
-.command-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-/* ==========================================================================
-   AUREUS × MERCURY × AGENCYANALYTICS HYBRID DESIGN SYSTEM
-   ========================================================================== */
-
-/* ── 1. Mercury Editorial Header & Fast Action Pills ── */
-.mercury-editorial-header {
+/* ── 1. Top Command Header ── */
+.fintech-top-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  padding-bottom: 4px;
 }
 
-.mercury-header-left {
+.header-greeting-block {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
-.mercury-badge-tag {
+.institutional-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-family: 'Space Grotesk', sans-serif;
+  gap: 8px;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 11px;
   font-weight: 700;
   color: #C9A84C;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  margin-bottom: 2px;
 }
 
-.badge-dot-gold {
+.eyebrow-pulsar {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #F3CA65;
-  box-shadow: 0 0 8px rgba(243, 202, 101, 0.6);
-  display: inline-block;
+  background: #22C55E;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+  animation: pulseGreenGlow 2s infinite ease-in-out;
 }
 
-.mercury-greeting {
+@keyframes pulseGreenGlow {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px rgba(34, 197, 94, 1); }
+}
+
+.fintech-main-title {
   font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
   color: #FFFFFF;
   letter-spacing: -0.03em;
@@ -4112,124 +4096,364 @@ textarea:focus,
   line-height: 1.2;
 }
 
-.mercury-subgreeting {
-  font-size: 13px;
-  color: #8E95A5;
+.fintech-main-sub {
+  font-size: 13.5px;
+  color: #94A3B8;
   margin: 0;
   line-height: 1.4;
 }
 
-.mercury-header-actions {
+.header-action-capsules {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.mercury-pill-action {
+.action-capsule-gold {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #F3CA65 0%, #C9A84C 100%);
+  color: #0A0C10;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 12px rgba(201, 168, 76, 0.35);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.action-capsule-gold:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(201, 168, 76, 0.5);
+  filter: brightness(1.06);
+}
+
+.action-capsule-glass {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 12px;
   font-weight: 600;
   padding: 8px 16px;
   border-radius: 9999px;
+  background: rgba(17, 19, 25, 0.85);
+  color: #D1D5DB;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
   cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
-.mercury-pill-action.gold-solid {
-  background: linear-gradient(135deg, #F3CA65 0%, #C9A84C 100%);
-  color: #0B0D11;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 10px rgba(201, 168, 76, 0.25);
-  font-weight: 700;
-}
-
-.mercury-pill-action.gold-solid:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(201, 168, 76, 0.4);
-  filter: brightness(1.05);
-}
-
-.mercury-pill-action.outline {
-  background: #111319;
-  color: #D1D5DB;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.mercury-pill-action.outline:hover {
-  background: #181B22;
+.action-capsule-glass:hover {
+  background: rgba(24, 27, 34, 0.95);
   border-color: rgba(255, 255, 255, 0.18);
   color: #FFFFFF;
-  transform: translateY(-1px);
+  transform: translateY(-1.5px);
 }
 
-.mercury-pill-action.small {
-  padding: 5px 12px;
-  font-size: 11.5px;
-}
-
-.mercury-pill-action.compliance-pill {
-  border-color: rgba(201, 168, 76, 0.25);
+.action-capsule-glass.compliance-badge {
+  border-color: rgba(201, 168, 76, 0.22);
   color: #E6CA7E;
 }
 
-.mercury-pill-action.compliance-pill:hover {
+.action-capsule-glass.compliance-badge:hover {
   border-color: #F3CA65;
-  background: rgba(201, 168, 76, 0.1);
+  background: rgba(201, 168, 76, 0.12);
+  color: #FFFFFF;
 }
 
-/* ── 2. Mercury Top Hero Grid (Balance Card + Accounts Card) ── */
-.mercury-hero-layout {
+/* ── 2. The Master Vault Hero (Apple Wallet Titanium Card + Capital Engine) ── */
+.vault-hero-grid {
   display: grid;
-  grid-template-columns: 1.55fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: 360px 1fr;
+  gap: 20px;
+  align-items: stretch;
 }
 
-@media (max-width: 1080px) {
-  .mercury-hero-layout {
+@media (max-width: 1040px) {
+  .vault-hero-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* Mercury Balance Hero Card */
-.mercury-balance-card {
+/* Left: Apple Wallet Inspired Titanium Card */
+.apple-wallet-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.apple-titanium-card {
+  position: relative;
+  height: 220px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #1A1D24 0%, #0D0E12 55%, #14171E 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  user-select: none;
+}
+
+.apple-titanium-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(243, 202, 101, 0.12);
+}
+
+.card-hologram-sweep {
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 220%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 35%,
+    rgba(243, 202, 101, 0.08) 42%,
+    rgba(255, 255, 255, 0.14) 47%,
+    rgba(147, 197, 253, 0.08) 52%,
+    transparent 60%
+  );
+  transform: rotate(15deg);
+  pointer-events: none;
+  animation: cardHoloSweep 6s infinite ease-in-out;
+}
+
+@keyframes cardHoloSweep {
+  0% { transform: translateX(-40%) rotate(15deg); }
+  50% { transform: translateX(35%) rotate(15deg); }
+  100% { transform: translateX(-40%) rotate(15deg); }
+}
+
+.card-header-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+}
+
+.card-brand-tag {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #F3CA65;
+  text-shadow: 0 1px 8px rgba(243, 202, 101, 0.4);
+}
+
+.card-nfc-indicator {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0.65;
+}
+
+.nfc-arc {
+  display: inline-block;
+  border: 1.5px solid #CBD5E1;
+  border-left: none;
+  border-top: none;
+  border-radius: 0 0 8px 0;
+  transform: rotate(-45deg);
+}
+
+.nfc-arc.a1 { width: 6px; height: 6px; }
+.nfc-arc.a2 { width: 10px; height: 10px; }
+.nfc-arc.a3 { width: 14px; height: 14px; }
+
+.card-emv-chip {
+  width: 42px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #D4AF37 0%, #AA820A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 2px 6px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.chip-line.horizontal {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.chip-line.vertical {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.card-digits-embossed {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #E2E8F0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
+.card-digits-embossed .last-four {
+  color: #F3CA65;
+  font-weight: 800;
+}
+
+.card-footer-line {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+}
+
+.card-client-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-tier-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  color: #94A3B8;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.card-holder-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.08em;
+}
+
+.card-security-seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(243, 202, 101, 0.1);
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(243, 202, 101, 0.2);
+}
+
+/* Runway Capsule underneath card */
+.card-runway-capsule {
   background: #111319;
   border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.runway-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.runway-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8E95A5;
+  letter-spacing: 0.1em;
+}
+
+.runway-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.runway-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.runway-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #10B981 0%, #34D399 100%);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  transition: width 0.5s ease;
+}
+
+.runway-caption {
+  font-size: 10.5px;
+  color: #64748B;
+  line-height: 1.3;
+}
+
+/* Right: Master Sovereign Balance & Visual Area Chart */
+.vault-balance-engine {
+  background: #111319;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-left: 3px solid #C9A84C;
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 22px 26px 18px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   position: relative;
   overflow: hidden;
 }
 
-.mercury-balance-top {
+.engine-top-bar {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
-.balance-label-tag {
+.engine-eyebrow {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 11px;
   font-weight: 700;
   color: #8E95A5;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  margin-bottom: 6px;
+  display: block;
+  margin-bottom: 4px;
 }
 
-.mercury-balance-figure {
+.engine-balance-display {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
@@ -4237,7 +4461,7 @@ textarea:focus,
   line-height: 1;
 }
 
-.balance-curr {
+.currency-prefix {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 22px;
   font-weight: 600;
@@ -4247,17 +4471,17 @@ textarea:focus,
   padding-top: 8px;
 }
 
-.balance-val {
+.balance-integer {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 46px;
-  font-weight: 700;
+  font-weight: 800;
   color: #FFFFFF;
   letter-spacing: -0.04em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
-.balance-cents {
+.balance-decimal {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 26px;
   font-weight: 600;
@@ -4268,10 +4492,10 @@ textarea:focus,
   font-variant-numeric: tabular-nums;
 }
 
-.balance-badge {
+.engine-delta-pill {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   font-family: 'Space Mono', monospace;
   font-size: 11px;
   font-weight: 700;
@@ -4279,22 +4503,21 @@ textarea:focus,
   border-radius: 6px;
   margin-left: 12px;
   align-self: center;
-  font-variant-numeric: tabular-nums;
 }
 
-.balance-badge.pos {
+.engine-delta-pill.positive {
   color: #22C55E;
   background: rgba(34, 197, 94, 0.12);
   border: 1px solid rgba(34, 197, 94, 0.25);
 }
 
-.balance-badge.neg {
+.engine-delta-pill.negative {
   color: #EF4444;
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
-.chart-view-toggles {
+.engine-chart-toggles {
   display: flex;
   align-items: center;
   background: rgba(255, 255, 255, 0.03);
@@ -4303,86 +4526,79 @@ textarea:focus,
   padding: 2px;
 }
 
-.chart-view-btn {
+.toggle-tab {
   background: transparent;
   border: none;
   color: #8E95A5;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.chart-view-btn:hover {
+.toggle-tab:hover {
   color: #FFFFFF;
 }
 
-.chart-view-btn.active {
+.toggle-tab.active {
   background: rgba(201, 168, 76, 0.18);
   color: #F3CA65;
   font-weight: 700;
 }
 
-/* Cash pulse strip inside balance card */
-.mercury-cash-pulse {
+/* Engine Pulse Strip */
+.engine-pulse-strip {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 20px;
   flex-wrap: wrap;
-  padding: 8px 12px;
+  padding: 8px 14px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 8px;
+  border-radius: 10px;
   margin-bottom: 8px;
 }
 
-.pulse-item {
+.pulse-metric {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 12.5px;
   font-family: 'Space Grotesk', sans-serif;
 }
 
-.pulse-dot {
+.indicator-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.pulse-dot.inflow { background: #22C55E; box-shadow: 0 0 6px rgba(34, 197, 94, 0.5); }
-.pulse-dot.outflow { background: #EF4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
-.pulse-dot.net { background: #F3CA65; box-shadow: 0 0 6px rgba(243, 202, 101, 0.5); }
+.indicator-dot.inflow { background: #22C55E; box-shadow: 0 0 6px rgba(34, 197, 94, 0.6); }
+.indicator-dot.outflow { background: #EF4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
+.indicator-dot.net { background: #F3CA65; box-shadow: 0 0 6px rgba(243, 202, 101, 0.6); }
 
-.pulse-label {
-  color: #8E95A5;
-}
+.pulse-tag { color: #8E95A5; }
+.pulse-num { font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.pulse-amount {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.mercury-embedded-chart {
+.engine-chart-viewport {
   width: 100%;
-  margin-top: 2px;
-  margin-bottom: 4px;
+  margin-top: 4px;
 }
 
-.mercury-balance-footer {
+.engine-meta-footer {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   flex-wrap: wrap;
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.footer-meta-chip {
+.meta-capsule {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -4391,296 +4607,392 @@ textarea:focus,
   font-family: 'Space Grotesk', sans-serif;
 }
 
-.footer-meta-chip strong {
+.meta-capsule strong {
   color: #E2E8F0;
   font-weight: 600;
 }
 
-/* Mercury Accounts & Position Card */
-.mercury-accounts-card {
-  background: #111319;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
-  padding: 20px 22px;
+/* ── 3. Ramp-Style Smart Action Queue ── */
+.ramp-action-section {
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-.accounts-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.accounts-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: #FFFFFF;
-}
-
-.accounts-sub {
-  font-size: 11.5px;
-  color: #8E95A5;
-  margin-top: 2px;
-}
-
-.accounts-action-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #8E95A5;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.accounts-action-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #FFFFFF;
-}
-
-.accounts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-  justify-content: space-between;
-}
-
-.account-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 12px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.015);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  transition: all 0.15s ease;
-}
-
-.account-row.clickable {
-  cursor: pointer;
-}
-
-.account-row.clickable:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.09);
-  transform: translateX(2px);
-}
-
-.account-icon-seal {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.account-icon-seal.gold { background: rgba(201, 168, 76, 0.15); color: #F3CA65; border-color: rgba(201, 168, 76, 0.3); }
-.account-icon-seal.green { background: rgba(34, 197, 94, 0.15); color: #22C55E; border-color: rgba(34, 197, 94, 0.3); }
-.account-icon-seal.rose { background: rgba(239, 68, 68, 0.15); color: #EF4444; border-color: rgba(239, 68, 68, 0.3); }
-.account-icon-seal.amber { background: rgba(251, 191, 36, 0.15); color: #FBBF24; border-color: rgba(251, 191, 36, 0.3); }
-.account-icon-seal.slate { background: rgba(148, 163, 184, 0.15); color: #94A3B8; border-color: rgba(148, 163, 184, 0.3); }
-
-.account-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.account-name {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: #FFFFFF;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.account-type {
-  font-size: 11px;
-  color: #8E95A5;
-  margin-top: 1px;
-}
-
-.account-balance-group {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.account-balance-val {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #FFFFFF;
-  font-variant-numeric: tabular-nums;
-}
-
-.account-pill-tag {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: 'Space Mono', monospace;
-}
-
-.account-pill-tag.gold { background: rgba(201, 168, 76, 0.15); color: #F3CA65; }
-.account-pill-tag.green { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
-.account-pill-tag.rose { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
-.account-pill-tag.neutral { background: rgba(255, 255, 255, 0.06); color: #94A3B8; }
-
-/* ── 3. AgencyAnalytics 2-Row High-Density Metrics Grid (Image 1) ── */
-.agency-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-@media (max-width: 1080px) {
-  .agency-kpi-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 580px) {
-  .agency-kpi-grid { grid-template-columns: 1fr; }
-}
-
-.agency-kpi-card {
-  background: #111319;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 12px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-}
-
-.agency-kpi-card:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-}
-
-.agency-kpi-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.agency-kpi-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #8E95A5;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.agency-kpi-badge {
-  font-family: 'Space Mono', monospace;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 5px;
-}
-
-.agency-kpi-badge.pos { color: #22C55E; background: rgba(34, 197, 94, 0.12); }
-.agency-kpi-badge.neg { color: #EF4444; background: rgba(239, 68, 68, 0.12); }
-.agency-kpi-badge.gold { color: #F3CA65; background: rgba(201, 168, 76, 0.15); }
-.agency-kpi-badge.neutral { color: #94A3B8; background: rgba(255, 255, 255, 0.06); }
-
-.agency-kpi-val {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 26px;
-  font-weight: 800;
-  color: #FFFFFF;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-  margin: 2px 0;
-}
-
-.agency-kpi-sub {
-  font-size: 11px;
-  color: #64748B;
-  font-family: 'Space Grotesk', sans-serif;
-  line-height: 1.3;
-}
-
-/* ── 4. Analytics Row: Donut + Horizontal Bars + Solvencia ── */
-.agency-analytics-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-@media (max-width: 1150px) {
-  .agency-analytics-row { grid-template-columns: 1fr; }
-}
-
-.analytics-box {
-  background: #111319;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
-  padding: 20px 22px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-}
-
-.analytics-box-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.analytics-box-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: #FFFFFF;
-}
-
-.analytics-box-sub {
-  font-size: 11.5px;
-  color: #8E95A5;
-  margin-top: 2px;
-}
-
-/* Agency Donut Chart with Center Metric */
-.agency-donut-container {
-  display: flex;
-  align-items: center;
   gap: 14px;
 }
 
-.donut-chart-wrapper {
+.section-title-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title-with-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-heading {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.queue-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(243, 202, 101, 0.15);
+  color: #F3CA65;
+  border: 1px solid rgba(243, 202, 101, 0.3);
+}
+
+.action-view-all {
+  background: transparent;
+  border: none;
+  color: #8E95A5;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s ease;
+}
+
+.action-view-all:hover {
+  color: #F3CA65;
+}
+
+.ramp-cards-queue {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .ramp-cards-queue {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ramp-queue-card {
+  background: #111319;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ramp-queue-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.queue-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 6px;
+  align-self: flex-start;
+}
+
+.queue-card-badge.gold {
+  background: rgba(201, 168, 76, 0.15);
+  color: #F3CA65;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+}
+
+.queue-card-badge.green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.queue-card-badge.purple {
+  background: rgba(168, 85, 247, 0.15);
+  color: #C084FC;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.queue-card-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.queue-card-desc {
+  font-size: 12.5px;
+  color: #94A3B8;
+  margin: 0;
+  line-height: 1.45;
+  flex: 1;
+}
+
+.queue-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.queue-cta-link {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #F3CA65;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.15s ease;
+}
+
+.ramp-queue-card:hover .queue-cta-link {
+  transform: translateX(3px);
+}
+
+/* ── 4. Fluid Capital Architecture Spectrum ── */
+.fluid-spectrum-panel {
+  background: #111319;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.spectrum-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.spectrum-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.spectrum-sub {
+  font-size: 12px;
+  color: #8E95A5;
+  margin: 2px 0 0;
+}
+
+.spectrum-coverage-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.spectrum-coverage-chip .coverage-label {
+  color: #8E95A5;
+}
+
+.spectrum-coverage-chip .coverage-val {
+  font-weight: 700;
+}
+
+.spectrum-bar-track {
+  width: 100%;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+}
+
+.spectrum-slice {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.spectrum-slice.free {
+  background: linear-gradient(90deg, #10B981 0%, #34D399 100%);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.spectrum-slice.fixed {
+  background: linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.spectrum-slice.debt {
+  background: linear-gradient(90deg, #F43F5E 0%, #FB7185 100%);
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.3);
+}
+
+.spectrum-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .spectrum-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .spectrum-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.spectrum-stat-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.stat-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.stat-dot.free { background: #10B981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.6); }
+.stat-dot.fixed { background: #F59E0B; box-shadow: 0 0 6px rgba(245, 158, 11, 0.6); }
+.stat-dot.debt { background: #F43F5E; box-shadow: 0 0 6px rgba(244, 63, 94, 0.6); }
+.stat-dot.gold { background: #F3CA65; box-shadow: 0 0 6px rgba(243, 202, 101, 0.6); }
+
+.stat-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  color: #8E95A5;
+}
+
+.stat-figure {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+  margin: 1px 0;
+}
+
+.stat-sub {
+  font-size: 10.5px;
+  color: #64748B;
+}
+
+/* ── 5. Dual Analytics: Category Donut + Payment Channels ── */
+.fintech-dual-analytics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 1080px) {
+  .fintech-dual-analytics {
+    grid-template-columns: 1fr;
+  }
+}
+
+.analytics-card-vault {
+  background: #111319;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-vault-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card-vault-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.card-vault-sub {
+  font-size: 12px;
+  color: #8E95A5;
+  margin: 2px 0 0;
+}
+
+.card-vault-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #94A3B8;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Donut Master Layout */
+.donut-master-layout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.donut-graphic-area {
   width: 52%;
   position: relative;
   height: 210px;
 }
 
-.donut-center-metric {
+.donut-core-metric {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -4692,7 +5004,7 @@ textarea:focus,
   pointer-events: none;
 }
 
-.center-amount {
+.core-amount {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 20px;
   font-weight: 800;
@@ -4700,22 +5012,22 @@ textarea:focus,
   letter-spacing: -0.02em;
 }
 
-.center-label {
+.core-label {
   font-size: 9.5px;
-  font-weight: 600;
+  font-weight: 700;
   color: #8E95A5;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
-.agency-legend-col {
+.donut-legend-stream {
   width: 48%;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.agency-legend-item {
+.donut-legend-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -4723,14 +5035,14 @@ textarea:focus,
   font-family: 'Space Grotesk', sans-serif;
 }
 
-.legend-bullet {
+.legend-indicator {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.legend-label {
+.legend-category-name {
   color: #94A3B8;
   flex: 1;
   white-space: nowrap;
@@ -4738,15 +5050,15 @@ textarea:focus,
   text-overflow: ellipsis;
 }
 
-.legend-num {
+.legend-category-amount {
   color: #FFFFFF;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   font-size: 12px;
 }
 
-/* Agency Horizontal Bars (New MRR by Price style) */
-.agency-progress-bars {
+/* Payment Channels Stream */
+.payment-channels-stream {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -4754,13 +5066,13 @@ textarea:focus,
   flex: 1;
 }
 
-.agency-bar-group {
+.channel-bar-group {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-.bar-header-row {
+.channel-bar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4768,18 +5080,18 @@ textarea:focus,
   font-family: 'Space Grotesk', sans-serif;
 }
 
-.bar-label {
+.channel-name {
   color: #D1D5DB;
   font-weight: 600;
 }
 
-.bar-amount {
+.channel-amount {
   color: #FFFFFF;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-.bar-track {
+.channel-track {
   width: 100%;
   height: 7px;
   background: rgba(255, 255, 255, 0.05);
@@ -4787,13 +5099,13 @@ textarea:focus,
   overflow: hidden;
 }
 
-.bar-fill {
+.channel-fill {
   height: 100%;
   border-radius: 999px;
   transition: width 0.4s ease;
 }
 
-.bar-footer-row {
+.channel-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4801,45 +5113,74 @@ textarea:focus,
   color: #64748B;
 }
 
-.solvency-mini-chart {
-  width: 100%;
-  margin-top: 10px;
+/* ── 6. Certified Live Transactions Stream ── */
+.transactions-stream-panel {
+  background: #111319;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
 }
 
-/* ── 5. Split Bottom Section: Agency Table + Mercury Money Movement ── */
-.mercury-bottom-split {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+.stream-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 1080px) {
-  .mercury-bottom-split {
-    grid-template-columns: 1fr;
-  }
+.stream-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
 }
 
-.table-box {
-  overflow: hidden;
+.stream-sub {
+  font-size: 12px;
+  color: #8E95A5;
+  margin: 2px 0 0;
 }
 
-.agency-table-wrapper {
+.stream-view-all {
+  background: transparent;
+  border: none;
+  color: #8E95A5;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s ease;
+}
+
+.stream-view-all:hover {
+  color: #F3CA65;
+}
+
+.stream-table-container {
   overflow-x: auto;
-  margin: 0 -22px -20px;
-  padding: 0 22px 14px;
+  margin: 0 -24px -22px;
+  padding: 0 24px 14px;
 }
 
-.agency-table {
+.stream-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12.5px;
 }
 
-.agency-table th {
+.stream-table th {
   text-align: left;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #8E95A5;
   text-transform: uppercase;
@@ -4848,24 +5189,24 @@ textarea:focus,
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.agency-table td {
+.stream-table td {
   padding: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   vertical-align: middle;
 }
 
-.agency-table tr:hover td {
+.stream-table-row:hover td {
   background: rgba(255, 255, 255, 0.02);
 }
 
-.table-date {
+.stream-date {
   color: #94A3B8;
   font-family: 'Space Mono', monospace;
   font-size: 11px;
   white-space: nowrap;
 }
 
-.table-item .item-name {
+.concept-text {
   color: #FFFFFF;
   font-weight: 600;
   display: block;
@@ -4875,8 +5216,7 @@ textarea:focus,
   text-overflow: ellipsis;
 }
 
-/* AgencyAnalytics Vivid Status Pills (Image 1 style) */
-.agency-status-pill {
+.stream-pill {
   display: inline-block;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 10px;
@@ -4888,31 +5228,31 @@ textarea:focus,
   white-space: nowrap;
 }
 
-.agency-status-pill.ingreso {
+.stream-pill.ingreso {
   background: #064E3B;
   color: #34D399;
   border: 1px solid rgba(52, 211, 153, 0.3);
 }
 
-.agency-status-pill.gasto {
+.stream-pill.gasto {
   background: #4C0519;
   color: #FB7185;
   border: 1px solid rgba(251, 113, 133, 0.3);
 }
 
-.agency-status-pill.tarjeta {
+.stream-pill.tarjeta {
   background: #2E1065;
   color: #C084FC;
   border: 1px solid rgba(192, 132, 252, 0.3);
 }
 
-.agency-status-pill.efectivo {
+.stream-pill.efectivo {
   background: #451A03;
   color: #FBBF24;
   border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
-.table-amount {
+.stream-total {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -4920,7 +5260,7 @@ textarea:focus,
   white-space: nowrap;
 }
 
-.table-row-jump {
+.stream-row-action {
   background: transparent;
   border: none;
   color: #64748B;
@@ -4933,126 +5273,15 @@ textarea:focus,
   transition: all 0.15s ease;
 }
 
-.table-row-jump:hover {
+.stream-row-action:hover {
   color: #F3CA65;
   background: rgba(201, 168, 76, 0.1);
 }
 
-/* Mercury Money Movement Panel */
-.mercury-money-movement-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* ── Utility Color Classes ── */
+.text-gold { color: #F3CA65 !important; }
+.text-emerald { color: #22C55E !important; }
+.text-rose { color: #EF4444 !important; }
+.text-amber { color: #F59E0B !important; }
+.text-purple { color: #C084FC !important; }
 
-.money-movement-box {
-  background: #111319;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
-  padding: 18px 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-.money-box-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.movement-label {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  color: #8E95A5;
-  letter-spacing: 0.1em;
-}
-
-.movement-figure {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  margin-top: 2px;
-}
-
-.movement-icon-tag {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.movement-icon-tag.green { background: rgba(34, 197, 94, 0.15); color: #22C55E; border: 1px solid rgba(34, 197, 94, 0.25); }
-.movement-icon-tag.rose { background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.25); }
-
-.movement-section-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: #64748B;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-}
-
-.movement-items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.movement-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-}
-
-.movement-row:last-child {
-  border-bottom: none;
-}
-
-.movement-row-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.movement-row-badge {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-}
-
-.movement-row-badge.green {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22C55E;
-}
-
-.movement-row-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #D1D5DB;
-}
-
-.movement-row-val {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 12.5px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.empty-mini {
-  font-size: 11px;
-  color: #64748B;
-  padding: 10px 0;
-  text-align: center;
-}

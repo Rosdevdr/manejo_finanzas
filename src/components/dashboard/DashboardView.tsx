@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  TrendingUp,
   CreditCard as CardIcon,
   Calendar,
   Sparkles,
@@ -18,13 +17,14 @@ import {
   Plus,
   Download,
   FileText,
-  DollarSign,
-  Layers,
+  Zap,
+  Target,
+  ArrowRight,
+  Compass,
 } from 'lucide-react'
 import {
   ResponsiveContainer, XAxis, YAxis, Tooltip,
-  PieChart, Pie, Cell, AreaChart, Area,
-  BarChart, Bar
+  PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts'
 import type { Income, Expense, CreditCard as CreditCardType, CreditCardTransaction, CashWithdrawal, CategoryBudget } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
@@ -32,7 +32,6 @@ import { formatCurrency } from '../../utils/formatters'
 import { getPreviousPeriod, getMonthProgress, MONTH_SHORT_NAMES, calculateCumulativeBalance, formatPeriodLabel } from '../../utils/calendar'
 import { getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
 import { downloadAiRegulationDocument } from '../../utils/aiRegulationDocument'
-import { AnimatedCurrency } from '../ui/AnimatedCurrency'
 import { triggerHaptic } from '../../utils/haptics'
 
 interface DashboardViewProps {
@@ -67,7 +66,7 @@ export function DashboardView({
   cashWithdrawals = [],
   creditCards = [],
   creditTransactions = [],
-  categoryBudgets = [],
+  categoryBudgets: _categoryBudgets = [],
   userEmail,
   onNavigateTab,
   onOpenTerms,
@@ -88,7 +87,7 @@ export function DashboardView({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showComplianceModal])
 
-  // 1. Datos de TODOS los módulos estrictamente del período actual
+  // 1. Datos consolidados del período actual
   const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
   const pInc = incomes.filter(i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === currentPeriod)
   const pExp = expenses.filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === currentPeriod)
@@ -106,15 +105,27 @@ export function DashboardView({
   const prevInc = incomes.filter(i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === prevPeriod).reduce((s, i) => s + i.amount, 0)
   const prevExp = expenses.filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === prevPeriod).reduce((s, e) => s + e.amount, 0)
 
-  const incDiff = prevInc > 0 ? ((totalIn - prevInc) / prevInc) * 100 : 0
-  const expDiff = prevExp > 0 ? ((totalExp - prevExp) / prevExp) * 100 : 0
   const balDiff = prevInc - prevExp !== 0 ? ((balance - (prevInc - prevExp)) / Math.abs(prevInc - prevExp)) * 100 : 0
 
   // 3. Resumen de Deuda y Tarjetas
   const creditSummary = getConsolidatedCreditSummary(creditCards, creditTransactions)
   const monthProgress = getMonthProgress(currentPeriod)
 
-  // 4. Últimos Movimientos Consolidados de TODOS los Módulos
+  // 4. Métricas de Liquidez y Pista Financiera (Financial Runway)
+  const unencumberedLiquidity = Math.max(0, cumulative.totalCumulativeBalance - creditSummary.totalDebt)
+  const liquidityRatio = cumulative.totalCumulativeBalance > 0
+    ? (unencumberedLiquidity / cumulative.totalCumulativeBalance) * 100
+    : 0
+  
+  const runwayMonths = fixedExp > 0 
+    ? (unencumberedLiquidity / fixedExp).toFixed(1) 
+    : '12+'
+  
+  const debtCoverage = creditSummary.totalDebt > 0
+    ? (cumulative.totalCumulativeBalance / creditSummary.totalDebt).toFixed(1)
+    : '100% Solvente'
+
+  // 5. Últimos Movimientos Consolidados de TODOS los Módulos
   const recentTx = [
     ...pInc.map(i => ({
       id: i.id,
@@ -123,8 +134,7 @@ export function DashboardView({
       amount: i.amount,
       kind: 'income' as const,
       tag: 'INGRESO',
-      typePillClass: 'in',
-      pillLabel: '+ INGRESO',
+      typePillClass: 'ingreso',
       targetTab: 'incomes' as TabType,
     })),
     ...pExp.map(e => ({
@@ -134,8 +144,7 @@ export function DashboardView({
       amount: e.amount,
       kind: 'expense' as const,
       tag: 'GASTO',
-      typePillClass: 'out',
-      pillLabel: '- GASTO',
+      typePillClass: 'gasto',
       targetTab: 'expenses' as TabType,
     })),
     ...pCardTxs.map(t => ({
@@ -145,8 +154,7 @@ export function DashboardView({
       amount: t.amount,
       kind: 'expense' as const,
       tag: 'TARJETA',
-      typePillClass: 'card',
-      pillLabel: '💳 TARJETA',
+      typePillClass: 'tarjeta',
       targetTab: 'credit' as TabType,
     })),
     ...pCash.map(c => ({
@@ -156,15 +164,14 @@ export function DashboardView({
       amount: c.amount,
       kind: 'expense' as const,
       tag: 'EFECTIVO',
-      typePillClass: 'cash',
-      pillLabel: '💵 EFECTIVO',
+      typePillClass: 'efectivo',
       targetTab: 'cash' as TabType,
     })),
   ]
     .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 7)
+    .slice(0, 6)
 
-  // 5. Pie chart data
+  // 6. Pie chart data (Desglose categórico)
   const categoryTotals: Record<string, number> = {}
   pExp.forEach(e => { categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount })
   const pieData = Object.entries(categoryTotals).map(([cat, val]) => ({
@@ -173,23 +180,7 @@ export function DashboardView({
     color: CATEGORY_COLORS[cat] ?? '#C9A84C',
   }))
 
-  // Top Fuentes de Ingreso (Mercury Money In)
-  const topSourcesIn = [...pInc]
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 3)
-
-  // Top Gastos por Categoría (Mercury Money Out)
-  const topSpendOut = Object.entries(categoryTotals)
-    .map(([cat, val]) => ({
-      category: cat,
-      name: CATEGORY_LABELS[cat] ?? cat,
-      amount: val,
-      color: CATEGORY_COLORS[cat] ?? '#C9A84C',
-    }))
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 3)
-
-  // 6. Línea de tiempo histórica de 5 meses para gráficos Sandbox
+  // 7. Línea de tiempo histórica de 5 meses
   const last5Periods: string[] = []
   let cursor = currentPeriod
   for (let i = 0; i < 5; i++) {
@@ -207,34 +198,9 @@ export function DashboardView({
     const cum = calculateCumulativeBalance(incomes, expenses, p)
     return {
       label: MONTH_SHORT_NAMES[mIdx] || p,
-      period: p,
       inflows: Math.round(totI),
       outflows: Math.round(totE),
       netWorth: Math.round(cum.totalCumulativeBalance),
-    }
-  })
-
-  // 7. Liquidez No Comprometida (Unencumbered Liquidity)
-  const unencumberedLiquidity = Math.max(0, cumulative.totalCumulativeBalance - creditSummary.totalDebt)
-  const liquidityRatio = cumulative.totalCumulativeBalance > 0
-    ? (unencumberedLiquidity / cumulative.totalCumulativeBalance) * 100
-    : 0
-  const debtCoverage = creditSummary.totalDebt > 0
-    ? (cumulative.totalCumulativeBalance / creditSummary.totalDebt).toFixed(1)
-    : 'Sin deuda'
-
-  const liquidityTrendData = last5Periods.map(p => {
-    const [, monthStr] = p.split('-')
-    const mIdx = (parseInt(monthStr, 10) || 1) - 1
-    const cum = calculateCumulativeBalance(incomes, expenses, p)
-    const tot = Math.round(cum.totalCumulativeBalance)
-    const free = Math.round(Math.max(0, cum.totalCumulativeBalance - creditSummary.totalDebt))
-    const debt = Math.round(Math.min(tot, creditSummary.totalDebt))
-    return {
-      label: MONTH_SHORT_NAMES[mIdx] || p,
-      liquidez: free,
-      totalCapital: tot,
-      deuda: debt,
     }
   })
 
@@ -268,61 +234,45 @@ export function DashboardView({
 
   // Estado de selector de vista de gráficos
   const [chartView, setChartView] = useState<'flow' | 'networth'>('flow')
-  const [unencumberedView, setUnencumberedView] = useState<'trend' | 'breakdown'>('trend')
+
+  // Proporciones para el Espectro de Capital
+  const totalAssets = Math.max(1, cumulative.totalCumulativeBalance)
+  const freeCapPct = Math.min(100, Math.max(0, (unencumberedLiquidity / totalAssets) * 100))
+  const fixedCommitPct = Math.min(100, Math.max(0, (fixedExp / totalAssets) * 100))
+  const debtPct = Math.min(100, Math.max(0, (creditSummary.totalDebt / totalAssets) * 100))
 
   return (
-    <div className="fade-in sandbox-dashboard">
+    <div className="fade-in fintech-vault-container">
 
-      {/* ── 1. MERCURY-STYLE EDITORIAL HEADER & ACTION PILLS ── */}
-      <div className="mercury-editorial-header">
-        <div className="mercury-header-left">
-          <div className="mercury-badge-tag">
-            <span className="badge-dot-gold" />
-            AUREUS WEALTH ADVISOR · {formatPeriodLabel(currentPeriod).toUpperCase()}
+      {/* ── 1. RAMP / APPLE TOP COMMAND HEADER ── */}
+      <div className="fintech-top-header">
+        <div className="header-greeting-block">
+          <div className="institutional-eyebrow">
+            <span className="eyebrow-pulsar" />
+            <span>AUREUS PRIVATE WEALTH · {formatPeriodLabel(currentPeriod).toUpperCase()}</span>
           </div>
-          <h1 className="mercury-greeting">Bienvenido, {capitalizedName}</h1>
-          <p className="mercury-subgreeting">
-            Patrimonio neto consolidado, solvencia libre y supervisión de capital en tiempo real.
+          <h1 className="fintech-main-title">Consola Patrimonial, {capitalizedName}</h1>
+          <p className="fintech-main-sub">
+            Arquitectura de liquidez no gravada, pista de solvencia y ejecución en tiempo real.
           </p>
         </div>
 
-        <div className="mercury-header-actions">
+        <div className="header-action-capsules">
           <button
             type="button"
-            className="mercury-pill-action gold-solid"
+            className="action-capsule-gold"
             onClick={() => {
               triggerHaptic('light')
               onNavigateTab && onNavigateTab('expenses')
             }}
           >
-            <Plus size={15} />
+            <Plus size={15} strokeWidth={2.5} />
             <span>Registrar Movimiento</span>
           </button>
+          
           <button
             type="button"
-            className="mercury-pill-action outline"
-            onClick={() => {
-              triggerHaptic('light')
-              onNavigateTab && onNavigateTab('incomes')
-            }}
-          >
-            <ArrowUpRight size={14} style={{ color: '#22C55E' }} />
-            <span>Ingreso</span>
-          </button>
-          <button
-            type="button"
-            className="mercury-pill-action outline"
-            onClick={() => {
-              triggerHaptic('light')
-              onNavigateTab && onNavigateTab('credit')
-            }}
-          >
-            <CardIcon size={14} style={{ color: '#F3CA65' }} />
-            <span>Tarjetas</span>
-          </button>
-          <button
-            type="button"
-            className="mercury-pill-action outline"
+            className="action-capsule-glass"
             onClick={() => {
               triggerHaptic('light')
               onNavigateTab && onNavigateTab('chat-advisor')
@@ -331,9 +281,10 @@ export function DashboardView({
             <Sparkles size={14} className="text-gold" />
             <span>Asesor IA</span>
           </button>
+
           <button
             type="button"
-            className="mercury-pill-action outline compliance-pill"
+            className="action-capsule-glass compliance-badge"
             onClick={() => setShowComplianceModal(true)}
             title="Normativas de Inteligencia Artificial & Transparencia"
           >
@@ -343,42 +294,98 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* ── 2. MERCURY TOP HERO: BALANCE CARD CON CHART INTEGRADO + LISTA DE CUENTAS ── */}
-      <div className="mercury-hero-layout">
-        
-        {/* Left: Balance Hero con Gráfico Integrado (Mercury Image 2) */}
-        <div className="mercury-balance-card">
-          <div className="mercury-balance-top">
+      {/* ── 2. THE MASTER VAULT HERO (APPLE WALLET TITANIUM CARD + CAPITAL ENGINE) ── */}
+      <div className="vault-hero-grid">
+
+        {/* Left: Apple Wallet Inspired Titanium Black Card */}
+        <div className="apple-wallet-card-container">
+          <div className="apple-titanium-card">
+            {/* Holographic foil sweep */}
+            <div className="card-hologram-sweep" />
+
+            <div className="card-header-line">
+              <div className="card-brand-tag">AUREUS</div>
+              <div className="card-nfc-indicator" title="Contactless Active">
+                <span className="nfc-arc a1" />
+                <span className="nfc-arc a2" />
+                <span className="nfc-arc a3" />
+              </div>
+            </div>
+
+            <div className="card-emv-chip">
+              <div className="chip-line horizontal" />
+              <div className="chip-line vertical" />
+            </div>
+
+            <div className="card-digits-embossed">
+              <span>••••</span>
+              <span>••••</span>
+              <span>••••</span>
+              <span className="last-four">4821</span>
+            </div>
+
+            <div className="card-footer-line">
+              <div className="card-client-info">
+                <span className="card-tier-label">TITANIUM BLACK SIGNATURE</span>
+                <span className="card-holder-name">{capitalizedName.toUpperCase()}</span>
+              </div>
+              <div className="card-security-seal">
+                <ShieldCheck size={18} className="text-gold" />
+              </div>
+            </div>
+          </div>
+
+          {/* Runway Meter underneath Card (Ramp style runway) */}
+          <div className="card-runway-capsule">
+            <div className="runway-header">
+              <span className="runway-label">PISTA DE SOLVENCIA (RUNWAY)</span>
+              <strong className="runway-val text-emerald">{runwayMonths} Meses</strong>
+            </div>
+            <div className="runway-track">
+              <div
+                className="runway-bar"
+                style={{ width: `${Math.min(100, Math.max(10, (parseFloat(runwayMonths) / 12) * 100))}%` }}
+              />
+            </div>
+            <div className="runway-caption">
+              Capacidad de cobertura de compromisos fijos sin ingresos adicionales.
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Master Sovereign Balance & Visual Area Chart */}
+        <div className="vault-balance-engine">
+          <div className="engine-top-bar">
             <div>
-              <div className="balance-label-tag">PATRIMONIO NETO CONSOLIDADO</div>
-              <div className="mercury-balance-figure">
-                <span className="balance-curr">RD$</span>
-                <span className="balance-val">
+              <span className="engine-eyebrow">PATRIMONIO NETO DISPONIBLE</span>
+              <div className="engine-balance-display">
+                <span className="currency-prefix">RD$</span>
+                <span className="balance-integer">
                   {Math.floor(Math.abs(cumulative.totalCumulativeBalance)).toLocaleString('es-DO')}
                 </span>
-                <span className="balance-cents">
+                <span className="balance-decimal">
                   .{Math.round((Math.abs(cumulative.totalCumulativeBalance) % 1) * 100).toString().padStart(2, '0')}
                 </span>
                 {balDiff !== 0 && (
-                  <span className={`balance-badge ${balDiff >= 0 ? 'pos' : 'neg'}`}>
-                    {balDiff >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                    {Math.abs(balDiff).toFixed(1)}% vs mes ant.
+                  <span className={`engine-delta-pill ${balDiff >= 0 ? 'positive' : 'negative'}`}>
+                    {balDiff >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+                    {Math.abs(balDiff).toFixed(1)}%
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="chart-view-toggles">
+            <div className="engine-chart-toggles">
               <button
                 type="button"
-                className={`chart-view-btn ${chartView === 'flow' ? 'active' : ''}`}
+                className={`toggle-tab ${chartView === 'flow' ? 'active' : ''}`}
                 onClick={() => setChartView('flow')}
               >
                 Flujo Mensual
               </button>
               <button
                 type="button"
-                className={`chart-view-btn ${chartView === 'networth' ? 'active' : ''}`}
+                className={`toggle-tab ${chartView === 'networth' ? 'active' : ''}`}
                 onClick={() => setChartView('networth')}
               >
                 Patrimonio
@@ -386,82 +393,82 @@ export function DashboardView({
             </div>
           </div>
 
-          {/* Quick Cash Flow Pulse Strip */}
-          <div className="mercury-cash-pulse">
-            <div className="pulse-item">
-              <span className="pulse-dot inflow" />
-              <span className="pulse-label">Inflows:</span>
-              <strong className="pulse-amount text-emerald">+{formatCurrency(totalIn)}</strong>
+          {/* Cash Pulse Bar */}
+          <div className="engine-pulse-strip">
+            <div className="pulse-metric">
+              <span className="indicator-dot inflow" />
+              <span className="pulse-tag">Inflows:</span>
+              <strong className="pulse-num text-emerald">+{formatCurrency(totalIn)}</strong>
             </div>
-            <div className="pulse-item">
-              <span className="pulse-dot outflow" />
-              <span className="pulse-label">Outflows:</span>
-              <strong className="pulse-amount text-rose">-{formatCurrency(totalExp)}</strong>
+            <div className="pulse-metric">
+              <span className="indicator-dot outflow" />
+              <span className="pulse-tag">Outflows:</span>
+              <strong className="pulse-num text-rose">-{formatCurrency(totalExp)}</strong>
             </div>
-            <div className="pulse-item">
-              <span className="pulse-dot net" />
-              <span className="pulse-label">Neto Operativo:</span>
-              <strong className={`pulse-amount ${balance >= 0 ? 'text-emerald' : 'text-rose'}`}>
+            <div className="pulse-metric">
+              <span className="indicator-dot net" />
+              <span className="pulse-tag">Superávit Neto:</span>
+              <strong className={`pulse-num ${balance >= 0 ? 'text-emerald' : 'text-rose'}`}>
                 {balance >= 0 ? '+' : ''}{formatCurrency(balance)}
               </strong>
             </div>
           </div>
 
-          {/* Embedded Smooth Chart directly in card (Mercury style) */}
-          <div className="mercury-embedded-chart">
-            <ResponsiveContainer width="100%" height={160}>
+          {/* Dynamic Recharts Area Chart */}
+          <div className="engine-chart-viewport">
+            <ResponsiveContainer width="100%" height={155}>
               {chartView === 'flow' ? (
                 <AreaChart data={waveData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="heroInflowGrad" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="vaultInflow" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#22C55E" stopOpacity={0.35} />
                       <stop offset="95%" stopColor="#22C55E" stopOpacity={0.0} />
                     </linearGradient>
-                    <linearGradient id="heroOutflowGrad" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="vaultOutflow" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#EF4444" stopOpacity={0.25} />
                       <stop offset="95%" stopColor="#EF4444" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                  <XAxis dataKey="label" stroke="#4B5563" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#4B5563" fontSize={10} tickLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
                   <Tooltip
-                    contentStyle={{ background: '#0F1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
-                    formatter={(val) => [formatCurrency(Number(val) || 0), '']}
+                    contentStyle={{ background: '#0B0C10', border: '1px solid rgba(243,202,101,0.2)', borderRadius: 8, fontSize: 12 }}
+                    formatter={(v) => [formatCurrency(Number(v) || 0), '']}
                   />
-                  <Area type="monotone" dataKey="inflows" stroke="#22C55E" strokeWidth={2.5} fillOpacity={1} fill="url(#heroInflowGrad)" name="Ingresos (Inflows)" />
-                  <Area type="monotone" dataKey="outflows" stroke="#EF4444" strokeWidth={2} fillOpacity={1} fill="url(#heroOutflowGrad)" name="Gastos (Outflows)" />
+                  <Area type="monotone" dataKey="inflows" stroke="#22C55E" strokeWidth={2.5} fillOpacity={1} fill="url(#vaultInflow)" name="Ingresos" />
+                  <Area type="monotone" dataKey="outflows" stroke="#EF4444" strokeWidth={2} fillOpacity={1} fill="url(#vaultOutflow)" name="Gastos" />
                 </AreaChart>
               ) : (
                 <AreaChart data={waveData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="heroPatrimonioGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#C9A84C" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#C9A84C" stopOpacity={0.0} />
+                    <linearGradient id="vaultNetWorth" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#F3CA65" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#F3CA65" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="label" stroke="#555" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#555" fontSize={10} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                  <XAxis dataKey="label" stroke="#4B5563" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#4B5563" fontSize={10} tickLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
                   <Tooltip
-                    contentStyle={{ background: '#0F1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
-                    formatter={(val) => [formatCurrency(Number(val) || 0), '']}
+                    contentStyle={{ background: '#0B0C10', border: '1px solid rgba(243,202,101,0.2)', borderRadius: 8, fontSize: 12 }}
+                    formatter={(v) => [formatCurrency(Number(v) || 0), '']}
                   />
-                  <Area type="monotone" dataKey="netWorth" stroke="#F3CA65" strokeWidth={3} fillOpacity={1} fill="url(#heroPatrimonioGrad)" name="Patrimonio Acumulado" />
+                  <Area type="monotone" dataKey="netWorth" stroke="#F3CA65" strokeWidth={3} fillOpacity={1} fill="url(#vaultNetWorth)" name="Patrimonio" />
                 </AreaChart>
               )}
             </ResponsiveContainer>
           </div>
 
-          <div className="mercury-balance-footer">
-            <div className="footer-meta-chip">
-              <ShieldCheck size={13} style={{ color: '#22C55E' }} />
+          <div className="engine-meta-footer">
+            <div className="meta-capsule">
+              <ShieldCheck size={13} className="text-emerald" />
               <span>Soberanía RLS Activa</span>
             </div>
-            <div className="footer-meta-chip">
-              <Calendar size={13} style={{ color: '#C9A84C' }} />
-              <span>Día <strong>{monthProgress.currentDay}</strong> de <strong>{monthProgress.totalDays}</strong> ({monthProgress.percentPassed}%)</span>
+            <div className="meta-capsule">
+              <Calendar size={13} className="text-gold" />
+              <span>Día <strong>{monthProgress.currentDay}</strong>/{monthProgress.totalDays} ({monthProgress.percentPassed}%)</span>
             </div>
             {cumulative.carriedOverBalance !== 0 && (
-              <div className="footer-meta-chip">
+              <div className="meta-capsule">
                 <Activity size={13} style={{ color: '#94A3B8' }} />
                 <span>Arrastre: <strong>{formatCurrency(cumulative.carriedOverBalance)}</strong></span>
               </div>
@@ -469,294 +476,199 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Right: Accounts & Positions Card (Mercury Image 2 Accounts layout) */}
-        <div className="mercury-accounts-card">
-          <div className="accounts-card-header">
-            <div>
-              <div className="accounts-title">Posiciones & Cuentas</div>
-              <div className="accounts-sub">Distribución del balance activo</div>
-            </div>
-            <button
-              type="button"
-              className="accounts-action-btn"
-              onClick={() => onNavigateTab && onNavigateTab('budgets')}
-              title="Ver Presupuestos"
-            >
-              <Layers size={14} />
-            </button>
-          </div>
-
-          <div className="accounts-list">
-            {/* Row 1: Liquidez Libre */}
-            <div
-              className="account-row clickable"
-              onClick={() => onNavigateTab && onNavigateTab('expenses')}
-            >
-              <div className="account-icon-seal gold">
-                <ShieldCheck size={16} />
-              </div>
-              <div className="account-info">
-                <div className="account-name">Liquidez No Comprometida</div>
-                <div className="account-type">Capital libre sin pasivos</div>
-              </div>
-              <div className="account-balance-group">
-                <div className="account-balance-val">{formatCurrency(unencumberedLiquidity)}</div>
-                <span className="account-pill-tag gold">{liquidityRatio.toFixed(0)}% libre</span>
-              </div>
-            </div>
-
-            {/* Row 2: Superávit / Balance Operativo */}
-            <div
-              className="account-row clickable"
-              onClick={() => onNavigateTab && onNavigateTab('incomes')}
-            >
-              <div className="account-icon-seal green">
-                <TrendingUp size={16} />
-              </div>
-              <div className="account-info">
-                <div className="account-name">Superávit del Período</div>
-                <div className="account-type">Ingresos vs Gastos del mes</div>
-              </div>
-              <div className="account-balance-group">
-                <div className="account-balance-val text-emerald">
-                  {balance >= 0 ? '+' : ''}{formatCurrency(balance)}
-                </div>
-                <span className="account-pill-tag green">Tasa {savingRate.toFixed(0)}%</span>
-              </div>
-            </div>
-
-            {/* Row 3: Pasivos en Tarjetas */}
-            <div
-              className="account-row clickable"
-              onClick={() => onNavigateTab && onNavigateTab('credit')}
-            >
-              <div className="account-icon-seal rose">
-                <CardIcon size={16} />
-              </div>
-              <div className="account-info">
-                <div className="account-name">Pasivos en Tarjetas</div>
-                <div className="account-type">{creditCards.length} tarjeta{creditCards.length !== 1 ? 's' : ''} activas</div>
-              </div>
-              <div className="account-balance-group">
-                <div className="account-balance-val text-rose">
-                  {formatCurrency(creditSummary.totalDebt)}
-                </div>
-                <span className={`account-pill-tag ${creditSummary.utilizationRate > 30 ? 'rose' : 'neutral'}`}>
-                  {creditSummary.utilizationRate.toFixed(0)}% uso
-                </span>
-              </div>
-            </div>
-
-            {/* Row 4: Retiros / Efectivo */}
-            <div
-              className="account-row clickable"
-              onClick={() => onNavigateTab && onNavigateTab('cash')}
-            >
-              <div className="account-icon-seal amber">
-                <Banknote size={16} />
-              </div>
-              <div className="account-info">
-                <div className="account-name">Caja Chica & Efectivo</div>
-                <div className="account-type">Retiros controlados</div>
-              </div>
-              <div className="account-balance-group">
-                <div className="account-balance-val">{formatCurrency(paymentTotals.cash)}</div>
-                <span className="account-pill-tag neutral">{pCash.length} movs</span>
-              </div>
-            </div>
-
-            {/* Row 5: Compromisos Fijos */}
-            <div
-              className="account-row clickable"
-              onClick={() => onNavigateTab && onNavigateTab('expenses')}
-            >
-              <div className="account-icon-seal slate">
-                <Building2 size={16} />
-              </div>
-              <div className="account-info">
-                <div className="account-name">Gastos Fijos Esenciales</div>
-                <div className="account-type">Vivienda, cuotas, servicios</div>
-              </div>
-              <div className="account-balance-group">
-                <div className="account-balance-val">{formatCurrency(fixedExp)}</div>
-                <span className="account-pill-tag neutral">
-                  {totalIn > 0 ? ((fixedExp / totalIn) * 100).toFixed(0) : 0}% de ingresos
-                </span>
-              </div>
-            </div>
-
-            {/* Row 6: Presupuestos Asignados */}
-            <div
-              className="account-row clickable"
-              onClick={() => onNavigateTab && onNavigateTab('budgets')}
-            >
-              <div className="account-icon-seal gold">
-                <Layers size={16} />
-              </div>
-              <div className="account-info">
-                <div className="account-name">Presupuestos de Control</div>
-                <div className="account-type">{categoryBudgets.length} límites configurados</div>
-              </div>
-              <div className="account-balance-group">
-                <div className="account-balance-val">{categoryBudgets.length} activos</div>
-                <span className="account-pill-tag gold">Control</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      {/* ── 3. AGENCYANALYTICS 2-ROW HIGH-DENSITY METRICS GRID (IMAGE 1) ── */}
-      <div className="agency-kpi-grid">
-        
-        {/* Row 1, Card 1: Ingresos Totales */}
-        <div className="agency-kpi-card" onClick={() => onNavigateTab && onNavigateTab('incomes')}>
-          <div className="agency-kpi-top">
-            <span className="agency-kpi-title">INGRESOS DEL PERÍODO</span>
-            <span className={`agency-kpi-badge ${incDiff >= 0 ? 'pos' : 'neg'}`}>
-              {incDiff >= 0 ? '+' : ''}{incDiff.toFixed(1)}%
-            </span>
+      {/* ── 3. RAMP SMART ACTION QUEUE (WORK QUEUE / COPILOT PRIORITIES) ── */}
+      <div className="ramp-action-section">
+        <div className="section-title-strip">
+          <div className="title-with-pill">
+            <Compass size={15} className="text-gold" />
+            <h2 className="section-heading">Cola de Acciones Prioritarias · Asesor Inteligente</h2>
+            <span className="queue-counter">3 Tareas Hoy</span>
           </div>
-          <div className="agency-kpi-val text-emerald">
-            <AnimatedCurrency value={totalIn} />
-          </div>
-          <div className="agency-kpi-sub">
-            {pInc.length} abonos registrados · {formatPeriodLabel(currentPeriod)}
-          </div>
+          <button
+            type="button"
+            className="action-view-all"
+            onClick={() => onNavigateTab && onNavigateTab('chat-advisor')}
+          >
+            <span>Consultar Asesor</span>
+            <ArrowRight size={13} />
+          </button>
         </div>
 
-        {/* Row 1, Card 2: Gastos Totales */}
-        <div className="agency-kpi-card" onClick={() => onNavigateTab && onNavigateTab('expenses')}>
-          <div className="agency-kpi-top">
-            <span className="agency-kpi-title">GASTOS DEL PERÍODO</span>
-            <span className={`agency-kpi-badge ${expDiff <= 0 ? 'pos' : 'neg'}`}>
-              {expDiff >= 0 ? '+' : ''}{expDiff.toFixed(1)}%
-            </span>
+        <div className="ramp-cards-queue">
+          
+          {/* Action 1: Golden Window Credit Card Strategy */}
+          <div
+            className="ramp-queue-card"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('credit')
+            }}
+          >
+            <div className="queue-card-badge gold">
+              <Zap size={14} />
+              <span>Ventana de Apalancamiento</span>
+            </div>
+            <h3 className="queue-card-title">
+              {creditCards.length > 0 ? `${creditCards[0].name}: Ciclo Activo` : 'Optimización de Crédito'}
+            </h3>
+            <p className="queue-card-desc">
+              Deuda consolidada en {formatCurrency(creditSummary.totalDebt)} ({creditSummary.utilizationRate.toFixed(0)}% del límite). Mantén el uso por debajo del 30% para proteger solvencia.
+            </p>
+            <div className="queue-card-footer">
+              <span className="queue-cta-link">
+                <span>Gestionar Tarjetas</span>
+                <ChevronRight size={14} />
+              </span>
+            </div>
           </div>
-          <div className="agency-kpi-val text-rose">
-            <AnimatedCurrency value={totalExp} />
-          </div>
-          <div className="agency-kpi-sub">
-            {pExp.length} transacciones registradas
-          </div>
-        </div>
 
-        {/* Row 1, Card 3: Liquidez No Comprometida */}
-        <div className="agency-kpi-card">
-          <div className="agency-kpi-top">
-            <span className="agency-kpi-title">LIQUIDEZ NO COMPROMETIDA</span>
-            <span className="agency-kpi-badge gold">
-              {liquidityRatio.toFixed(0)}% libre
-            </span>
+          {/* Action 2: Unencumbered Capital Deployment */}
+          <div
+            className="ramp-queue-card"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('budgets')
+            }}
+          >
+            <div className="queue-card-badge green">
+              <ShieldCheck size={14} />
+              <span>Excedente No Gravado</span>
+            </div>
+            <h3 className="queue-card-title">
+              {formatCurrency(unencumberedLiquidity)} 100% Libre
+            </h3>
+            <p className="queue-card-desc">
+              El {liquidityRatio.toFixed(0)}% de tu capital está completamente blindado sin gravámenes de pasivos. Tienes solvencia para destinar excedente al fondo FIRE.
+            </p>
+            <div className="queue-card-footer">
+              <span className="queue-cta-link">
+                <span>Ver Metas de Ahorro</span>
+                <ChevronRight size={14} />
+              </span>
+            </div>
           </div>
-          <div className="agency-kpi-val">
-            <AnimatedCurrency value={unencumberedLiquidity} />
-          </div>
-          <div className="agency-kpi-sub">
-            Capital soberano sin gravámenes de deuda
-          </div>
-        </div>
 
-        {/* Row 1, Card 4: Tasa de Ahorro */}
-        <div className="agency-kpi-card">
-          <div className="agency-kpi-top">
-            <span className="agency-kpi-title">TASA DE AHORRO</span>
-            <span className={`agency-kpi-badge ${savingRate >= 30 ? 'pos' : savingRate >= 15 ? 'gold' : 'neg'}`}>
-              {savingRate >= 30 ? 'Óptima' : savingRate >= 15 ? 'Moderada' : 'Ajustada'}
-            </span>
+          {/* Action 3: Savings Target Milestone */}
+          <div
+            className="ramp-queue-card"
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('incomes')
+            }}
+          >
+            <div className="queue-card-badge purple">
+              <Target size={14} />
+              <span>Tasa de Retención {savingRate.toFixed(1)}%</span>
+            </div>
+            <h3 className="queue-card-title">
+              {savingRate >= 30 ? 'Desempeño Institucional Óptimo' : 'Capacidad de Ahorro Moderada'}
+            </h3>
+            <p className="queue-card-desc">
+              Superávit operativo de {formatCurrency(balance)} con {pInc.length} abonos. Compromiso de gastos fijos controlado al {totalIn > 0 ? ((fixedExp / totalIn) * 100).toFixed(0) : 0}%.
+            </p>
+            <div className="queue-card-footer">
+              <span className="queue-cta-link">
+                <span>Supervisar Ingresos</span>
+                <ChevronRight size={14} />
+              </span>
+            </div>
           </div>
-          <div className="agency-kpi-val text-gold">
-            {savingRate.toFixed(1)}%
-          </div>
-          <div className="agency-kpi-sub">
-            {savingRate >= 20 ? 'Excelente capacidad de retención' : 'Margen institucional a optimizar'}
-          </div>
-        </div>
 
-        {/* Row 2, Card 5: Deuda Total Tarjetas */}
-        <div className="agency-kpi-card" onClick={() => onNavigateTab && onNavigateTab('credit')}>
-          <div className="agency-kpi-top">
-            <span className="agency-kpi-title">DEUDA CONSOLIDADA TARJETAS</span>
-            <span className={`agency-kpi-badge ${creditSummary.utilizationRate > 30 ? 'neg' : 'pos'}`}>
-              {creditSummary.utilizationRate.toFixed(0)}% uso
-            </span>
-          </div>
-          <div className="agency-kpi-val">
-            <AnimatedCurrency value={creditSummary.totalDebt} />
-          </div>
-          <div className="agency-kpi-sub">
-            Límite disponible: {formatCurrency(creditSummary.totalLimit - creditSummary.totalDebt)}
-          </div>
         </div>
-
-        {/* Row 2, Card 6: Compromiso Fijo */}
-        <div className="agency-kpi-card">
-          <div className="agency-kpi-top">
-            <span className="agency-kpi-title">GASTOS FIJOS ESENCIALES</span>
-            <span className="agency-kpi-badge neutral">
-              {totalIn > 0 ? ((fixedExp / totalIn) * 100).toFixed(0) : 0}% in
-            </span>
-          </div>
-          <div className="agency-kpi-val">
-            <AnimatedCurrency value={fixedExp} />
-          </div>
-          <div className="agency-kpi-sub">
-            Vivienda, compromisos fijos y servicios
-          </div>
-        </div>
-
-        {/* Row 2, Card 7: Cobertura de Deuda */}
-        <div className="agency-kpi-card">
-          <div className="agency-kpi-top">
-            <span className="agency-kpi-title">COBERTURA DE DEUDA</span>
-            <span className="agency-kpi-badge pos">
-              Solvencia
-            </span>
-          </div>
-          <div className="agency-kpi-val text-emerald">
-            {debtCoverage === 'Sin deuda' ? '100%' : `${debtCoverage}x`}
-          </div>
-          <div className="agency-kpi-sub">
-            Ratio de respaldo patrimonio / pasivos
-          </div>
-        </div>
-
-        {/* Row 2, Card 8: Progreso del Período */}
-        <div className="agency-kpi-card">
-          <div className="agency-kpi-top">
-            <span className="agency-kpi-title">PROGRESO DEL PERÍODO</span>
-            <span className="agency-kpi-badge gold">
-              Día {monthProgress.currentDay}/{monthProgress.totalDays}
-            </span>
-          </div>
-          <div className="agency-kpi-val">
-            {monthProgress.percentPassed}%
-          </div>
-          <div className="agency-kpi-sub">
-            {monthProgress.totalDays - monthProgress.currentDay} días restantes en el ciclo
-          </div>
-        </div>
-
       </div>
 
-      {/* ── 4. ANALYTICS ROW: DONUT (AGENCYANALYTICS) + CANALES DE PAGO (HORIZONTAL BARS) + SOLVENCIA ── */}
-      <div className="agency-analytics-row">
-        
-        {/* Card 1: Donut Gastos por Categoría con Centro Métrico (AgencyAnalytics Image 1) */}
-        <div className="analytics-box">
-          <div className="analytics-box-header">
+      {/* ── 4. FLUID CAPITAL ARCHITECTURE SPECTRUM ── */}
+      <div className="fluid-spectrum-panel">
+        <div className="spectrum-header">
+          <div>
+            <div className="spectrum-title">Arquitectura de Capital & Cobertura</div>
+            <div className="spectrum-sub">Distribución proporcional entre activos libres, compromisos fijos y pasivos</div>
+          </div>
+          <div className="spectrum-coverage-chip">
+            <span className="coverage-label">Cobertura de Pasivos:</span>
+            <strong className="coverage-val text-emerald">{debtCoverage === 'Sin deuda' ? '100%' : `${debtCoverage}x`}</strong>
+          </div>
+        </div>
+
+        {/* The Multi-Tier Spectrum Bar */}
+        <div className="spectrum-bar-track">
+          <div
+            className="spectrum-slice free"
+            style={{ width: `${Math.max(5, freeCapPct)}%` }}
+            title={`Capital Libre: ${formatCurrency(unencumberedLiquidity)} (${freeCapPct.toFixed(1)}%)`}
+          />
+          <div
+            className="spectrum-slice fixed"
+            style={{ width: `${Math.max(3, fixedCommitPct)}%` }}
+            title={`Compromisos Fijos: ${formatCurrency(fixedExp)} (${fixedCommitPct.toFixed(1)}%)`}
+          />
+          <div
+            className="spectrum-slice debt"
+            style={{ width: `${Math.max(3, debtPct)}%` }}
+            title={`Pasivos Tarjetas: ${formatCurrency(creditSummary.totalDebt)} (${debtPct.toFixed(1)}%)`}
+          />
+        </div>
+
+        {/* Interactive Legend & Stats */}
+        <div className="spectrum-stats-grid">
+          <div className="spectrum-stat-item">
+            <div className="stat-dot free" />
             <div>
-              <div className="analytics-box-title">Gastos por Categoría</div>
-              <div className="analytics-box-sub">Distribución proporcional de egresos</div>
+              <div className="stat-name">Capital Libre Inmediato</div>
+              <div className="stat-figure text-emerald">{formatCurrency(unencumberedLiquidity)}</div>
+              <div className="stat-sub">{liquidityRatio.toFixed(0)}% del total</div>
             </div>
+          </div>
+
+          <div className="spectrum-stat-item">
+            <div className="stat-dot fixed" />
+            <div>
+              <div className="stat-name">Compromisos Fijos</div>
+              <div className="stat-figure">{formatCurrency(fixedExp)}</div>
+              <div className="stat-sub">{totalIn > 0 ? ((fixedExp / totalIn) * 100).toFixed(0) : 0}% de ingresos</div>
+            </div>
+          </div>
+
+          <div className="spectrum-stat-item">
+            <div className="stat-dot debt" />
+            <div>
+              <div className="stat-name">Pasivos en Tarjetas</div>
+              <div className="stat-figure text-rose">{formatCurrency(creditSummary.totalDebt)}</div>
+              <div className="stat-sub">{creditSummary.utilizationRate.toFixed(0)}% utilización</div>
+            </div>
+          </div>
+
+          <div className="spectrum-stat-item">
+            <div className="stat-dot gold" />
+            <div>
+              <div className="stat-name">Límite Total Disponible</div>
+              <div className="stat-figure text-gold">{formatCurrency(creditSummary.totalLimit - creditSummary.totalDebt)}</div>
+              <div className="stat-sub">{creditCards.length} tarjetas activas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 5. SPLIT ANALYTICS: CATEGORY DONUT & PAYMENT CHANNELS ── */}
+      <div className="fintech-dual-analytics">
+        
+        {/* Box A: Gastos por Categoría con Centro Métrico */}
+        <div className="analytics-card-vault">
+          <div className="card-vault-header">
+            <div>
+              <div className="card-vault-title">Distribución Categórica</div>
+              <div className="card-vault-sub">Egresos del período actual</div>
+            </div>
+            <span className="card-vault-badge">{pieData.length} categorías</span>
           </div>
 
           {pieData.length === 0 ? (
-            <div className="sandbox-empty">Sin egresos registrados en este período</div>
+            <div className="sandbox-empty">Sin egresos registrados en {formatPeriodLabel(currentPeriod)}</div>
           ) : (
-            <div className="agency-donut-container">
-              <div className="donut-chart-wrapper">
+            <div className="donut-master-layout">
+              <div className="donut-graphic-area">
                 <ResponsiveContainer width="100%" height={210}>
                   <PieChart>
                     <Pie
@@ -764,34 +676,32 @@ export function DashboardView({
                       dataKey="value"
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={85}
+                      innerRadius={62}
+                      outerRadius={86}
                       paddingAngle={3}
                     >
                       {pieData.map((d, i) => (
-                        <Cell key={i} fill={d.color} stroke="#111319" strokeWidth={2} />
+                        <Cell key={i} fill={d.color} stroke="#0E1015" strokeWidth={2} />
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ background: '#0F1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                      contentStyle={{ background: '#0B0C10', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
                       formatter={(val) => [formatCurrency(Number(val) || 0), '']}
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                {/* Metric in the center of the Donut (AgencyAnalytics style) */}
-                <div className="donut-center-metric">
-                  <span className="center-amount">${(totalExp / 1000).toFixed(1)}k</span>
-                  <span className="center-label">Total Gastos</span>
+                <div className="donut-core-metric">
+                  <span className="core-amount">${(totalExp / 1000).toFixed(1)}k</span>
+                  <span className="core-label">Total Egresos</span>
                 </div>
               </div>
 
-              {/* Vertical Legend (AgencyAnalytics Image 1 style) */}
-              <div className="agency-legend-col">
+              <div className="donut-legend-stream">
                 {pieData.slice(0, 5).map((d, i) => (
-                  <div key={i} className="agency-legend-item">
-                    <span className="legend-bullet" style={{ background: d.color }} />
-                    <span className="legend-label">{d.name}</span>
-                    <strong className="legend-num">{formatCurrency(d.value)}</strong>
+                  <div key={i} className="donut-legend-row">
+                    <span className="legend-indicator" style={{ background: d.color }} />
+                    <span className="legend-category-name">{d.name}</span>
+                    <strong className="legend-category-amount">{formatCurrency(d.value)}</strong>
                   </div>
                 ))}
               </div>
@@ -799,34 +709,35 @@ export function DashboardView({
           )}
         </div>
 
-        {/* Card 2: Canales de Liquidez & Métodos de Pago (AgencyAnalytics "New MRR by Price" style) */}
-        <div className="analytics-box">
-          <div className="analytics-box-header">
+        {/* Box B: Canales de Pago & Consumo */}
+        <div className="analytics-card-vault">
+          <div className="card-vault-header">
             <div>
-              <div className="analytics-box-title">Canales de Pago & Liquidez</div>
-              <div className="analytics-box-sub">Consumo consolidado por vía de liquidación</div>
+              <div className="card-vault-title">Canales de Liquidación</div>
+              <div className="card-vault-sub">Desglose por método de pago</div>
             </div>
+            <span className="card-vault-badge">4 canales</span>
           </div>
 
-          <div className="agency-progress-bars">
+          <div className="payment-channels-stream">
             {paymentMethodsList.map((pm, i) => {
               const pct = totalExp > 0 ? (pm.amount / totalExp) * 100 : 0
               return (
-                <div key={i} className="agency-bar-group">
-                  <div className="bar-header-row">
-                    <span className="bar-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div key={i} className="channel-bar-group">
+                  <div className="channel-bar-header">
+                    <span className="channel-name" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                       <span style={{ color: pm.color }}>{pm.icon}</span>
                       {pm.name}
                     </span>
-                    <strong className="bar-amount">{formatCurrency(pm.amount)}</strong>
+                    <strong className="channel-amount">{formatCurrency(pm.amount)}</strong>
                   </div>
-                  <div className="bar-track">
+                  <div className="channel-track">
                     <div
-                      className="bar-fill"
+                      className="channel-fill"
                       style={{ width: `${Math.min(100, pct)}%`, background: pm.color }}
                     />
                   </div>
-                  <div className="bar-footer-row">
+                  <div className="channel-footer">
                     <span>Participación</span>
                     <span>{pct.toFixed(1)}% del egreso</span>
                   </div>
@@ -836,247 +747,79 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Card 3: Solvencia & Liquidez No Comprometida */}
-        <div className="analytics-box">
-          <div className="analytics-box-header">
-            <div>
-              <div className="analytics-box-title">Solvencia & Ratio Libre</div>
-              <div className="analytics-box-sub">Equilibrio entre activos libres y pasivos</div>
-            </div>
-            <div className="sandbox-pills">
-              <button
-                type="button"
-                className={`sandbox-pill-btn ${unencumberedView === 'trend' ? 'active' : ''}`}
-                onClick={() => setUnencumberedView('trend')}
-              >
-                Evolución
-              </button>
-              <button
-                type="button"
-                className={`sandbox-pill-btn ${unencumberedView === 'breakdown' ? 'active' : ''}`}
-                onClick={() => setUnencumberedView('breakdown')}
-              >
-                Solvencia
-              </button>
-            </div>
-          </div>
-
-          <div className="unencumbered-stat-row">
-            <div className="unencumbered-val">
-              <AnimatedCurrency value={unencumberedLiquidity} />
-            </div>
-            <span className={`sandbox-kpi-pill ${liquidityRatio >= 60 ? 'pos' : 'neutral'}`}>
-              {liquidityRatio.toFixed(0)}% libre
-            </span>
-          </div>
-
-          <div className="unencumbered-allocation-block">
-            <div className="unencumbered-ratio-bar">
-              <div
-                className="unencumbered-bar-fill free"
-                style={{ width: `${Math.min(100, Math.max(0, liquidityRatio))}%` }}
-                title={`Capital Libre: ${formatCurrency(unencumberedLiquidity)} (${liquidityRatio.toFixed(1)}%)`}
-              />
-              <div
-                className="unencumbered-bar-fill debt"
-                style={{ width: `${Math.min(100, Math.max(0, 100 - liquidityRatio))}%` }}
-                title={`Pasivos Tarjetas: ${formatCurrency(creditSummary.totalDebt)} (${(100 - liquidityRatio).toFixed(1)}%)`}
-              />
-            </div>
-            <div className="unencumbered-ratio-legend">
-              <div className="ratio-legend-item">
-                <span className="ratio-dot free" />
-                <span className="ratio-name">Libre</span>
-                <strong className="ratio-amount">{formatCurrency(unencumberedLiquidity)}</strong>
-              </div>
-              <div className="ratio-legend-item">
-                <span className="ratio-dot debt" />
-                <span className="ratio-name">Tarjetas</span>
-                <strong className="ratio-amount">{formatCurrency(creditSummary.totalDebt)}</strong>
-              </div>
-            </div>
-          </div>
-
-          <div className="solvency-mini-chart">
-            <ResponsiveContainer width="100%" height={105}>
-              {unencumberedView === 'trend' ? (
-                <AreaChart data={liquidityTrendData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="solvGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#F3CA65" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#F3CA65" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="label" stroke="#555" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#555" fontSize={9} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
-                  <Tooltip
-                    contentStyle={{ background: '#0F1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 11 }}
-                    formatter={(val) => [formatCurrency(Number(val) || 0), '']}
-                  />
-                  <Area type="monotone" dataKey="liquidez" stroke="#F3CA65" strokeWidth={2} fillOpacity={1} fill="url(#solvGrad)" name="Liquidez Libre" />
-                </AreaChart>
-              ) : (
-                <BarChart data={liquidityTrendData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                  <XAxis dataKey="label" stroke="#555" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#555" fontSize={9} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
-                  <Bar dataKey="liquidez" fill="#34D399" radius={[3, 3, 0, 0]} name="Libre" />
-                  <Bar dataKey="deuda" fill="#EF4444" radius={[3, 3, 0, 0]} name="Deuda" />
-                </BarChart>
-              )}
-            </ResponsiveContainer>
-          </div>
-        </div>
-
       </div>
 
-      {/* ── 5. SPLIT DATA: AGENCYANALYTICS TRANSACTIONS TABLE + MERCURY MONEY MOVEMENT ── */}
-      <div className="mercury-bottom-split">
-        
-        {/* Left: Clean Transactions Table (AgencyAnalytics Table Style) */}
-        <div className="analytics-box table-box">
-          <div className="analytics-box-header">
-            <div>
-              <div className="analytics-box-title">Últimos Movimientos Certificados</div>
-              <div className="analytics-box-sub">Transacciones consolidadas en {formatPeriodLabel(currentPeriod)}</div>
-            </div>
-            {onNavigateTab && (
-              <button
-                type="button"
-                className="mercury-pill-action outline small"
-                onClick={() => onNavigateTab('expenses')}
-                title="Ver todos los movimientos"
-              >
-                <span>Ver todos</span>
-                <ChevronRight size={13} />
-              </button>
-            )}
+      {/* ── 6. CERTIFIED TRANSACTIONS FEED (RAMP DATA STREAM) ── */}
+      <div className="transactions-stream-panel">
+        <div className="stream-panel-header">
+          <div>
+            <div className="stream-title">Flujo de Movimientos Certificados</div>
+            <div className="stream-sub">Últimas transacciones sincronizadas con hash de integridad en {formatPeriodLabel(currentPeriod)}</div>
           </div>
-
-          {recentTx.length === 0 ? (
-            <div className="sandbox-empty">
-              No hay movimientos registrados en {formatPeriodLabel(currentPeriod)}.
-            </div>
-          ) : (
-            <div className="agency-table-wrapper">
-              <table className="agency-table">
-                <thead>
-                  <tr>
-                    <th>FECHA</th>
-                    <th>CONCEPTO / ITEM</th>
-                    <th>TIPO</th>
-                    <th style={{ textAlign: 'right' }}>TOTAL</th>
-                    <th style={{ textAlign: 'center', width: 40 }}>IR</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentTx.map((tx, idx) => {
-                    const isInc = tx.kind === 'income'
-                    return (
-                      <tr key={idx}>
-                        <td className="table-date">{tx.date}</td>
-                        <td className="table-item">
-                          <span className="item-name">{tx.description}</span>
-                        </td>
-                        <td>
-                          {/* Vivid status pills inspired by AgencyAnalytics Image 1 */}
-                          <span className={`agency-status-pill ${tx.tag.toLowerCase()}`}>
-                            {tx.tag}
-                          </span>
-                        </td>
-                        <td className={`table-amount ${isInc ? 'text-emerald' : 'text-rose'}`} style={{ textAlign: 'right' }}>
-                          {isInc ? '+' : '-'}{formatCurrency(tx.amount)}
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                          <button
-                            type="button"
-                            className="table-row-jump"
-                            onClick={() => onNavigateTab && onNavigateTab(tx.targetTab)}
-                            title={`Ir a ${tx.tag}`}
-                          >
-                            <ChevronRight size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+          {onNavigateTab && (
+            <button
+              type="button"
+              className="stream-view-all"
+              onClick={() => onNavigateTab('expenses')}
+              title="Ver todos los movimientos"
+            >
+              <span>Ver Libro Completo</span>
+              <ChevronRight size={14} />
+            </button>
           )}
         </div>
 
-        {/* Right: Mercury Money Movement (Money In & Money Out Cards - Image 2) */}
-        <div className="mercury-money-movement-panel">
-          
-          {/* Card A: Money In */}
-          <div className="money-movement-box">
-            <div className="money-box-top">
-              <div>
-                <span className="movement-label">MONEY IN (INGRESOS)</span>
-                <div className="movement-figure text-emerald">+{formatCurrency(totalIn)}</div>
-              </div>
-              <div className="movement-icon-tag green">
-                <ArrowUpRight size={18} />
-              </div>
-            </div>
-
-            <div className="movement-section-title">Principales Fuentes</div>
-            <div className="movement-items-list">
-              {topSourcesIn.length === 0 ? (
-                <div className="empty-mini">Sin ingresos este mes</div>
-              ) : (
-                topSourcesIn.map((inc, i) => (
-                  <div key={i} className="movement-row">
-                    <div className="movement-row-left">
-                      <div className="movement-row-badge green">
-                        <DollarSign size={13} />
-                      </div>
-                      <div className="movement-row-name">{inc.description}</div>
-                    </div>
-                    <strong className="movement-row-val text-emerald">+{formatCurrency(inc.amount)}</strong>
-                  </div>
-                ))
-              )}
-            </div>
+        {recentTx.length === 0 ? (
+          <div className="sandbox-empty">No hay transacciones registradas en este período.</div>
+        ) : (
+          <div className="stream-table-container">
+            <table className="stream-table">
+              <thead>
+                <tr>
+                  <th>FECHA</th>
+                  <th>CONCEPTO / ITEM</th>
+                  <th>TIPO</th>
+                  <th style={{ textAlign: 'right' }}>TOTAL</th>
+                  <th style={{ textAlign: 'center', width: 44 }}>IR</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTx.map((tx, idx) => {
+                  const isInc = tx.kind === 'income'
+                  return (
+                    <tr key={idx} className="stream-table-row">
+                      <td className="stream-date">{tx.date}</td>
+                      <td className="stream-concept">
+                        <span className="concept-text">{tx.description}</span>
+                      </td>
+                      <td>
+                        <span className={`stream-pill ${tx.typePillClass}`}>
+                          {tx.tag}
+                        </span>
+                      </td>
+                      <td className={`stream-total ${isInc ? 'text-emerald' : 'text-rose'}`} style={{ textAlign: 'right' }}>
+                        {isInc ? '+' : '-'}{formatCurrency(tx.amount)}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          className="stream-row-action"
+                          onClick={() => onNavigateTab && onNavigateTab(tx.targetTab)}
+                          title={`Ir a ${tx.tag}`}
+                        >
+                          <ChevronRight size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-
-          {/* Card B: Money Out */}
-          <div className="money-movement-box">
-            <div className="money-box-top">
-              <div>
-                <span className="movement-label">MONEY OUT (GASTOS)</span>
-                <div className="movement-figure text-rose">-{formatCurrency(totalExp)}</div>
-              </div>
-              <div className="movement-icon-tag rose">
-                <ArrowDownRight size={18} />
-              </div>
-            </div>
-
-            <div className="movement-section-title">Principales Egresos</div>
-            <div className="movement-items-list">
-              {topSpendOut.length === 0 ? (
-                <div className="empty-mini">Sin gastos este mes</div>
-              ) : (
-                topSpendOut.map((sp, i) => (
-                  <div key={i} className="movement-row">
-                    <div className="movement-row-left">
-                      <div className="movement-row-badge" style={{ background: `${sp.color}22`, color: sp.color }}>
-                        <Layers size={13} />
-                      </div>
-                      <div className="movement-row-name">{sp.name}</div>
-                    </div>
-                    <strong className="movement-row-val text-rose">-{formatCurrency(sp.amount)}</strong>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-        </div>
-
+        )}
       </div>
 
-      {/* ── 6. MODAL DE CUMPLIMIENTO Y NORMATIVAS GLOBALES DE IA (PORTAL VIEWPORT) ── */}
+      {/* ── 7. MODAL DE CUMPLIMIENTO Y NORMATIVAS GLOBALES DE IA ── */}
       {showComplianceModal && createPortal(
         <div className="modal-overlay" onClick={() => setShowComplianceModal(false)}>
           <div className="modal-card" style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
@@ -1127,7 +870,6 @@ export function DashboardView({
               </div>
             </div>
 
-            {/* BOTONES DE ACCIÓN: DESCARGA DE NORMATIVA & TÉRMINOS Y CONDICIONES */}
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18, paddingTop: 14, borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
               <button
                 type="button"
@@ -1158,7 +900,7 @@ export function DashboardView({
             <div className="modal-footer" style={{ marginTop: 14, borderTop: 'none', paddingTop: 0 }}>
               <button
                 type="button"
-                className="sandbox-btn-gold"
+                className="action-capsule-gold"
                 style={{ width: '100%', justifyContent: 'center' }}
                 onClick={() => setShowComplianceModal(false)}
               >
