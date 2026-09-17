@@ -24,9 +24,9 @@ describe('Theme management utility', () => {
     expect(['dark', 'light']).toContain(theme)
   })
 
-  it('reads saved theme from localStorage when valid', () => {
+  it('always enforces dark theme even if light is in localStorage', () => {
     mockLocalStorage.setItem('aureus_theme', 'light')
-    expect(getInitialTheme()).toBe('light')
+    expect(getInitialTheme()).toBe('dark')
 
     mockLocalStorage.setItem('aureus_theme', 'dark')
     expect(getInitialTheme()).toBe('dark')
