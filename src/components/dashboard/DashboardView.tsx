@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { useCountUp } from '../../hooks/useCountUp'
 import {
   CreditCard as CardIcon,
   Calendar,
@@ -73,6 +74,30 @@ export function DashboardView({
 }: DashboardViewProps) {
   const userName = userEmail ? userEmail.split('@')[0] : 'Inversor'
   const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
+
+  // Estado de inclinación 3D (Mouse Tilt Parallax) para la tarjeta Titanium
+  const [tilt, setTilt] = useState({ x: 0, y: 0, active: false, flareX: 50, flareY: 50 })
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / rect.width
+    const y = (e.clientY - rect.top) / rect.height
+    const rotX = (0.5 - y) * 14
+    const rotY = (x - 0.5) * 14
+    setTilt({
+      x: rotX,
+      y: rotY,
+      active: true,
+      flareX: Math.round(x * 100),
+      flareY: Math.round(y * 100),
+    })
+  }
+
+  const handleCardMouseLeave = () => {
+    setTilt({ x: 0, y: 0, active: false, flareX: 50, flareY: 50 })
+  }
 
   // Modal de cumplimiento de IA
   const [showComplianceModal, setShowComplianceModal] = useState(false)
@@ -297,11 +322,28 @@ export function DashboardView({
       {/* ── 2. THE MASTER VAULT HERO (APPLE WALLET TITANIUM CARD + CAPITAL ENGINE) ── */}
       <div className="vault-hero-grid">
 
-        {/* Left: Apple Wallet Inspired Titanium Black Card */}
+        {/* Left: Apple Wallet Inspired Titanium Black Card con Física 3D */}
         <div className="apple-wallet-card-container">
-          <div className="apple-titanium-card">
-            {/* Holographic foil sweep */}
+          <div
+            ref={cardRef}
+            className={`apple-titanium-card ${tilt.active ? 'is-tilting' : ''}`}
+            onMouseMove={handleCardMouseMove}
+            onMouseLeave={handleCardMouseLeave}
+            style={{
+              transform: tilt.active
+                ? `perspective(1000px) rotateX(${tilt.x.toFixed(2)}deg) rotateY(${tilt.y.toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`
+                : 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+            }}
+          >
+            {/* Haz holográfico y destello reactivo centrado en el cursor */}
             <div className="card-hologram-sweep" />
+            <div
+              className="card-specular-glare"
+              style={{
+                background: `radial-gradient(circle 140px at ${tilt.flareX}% ${tilt.flareY}%, rgba(243, 202, 101, 0.25) 0%, rgba(255, 255, 255, 0.08) 35%, transparent 70%)`,
+                opacity: tilt.active ? 1 : 0.35,
+              }}
+            />
 
             <div className="card-header-line">
               <div className="card-brand-tag">AUREUS</div>
@@ -361,7 +403,7 @@ export function DashboardView({
               <div className="engine-balance-display">
                 <span className="currency-prefix">RD$</span>
                 <span className="balance-integer">
-                  {Math.floor(Math.abs(cumulative.totalCumulativeBalance)).toLocaleString('es-DO')}
+                  {Math.floor(Math.abs(useCountUp(cumulative.totalCumulativeBalance, 650))).toLocaleString('es-DO')}
                 </span>
                 <span className="balance-decimal">
                   .{Math.round((Math.abs(cumulative.totalCumulativeBalance) % 1) * 100).toString().padStart(2, '0')}

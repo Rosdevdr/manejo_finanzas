@@ -18,6 +18,7 @@ import { SecurityModal }     from './components/security/SecurityModal'
 import { MitLicenseModal }   from './components/ui/MitLicenseModal'
 import { ReportExportModal } from './components/reports/ReportExportModal'
 import { ModuleUsageGuideModal } from './components/guide/ModuleUsageGuideModal'
+import { QuickCommandPalette }     from './components/ui/QuickCommandPalette'
 import { Analytics }         from '@vercel/analytics/react'
 import { useFinanceStorage } from './hooks/useFinanceStorage'
 import { useAuth }           from './hooks/useAuth'
@@ -58,6 +59,7 @@ export function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [showCommandPalette, setShowCommandPalette] = useState(false)
 
   const { toasts, show: showToast, dismiss } = useToast()
   const { isInstallable, installApp } = usePwaInstall()
@@ -154,6 +156,18 @@ export function App() {
       contentRef.current.scrollTop = 0
     }
   }, [activeTab])
+
+  // Atajo de teclado global para Command Palette (Cmd + K / Ctrl + K)
+  useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setShowCommandPalette(prev => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [])
 
   // Manejar retorno de Stripe Checkout (éxito o cancelación)
   useEffect(() => {
@@ -514,6 +528,22 @@ export function App() {
         userEmail={user?.email}
         isDemoMode={isDemoMode}
         onRefreshPlan={refreshPlan}
+      />
+      <QuickCommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onNavigateTab={tab => {
+          setActiveTab(tab)
+          setShowCommandPalette(false)
+        }}
+        onOpenExport={() => {
+          setShowExportModal(true)
+          setShowCommandPalette(false)
+        }}
+        onOpenFire={() => {
+          setShowFireModal(true)
+          setShowCommandPalette(false)
+        }}
       />
       {isModuleLoading && (
         <SplashScreenLoader

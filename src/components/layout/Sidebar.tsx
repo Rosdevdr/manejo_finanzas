@@ -19,6 +19,7 @@ import {
   Sliders,
   BookOpen,
   Zap,
+  Search,
 } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
@@ -119,6 +120,22 @@ export function Sidebar({
             </button>
           )}
         </div>
+
+        {/* Acceso Rápido a Consola de Comandos (Ctrl + K) */}
+        <button
+          type="button"
+          className="sidebar-quick-command-pill"
+          onClick={() => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))
+          }}
+          title="Abrir consola de comandos rápidos (Ctrl + K)"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <Search size={13} className="text-gold" />
+            <span>Buscar comando</span>
+          </div>
+          <kbd>Ctrl K</kbd>
+        </button>
 
         {/* Navigation Modules */}
         <div className="nav-section">
