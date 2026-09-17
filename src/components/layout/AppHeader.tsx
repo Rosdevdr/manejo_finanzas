@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import { GithubIcon } from '../ui/GithubIcon'
 import { CardAlertsPopover } from '../alerts/CardAlertsPopover'
-import { TenantSelector } from '../ui/TenantSelector'
 import type { CreditCard, CreditCardTransaction } from '../../types/finance'
 import { getRandomDailyTip, FINANCIAL_TIPS_BANK } from '../../utils/financialTips'
 import { triggerHaptic } from '../../utils/haptics'
@@ -278,9 +277,6 @@ export function AppHeader({
             {balanceLabel}
           </span>
         </div>
-
-        {/* Selector Multi-Tenant de Marca Blanca */}
-        <TenantSelector />
 
         {/* Notificaciones (Icono Campanita de Alertas de Tarjetas) */}
         <CardAlertsPopover creditCards={creditCards} creditTransactions={creditTransactions} />
