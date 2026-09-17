@@ -18,6 +18,7 @@ import type {
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
 import { exportTransactionsToCSV, printExecutiveFinancialReport, type ReportData } from '../../utils/exportReports'
+import { useTenant } from '../../context/TenantContext'
 import { triggerHaptic } from '../../utils/haptics'
 import './ReportExportModal.css'
 
@@ -50,6 +51,7 @@ export function ReportExportModal({
   userEmail,
   onShowToast,
 }: ReportExportModalProps) {
+  const { tenant } = useTenant()
   const [selectedPeriod, setSelectedPeriod] = useState<string>(currentPeriod)
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export function ReportExportModal({
     creditCards,
     categoryBudgets,
     savingsGoals,
-    userName: userEmail ? userEmail.split('@')[0] : 'Titular AUREUS',
+    userName: userEmail ? userEmail.split('@')[0] : `Titular ${tenant.name}`,
     userEmail: userEmail || undefined,
   }
 
@@ -94,13 +96,13 @@ export function ReportExportModal({
 
   const handleExportPDF = () => {
     triggerHaptic('success')
-    printExecutiveFinancialReport(reportData)
-    onShowToast('📄 Vista de impresión / PDF generada', 'success')
+    printExecutiveFinancialReport(reportData, tenant)
+    onShowToast(`📄 Estado de cuenta (${tenant.name}) generado`, 'success')
   }
 
   const handleExportCSV = () => {
     triggerHaptic('success')
-    exportTransactionsToCSV(reportData)
+    exportTransactionsToCSV(reportData, tenant.slug)
     onShowToast('📊 Archivo CSV descargado con éxito', 'success')
   }
 

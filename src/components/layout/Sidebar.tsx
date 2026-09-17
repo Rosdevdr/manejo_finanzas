@@ -23,6 +23,8 @@ import {
 import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
 import type { TabType } from '../../types/navigation'
+import { useTenant } from '../../context/TenantContext'
+import { useFeatureFlags } from '../../hooks/useFeatureFlags'
 
 interface SidebarProps {
   activeTab: TabType
@@ -75,6 +77,9 @@ export function Sidebar({
   onOpenSubscription,
   currentPlan = 'free',
 }: SidebarProps) {
+  const { tenant } = useTenant()
+  const { isFeatureEnabled } = useFeatureFlags()
+
   const PLAN_LABELS: Record<string, string> = { free: 'Free', personal: 'Personal', pro: 'Pro ⚡' }
   const PLAN_COLORS: Record<string, string> = { free: '#71717A', personal: '#F59E0B', pro: '#818CF8' }
   const initials = userEmail
@@ -84,6 +89,20 @@ export function Sidebar({
   const displayName = userEmail
     ? userEmail.split('@')[0]
     : 'Jesús Rosario'
+
+  // Filtrado de módulos según Feature Flags del Tenant activo
+  const visibleNavItems = NAV_ITEMS.filter(item => {
+    if ((item.id === 'advisor' || item.id === 'chat-advisor') && !isFeatureEnabled('ai_advisor')) {
+      return false
+    }
+    if (item.id === 'cash' && !isFeatureEnabled('cash_management')) {
+      return false
+    }
+    if (item.id === 'credit' && !isFeatureEnabled('credit_management')) {
+      return false
+    }
+    return true
+  })
 
   return (
     <>
@@ -100,10 +119,18 @@ export function Sidebar({
         {/* Logo & Mobile Close */}
         <div className="sidebar-logo">
           <div className="logo-mark">
-            <AureusLogo size={34} />
+            {tenant.logoUrl ? (
+              <img src={tenant.logoUrl} alt={tenant.name} style={{ width: 34, height: 34, objectFit: 'contain' }} />
+            ) : (
+              <AureusLogo size={34} />
+            )}
             <div>
-              <div className="logo-name">AUREUS</div>
-              <div className="logo-sub">WEALTH ADVISOR</div>
+              <div className="logo-name" style={{ color: tenant.theme.colors.brandAccent }}>
+                {tenant.name.toUpperCase()}
+              </div>
+              <div className="logo-sub">
+                {tenant.slug === 'aureus' ? 'WEALTH ADVISOR' : 'FINANCIAL PLATFORM'}
+              </div>
             </div>
           </div>
 
@@ -123,7 +150,7 @@ export function Sidebar({
         {/* Navigation Modules */}
         <div className="nav-section">
           <div className="nav-label">Módulos</div>
-          {NAV_ITEMS.map(item => (
+          {visibleNavItems.map(item => (
             <button
               key={item.id}
               className={`nav-item${activeTab === item.id ? ' active' : ''}`}
@@ -156,7 +183,7 @@ export function Sidebar({
             </button>
           )}
 
-          {onOpenFireCalculator && (
+          {onOpenFireCalculator && isFeatureEnabled('fire_calculator') && (
             <button
               type="button"
               className="nav-item"
