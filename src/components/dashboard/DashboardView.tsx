@@ -44,6 +44,7 @@ interface DashboardViewProps {
   creditTransactions?: CreditCardTransaction[]
   categoryBudgets?: CategoryBudget[]
   userEmail?: string | null
+  userName?: string | null
   onNavigateTab?: (t: TabType) => void
   onOpenTerms?: () => void
 }
@@ -69,11 +70,32 @@ export function DashboardView({
   creditTransactions = [],
   categoryBudgets: _categoryBudgets = [],
   userEmail,
+  userName,
   onNavigateTab,
   onOpenTerms,
 }: DashboardViewProps) {
-  const userName = userEmail ? userEmail.split('@')[0] : 'Inversor'
-  const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
+  // Obtener nombre formateado del usuario (evitando siempre 'Inversor')
+  const resolvedUserName = (() => {
+    if (userName && userName.trim()) return userName.trim()
+    if (userEmail && userEmail.trim()) {
+      const prefix = userEmail.split('@')[0]
+      const formatted = prefix
+        .replace(/[._-]+/g, ' ')
+        .split(' ')
+        .filter(Boolean)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ')
+      if (formatted.toLowerCase().includes('jesus')) {
+        return formatted.replace(/Jesus/i, 'Jesús')
+      }
+      return formatted || 'Jesús Rosario'
+    }
+    return 'Jesús Rosario'
+  })()
+
+  // Tarjeta de Crédito Principal (si existe al menos una en el sistema)
+  const primaryCard = creditCards && creditCards.length > 0 ? creditCards[0] : null
+  const cardThemeClass = primaryCard?.color ? `theme-card-${primaryCard.color}` : ''
 
   // Estado de inclinación 3D (Mouse Tilt Parallax) para la tarjeta Titanium
   const [tilt, setTilt] = useState({ x: 0, y: 0, active: false, flareX: 50, flareY: 50 })
@@ -276,7 +298,7 @@ export function DashboardView({
             <span className="eyebrow-pulsar" />
             <span>AUREUS PRIVATE WEALTH · {formatPeriodLabel(currentPeriod).toUpperCase()}</span>
           </div>
-          <h1 className="fintech-main-title">Consola Patrimonial, {capitalizedName}</h1>
+          <h1 className="fintech-main-title">Consola Patrimonial, {resolvedUserName}</h1>
           <p className="fintech-main-sub">
             Arquitectura de liquidez no gravada, pista de solvencia y ejecución en tiempo real.
           </p>
@@ -326,7 +348,12 @@ export function DashboardView({
         <div className="apple-wallet-card-container">
           <div
             ref={cardRef}
-            className={`apple-titanium-card ${tilt.active ? 'is-tilting' : ''}`}
+            className={`apple-titanium-card ${cardThemeClass} ${tilt.active ? 'is-tilting' : ''}`}
+            onClick={() => {
+              triggerHaptic('light')
+              onNavigateTab && onNavigateTab('credit')
+            }}
+            title={primaryCard ? `Tarjeta Principal: ${primaryCard.name} (${primaryCard.bank || 'AUREUS'}) · Clic para administrar` : 'Gestionar Tarjetas de Crédito'}
             onMouseMove={handleCardMouseMove}
             onMouseLeave={handleCardMouseLeave}
             style={{
@@ -346,7 +373,9 @@ export function DashboardView({
             />
 
             <div className="card-header-line">
-              <div className="card-brand-tag">AUREUS</div>
+              <div className="card-brand-tag">
+                {primaryCard ? (primaryCard.bank ? primaryCard.bank.toUpperCase() : primaryCard.name.toUpperCase()) : 'AUREUS'}
+              </div>
               <div className="card-nfc-indicator" title="Contactless Active">
                 <span className="nfc-arc a1" />
                 <span className="nfc-arc a2" />
@@ -363,16 +392,27 @@ export function DashboardView({
               <span>••••</span>
               <span>••••</span>
               <span>••••</span>
-              <span className="last-four">4821</span>
+              <span className="last-four">
+                {primaryCard ? primaryCard.lastFourDigits : '4821'}
+              </span>
             </div>
 
             <div className="card-footer-line">
               <div className="card-client-info">
-                <span className="card-tier-label">TITANIUM BLACK SIGNATURE</span>
-                <span className="card-holder-name">{capitalizedName.toUpperCase()}</span>
+                <span className="card-tier-label">
+                  {primaryCard ? primaryCard.name.toUpperCase() : 'TITANIUM BLACK SIGNATURE'}
+                </span>
+                <span className="card-holder-name">{resolvedUserName.toUpperCase()}</span>
               </div>
-              <div className="card-security-seal">
-                <ShieldCheck size={18} className="text-gold" />
+              <div className="card-footer-meta">
+                {primaryCard && primaryCard.creditLimit > 0 && (
+                  <span className="card-limit-chip" title={`Límite de Crédito: ${formatCurrency(primaryCard.creditLimit)}`}>
+                    LÍM {formatCurrency(primaryCard.creditLimit)}
+                  </span>
+                )}
+                <div className="card-security-seal" title="Cifrado RLS & Protección de Tarjeta">
+                  <ShieldCheck size={17} className="text-gold" />
+                </div>
               </div>
             </div>
           </div>

@@ -318,6 +318,7 @@ export function App() {
               creditTransactions={creditTransactions}
               categoryBudgets={categoryBudgets}
               userEmail={user?.email}
+              userName={user?.user_metadata?.full_name || user?.user_metadata?.name}
               onNavigateTab={handleTabChange}
               onOpenTerms={() => setShowTermsModal(true)}
             />

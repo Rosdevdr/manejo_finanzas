@@ -4182,18 +4182,24 @@ textarea:focus,
   .vault-hero-grid {
     grid-template-columns: 1fr;
   }
+  .apple-titanium-card {
+    height: 220px !important;
+    flex: none !important;
+  }
 }
 
 /* Left: Apple Wallet Inspired Titanium Card */
 .apple-wallet-card-container {
   display: flex;
   flex-direction: column;
+  height: 100%;
   gap: 12px;
 }
 
 .apple-titanium-card {
   position: relative;
-  height: 220px;
+  flex: 1 1 auto;
+  min-height: 220px;
   border-radius: 18px;
   background: linear-gradient(145deg, #1A1D24 0%, #0D0E12 55%, #14171E 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -4205,11 +4211,39 @@ textarea:focus,
   overflow: hidden;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
   user-select: none;
+  cursor: pointer;
 }
 
 .apple-titanium-card:hover {
   transform: translateY(-3px) scale(1.01);
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(243, 202, 101, 0.12);
+}
+
+/* Card Themes for Apple Titanium Card */
+.apple-titanium-card.theme-card-gold {
+  background: linear-gradient(145deg, #2A2210 0%, #121008 55%, #1D180C 100%);
+  border-color: rgba(243, 202, 101, 0.28);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(243, 202, 101, 0.2);
+}
+.apple-titanium-card.theme-card-emerald {
+  background: linear-gradient(145deg, #0F251C 0%, #08140F 55%, #0B1C15 100%);
+  border-color: rgba(52, 211, 153, 0.28);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(52, 211, 153, 0.2);
+}
+.apple-titanium-card.theme-card-navy {
+  background: linear-gradient(145deg, #111D2E 0%, #090F19 55%, #0E1724 100%);
+  border-color: rgba(96, 165, 250, 0.28);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(96, 165, 250, 0.2);
+}
+.apple-titanium-card.theme-card-crimson {
+  background: linear-gradient(145deg, #2B1216 0%, #15080A 55%, #1F0B0E 100%);
+  border-color: rgba(248, 113, 113, 0.28);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(248, 113, 113, 0.2);
+}
+.apple-titanium-card.theme-card-purple {
+  background: linear-gradient(145deg, #23122E 0%, #110817 55%, #1A0D23 100%);
+  border-color: rgba(167, 139, 250, 0.28);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(167, 139, 250, 0.2);
 }
 
 .card-hologram-sweep {
@@ -4355,6 +4389,25 @@ textarea:focus,
   letter-spacing: 0.08em;
 }
 
+.card-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-limit-chip {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #F3CA65;
+  background: rgba(243, 202, 101, 0.12);
+  border: 1px solid rgba(243, 202, 101, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 .card-security-seal {
   display: flex;
   align-items: center;
@@ -4370,10 +4423,11 @@ textarea:focus,
   background: #111319;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 13px 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .runway-header {
