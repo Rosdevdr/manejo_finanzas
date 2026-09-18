@@ -5,6 +5,7 @@ import {
   getPreviousPeriod,
   getNextPeriod,
   formatPeriodLabel,
+  formatShortPeriodLabel,
   getMonthProgress,
   getAllAvailablePeriods,
   calculateCumulativeBalance,
@@ -65,6 +66,16 @@ describe('Calendar and Period Engine', () => {
       expect(formatPeriodLabel('2026-08')).toBe('Agosto 2026')
       expect(formatPeriodLabel('2026-09')).toBe('Septiembre 2026')
       expect(formatPeriodLabel('2027-01')).toBe('Enero 2027')
+    })
+  })
+
+  describe('formatShortPeriodLabel', () => {
+    it('formats period strings into compact Spanish month abbreviation and year', () => {
+      expect(formatShortPeriodLabel('2026-08')).toBe('Ago 2026')
+      expect(formatShortPeriodLabel('2026-09')).toBe('Sep 2026')
+      expect(formatShortPeriodLabel('2027-01')).toBe('Ene 2027')
+      expect(formatShortPeriodLabel('2026-12')).toBe('Dic 2026')
+      expect(formatShortPeriodLabel('')).toBe('')
     })
   })
 

@@ -357,6 +357,14 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Space Grotesk', sans-serif;
 }
 
+.period-label-short {
+  display: none;
+}
+
+.period-label-full {
+  display: inline;
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -530,6 +538,32 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.header-tls-badge {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .period-label-full {
+    display: none !important;
+  }
+  .period-label-short {
+    display: inline !important;
+  }
+  .profile-dropdown {
+    right: -6px !important;
+    width: 260px !important;
+    max-width: calc(100vw - 20px) !important;
+  }
 }
 
 /* ── Popover del Consejo del Día ── */
@@ -1981,6 +2015,10 @@ select.field-select {
   .header-right  { gap: 8px !important; flex-shrink: 0; }
   .balance-pill  { font-size: 11px; padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 
+  @media (max-width: 540px) {
+    .balance-pill { display: none !important; }
+  }
+
   /* Hide secondary header items */
   .github-shortcut,
   .header-sync-pill,
@@ -2094,28 +2132,18 @@ select.field-select {
   }
   .nav-btn { width: 26px; height: 26px; border-radius: 6px; }
   .period-label {
-    padding: 3px 7px;
-    font-size: 11px;
-    max-width: 86px;
+    padding: 3px 8px;
+    font-size: 11.5px;
+    max-width: none !important;
+    width: auto;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    text-overflow: clip;
   }
-  .header-right { gap: 5px !important; }
+  .header-right { gap: 6px !important; }
   .balance-pill {
-    padding: 3px 7px;
-    font-size: 10px;
-    max-width: 120px;
-    overflow: hidden;
+    display: none !important;
   }
-  .balance-pill-label { display: none; }
-  .balance-pill-value {
-    font-size: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .pill-dot { width: 5px; height: 5px; }
 
   /* KPI: single column */
   .kpi-grid   { grid-template-columns: 1fr !important; gap: 8px; }
@@ -2184,8 +2212,8 @@ select.field-select {
 
 /* ── Tiny phones (≤ 360px) ───────────────────────────── */
 @media (max-width: 360px) {
-  .balance-pill   { max-width: 90px; font-size: 9.5px; }
-  .period-label   { max-width: 72px; font-size: 10px; }
+  .balance-pill   { display: none !important; }
+  .period-label   { max-width: none !important; width: auto; font-size: 10.5px; padding: 2px 6px; }
   .nav-btn        { width: 24px; height: 24px; }
   .kpi-value      { font-size: 16px; }
   .content        { padding: 10px 8px calc(18px + env(safe-area-inset-bottom, 0px)) !important; }
@@ -3461,11 +3489,13 @@ select.field-select {
   padding-left: 4px;
   padding-right: 4px;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
 }
 
 .credit-card-vault-item {
   width: 250px;
   min-width: 250px;
+  scroll-snap-align: start;
   border-radius: 12px;
   padding: 14px 16px;
   display: flex;
@@ -3476,6 +3506,19 @@ select.field-select {
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
+}
+
+@media (max-width: 480px) {
+  .credit-cards-carousel {
+    padding-left: 2px;
+    padding-right: 16px;
+    gap: 12px;
+  }
+  .credit-card-vault-item {
+    width: calc(100vw - 64px);
+    min-width: calc(100vw - 64px);
+    max-width: 320px;
+  }
 }
 
 .credit-card-vault-item:hover {
@@ -5111,6 +5154,31 @@ textarea:focus,
   font-size: 12px;
 }
 
+@media (max-width: 640px) {
+  .donut-master-layout {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .donut-graphic-area {
+    width: 100%;
+    max-width: 240px;
+    height: 220px;
+  }
+  .donut-legend-stream {
+    width: 100%;
+    gap: 10px;
+  }
+  .donut-legend-row {
+    font-size: 13px;
+  }
+  .legend-category-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
 /* Payment Channels Stream */
 .payment-channels-stream {
   display: flex;
@@ -5605,6 +5673,114 @@ textarea:focus,
 .stream-table-row:hover .stream-row-action {
   opacity: 1;
   transform: translateX(1px);
+}
+
+/* ── Goals Header Bar & Suggested Limits Responsive ── */
+.goals-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 12px;
+}
+
+.suggested-limits-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .goals-header-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .goals-header-bar .btn {
+    width: 100% !important;
+    justify-content: center;
+  }
+  .suggested-limits-actions {
+    width: 100%;
+    margin-top: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .suggested-limits-actions button {
+    width: 100% !important;
+    justify-content: center;
+  }
+}
+
+/* ── Module Usage Guide Modal Responsive Layout ── */
+.guide-modal-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.guide-modal-sidebar {
+  width: 240px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 15, 0.7);
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.guide-nav-tab-btn {
+  width: 100%;
+}
+
+.guide-modal-content {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+  background: rgba(14, 14, 20, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .guide-modal-body {
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .guide-modal-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px 10px;
+    gap: 6px;
+    flex-shrink: 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .guide-sidebar-title {
+    display: none !important;
+  }
+  .guide-nav-tab-btn {
+    width: auto !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+    padding: 6px 12px !important;
+    font-size: 11.5px !important;
+  }
+  .guide-modal-content {
+    padding: 14px 14px 20px;
+    gap: 12px;
+  }
 }
 
 

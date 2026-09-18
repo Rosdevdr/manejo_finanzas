@@ -18,6 +18,7 @@ import { CardAlertsPopover } from '../alerts/CardAlertsPopover'
 import type { CreditCard, CreditCardTransaction } from '../../types/finance'
 import { getRandomDailyTip, FINANCIAL_TIPS_BANK } from '../../utils/financialTips'
 import { triggerHaptic } from '../../utils/haptics'
+import { formatShortPeriodLabel } from '../../utils/calendar'
 
 interface AppHeaderProps {
   periodLabel: string
@@ -150,7 +151,10 @@ export function AppHeader({
         >
           <ChevronLeft size={16} />
         </button>
-        <span className="period-label">{periodLabel}</span>
+        <span className="period-label">
+          <span className="period-label-full">{periodLabel}</span>
+          <span className="period-label-short">{currentPeriod ? formatShortPeriodLabel(currentPeriod) : periodLabel}</span>
+        </span>
         <button
           type="button"
           className="nav-btn"
@@ -339,20 +343,9 @@ export function AppHeader({
               </div>
 
               {/* Indicador de Seguridad Institucional Estilo Revolut */}
-              <div
-                style={{
-                  background: 'rgba(52, 211, 153, 0.08)',
-                  border: '1px solid rgba(52, 211, 153, 0.25)',
-                  borderRadius: 8,
-                  padding: '7px 10px',
-                  margin: '8px 12px 6px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                }}
-              >
+              <div className="header-tls-badge">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, fontWeight: 700, color: '#34D399' }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34D399', boxShadow: '0 0 6px #34D399' }} />
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34D399', boxShadow: '0 0 6px #34D399', flexShrink: 0 }} />
                   <span>Conexión Cifrada TLS 256-bit</span>
                 </div>
                 <div style={{ fontSize: 9.5, color: '#9CA3AF', paddingLeft: 12 }}>

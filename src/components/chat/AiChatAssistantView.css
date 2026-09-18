@@ -404,8 +404,15 @@
   align-items: center;
   gap: 8px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-shrink: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(13, 13, 18, 0.4);
+}
+
+.prompt-chips-container::-webkit-scrollbar {
+  display: none;
 }
 
 .chip-btn {
@@ -565,25 +572,33 @@
 
 @media (max-width: 640px) {
   .chat-page-header {
-    margin-bottom: 8px !important;
-    gap: 6px !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
+    margin-bottom: 10px !important;
+    gap: 8px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
   }
   .chat-page-header .page-title {
-    font-size: 15px !important;
+    font-size: 16px !important;
     margin: 0 !important;
-    line-height: 1.2 !important;
+    line-height: 1.3 !important;
   }
   .chat-page-header .breadcrumb {
     display: none !important;
   }
   .chat-header-badges {
-    align-items: flex-end !important;
-    flex-direction: column !important;
-    gap: 4px !important;
-    margin-top: 0 !important;
+    width: 100% !important;
+    align-items: flex-start !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    margin-top: 2px !important;
+  }
+  .chat-status-badge {
+    white-space: normal !important;
+    text-align: left !important;
+    max-width: 100% !important;
+    line-height: 1.3 !important;
   }
   .chat-clear-btn-text {
     display: none;

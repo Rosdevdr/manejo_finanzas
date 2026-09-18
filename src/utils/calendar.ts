@@ -232,3 +232,14 @@ export function calculateCumulativeBalance(
   }
 }
 
+/**
+ * Retorna una etiqueta de período compacta para pantallas móviles (ej. "Sep 2026")
+ */
+export function formatShortPeriodLabel(period: string): string {
+  if (!period || typeof period !== 'string' || !period.includes('-')) return period || ''
+  const parts = period.split('-')
+  const year = parts[0]
+  const monthIdx = (parseInt(parts[1], 10) || 1) - 1
+  return `${MONTH_SHORT_NAMES[monthIdx] || parts[1]} ${year}`
+}
+

@@ -439,7 +439,7 @@ export function BudgetsAndGoalsView({
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="suggested-limits-actions">
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -568,7 +568,7 @@ export function BudgetsAndGoalsView({
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <div className="goals-header-bar">
             <h2 className="section-title" style={{ margin: 0 }}>Tus Metas y Fondos Activos</h2>
             <button className="btn btn-primary" onClick={() => handleOpenGoalModal()}>
               <Plus size={15} /> Nueva Meta de Ahorro

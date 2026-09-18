@@ -241,19 +241,10 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
         </div>
 
         {/* Modal Body: Sidebar Selector + Content Pane */}
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
-          {/* Module Nav Tabs (Left side) */}
-          <div style={{
-            width: 240,
-            borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'rgba(10, 10, 15, 0.7)',
-            padding: '12px 8px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-            overflowY: 'auto',
-          }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#717182', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 10px' }}>
+        <div className="guide-modal-body">
+          {/* Module Nav Tabs (Left side on desktop, top bar on mobile) */}
+          <div className="guide-modal-sidebar">
+            <div className="guide-sidebar-title" style={{ fontSize: 10, fontWeight: 700, color: '#717182', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 10px' }}>
               Módulos del Sistema
             </div>
             {GUIDE_SECTIONS.map(sec => {
@@ -263,6 +254,7 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
                   key={sec.id}
                   type="button"
                   onClick={() => setSelectedId(sec.id)}
+                  className={`guide-nav-tab-btn ${isSelected ? 'active' : ''}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -276,7 +268,6 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
                     color: isSelected ? '#F3CA65' : '#9CA3AF',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    width: '100%',
                     fontFamily: 'Space Grotesk',
                     fontSize: 12,
                     fontWeight: isSelected ? 700 : 500,
@@ -291,16 +282,8 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
             })}
           </div>
 
-          {/* Module Detailed Content (Right side) */}
-          <div style={{
-            flex: 1,
-            padding: '20px 24px',
-            overflowY: 'auto',
-            background: 'rgba(14, 14, 20, 0.4)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-          }}>
+          {/* Module Detailed Content (Right side on desktop, full width underneath on mobile) */}
+          <div className="guide-modal-content">
             {/* Header section badge & title */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <span style={{

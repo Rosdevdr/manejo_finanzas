@@ -515,7 +515,7 @@ export function DashboardView({
                   <YAxis stroke="#4B5563" fontSize={10} tickLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
                   <Tooltip
                     contentStyle={{ background: '#0B0C10', border: '1px solid rgba(243,202,101,0.2)', borderRadius: 8, fontSize: 12 }}
-                    formatter={(v) => [formatCurrency(Number(v) || 0), '']}
+                    formatter={(v, name) => [formatCurrency(Number(v) || 0), String(name || 'Monto')]}
                   />
                   <Area type="monotone" dataKey="inflows" stroke="#22C55E" strokeWidth={2.5} fillOpacity={1} fill="url(#vaultInflow)" name="Ingresos" />
                   <Area type="monotone" dataKey="outflows" stroke="#EF4444" strokeWidth={2} fillOpacity={1} fill="url(#vaultOutflow)" name="Gastos" />
@@ -532,7 +532,7 @@ export function DashboardView({
                   <YAxis stroke="#4B5563" fontSize={10} tickLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
                   <Tooltip
                     contentStyle={{ background: '#0B0C10', border: '1px solid rgba(243,202,101,0.2)', borderRadius: 8, fontSize: 12 }}
-                    formatter={(v) => [formatCurrency(Number(v) || 0), '']}
+                    formatter={(v, name) => [formatCurrency(Number(v) || 0), String(name || 'Patrimonio')]}
                   />
                   <Area type="monotone" dataKey="netWorth" stroke="#F3CA65" strokeWidth={3} fillOpacity={1} fill="url(#vaultNetWorth)" name="Patrimonio" />
                 </AreaChart>
@@ -768,7 +768,7 @@ export function DashboardView({
                     </Pie>
                     <Tooltip
                       contentStyle={{ background: '#0B0C10', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
-                      formatter={(val) => [formatCurrency(Number(val) || 0), '']}
+                      formatter={(val, name) => [formatCurrency(Number(val) || 0), String(name || 'Gasto')]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
