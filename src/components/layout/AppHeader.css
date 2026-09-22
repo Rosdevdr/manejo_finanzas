@@ -1,0 +1,162 @@
+/* src/components/layout/AppHeader.css - Apex Obsidian AppHeader */
+
+.app-header-obsidian {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: rgba(12, 13, 20, 0.75);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.app-header-obsidian .period-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.03);
+  padding: 6px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.app-header-obsidian .nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #888899;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.app-header-obsidian .nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #D0D0DC;
+  transform: scale(1.05);
+}
+
+.app-header-obsidian .nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.app-header-obsidian .period-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #E2E2EB;
+  min-width: 130px;
+  text-align: center;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-header-obsidian .header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Balance Pill */
+.app-header-obsidian .balance-pill-glass {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.02));
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+}
+
+.app-header-obsidian .balance-pill-glass .label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888899;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.app-header-obsidian .balance-pill-glass .value {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-header-obsidian .balance-pill-glass .value.positive {
+  color: #F3CA65;
+}
+.app-header-obsidian .balance-pill-glass .value.negative {
+  color: #F87171;
+}
+
+/* Pulse animation */
+@keyframes goldPulse {
+  0% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(201, 168, 76, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0); }
+}
+.app-header-obsidian .pulse-gold-confirm {
+  animation: goldPulse 1s ease-out;
+}
+
+/* Micro interaction active states */
+.app-header-obsidian .icon-btn-glass {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #888899;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.app-header-obsidian .icon-btn-glass:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #E2E2EB;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.app-header-obsidian .icon-btn-glass.active-gold {
+  background: rgba(243, 202, 101, 0.15);
+  border-color: rgba(243, 202, 101, 0.3);
+  color: #F3CA65;
+  box-shadow: 0 0 12px rgba(243, 202, 101, 0.2);
+}
+
+/* Dropdowns */
+.app-header-obsidian .dropdown-glass {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 320px;
+  background: rgba(18, 20, 32, 0.85);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  z-index: 100;
+  transform-origin: top right;
+  animation: dropdownPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes dropdownPop {
+  0% { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}

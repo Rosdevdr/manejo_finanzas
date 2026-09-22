@@ -1,275 +1,273 @@
-/* ==========================================================================
-   CREDIT CARDS MODULE STYLES (AUREUS WALLET & CREDIT ADVISOR)
-   ========================================================================== */
+/* src/components/credit/CreditCardsView.css - Apex Obsidian / Revolut Ultra Style */
 
-.credit-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
-  gap: 16px;
-  padding-top: 8px;
-  margin-top: -8px;
-  margin-bottom: 24px;
+.credit-cards-carousel {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 10px 10px 30px 10px;
+  margin: -10px -10px -20px -10px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Virtual Plastic Credit Card */
-.virtual-card {
-  position: relative;
-  height: 195px;
-  border-radius: 18px;
-  padding: 20px;
+.credit-cards-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+.credit-cards-carousel::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.02);
+  border-radius: 4px;
+}
+.credit-cards-carousel::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+
+/* Pseudo-3D Revolut Ultra Metallic Card */
+.credit-card-vault-item {
+  flex: 0 0 auto;
+  width: 320px;
+  height: 200px;
+  border-radius: 16px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
-  overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  user-select: none;
-}
-
-.virtual-card:hover {
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 16px 35px -8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(201, 168, 76, 0.15);
-}
-
-.virtual-card.active {
-  border-color: #C9A84C;
-  box-shadow: 0 14px 35px -5px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(201, 168, 76, 0.4);
-}
-
-/* Card Themes */
-.virtual-card.theme-gold {
-  background: linear-gradient(135deg, #2B2312 0%, #15120B 60%, #0D0A05 100%);
-  border-color: rgba(201, 168, 76, 0.3);
-}
-.virtual-card.theme-emerald {
-  background: linear-gradient(135deg, #0D261C 0%, #071610 60%, #040D09 100%);
-  border-color: rgba(52, 211, 153, 0.3);
-}
-.virtual-card.theme-blue {
-  background: linear-gradient(135deg, #0F2038 0%, #081220 60%, #040910 100%);
-  border-color: rgba(96, 165, 250, 0.3);
-}
-.virtual-card.theme-purple {
-  background: linear-gradient(135deg, #231438 0%, #140A22 60%, #0B0413 100%);
-  border-color: rgba(167, 139, 250, 0.3);
-}
-.virtual-card.theme-silver {
-  background: linear-gradient(135deg, #262832 0%, #16171E 60%, #0D0E12 100%);
-  border-color: rgba(200, 200, 220, 0.25);
-}
-.virtual-card.theme-rose {
-  background: linear-gradient(135deg, #331520 0%, #1D0A11 60%, #100408 100%);
-  border-color: rgba(244, 114, 182, 0.3);
-}
-
-/* Card Elements */
-.card-chip {
-  width: 38px;
-  height: 28px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #F3D079 0%, #C9A84C 50%, #947228 100%);
+  scroll-snap-align: center;
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 0 3px rgba(0,0,0,0.4);
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 15px 35px rgba(0,0,0,0.5), 
+    inset 0 1px 0 rgba(255,255,255,0.2), 
+    inset 0 -1px 0 rgba(0,0,0,0.5);
+  transform-style: preserve-3d;
+  perspective: 1000px;
 }
-.card-chip::after {
+
+/* Metallic Glare Effect */
+.credit-card-vault-item::before {
   content: '';
   position: absolute;
-  inset: 5px;
-  border: 1px solid rgba(0,0,0,0.3);
-  border-radius: 3px;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(
+    to right, 
+    rgba(255,255,255,0) 0%, 
+    rgba(255,255,255,0.1) 50%, 
+    rgba(255,255,255,0) 100%
+  );
+  transform: skewX(-25deg);
+  transition: all 0.7s ease;
+  z-index: 1;
+  pointer-events: none;
 }
 
+.credit-card-vault-item:hover {
+  transform: translateY(-8px) rotateX(5deg) rotateY(-5deg);
+  box-shadow: 
+    -10px 20px 40px rgba(0,0,0,0.6), 
+    inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.credit-card-vault-item:hover::before {
+  left: 200%;
+}
+
+.credit-card-vault-item.active-card-selected {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 30px rgba(255, 255, 255, 0.05);
+}
+
+.credit-card-vault-item.active-card-selected:hover {
+  transform: translateY(-10px) rotateX(5deg) rotateY(-5deg) scale(1.02);
+}
+
+/* Base structural text layer */
+.credit-card-vault-item > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Color Themes mapped from original code */
+.theme-gold {
+  background: linear-gradient(135deg, #2a2416 0%, #15130b 60%, #0d0a05 100%);
+  border: 1px solid rgba(201, 168, 76, 0.3);
+}
+.theme-gold.active-card-selected {
+  border-color: rgba(201, 168, 76, 0.8);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(201, 168, 76, 0.15);
+}
+
+.theme-emerald {
+  background: linear-gradient(135deg, #122a1f 0%, #071610 60%, #040d09 100%);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+.theme-emerald.active-card-selected {
+  border-color: rgba(52, 211, 153, 0.8);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(52, 211, 153, 0.15);
+}
+
+.theme-blue {
+  background: linear-gradient(135deg, #13243d 0%, #081220 60%, #040910 100%);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+.theme-blue.active-card-selected {
+  border-color: rgba(96, 165, 250, 0.8);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(96, 165, 250, 0.15);
+}
+
+.theme-purple {
+  background: linear-gradient(135deg, #2a1843 0%, #140a22 60%, #0b0413 100%);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+}
+.theme-purple.active-card-selected {
+  border-color: rgba(167, 139, 250, 0.8);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(167, 139, 250, 0.15);
+}
+
+.theme-silver {
+  background: linear-gradient(135deg, #323541 0%, #16171e 60%, #0d0e12 100%);
+  border: 1px solid rgba(200, 200, 220, 0.3);
+}
+.theme-silver.active-card-selected {
+  border-color: rgba(200, 200, 220, 0.8);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(200, 200, 220, 0.15);
+}
+
+.theme-rose {
+  background: linear-gradient(135deg, #3d1b28 0%, #1d0a11 60%, #100408 100%);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+}
+.theme-rose.active-card-selected {
+  border-color: rgba(244, 114, 182, 0.8);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(244, 114, 182, 0.15);
+}
+
+/* Inner elements */
 .card-top-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
-.card-bank {
+.card-bank-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 2px;
+}
+
+.card-type-name {
   font-size: 13px;
-  font-weight: 700;
-  color: #FFFFFF;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.card-number {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-size: 16px;
-  letter-spacing: 0.18em;
-  color: #F0F0F8;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  margin: 12px 0;
-}
-
-.card-bottom-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-
-.card-holder {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.card-holder-label {
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #888898;
-}
-
-.card-holder-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #E8E8F0;
-}
-
-.card-dates {
-  display: flex;
-  gap: 12px;
-}
-
-.card-date-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.card-date-label {
-  font-size: 8px;
-  text-transform: uppercase;
-  color: #888898;
-}
-
-.card-date-val {
-  font-size: 11px;
-  font-weight: 700;
-  color: #F1D97E;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-}
-
-/* Advisor Banner for Selected Card */
-.credit-advisor-banner {
-  background: linear-gradient(135deg, rgba(201, 168, 76, 0.08) 0%, rgba(20, 20, 28, 0.8) 100%);
-  border: 1px solid rgba(201, 168, 76, 0.25);
-  border-radius: 16px;
-  padding: 18px 22px;
-  margin-bottom: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.credit-advisor-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.credit-advisor-tags {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.advisor-badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 20px;
-}
-
-.advisor-badge-pill.optimal {
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  color: #34D399;
-}
-.advisor-badge-pill.moderate {
-  background: rgba(251, 191, 36, 0.12);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  color: #FBBF24;
-}
-.advisor-badge-pill.warning {
-  background: rgba(249, 115, 22, 0.12);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  color: #F97316;
-}
-.advisor-badge-pill.critical {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #F87171;
-}
-
-.golden-window-alert {
-  background: rgba(201, 168, 76, 0.12);
-  border: 1px dashed rgba(201, 168, 76, 0.4);
-  border-radius: 10px;
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: #F1D97E;
+  color: rgba(255,255,255,0.6);
   font-weight: 500;
 }
 
-/* Payment Status Toggle Pill */
-.tx-paid-badge {
-  display: inline-flex;
+.card-chip-sim {
+  width: 42px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 50%, #806921 100%);
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  overflow: hidden;
+}
+.card-chip-sim::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 3px;
+  background-image: linear-gradient(90deg, transparent 48%, rgba(0,0,0,0.1) 48%, rgba(0,0,0,0.1) 52%, transparent 52%);
+}
+
+.card-digits-row {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 18px;
+  letter-spacing: 0.25em;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  margin: 16px 0;
+}
+
+.card-balance-row {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+.card-stat {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
-  font-size: 10.5px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 12px;
+}
+
+.stat-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.5);
+}
+
+.stat-val {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.card-footer-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.card-hover-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.3s ease;
+}
+
+.credit-card-vault-item:hover .card-hover-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.card-mini-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s;
+}
+.card-mini-btn:hover {
+  background: rgba(255,255,255,0.2);
+}
+.card-mini-btn.danger:hover {
+  background: rgba(248, 113, 113, 0.3);
+  color: #FCA5A5;
+  border-color: rgba(248, 113, 113, 0.5);
 }
 
-.tx-paid-badge.paid {
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  color: #34D399;
-}
-
-.tx-paid-badge.pending {
-  background: rgba(248, 113, 113, 0.12);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  color: #F87171;
-}
-
-.tx-paid-badge:hover {
-  transform: scale(1.04);
-}
-
-.tx-paid-badge:active {
-  transform: scale(0.96);
-}
-
-@media (max-width: 480px) {
-  .credit-cards-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .virtual-card {
-    height: 180px;
-    padding: 16px;
-    border-radius: 14px;
-  }
-  .card-number {
-    font-size: 14px !important;
-  }
+/* Transactions Table Panel Specific */
+.transactions-table-panel {
+  margin-top: 24px;
 }

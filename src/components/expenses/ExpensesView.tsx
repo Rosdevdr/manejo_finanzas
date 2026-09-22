@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { TrendingDown, Lock, Shuffle, Plus, Trash2, Pencil, X, Check, Calendar } from 'lucide-react'
+import { TrendingDown, Lock, Shuffle, Plus, Trash2, Pencil, X, Calendar, Search } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
 import { TransactionConfirmationFlow } from '../common/TransactionConfirmationFlow'
+import './ExpensesView.css'
 
 interface ExpensesViewProps {
   currentPeriod: string
@@ -135,111 +136,102 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
   }
 
   return (
-    <div className="fade-in sandbox-view">
-      {/* ── CABECERA INSTITUCIONAL CON BOTÓN DE ACCIÓN MODAL ── */}
-      <div className="sandbox-header-strip">
+    <div className="expenses-obsidian-root fade-in">
+      {/* ── CABECERA INSTITUCIONAL ── */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
-          <div className="sandbox-subhead">GESTIÓN DE EGRESOS · {formatPeriodLabel(currentPeriod).toUpperCase()}</div>
-          <h1 className="sandbox-title">Control de Gastos</h1>
+          <div style={{ fontSize: 11, color: '#C9A84C', fontWeight: 700, letterSpacing: '0.15em', marginBottom: 4 }}>GESTIÓN DE EGRESOS</div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.02em', margin: 0 }}>Control de Gastos</h1>
         </div>
-        <div className="sandbox-header-actions">
+        <div>
           <button
             type="button"
-            className="sandbox-btn-gold"
             onClick={() => setIsModalOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: '#C9A84C', color: '#121420',
+              padding: '10px 20px', borderRadius: 10,
+              fontWeight: 600, fontSize: 13, border: 'none',
+              cursor: 'pointer', transition: 'all 0.2s'
+            }}
           >
-            <Plus size={15} />
+            <Plus size={16} />
             <span>Registrar Gasto</span>
           </button>
         </div>
       </div>
 
-      {/* ── METRIC STRIP COMPACTO ── */}
-      <div className="sandbox-kpi-row" style={{ marginBottom: 20 }}>
-        <div className="sandbox-kpi-card">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Total Gastado</span>
-            <TrendingDown size={14} className="text-rose" />
+      {/* ── METRIC STRIP ── */}
+      <div className="expenses-obsidian-kpi-row">
+        <div className="expenses-obsidian-kpi-card" style={{ borderTop: '2px solid #F87171' }}>
+          <div className="expenses-obsidian-kpi-header">
+            <span className="expenses-obsidian-kpi-label">Total Gastado</span>
+            <TrendingDown size={16} color="#F87171" />
           </div>
-          <div className="sandbox-kpi-value text-rose">{formatCurrency(totalExp)}</div>
-          <div className="sandbox-kpi-sub">{pExp.length} egresos en {currentPeriod}</div>
+          <div className="expenses-obsidian-kpi-val" style={{ color: '#F87171' }}>{formatCurrency(totalExp)}</div>
+          <div style={{ fontSize: 12, color: '#717182' }}>{pExp.length} egresos en {currentPeriod}</div>
         </div>
 
-        <div className="sandbox-kpi-card">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Gastos Fijos</span>
-            <Lock size={14} className="text-gold" />
+        <div className="expenses-obsidian-kpi-card">
+          <div className="expenses-obsidian-kpi-header">
+            <span className="expenses-obsidian-kpi-label">Gastos Fijos</span>
+            <Lock size={16} color="#C9A84C" />
           </div>
-          <div className="sandbox-kpi-value">{formatCurrency(fixedExp)}</div>
-          <div className="sandbox-kpi-sub">Compromisos innegociables</div>
+          <div className="expenses-obsidian-kpi-val">{formatCurrency(fixedExp)}</div>
+          <div style={{ fontSize: 12, color: '#717182' }}>Compromisos innegociables</div>
         </div>
 
-        <div className="sandbox-kpi-card">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Gastos Variables</span>
-            <Shuffle size={14} className="text-sand" />
+        <div className="expenses-obsidian-kpi-card">
+          <div className="expenses-obsidian-kpi-header">
+            <span className="expenses-obsidian-kpi-label">Gastos Variables</span>
+            <Shuffle size={16} color="#D0D0DC" />
           </div>
-          <div className="sandbox-kpi-value">{formatCurrency(varExp)}</div>
-          <div className="sandbox-kpi-sub">Presupuesto optimizable</div>
+          <div className="expenses-obsidian-kpi-val">{formatCurrency(varExp)}</div>
+          <div style={{ fontSize: 12, color: '#717182' }}>Presupuesto optimizable</div>
         </div>
       </div>
 
-      {/* ── TABLA DE REGISTROS DE HISTORIAL INMEDIATAMENTE VISIBLE ── */}
-      <div className="sandbox-panel transactions-table-panel">
-        <div className="sandbox-panel-header">
-          <div>
-            <div className="sandbox-panel-title">
-              {showAllPeriods ? 'Registro Histórico de Gastos' : `Gastos de ${formatPeriodLabel(currentPeriod)}`}
-            </div>
-            <div className="sandbox-panel-sub">
-              {displayedExpenses.length} movimiento{displayedExpenses.length !== 1 ? 's' : ''} registrado{displayedExpenses.length !== 1 ? 's' : ''}
-            </div>
+      {/* ── HIGH DENSITY DATA GRID ── */}
+      <div className="obsidian-data-grid-container">
+        <div className="obsidian-data-grid-header">
+          <div className="obsidian-data-grid-title">
+            {showAllPeriods ? 'Registro Histórico de Gastos' : `Movimientos de ${formatPeriodLabel(currentPeriod)}`}
           </div>
-
-          <div className="sandbox-pills">
+          <div style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.3)', padding: 4, borderRadius: 10 }}>
             <button
-              type="button"
-              className={`sandbox-pill-btn ${!showAllPeriods ? 'active' : ''}`}
+              className={`obsidian-icon-btn ${!showAllPeriods ? 'active' : ''}`}
+              style={!showAllPeriods ? { background: '#2B2D3C', color: '#fff' } : {}}
               onClick={() => setShowAllPeriods(false)}
             >
-              {currentPeriod} ({pExp.length})
+              <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Mes Actual</span>
             </button>
             <button
-              type="button"
-              className={`sandbox-pill-btn ${showAllPeriods ? 'active' : ''}`}
+              className={`obsidian-icon-btn ${showAllPeriods ? 'active' : ''}`}
+              style={showAllPeriods ? { background: '#2B2D3C', color: '#fff' } : {}}
               onClick={() => setShowAllPeriods(true)}
             >
-              Ver Todo el Historial ({expenses.length})
+              <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Historial</span>
             </button>
           </div>
         </div>
 
         {displayedExpenses.length === 0 ? (
-          <div className="sandbox-empty">
-            <p style={{ margin: 0 }}>No hay gastos registrados en {formatPeriodLabel(currentPeriod)}.</p>
-            {expenses.length > 0 && !showAllPeriods && (
-              <button
-                type="button"
-                className="sandbox-btn-outline"
-                style={{ marginTop: 12 }}
-                onClick={() => setShowAllPeriods(true)}
-              >
-                Ver los {expenses.length} gastos de otros meses
-              </button>
-            )}
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#717182' }}>
+            <Search size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
+            <div style={{ fontSize: 14, fontWeight: 500 }}>No hay gastos en este período</div>
+            <div style={{ fontSize: 12, marginTop: 4 }}>Registra un gasto usando el botón superior dorado.</div>
           </div>
         ) : (
-          <div className="sandbox-table-wrapper">
-            <table className="sandbox-table">
+          <div className="obsidian-table-wrapper">
+            <table className="obsidian-table">
               <thead>
                 <tr>
                   <th>FECHA</th>
-                  <th>CONCEPTO / COMERCIO</th>
                   <th>CATEGORÍA</th>
-                  <th>COMPROMISO</th>
-                  <th>CANAL</th>
-                  <th>MONTO</th>
-                  <th style={{ textAlign: 'right' }}>ACCIONES</th>
+                  <th>CONCEPTO</th>
+                  <th>COMPROMISO / CANAL</th>
+                  <th style={{ textAlign: 'right' }}>MONTO</th>
+                  <th style={{ textAlign: 'right', width: 100 }}>ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
@@ -248,83 +240,59 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
 
                   if (editingId === exp.id) {
                     return (
-                      <tr key={exp.id} className="edit-active-row">
+                      <tr key={exp.id}>
+                        <td className="cell-date">{exp.date}</td>
                         <td>
-                          <input
-                            type="date"
-                            className="sandbox-edit-input"
-                            value={editForm.date}
-                            onChange={e => setEditForm(p => ({ ...p, date: e.target.value }))}
-                          />
+                          <select
+                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12 }}
+                            value={editForm.category}
+                            onChange={e => setEditForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}
+                          >
+                            {Object.entries(CATEGORY_MAP).map(([k, v]) => (
+                              <option key={k} value={k}>{v.emoji} {v.label}</option>
+                            ))}
+                          </select>
                         </td>
                         <td>
                           <input
-                            className="sandbox-edit-input"
+                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: '100%' }}
                             value={editForm.description}
                             onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))}
                           />
                         </td>
                         <td>
-                          <select
-                            className="sandbox-edit-select"
-                            value={editForm.category}
-                            onChange={e => setEditForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}
-                          >
-                            {Object.entries(CATEGORY_MAP).map(([k, v]) => (
-                              <option key={k} value={k}>{v.label}</option>
-                            ))}
-                          </select>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <select
+                              style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 8px', borderRadius: 6, fontSize: 11 }}
+                              value={editForm.type}
+                              onChange={e => setEditForm(p => ({ ...p, type: e.target.value as ExpenseType }))}
+                            >
+                              <option value="fixed">Fijo</option>
+                              <option value="variable">Variable</option>
+                            </select>
+                            <select
+                              style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 8px', borderRadius: 6, fontSize: 11 }}
+                              value={editForm.paymentMethod}
+                              onChange={e => setEditForm(p => ({ ...p, paymentMethod: e.target.value as PaymentMethod }))}
+                            >
+                              <option value="debit_card">Débito</option>
+                              <option value="credit_card">Crédito</option>
+                              <option value="bank_transfer">Transferencia</option>
+                              <option value="cash">Efectivo</option>
+                            </select>
+                          </div>
                         </td>
-                        <td>
-                          <select
-                            className="sandbox-edit-select"
-                            value={editForm.type}
-                            onChange={e => setEditForm(p => ({ ...p, type: e.target.value as ExpenseType }))}
-                          >
-                            <option value="fixed">Fijo</option>
-                            <option value="variable">Variable</option>
-                          </select>
-                        </td>
-                        <td>
-                          <select
-                            className="sandbox-edit-select"
-                            value={editForm.paymentMethod}
-                            onChange={e => setEditForm(p => ({ ...p, paymentMethod: e.target.value as PaymentMethod }))}
-                          >
-                            <option value="debit_card">Débito</option>
-                            <option value="credit_card">Crédito</option>
-                            <option value="bank_transfer">Transferencia</option>
-                            <option value="cash">Efectivo</option>
-                          </select>
-                        </td>
-                        <td>
+                        <td style={{ textAlign: 'right' }}>
                           <input
                             type="number"
-                            className="sandbox-edit-input"
-                            style={{ width: 110 }}
+                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: 90, textAlign: 'right' }}
                             value={editForm.amount}
                             onChange={e => setEditForm(p => ({ ...p, amount: e.target.value }))}
                           />
                         </td>
-                        <td style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'inline-flex', gap: 6 }}>
-                            <button
-                              type="button"
-                              className="sandbox-btn-save"
-                              onClick={() => saveEdit(exp)}
-                              title="Guardar"
-                            >
-                              <Check size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              className="sandbox-btn-cancel"
-                              onClick={cancelEdit}
-                              title="Cancelar"
-                            >
-                              <X size={13} />
-                            </button>
-                          </div>
+                        <td className="action-cell">
+                          <button className="obsidian-icon-btn" style={{ color: '#34D399' }} onClick={() => saveEdit(exp)}>✓</button>
+                          <button className="obsidian-icon-btn" onClick={cancelEdit}>✕</button>
                         </td>
                       </tr>
                     )
@@ -333,44 +301,33 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                   return (
                     <tr key={exp.id}>
                       <td className="cell-date">{exp.date}</td>
-                      <td className="cell-item">
-                        <div className="item-title">{exp.description}</div>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>{c.emoji}</span>
+                          <span style={{ fontWeight: 500, color: '#E2E2EB' }}>{c.label}</span>
+                        </div>
                       </td>
                       <td>
-                        <span className={`sandbox-type-pill in`} style={{ color: '#D4AF37', borderColor: 'rgba(212,175,55,0.3)', background: 'rgba(212,175,55,0.08)' }}>
-                          {c.emoji} {c.label}
+                        <span style={{ color: '#C0C0D0', fontWeight: 500 }}>
+                          {exp.description}
                         </span>
                       </td>
                       <td>
-                        <span className={`sandbox-type-pill ${exp.type === 'fixed' ? 'out' : 'neutral'}`}>
-                          {exp.type === 'fixed' ? 'Fijo' : 'Variable'}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <span style={{ fontSize: 11, color: exp.type === 'fixed' ? '#F87171' : '#34D399', fontWeight: 600 }}>
+                            {exp.type === 'fixed' ? 'Obligatorio' : 'Optimizable'}
+                          </span>
+                          <span style={{ fontSize: 10, color: '#717182' }}>
+                            {PAYMENT_MAP[exp.paymentMethod]}
+                          </span>
+                        </div>
                       </td>
-                      <td style={{ fontSize: 11.5, color: '#9CA3AF' }}>
-                        {PAYMENT_MAP[exp.paymentMethod]}
-                      </td>
-                      <td className="cell-total text-rose">
+                      <td className="cell-amount negative">
                         -{formatCurrency(exp.amount)}
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: 4 }}>
-                          <button
-                            type="button"
-                            className="table-action-btn"
-                            onClick={() => startEdit(exp)}
-                            title="Editar"
-                          >
-                            <Pencil size={13} />
-                          </button>
-                          <button
-                            type="button"
-                            className="table-action-btn danger"
-                            onClick={() => onDeleteExpense(exp.id)}
-                            title="Eliminar"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
+                      <td className="action-cell">
+                        <button className="obsidian-icon-btn" onClick={() => startEdit(exp)} title="Editar"><Pencil size={14} /></button>
+                        <button className="obsidian-icon-btn danger" onClick={() => onDeleteExpense(exp.id)} title="Eliminar"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   )
@@ -381,58 +338,43 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
         )}
       </div>
 
-      {/* ── MODAL INSTITUCIONAL SANDBOX PARA REGISTRAR GASTO ── */}
+      {/* ── MODAL PARA REGISTRAR GASTO ── */}
       {isModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">
-                <Plus size={16} className="text-gold" />
-                <span>Registrar Nuevo Gasto</span>
-              </h2>
-              <button
-                type="button"
-                className="modal-close"
-                onClick={() => setIsModalOpen(false)}
-              >
-                <X size={16} />
-              </button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#121420', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 24px 48px rgba(0,0,0,0.5)' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 600, color: '#E2E2EB' }}>
+                <Plus size={18} color="#C9A84C" /> Registrar Nuevo Gasto
+              </div>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: '#717182', cursor: 'pointer' }}><X size={18} /></button>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="modal-form-group">
-                <label className="modal-label">Descripción o Concepto</label>
+            <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Descripción / Concepto</label>
                 <input
-                  className="modal-input"
-                  placeholder="Ej: Supermercado Nacional, Alquiler, Combustible..."
-                  value={form.description}
-                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                  autoFocus
-                  required
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                  placeholder="Ej: Supermercado, Alquiler..."
+                  value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                  autoFocus required
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Monto (RD$)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Monto (RD$)</label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    className="modal-input"
-                    placeholder="0.00"
-                    value={form.amount}
-                    onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+                    type="number" step="0.01" min="0.01"
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
                     required
                   />
                 </div>
-
-                <div className="modal-form-group">
-                  <label className="modal-label">Categoría</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Categoría</label>
                   <select
-                    className="modal-select"
-                    value={form.category}
-                    onChange={e => setForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}
                   >
                     {Object.entries(CATEGORY_MAP).map(([k, v]) => (
                       <option key={k} value={k}>{v.emoji} {v.label}</option>
@@ -441,59 +383,50 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Compromiso</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Compromiso</label>
                   <select
-                    className="modal-select"
-                    value={form.type}
-                    onChange={e => setForm(p => ({ ...p, type: e.target.value as ExpenseType }))}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value as ExpenseType }))}
                   >
-                    <option value="variable">Gasto Variable (Optimizable)</option>
-                    <option value="fixed">Gasto Fijo (Obligatorio)</option>
+                    <option value="variable">Gasto Variable</option>
+                    <option value="fixed">Gasto Fijo</option>
                   </select>
                 </div>
-
-                <div className="modal-form-group">
-                  <label className="modal-label">Método de Pago</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Método Pago</label>
                   <select
-                    className="modal-select"
-                    value={form.paymentMethod}
-                    onChange={e => setForm(p => ({ ...p, paymentMethod: e.target.value as PaymentMethod }))}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    value={form.paymentMethod} onChange={e => setForm(p => ({ ...p, paymentMethod: e.target.value as PaymentMethod }))}
                   >
                     <option value="debit_card">Tarjeta de Débito</option>
                     <option value="credit_card">Tarjeta de Crédito</option>
-                    <option value="bank_transfer">Transferencia Bancaria</option>
+                    <option value="bank_transfer">Transferencia</option>
                     <option value="cash">Efectivo</option>
                   </select>
                 </div>
               </div>
 
-              <div className="modal-form-group">
-                <label className="modal-label">
-                  <Calendar size={13} className="text-gold" />
-                  <span>Fecha del Gasto</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>
+                  <Calendar size={12} style={{ marginRight: 4, display: 'inline-block', verticalAlign: 'middle' }} color="#C9A84C" />
+                  Fecha
                 </label>
                 <input
                   type="date"
-                  className="modal-input"
-                  value={form.date}
-                  onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                  value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
                   required
                 />
               </div>
 
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setIsModalOpen(false)}
-                >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>
                   Cancelar
                 </button>
-                <button type="submit" className="sandbox-btn-gold">
-                  <Plus size={14} />
-                  <span>Guardar Gasto</span>
+                <button type="submit" style={{ background: '#C9A84C', border: 'none', color: '#121420', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Plus size={16} /> Guardar
                 </button>
               </div>
             </form>

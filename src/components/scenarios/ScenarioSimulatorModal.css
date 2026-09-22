@@ -1,79 +1,72 @@
-/* src/components/scenarios/ScenarioSimulatorModal.css */
+/* src/components/scenarios/ScenarioSimulatorModal.css - Apex Obsidian */
+
 .scenario-modal-card {
-  width: min(94vw, 680px) !important;
-  max-height: 90vh !important;
-  flex-direction: column;
-  overflow-y: auto !important;
-  box-sizing: border-box;
+  width: 100%;
+  max-width: 750px;
+  background: rgba(10, 11, 16, 0.85);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+  overflow: hidden;
 }
 
 .scenario-controls-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 18px;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .scenario-control-card {
-  background: rgba(22, 22, 32, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition: border-color 0.15s ease;
+  padding: 16px;
+  transition: all 0.3s ease;
 }
 
 .scenario-control-card:hover {
-  border-color: rgba(201, 168, 76, 0.35);
-}
-
-.scenario-control-label {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #D1D5DB;
-  font-family: 'Space Grotesk', sans-serif;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .slider-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.scenario-control-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #888899;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .slider-value-badge {
-  font-size: 11.5px;
+  font-family: 'Space Grotesk', monospace;
+  font-size: 15px;
   font-weight: 700;
-  color: #F3CA65;
-  background: rgba(243, 202, 101, 0.12);
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-family: 'Space Mono', monospace;
-  border: 1px solid rgba(243, 202, 101, 0.25);
+  color: #E2E2EB;
 }
+.slider-value-badge.emerald { color: #34D399; }
+.slider-value-badge.gold { color: #C9A84C; }
 
-.slider-value-badge.emerald {
-  color: #34D399;
-  background: rgba(52, 211, 153, 0.12);
-  border-color: rgba(52, 211, 153, 0.25);
-}
-
-.slider-value-badge.gold {
-  color: #F3CA65;
-  background: rgba(243, 202, 101, 0.12);
-  border-color: rgba(243, 202, 101, 0.25);
-}
-
+/* Base Slider Styling */
 .scenario-range-input {
+  -webkit-appearance: none;
   width: 100%;
   height: 6px;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
-  background: #2A2A38;
   outline: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  margin: 4px 0;
+  margin-bottom: 16px;
 }
 
 .scenario-range-input::-webkit-slider-thumb {
@@ -81,140 +74,123 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #F3CA65;
-  border: 2px solid #0A0A0C;
-  box-shadow: 0 0 10px rgba(243, 202, 101, 0.5);
+  background: #E2E2EB;
   cursor: pointer;
-  transition: transform 0.12s ease;
+  box-shadow: 0 0 10px rgba(255,255,255,0.3);
+  transition: transform 0.2s;
+}
+.scenario-range-input::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
 }
 
+/* Colored Sliders */
 .scenario-range-input.emerald::-webkit-slider-thumb {
   background: #34D399;
   box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
 }
+.scenario-range-input.gold::-webkit-slider-thumb {
+  background: #C9A84C;
+  box-shadow: 0 0 10px rgba(201, 168, 76, 0.5);
+}
 
-.scenario-num-input {
+/* Input Fields */
+.scenario-num-input, .scenario-select-input {
   width: 100%;
-  height: 38px;
-  background: #151520;
-  border: 1px solid #2A2A3A;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
-  padding: 0 12px;
-  font-size: 13px;
-  color: #F0F0F8;
-  font-family: 'Space Mono', monospace;
-  font-weight: 600;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 14px;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  margin-bottom: 16px;
+  transition: all 0.2s;
 }
 
-.scenario-num-input:focus {
-  border-color: #F3CA65;
-  box-shadow: 0 0 0 2px rgba(243, 202, 101, 0.2);
+.scenario-num-input:focus, .scenario-select-input:focus {
+  border-color: rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.4);
 }
 
-.scenario-select-input {
-  width: 100%;
-  height: 38px;
-  background: #151520;
-  border: 1px solid #2A2A3A;
-  border-radius: 8px;
-  padding: 0 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #F0F0F8;
-  font-family: 'Space Grotesk', sans-serif;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
-}
-
-.scenario-select-input:focus {
-  border-color: #F3CA65;
-  box-shadow: 0 0 0 2px rgba(243, 202, 101, 0.2);
-}
-
+/* Presets */
 .scenario-presets {
   display: flex;
-  gap: 5px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-top: 4px;
 }
 
 .scenario-preset-btn {
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  padding: 3px 7px;
-  font-size: 10.5px;
+  color: #A0A0B0;
+  font-size: 10px;
   font-weight: 600;
-  color: #9CA3AF;
+  padding: 4px 8px;
   cursor: pointer;
-  transition: all 0.12s ease;
-  font-family: 'Space Mono', monospace;
+  transition: all 0.2s;
 }
 
 .scenario-preset-btn:hover {
-  background: rgba(243, 202, 101, 0.12);
-  color: #F3CA65;
-  border-color: rgba(243, 202, 101, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .scenario-preset-btn.active {
-  background: rgba(243, 202, 101, 0.2);
+  background: rgba(201, 168, 76, 0.15);
+  border-color: rgba(201, 168, 76, 0.5);
   color: #F3CA65;
-  border-color: #F3CA65;
 }
 
+/* Comparison Grid */
 .scenario-comparison-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-  margin: 16px 0;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .scenario-card {
-  background: rgba(18, 18, 26, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.scenario-card.baseline {
-  border-color: rgba(156, 163, 175, 0.3);
-}
-
 .scenario-card.simulated {
-  border-color: rgba(243, 202, 101, 0.5);
-  background: linear-gradient(135deg, rgba(201, 168, 76, 0.12) 0%, rgba(18, 18, 26, 0.85) 100%);
-  box-shadow: 0 4px 20px rgba(201, 168, 76, 0.1);
+  background: rgba(201, 168, 76, 0.05);
+  border-color: rgba(201, 168, 76, 0.3);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(201,168,76,0.1);
 }
 
 .scenario-card-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #D1D5DB;
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.scenario-card-value {
-  font-size: 20px;
+  font-size: 13px;
   font-weight: 700;
-  font-family: 'Space Mono', monospace;
+  color: #E2E2EB;
 }
 
 .scenario-card-sub {
-  font-size: 11.5px;
-  color: #9CA3AF;
+  font-size: 11px;
+  color: #717182;
 }
 
-@media (max-width: 600px) {
-  .scenario-controls-grid,
+.scenario-card-value {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 640px) {
+  .scenario-controls-grid {
+    grid-template-columns: 1fr;
+  }
   .scenario-comparison-grid {
     grid-template-columns: 1fr;
   }

@@ -58,8 +58,8 @@ export function ScenarioSimulatorModal({
   const isPositiveGain = difference >= 0
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-card scenario-modal-card">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card scenario-modal-card" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Sliders size={20} style={{ color: '#F3CA65' }} />

@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Wallet, Briefcase, TrendingUp, Plus, Trash2, Pencil, X, Check, Calendar } from 'lucide-react'
+import { Wallet, Briefcase, TrendingUp, Plus, Trash2, Pencil, X, Calendar, Search } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
+import './IncomesView.css'
+// IncomesView reuses the data-grid styles from ExpensesView for consistency
+import '../expenses/ExpensesView.css'
 
 interface IncomesViewProps {
   currentPeriod: string
@@ -86,136 +89,115 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
   }
 
   return (
-    <div className="fade-in sandbox-view">
-      {/* ── CABECERA INSTITUCIONAL CON BOTÓN DE ACCIÓN MODAL ── */}
-      <div className="sandbox-header-strip">
+    <div className="incomes-obsidian-root fade-in">
+      {/* ── CABECERA INSTITUCIONAL ── */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
-          <div className="sandbox-subhead">GESTIÓN DE CAPITAL · {formatPeriodLabel(currentPeriod).toUpperCase()}</div>
-          <h1 className="sandbox-title">Entradas & Salarios</h1>
+          <div style={{ fontSize: 11, color: '#34D399', fontWeight: 700, letterSpacing: '0.15em', marginBottom: 4 }}>GESTIÓN DE CAPITAL</div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.02em', margin: 0 }}>Entradas & Salarios</h1>
         </div>
-        <div className="sandbox-header-actions">
+        <div>
           <button
             type="button"
-            className="sandbox-btn-gold"
             onClick={() => setIsModalOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: '#34D399', color: '#042F2E',
+              padding: '10px 20px', borderRadius: 10,
+              fontWeight: 600, fontSize: 13, border: 'none',
+              cursor: 'pointer', transition: 'all 0.2s'
+            }}
           >
-            <Plus size={15} />
+            <Plus size={16} />
             <span>Registrar Ingreso</span>
           </button>
         </div>
       </div>
 
-      {/* ── METRIC STRIP COMPACTO ── */}
-      <div className="sandbox-kpi-row" style={{ marginBottom: 20 }}>
-        <div className="sandbox-kpi-card gold-glow">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Total del Período</span>
-            <Wallet size={14} className="text-gold" />
+      {/* ── METRIC STRIP ── */}
+      <div className="incomes-obsidian-kpi-row">
+        <div className="incomes-obsidian-kpi-card" style={{ borderTop: '2px solid #34D399' }}>
+          <div className="incomes-obsidian-kpi-header">
+            <span className="incomes-obsidian-kpi-label">Total del Período</span>
+            <Wallet size={16} color="#34D399" />
           </div>
-          <div className="sandbox-kpi-value text-emerald">{formatCurrency(totalIncome)}</div>
-          <div className="sandbox-kpi-sub">{periodIncomes.length} ingresos en {currentPeriod}</div>
+          <div className="incomes-obsidian-kpi-val" style={{ color: '#34D399' }}>{formatCurrency(totalIncome)}</div>
+          <div style={{ fontSize: 12, color: '#717182' }}>{periodIncomes.length} ingresos en {currentPeriod}</div>
         </div>
 
-        <div className="sandbox-kpi-card">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Ingresos Fijos</span>
-            <Briefcase size={14} className="text-gold" />
+        <div className="incomes-obsidian-kpi-card">
+          <div className="incomes-obsidian-kpi-header">
+            <span className="incomes-obsidian-kpi-label">Ingresos Fijos</span>
+            <Briefcase size={16} color="#C9A84C" />
           </div>
-          <div className="sandbox-kpi-value">{formatCurrency(salary)}</div>
-          <div className="sandbox-kpi-sub">Salario principal y nómina</div>
+          <div className="incomes-obsidian-kpi-val">{formatCurrency(salary)}</div>
+          <div style={{ fontSize: 12, color: '#717182' }}>Salario principal y nómina</div>
         </div>
 
-        <div className="sandbox-kpi-card">
-          <div className="sandbox-kpi-header">
-            <span className="sandbox-kpi-label">Ingresos Variables</span>
-            <TrendingUp size={14} className="text-emerald" />
+        <div className="incomes-obsidian-kpi-card">
+          <div className="incomes-obsidian-kpi-header">
+            <span className="incomes-obsidian-kpi-label">Ingresos Variables</span>
+            <TrendingUp size={16} color="#60A5FA" />
           </div>
-          <div className="sandbox-kpi-value">{formatCurrency(extra)}</div>
-          <div className="sandbox-kpi-sub">Honorarios, Freelance & Inversiones</div>
+          <div className="incomes-obsidian-kpi-val">{formatCurrency(extra)}</div>
+          <div style={{ fontSize: 12, color: '#717182' }}>Honorarios, Freelance & Extra</div>
         </div>
       </div>
 
-      {/* ── TABLA DE REGISTROS DE HISTORIAL INMEDIATAMENTE VISIBLE ── */}
-      <div className="sandbox-panel transactions-table-panel">
-        <div className="sandbox-panel-header">
-          <div>
-            <div className="sandbox-panel-title">
-              {showAllPeriods ? 'Registro Histórico Completo' : `Entradas de ${formatPeriodLabel(currentPeriod)}`}
-            </div>
-            <div className="sandbox-panel-sub">
-              {displayedIncomes.length} movimiento{displayedIncomes.length !== 1 ? 's' : ''} registrado{displayedIncomes.length !== 1 ? 's' : ''}
-            </div>
+      {/* ── HIGH DENSITY DATA GRID ── */}
+      <div className="obsidian-data-grid-container">
+        <div className="obsidian-data-grid-header">
+          <div className="obsidian-data-grid-title">
+            {showAllPeriods ? 'Registro Histórico Completo' : `Entradas de ${formatPeriodLabel(currentPeriod)}`}
           </div>
-
-          <div className="sandbox-pills">
+          <div style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.3)', padding: 4, borderRadius: 10 }}>
             <button
-              type="button"
-              className={`sandbox-pill-btn ${!showAllPeriods ? 'active' : ''}`}
+              className={`obsidian-icon-btn ${!showAllPeriods ? 'active' : ''}`}
+              style={!showAllPeriods ? { background: '#2B2D3C', color: '#fff' } : {}}
               onClick={() => setShowAllPeriods(false)}
             >
-              {currentPeriod} ({periodIncomes.length})
+              <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Mes Actual</span>
             </button>
             <button
-              type="button"
-              className={`sandbox-pill-btn ${showAllPeriods ? 'active' : ''}`}
+              className={`obsidian-icon-btn ${showAllPeriods ? 'active' : ''}`}
+              style={showAllPeriods ? { background: '#2B2D3C', color: '#fff' } : {}}
               onClick={() => setShowAllPeriods(true)}
             >
-              Ver Todo el Historial ({incomes.length})
+              <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Historial</span>
             </button>
           </div>
         </div>
 
         {displayedIncomes.length === 0 ? (
-          <div className="sandbox-empty">
-            <p style={{ margin: 0 }}>No hay ingresos registrados en {formatPeriodLabel(currentPeriod)}.</p>
-            {incomes.length > 0 && !showAllPeriods && (
-              <button
-                type="button"
-                className="sandbox-btn-outline"
-                style={{ marginTop: 12 }}
-                onClick={() => setShowAllPeriods(true)}
-              >
-                Ver los {incomes.length} ingresos de otros meses
-              </button>
-            )}
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#717182' }}>
+            <Search size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
+            <div style={{ fontSize: 14, fontWeight: 500 }}>No hay ingresos en este período</div>
+            <div style={{ fontSize: 12, marginTop: 4 }}>Registra un ingreso usando el botón verde superior.</div>
           </div>
         ) : (
-          <div className="sandbox-table-wrapper">
-            <table className="sandbox-table">
+          <div className="obsidian-table-wrapper">
+            <table className="obsidian-table">
               <thead>
                 <tr>
                   <th>FECHA</th>
-                  <th>CONCEPTO / DESCRIPCIÓN</th>
-                  <th>CATEGORÍA</th>
+                  <th>TIPO</th>
+                  <th>CONCEPTO</th>
                   <th>PERÍODO</th>
-                  <th>MONTO</th>
-                  <th style={{ textAlign: 'right' }}>ACCIONES</th>
+                  <th style={{ textAlign: 'right' }}>MONTO</th>
+                  <th style={{ textAlign: 'right', width: 100 }}>ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
                 {displayedIncomes.map(inc => {
                   const t = TYPE_MAP[inc.type]
+
                   if (editingId === inc.id) {
                     return (
-                      <tr key={inc.id} className="edit-active-row">
-                        <td>
-                          <input
-                            type="date"
-                            className="sandbox-edit-input"
-                            value={editForm.date}
-                            onChange={e => setEditForm(p => ({ ...p, date: e.target.value }))}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            className="sandbox-edit-input"
-                            value={editForm.description}
-                            onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))}
-                          />
-                        </td>
+                      <tr key={inc.id}>
+                        <td className="cell-date">{inc.date}</td>
                         <td>
                           <select
-                            className="sandbox-edit-select"
+                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12 }}
                             value={editForm.type}
                             onChange={e => setEditForm(p => ({ ...p, type: e.target.value as IncomeType }))}
                           >
@@ -225,35 +207,25 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
                             <option value="extra">Extra</option>
                           </select>
                         </td>
-                        <td style={{ color: '#888' }}>{inc.period}</td>
                         <td>
                           <input
+                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: '100%' }}
+                            value={editForm.description}
+                            onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))}
+                          />
+                        </td>
+                        <td className="cell-date" style={{ color: '#34D399' }}>{inc.period}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <input
                             type="number"
-                            className="sandbox-edit-input"
-                            style={{ width: 110 }}
+                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: 90, textAlign: 'right' }}
                             value={editForm.amount}
                             onChange={e => setEditForm(p => ({ ...p, amount: e.target.value }))}
                           />
                         </td>
-                        <td style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'inline-flex', gap: 6 }}>
-                            <button
-                              type="button"
-                              className="sandbox-btn-save"
-                              onClick={() => saveEdit(inc)}
-                              title="Guardar"
-                            >
-                              <Check size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              className="sandbox-btn-cancel"
-                              onClick={cancelEdit}
-                              title="Cancelar"
-                            >
-                              <X size={13} />
-                            </button>
-                          </div>
+                        <td className="action-cell">
+                          <button className="obsidian-icon-btn" style={{ color: '#34D399' }} onClick={() => saveEdit(inc)}>✓</button>
+                          <button className="obsidian-icon-btn" onClick={cancelEdit}>✕</button>
                         </td>
                       </tr>
                     )
@@ -262,39 +234,24 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
                   return (
                     <tr key={inc.id}>
                       <td className="cell-date">{inc.date}</td>
-                      <td className="cell-item">
-                        <div className="item-title">{inc.description}</div>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>{t.emoji}</span>
+                          <span style={{ fontWeight: 500, color: '#E2E2EB' }}>{t.label}</span>
+                        </div>
                       </td>
                       <td>
-                        <span className={`sandbox-type-pill in`}>
-                          {t.emoji} {t.label}
+                        <span style={{ color: '#C0C0D0', fontWeight: 500 }}>
+                          {inc.description}
                         </span>
                       </td>
-                      <td style={{ fontFamily: 'Space Mono', fontSize: 11.5, color: '#C9A84C' }}>
-                        {inc.period}
-                      </td>
-                      <td className="cell-total text-emerald">
+                      <td className="cell-date" style={{ color: '#34D399' }}>{inc.period}</td>
+                      <td className="cell-amount positive">
                         +{formatCurrency(inc.amount)}
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: 4 }}>
-                          <button
-                            type="button"
-                            className="table-action-btn"
-                            onClick={() => startEdit(inc)}
-                            title="Editar"
-                          >
-                            <Pencil size={13} />
-                          </button>
-                          <button
-                            type="button"
-                            className="table-action-btn danger"
-                            onClick={() => onDeleteIncome(inc.id)}
-                            title="Eliminar"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
+                      <td className="action-cell">
+                        <button className="obsidian-icon-btn" onClick={() => startEdit(inc)} title="Editar"><Pencil size={14} /></button>
+                        <button className="obsidian-icon-btn danger" onClick={() => onDeleteIncome(inc.id)} title="Eliminar"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   )
@@ -305,92 +262,71 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
         )}
       </div>
 
-      {/* ── MODAL INSTITUCIONAL SANDBOX PARA REGISTRAR INGRESO ── */}
+      {/* ── MODAL PARA REGISTRAR INGRESO ── */}
       {isModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">
-                <Plus size={16} className="text-gold" />
-                <span>Registrar Entrada de Capital</span>
-              </h2>
-              <button
-                type="button"
-                className="modal-close"
-                onClick={() => setIsModalOpen(false)}
-              >
-                <X size={16} />
-              </button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#121420', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 24px 48px rgba(0,0,0,0.5)' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 600, color: '#E2E2EB' }}>
+                <Plus size={18} color="#34D399" /> Registrar Entrada de Capital
+              </div>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: '#717182', cursor: 'pointer' }}><X size={18} /></button>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="modal-form-group">
-                <label className="modal-label">Descripción o Concepto</label>
+            <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Descripción / Concepto</label>
                 <input
-                  className="modal-input"
-                  placeholder="Ej: Salario mensual, Consultoría, Dividendos..."
-                  value={form.description}
-                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                  autoFocus
-                  required
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                  placeholder="Ej: Salario mensual, Dividendo..."
+                  value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                  autoFocus required
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Monto (RD$)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Monto (RD$)</label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    className="modal-input"
-                    placeholder="0.00"
-                    value={form.amount}
-                    onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+                    type="number" step="0.01" min="0.01"
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
                     required
                   />
                 </div>
-
-                <div className="modal-form-group">
-                  <label className="modal-label">Tipo de Ingreso</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Tipo de Ingreso</label>
                   <select
-                    className="modal-select"
-                    value={form.type}
-                    onChange={e => setForm(p => ({ ...p, type: e.target.value as IncomeType }))}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value as IncomeType }))}
                   >
-                    <option value="salary">Sueldo / Salario Fijo</option>
-                    <option value="freelance">Freelance / Honorarios</option>
-                    <option value="investment">Inversiones / Rendimientos</option>
+                    <option value="salary">Sueldo / Fijo</option>
+                    <option value="freelance">Freelance</option>
+                    <option value="investment">Inversión</option>
                     <option value="extra">Extra / Ocasional</option>
                   </select>
                 </div>
               </div>
 
-              <div className="modal-form-group">
-                <label className="modal-label">
-                  <Calendar size={13} className="text-gold" />
-                  <span>Fecha de Entrada</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>
+                  <Calendar size={12} style={{ marginRight: 4, display: 'inline-block', verticalAlign: 'middle' }} color="#34D399" />
+                  Fecha
                 </label>
                 <input
                   type="date"
-                  className="modal-input"
-                  value={form.date}
-                  onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                  value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
                   required
                 />
               </div>
 
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setIsModalOpen(false)}
-                >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>
                   Cancelar
                 </button>
-                <button type="submit" className="sandbox-btn-gold">
-                  <Plus size={14} />
-                  <span>Guardar Ingreso</span>
+                <button type="submit" style={{ background: '#34D399', border: 'none', color: '#042F2E', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Plus size={16} /> Guardar
                 </button>
               </div>
             </form>

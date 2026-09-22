@@ -4,13 +4,13 @@
 .splash-screen-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 50% 40%, #15151F 0%, #0A0A0C 100%);
+  background: radial-gradient(circle at 50% 40%, #10101A 0%, #060709 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 99999;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   animation: splashFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
 }

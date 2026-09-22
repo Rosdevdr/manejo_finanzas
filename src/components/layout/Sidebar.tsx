@@ -23,6 +23,7 @@ import {
 import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
 import type { TabType } from '../../types/navigation'
+import './Sidebar.css'
 
 interface SidebarProps {
   activeTab: TabType
@@ -90,27 +91,25 @@ export function Sidebar({
       {/* Backdrop overlay for mobile drawer */}
       {isOpen && (
         <div
-          className="sidebar-backdrop"
+          className="sidebar-backdrop-glass"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
 
-      <nav className={`sidebar ${isOpen ? 'mobile-open' : ''}`} aria-label="Navegación principal">
+      <nav className={`sidebar-obsidian ${isOpen ? 'mobile-open' : ''}`} aria-label="Navegación principal">
         {/* Logo & Mobile Close */}
-        <div className="sidebar-logo">
-          <div className="logo-mark">
-            <AureusLogo size={34} />
-            <div>
-              <div className="logo-name">AUREUS</div>
-              <div className="logo-sub">WEALTH ADVISOR</div>
-            </div>
+        <div className="logo-container">
+          <AureusLogo size={34} />
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#E2E2EB', letterSpacing: '0.05em' }}>AUREUS</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: '#888899', letterSpacing: '0.1em' }}>WEALTH ADVISOR</div>
           </div>
 
           {onClose && (
             <button
               type="button"
-              className="sidebar-mobile-close"
+              style={{ background: 'transparent', border: 'none', color: '#D0D0DC', cursor: 'pointer', marginLeft: 'auto', padding: 4 }}
               onClick={onClose}
               title="Cerrar menú"
               aria-label="Cerrar menú"
@@ -126,7 +125,7 @@ export function Sidebar({
           {NAV_ITEMS.map(item => (
             <button
               key={item.id}
-              className={`nav-item${activeTab === item.id ? ' active' : ''}`}
+              className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
               onClick={() => {
                 onTabChange(item.id)
                 onClose?.()
@@ -277,7 +276,8 @@ export function Sidebar({
             href="https://github.com/Rosdevdr/manejo_finanzas"
             target="_blank"
             rel="noopener noreferrer"
-            className="nav-item sidebar-github-link"
+            className="nav-item"
+            style={{ textDecoration: 'none' }}
             onClick={onClose}
           >
             <span className="nav-icon"><GithubIcon size={16} /></span>
@@ -286,10 +286,10 @@ export function Sidebar({
         </div>
 
         {/* Footer user & Sync Status */}
-        <div className="sidebar-footer" style={{ justifyContent: 'space-between', marginTop: 'auto' }}>
+        <div className="sidebar-footer">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-            <div className="avatar">{initials}</div>
-            <div style={{ minWidth: 0 }}>
+            <div className="avatar-glass">{initials}</div>
+            <div className="user-details">
               <div className="user-name" title={userEmail || displayName}>{displayName}</div>
               <div className="user-status" style={{ color: isDemoMode ? '#FBBF24' : '#34D399' }}>
                 {isDemoMode ? <HardDrive size={10} /> : <Cloud size={10} />}
