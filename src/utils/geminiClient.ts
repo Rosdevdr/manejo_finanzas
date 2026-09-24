@@ -167,9 +167,10 @@ export async function queryGeminiFinancialAdvisor(
 
   let lastErrorMsg = ''
 
-  // 1. Intentar a través del endpoint serverless de la app (evita bloqueos de Brave Shields y CORS)
+  // 1. Intentar a través del endpoint del backend (evita bloqueos de Brave Shields y CORS)
   try {
-    const proxyRes = await fetch('/api/gemini', {
+    const apiBaseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+    const proxyRes = await fetch(`${apiBaseUrl}/api/gemini`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

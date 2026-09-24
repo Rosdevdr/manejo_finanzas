@@ -1,15 +1,25 @@
-# 💰 AUREUS · Asesor Financiero Personal & Gestión de Presupuesto
+# 💰 AUREUS · Frontend Client (Web & Mobile)
 
-Aplicación web moderna de nivel profesional para la gestión inteligente del patrimonio personal, control integral de sueldos y fuentes de ingresos, seguimiento de gastos fijos y variables, monitoreo de retiros en efectivo con Asesor Inteligente en tiempo real, análisis predictivo y diagnóstico de salud financiera.
+Aplicación cliente de alta fidelidad para el sistema financiero **AUREUS Wealth Advisor**. Construida con React 19, TypeScript, Tailwind CSS v4, Recharts y Capacitor para Android, desacoplada por completo del backend para escalabilidad y mantenimiento profesional.
 
-## 🚀 Tecnologías Principales
-- **Frontend:** React 19 + TypeScript + Vite 8
-- **Estilos:** Vanilla CSS / CSS Variables / Flexbox / CSS Grid (Diseño Oscuro Premium)
-- **Visualización de Datos:** Recharts (Gráficos interactivos de barras y distribución)
-- **Iconografía:** Lucide React
-- **Testing Unitario:** Vitest 4
-- **Linter & Calidad:** ESLint 9
-- **Despliegue:** Vercel (Configurado con `vercel.json` para SPA)
+---
+
+## 🏛️ Arquitectura Desacoplada (Frontend / Backend Independientes)
+
+Este proyecto ha sido separado de un monorepo a dos repositorios independientes:
+1. **Frontend Repo (`manejo_finanzas`)**: Interfaz de usuario, gráficos interactivos, modo oscuro/claro, PWA y cliente móvil Android.
+2. **Backend Repo (`manejo_finanzas-backend`)**: API REST en Express + TypeScript, orquestador Gemini AI, pasarela de suscripciones Stripe, migraciones analíticas y suite automatizada de QA con Vitest/Supertest.
+
+---
+
+## 🚀 Tecnologías del Cliente
+- **Core:** React 19 + TypeScript + Vite 8
+- **Estilos:** Tailwind CSS v4 + Tokens de Diseño Stitch (Stripe + Revolut)
+- **Modos:** Dark Mode ("Apex Obsidian") y Light Mode ("Apex Alabaster")
+- **Visualización de Datos:** Recharts (Bento Grids, Donut de Distribución, Cash Flow)
+- **Móvil:** Capacitor 8 (Soporte nativo para Android)
+- **Testing:** Vitest 4
+- **API Proxy:** Vite Server Proxy integrado hacia el backend (`http://localhost:3001`)
 
 ---
 

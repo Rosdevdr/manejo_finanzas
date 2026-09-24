@@ -132,7 +132,8 @@ export function SubscriptionModal({
     setLoadingPlan(plan)
 
     try {
-      const response = await fetch('/api/stripe-checkout', {
+      const apiBaseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+      const response = await fetch(`${apiBaseUrl}/api/stripe-checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan, userId, userEmail }),

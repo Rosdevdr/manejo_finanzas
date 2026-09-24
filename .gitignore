@@ -31,4 +31,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
+# Separate Backend Repo directory (when stored locally side-by-side)
+backend/
+/backend/
