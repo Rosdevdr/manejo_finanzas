@@ -1,4 +1,4 @@
-import { ShoppingBag, Pencil, Trash2 } from 'lucide-react'
+import { ShoppingBag, Pencil, Trash2, CreditCard } from 'lucide-react'
 import type { Expense, PaymentMethod } from '../../types/finance'
 import { CATEGORY_MAP } from '../../utils/categoryHelpers'
 import { formatCurrency } from '../../utils/formatters'
@@ -109,8 +109,8 @@ export function ExpenseList({ expenses, onEdit, onDelete }: ExpenseListProps) {
                   <span className="text-base sm:text-lg font-mono font-bold text-[#F87171] block">
                     -{formatCurrency(expense.amount)}
                   </span>
-                  <span className="text-[11px] text-[#71717A] font-mono">
-                    💳 {getPaymentLabel(expense.paymentMethod)}
+                  <span className="text-[11px] text-[var(--text-muted)] font-mono flex items-center justify-end gap-1">
+                    <CreditCard size={11} /> {getPaymentLabel(expense.paymentMethod)}
                   </span>
                 </div>
 

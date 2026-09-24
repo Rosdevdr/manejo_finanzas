@@ -1,4 +1,4 @@
-/* src/components/security/SecurityModal.css - Apex Obsidian */
+﻿/* src/components/security/SecurityModal.css - Apex Obsidian */
 
 .security-modal-overlay {
   position: fixed;
@@ -15,11 +15,11 @@
 .security-modal-card {
   width: 100%;
   max-width: 600px;
-  background: rgba(10, 11, 16, 0.85);
+  background: var(--bg-card);
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-focus);
   border-radius: 20px;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: var(--shadow-modal), var(--specular-top);
   overflow: hidden;
   max-height: 90vh;
   display: flex;
@@ -31,8 +31,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 24px 30px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
 }
 
 .security-header-title {
@@ -57,20 +57,20 @@
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #E2E2EB;
+  color: var(--text-primary);
 }
 
 .security-subtitle {
   margin: 4px 0 0;
   font-size: 13px;
-  color: #888899;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .security-close-btn {
   background: transparent;
   border: none;
-  color: #717182;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
@@ -79,7 +79,7 @@
 
 .security-close-btn:hover {
   background: rgba(255,255,255,0.05);
-  color: #E2E2EB;
+  color: var(--text-primary);
 }
 
 .security-modal-body {
@@ -110,11 +110,11 @@
   margin: 0;
   font-size: 15px;
   font-weight: 700;
-  color: #E2E2EB;
+  color: var(--text-primary);
 }
 
 .section-icon {
-  color: #C9A84C;
+  color: var(--gold-primary);
 }
 .section-icon.text-red {
   color: #F87171;
@@ -123,7 +123,7 @@
 .section-desc {
   margin: 0;
   font-size: 13px;
-  color: #A0A0B0;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -143,9 +143,9 @@
 }
 
 .status-badge.inactive {
-  background: rgba(255, 255, 255, 0.05);
-  color: #A0A0B0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--border-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
 }
 
 .status-badge.danger {
@@ -156,7 +156,7 @@
 
 .security-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--border-subtle);
   margin: 30px 0;
 }
 
@@ -180,12 +180,12 @@
 .twofa-active-title {
   font-size: 14px;
   font-weight: 700;
-  color: #E2E2EB;
+  color: var(--text-primary);
 }
 
 .twofa-active-sub {
   font-size: 12px;
-  color: #A0A0B0;
+  color: var(--text-secondary);
   margin-top: 4px;
 }
 
@@ -207,7 +207,7 @@
 
 .btn-enable-2fa {
   background: rgba(201, 168, 76, 0.15);
-  color: #F3CA65;
+  color: var(--gold-hover);
   border: 1px solid rgba(201, 168, 76, 0.3);
   padding: 14px 24px;
   border-radius: 12px;
@@ -228,8 +228,8 @@
 }
 
 .enroll-box {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-subtle);
   border-radius: 16px;
   padding: 24px;
   display: flex;
@@ -243,21 +243,21 @@
   gap: 8px;
   font-size: 14px;
   font-weight: 700;
-  color: #E2E2EB;
+  color: var(--text-primary);
 }
 
 .enroll-step-title svg {
-  color: #C9A84C;
+  color: var(--gold-primary);
 }
 
 .enroll-step-desc {
   margin: 0;
   font-size: 13px;
-  color: #A0A0B0;
+  color: var(--text-secondary);
 }
 
 .qr-container {
-  background: #FFF;
+  background: var(--text-primary);
   padding: 16px;
   border-radius: 12px;
   width: fit-content;
@@ -278,14 +278,14 @@
 
 .secret-label {
   font-size: 12px;
-  color: #717182;
+  color: var(--text-muted);
 }
 
 .secret-code-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(0,0,0,0.5);
+  background: var(--bg-input);
   border: 1px solid rgba(255,255,255,0.1);
   padding: 8px 16px;
   border-radius: 8px;
@@ -294,21 +294,21 @@
 .secret-code-row code {
   font-family: 'Space Mono', monospace;
   font-size: 14px;
-  color: #E2E2EB;
+  color: var(--text-primary);
   letter-spacing: 0.1em;
 }
 
 .copy-btn {
   background: transparent;
   border: none;
-  color: #A0A0B0;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 4px;
   transition: color 0.2s;
 }
 
 .copy-btn:hover {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .verify-form {
@@ -327,20 +327,20 @@
 
 .verify-code-input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: 10px;
   padding: 14px;
   font-family: 'Space Mono', monospace;
   font-size: 18px;
   letter-spacing: 0.2em;
-  color: #fff;
+  color: var(--text-primary);
   text-align: center;
   outline: none;
 }
 
 .verify-code-input:focus {
-  border-color: #C9A84C;
+  border-color: var(--gold-primary);
 }
 
 .btn-verify-submit {
@@ -369,8 +369,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-subtle);
   border-radius: 16px;
   padding: 24px;
 }
@@ -384,15 +384,15 @@
 .password-field label {
   font-size: 12px;
   font-weight: 600;
-  color: #888899;
+  color: var(--text-muted);
 }
 
 .security-input {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: 10px;
   padding: 12px 16px;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
@@ -404,7 +404,7 @@
 
 .btn-update-password {
   background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: var(--text-primary);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
   padding: 14px;
@@ -430,6 +430,7 @@
   border-radius: 12px;
   padding: 20px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -503,22 +504,22 @@
 
 .danger-confirm-label {
   font-size: 13px;
-  color: #E2E2EB;
+  color: var(--text-primary);
 }
 
 .danger-confirm-label strong {
   font-family: monospace;
-  background: rgba(0,0,0,0.3);
+  background: var(--bg-surface);
   padding: 2px 6px;
   border-radius: 4px;
 }
 
 .danger-confirm-input {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-input);
   border: 1px solid rgba(248, 113, 113, 0.3);
   border-radius: 8px;
   padding: 12px 16px;
-  color: #fff;
+  color: var(--text-primary);
   font-family: monospace;
   font-size: 14px;
   outline: none;
@@ -536,7 +537,7 @@
 
 .btn-danger-cancel {
   background: transparent;
-  color: #A0A0B0;
+  color: var(--text-secondary);
   border: 1px solid rgba(255,255,255,0.2);
   padding: 10px 20px;
   border-radius: 8px;
@@ -547,7 +548,7 @@
 
 .btn-danger-execute {
   background: #F87171;
-  color: #fff;
+  color: var(--text-primary);
   border: none;
   padding: 10px 20px;
   border-radius: 8px;
@@ -599,3 +600,4 @@
     align-items: stretch;
   }
 }
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import { ShieldCheck, Check, AlertTriangle, X } from 'lucide-react'
 import { formatCurrency } from '../../utils/formatters'
 import { triggerHaptic } from '../../utils/haptics'
@@ -121,7 +121,7 @@ export const TransactionConfirmationFlow: React.FC<TransactionConfirmationFlowPr
             </div>
 
             {step === 0 && (
-              <div style={{ textAlign: 'center', padding: '12px 0', color: '#9CA3AF', fontSize: 13 }}>
+              <div style={{ textAlign: 'center', padding: '12px 0', color: 'var(--text-muted)', fontSize: 13 }}>
                 Verificando parámetros y límites institucionales...
               </div>
             )}

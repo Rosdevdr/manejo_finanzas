@@ -35,7 +35,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: 'dashboard',
     title: 'Dashboard (Panorama Financiero)',
-    icon: <LayoutDashboard size={18} style={{ color: '#F3CA65' }} />,
+    icon: <LayoutDashboard size={18} style={{ color: 'var(--gold-hover)' }} />,
     badge: 'Módulo Principal',
     description: 'Es el centro de comando de tu salud financiera. Consolida tus ingresos, gastos, deuda de tarjetas y el ritmo de gasto diario según los días transcurridos del mes.',
     bestPractices: [
@@ -52,7 +52,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: 'incomes-expenses',
     title: 'Ingresos y Control de Gastos',
-    icon: <TrendingDown size={18} style={{ color: '#F87171' }} />,
+    icon: <TrendingDown size={18} style={{ color: 'var(--rose-danger)' }} />,
     badge: 'Registro Diario',
     description: 'Permite registrar y categorizar cada movimiento con su fecha exacta. El sistema sincroniza automáticamente cada registro con su mes correspondiente (AAAA-MM).',
     bestPractices: [
@@ -81,12 +81,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
       'Pagar solo el "Pago Mínimo": esto activa altos intereses de financiamiento compuesto.',
       'Usar la tarjeta como una extensión de tu sueldo en lugar de un medio de pago programado.',
     ],
-    proTip: 'Revisa la campana de notificaciones 🔔 en la barra superior para ver alertas preventivas a menos de 3 días de tu fecha de corte o pago.',
+    proTip: 'Revisa la campana de notificaciones en la barra superior para ver alertas preventivas a menos de 3 días de tu fecha de corte o pago.',
   },
   {
     id: 'cash-wallet',
     title: 'Efectivo & Billetera',
-    icon: <Wallet size={18} style={{ color: '#34D399' }} />,
+    icon: <Wallet size={18} style={{ color: 'var(--emerald-success)' }} />,
     badge: 'Dinero en Mano',
     description: 'Lleva el control de los retiros de cajero automático y el dinero físico que manejas en el día a día sin duplicar tus egresos bancarios.',
     bestPractices: [
@@ -103,7 +103,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: 'budgets-goals',
     title: 'Presupuestos & Metas de Ahorro',
-    icon: <Target size={18} style={{ color: '#F3CA65' }} />,
+    icon: <Target size={18} style={{ color: 'var(--gold-hover)' }} />,
     badge: 'Planificación',
     description: 'Define techos máximos de gasto por categoría basados en el modelo 50/30/20 y gestiona tus metas de ahorro con depósitos progresivos.',
     bestPractices: [
@@ -136,7 +136,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: 'tools',
     title: 'Herramientas (Calculadora FIRE & Simulador What-If)',
-    icon: <Sliders size={18} style={{ color: '#F59E0B' }} />,
+    icon: <Sliders size={18} style={{ color: 'var(--amber-warning)' }} />,
     badge: 'Simuladores Estratégicos',
     description: 'Proyecta tu número de independencia financiera (FIRE) y simula el impacto en tu ahorro a 6, 12 y 24 meses variando ingresos o recortando gastos.',
     bestPractices: [
@@ -182,19 +182,19 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
           padding: 0,
           overflow: 'hidden',
           borderRadius: 18,
-          background: '#0E0E14',
-          border: '1px solid rgba(243, 202, 101, 0.25)',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-default)',
+          boxShadow: 'var(--shadow-modal), var(--specular-top)',
         }}
       >
         {/* Modal Header */}
         <div style={{
           padding: '16px 22px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: '1px solid var(--border-default)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.12) 0%, rgba(14, 14, 20, 0.95) 100%)',
+          background: 'var(--bg-surface)',
           flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -206,15 +206,15 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#F3CA65',
+              color: 'var(--gold-hover)',
             }}>
               <BookOpen size={18} />
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF', fontFamily: 'Space Grotesk' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Space Grotesk' }}>
                 Normativas y Guía de Uso del Sistema AUREUS
               </div>
-              <div style={{ fontSize: 11, color: '#9CA3AF' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                 Aprende cómo funciona cada módulo y sácale el máximo provecho a tus finanzas
               </div>
             </div>
@@ -225,10 +225,10 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
             onClick={onClose}
             style={{
               background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: '1px solid var(--border-default)',
               borderRadius: 8,
               padding: 6,
-              color: '#9CA3AF',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -245,15 +245,15 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
           {/* Module Nav Tabs (Left side) */}
           <div style={{
             width: 240,
-            borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'rgba(10, 10, 15, 0.7)',
+            borderRight: '1px solid var(--border-subtle)',
+            background: 'var(--bg-surface)',
             padding: '12px 8px',
             display: 'flex',
             flexDirection: 'column',
             gap: 4,
             overflowY: 'auto',
           }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#717182', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 10px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 10px' }}>
               Módulos del Sistema
             </div>
             {GUIDE_SECTIONS.map(sec => {
@@ -271,9 +271,9 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
                     borderRadius: 10,
                     border: 'none',
                     background: isSelected
-                      ? 'linear-gradient(90deg, rgba(243, 202, 101, 0.16) 0%, rgba(201, 168, 76, 0.06) 100%)'
+                      ? 'var(--gold-subtle)'
                       : 'transparent',
-                    color: isSelected ? '#F3CA65' : '#9CA3AF',
+                    color: isSelected ? 'var(--gold-hover)' : 'var(--text-secondary)',
                     cursor: 'pointer',
                     textAlign: 'left',
                     width: '100%',
@@ -281,7 +281,7 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
                     fontSize: 12,
                     fontWeight: isSelected ? 700 : 500,
                     transition: 'all 0.15s ease',
-                    borderLeft: isSelected ? '3px solid #F3CA65' : '3px solid transparent',
+                    borderLeft: isSelected ? '3px solid var(--gold-primary)' : '3px solid transparent',
                   }}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{sec.icon}</span>
@@ -296,7 +296,7 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
             flex: 1,
             padding: '20px 24px',
             overflowY: 'auto',
-            background: 'rgba(14, 14, 20, 0.4)',
+            background: 'var(--bg-card)',
             display: 'flex',
             flexDirection: 'column',
             gap: 16,
@@ -311,14 +311,14 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
                 padding: '3px 8px',
                 borderRadius: 6,
                 background: 'rgba(243, 202, 101, 0.15)',
-                color: '#F3CA65',
+                color: 'var(--gold-hover)',
                 border: '1px solid rgba(243, 202, 101, 0.3)',
               }}>
                 {activeSection.badge}
               </span>
             </div>
 
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#FFFFFF', margin: '0 0 10px 0', fontFamily: 'Space Grotesk' }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 10px 0', fontFamily: 'Space Grotesk' }}>
               {activeSection.title}
             </h3>
 
@@ -329,14 +329,14 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
             {/* Best practices */}
             <div style={{
               background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: 12,
               padding: '14px 16px',
               marginBottom: 14,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <CheckCircle2 size={16} style={{ color: '#34D399' }} />
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: '#34D399', fontFamily: 'Space Grotesk' }}>
+                <CheckCircle2 size={16} style={{ color: 'var(--emerald-success)' }} />
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--emerald-success)', fontFamily: 'Space Grotesk' }}>
                   Buenas Prácticas Recomendadas
                 </span>
               </div>
@@ -356,8 +356,8 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
               marginBottom: 14,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <AlertTriangle size={16} style={{ color: '#F87171' }} />
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: '#F87171', fontFamily: 'Space Grotesk' }}>
+                <AlertTriangle size={16} style={{ color: 'var(--rose-danger)' }} />
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--rose-danger)', fontFamily: 'Space Grotesk' }}>
                   Errores Comunes a Evitar
                 </span>
               </div>
@@ -378,8 +378,8 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
               alignItems: 'center',
               gap: 10,
             }}>
-              <Lightbulb size={18} style={{ color: '#F59E0B', flexShrink: 0 }} />
-              <div style={{ fontSize: 11.5, color: '#F3CA65', lineHeight: 1.45 }}>
+              <Lightbulb size={18} style={{ color: 'var(--amber-warning)', flexShrink: 0 }} />
+              <div style={{ fontSize: 11.5, color: 'var(--gold-hover)', lineHeight: 1.45 }}>
                 <strong>Tip del Asesor AUREUS:</strong> {activeSection.proTip}
               </div>
             </div>

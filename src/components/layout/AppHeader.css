@@ -1,48 +1,83 @@
-/* src/components/layout/AppHeader.css - Apex Obsidian AppHeader */
+/* src/components/layout/AppHeader.css - Stitch Exact Styling */
 
 .app-header-obsidian {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  background: rgba(12, 13, 20, 0.75);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  height: 64px;
+  min-height: 64px;
+  padding: 0 32px;
+  background-color: var(--header-bg, rgba(15, 19, 28, 0.85));
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--header-border, rgba(49, 53, 62, 0.35));
   position: sticky;
   top: 0;
-  z-index: 30;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 40;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+  gap: 16px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  margin: 0 24px;
+}
+
+.header-brand-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-on-surface, #dfe2ee);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.header-brand-title .header-icon {
+  color: var(--color-primary, #ffc174);
+  display: flex;
+  align-items: center;
+}
+
+/* Period Navigator Pill */
 .app-header-obsidian .period-nav {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: rgba(255,255,255,0.03);
-  padding: 6px 8px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.05);
+  gap: 6px;
+  background-color: var(--color-surface-container-low, #181c24);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  padding: 4px 8px;
+  border-radius: 10px;
 }
 
 .app-header-obsidian .nav-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   background: transparent;
   border: none;
-  color: #888899;
+  color: var(--color-outline, #a08e7a);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.15s ease;
 }
 
 .app-header-obsidian .nav-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  color: #D0D0DC;
-  transform: scale(1.05);
+  background-color: var(--color-surface-container-high, #262a33);
+  color: var(--color-on-surface, #dfe2ee);
 }
 
 .app-header-obsidian .nav-btn:disabled {
@@ -51,112 +86,215 @@
 }
 
 .app-header-obsidian .period-label {
-  font-size: 14px;
-  font-weight: 700;
-  color: #E2E2EB;
-  min-width: 130px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-on-surface, #dfe2ee);
+  min-width: 120px;
   text-align: center;
-  letter-spacing: 0.05em;
-  font-variant-numeric: tabular-nums;
 }
 
-.app-header-obsidian .header-right {
+/* Header Right */
+.header-right {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-/* Balance Pill */
-.app-header-obsidian .balance-pill-glass {
+/* Stitch Available Balance Pill */
+.header-balance-pill {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  border-radius: 100px;
-  background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.02));
-  border: 1px solid rgba(201, 168, 76, 0.2);
-  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+  border-radius: 9999px;
+  background-color: var(--color-surface-container-low, #181c24);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.app-header-obsidian .balance-pill-glass .label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #888899;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.header-balance-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--color-on-surface-variant, #d8c3ad);
 }
 
-.app-header-obsidian .balance-pill-glass .value {
-  font-size: 14px;
-  font-weight: 700;
+.header-balance-amount {
+  font-family: 'Inter', sans-serif;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-on-surface, #dfe2ee);
 }
 
-.app-header-obsidian .balance-pill-glass .value.positive {
-  color: #F3CA65;
-}
-.app-header-obsidian .balance-pill-glass .value.negative {
-  color: #F87171;
-}
-
-/* Pulse animation */
-@keyframes goldPulse {
-  0% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(201, 168, 76, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0); }
-}
-.app-header-obsidian .pulse-gold-confirm {
-  animation: goldPulse 1s ease-out;
+.header-balance-badge {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background-color: rgba(48, 200, 143, 0.18);
+  color: var(--color-tertiary, #56e5a9);
 }
 
-/* Micro interaction active states */
-.app-header-obsidian .icon-btn-glass {
+/* Controls Cluster */
+.header-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+}
+
+.icon-btn-glass {
+  position: relative;
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
+  background-color: var(--color-surface-container-low, #181c24);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  color: #888899;
+  color: var(--color-on-surface-variant, #d8c3ad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.15s ease;
 }
 
-.app-header-obsidian .icon-btn-glass:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #E2E2EB;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+.icon-btn-glass:hover {
+  background-color: var(--color-surface-container-high, #262a33);
+  color: var(--color-on-surface, #dfe2ee);
 }
 
-.app-header-obsidian .icon-btn-glass.active-gold {
-  background: rgba(243, 202, 101, 0.15);
-  border-color: rgba(243, 202, 101, 0.3);
-  color: #F3CA65;
-  box-shadow: 0 0 12px rgba(243, 202, 101, 0.2);
-}
-
-/* Dropdowns */
-.app-header-obsidian .dropdown-glass {
+.icon-badge-dot {
   position: absolute;
-  top: calc(100% + 12px);
-  right: 0;
-  width: 320px;
-  background: rgba(18, 20, 32, 0.85);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset;
-  z-index: 100;
-  transform-origin: top right;
-  animation: dropdownPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background-color: var(--color-primary-container, #f59e0b);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
 }
 
-@keyframes dropdownPop {
-  0% { opacity: 0; transform: scale(0.95) translateY(-10px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+/* User Profile Widget */
+.header-profile-widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  background: transparent;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+}
+
+.header-profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  object-fit: cover;
+  background: var(--color-surface-container-high, #262a33);
+  border: 1.5px solid rgba(245, 158, 11, 0.4);
+}
+
+.header-profile-meta {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.header-profile-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-on-surface, #dfe2ee);
+  line-height: 1.2;
+}
+
+.header-profile-role {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: var(--color-outline, #a08e7a);
+  line-height: 1.2;
+}
+
+@media (max-width: 1024px) {
+  .app-header-obsidian {
+    padding: 0 16px;
+  }
+  .header-brand-title span:not(.header-icon) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-balance-pill {
+    display: none;
+  }
+  .header-profile-meta {
+    display: none;
+  }
+}
+
+/* Light Mode Overrides for AppHeader */
+[data-theme='light'] .app-header-obsidian {
+  --header-bg: rgba(255, 255, 255, 0.92);
+  --header-border: rgba(226, 232, 240, 0.9);
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .header-brand-title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .app-header-obsidian .period-nav {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+[data-theme='light'] .app-header-obsidian .period-label {
+  color: #0f172a;
+}
+
+[data-theme='light'] .app-header-obsidian .nav-btn {
+  color: #64748b;
+}
+
+[data-theme='light'] .app-header-obsidian .nav-btn:hover:not(:disabled) {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+[data-theme='light'] .header-balance-pill {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+[data-theme='light'] .header-balance-label {
+  color: #64748b;
+}
+
+[data-theme='light'] .header-balance-amount {
+  color: #0f172a;
+}
+
+[data-theme='light'] .icon-btn-glass {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+[data-theme='light'] .icon-btn-glass:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+[data-theme='light'] .header-profile-name {
+  color: #0f172a;
+}
+
+[data-theme='light'] .header-profile-role {
+  color: #64748b;
 }

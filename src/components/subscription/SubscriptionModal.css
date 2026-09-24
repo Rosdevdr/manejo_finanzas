@@ -1,4 +1,4 @@
-/* ── SubscriptionModal.css ─────────────────────────────────────────────────
+﻿/* ── SubscriptionModal.css ─────────────────────────────────────────────────
    Estilos premium para el modal de suscripciones de AUREUS
    Paleta: gold (#F59E0B), emerald (#34D399), azul pro (#818CF8), fondo oscuro
    ─────────────────────────────────────────────────────────────────────────── */
@@ -20,8 +20,8 @@
 
 /* ── CARD ── */
 .sub-modal-card {
-  background: #0C0D15;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 20px;
   width: 100%;
   max-width: 860px;
@@ -30,7 +30,7 @@
   display: flex;
   flex-direction: column;
   animation: modalSpringIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-modal), var(--specular-top);
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
@@ -78,14 +78,14 @@
 .sub-title {
   font-size: 22px;
   font-weight: 700;
-  color: #F4F4F5;
+  color: var(--text-primary);
   margin: 0 0 4px;
   letter-spacing: -0.02em;
 }
 
 .sub-subtitle {
   font-size: 12px;
-  color: #71717A;
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -105,7 +105,7 @@
 
 .sub-close-btn:hover {
   background: rgba(255,255,255,0.12);
-  color: #F4F4F5;
+  color: var(--text-primary);
 }
 
 /* ── CURRENT PLAN BAR ── */
@@ -122,7 +122,7 @@
   color: #A1A1AA;
 }
 
-.plan-badge-free    { color: #71717A; }
+.plan-badge-free    { color: var(--text-muted); }
 .plan-badge-personal { color: #F59E0B; }
 .plan-badge-pro     { color: #818CF8; }
 .demo-badge         { color: #34D399; font-size: 12px; }
@@ -151,8 +151,8 @@
 
 /* ── PLAN CARD ── */
 .sub-plan-card {
-  background: linear-gradient(180deg, #13131D 0%, #0E0E15 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-focus);
   border-radius: 18px;
   padding: 24px 20px 20px;
   display: flex;
@@ -160,7 +160,7 @@
   gap: 0;
   position: relative;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 var(--border-subtle);
 }
 
 .sub-plan-card:hover {
@@ -233,7 +233,7 @@
   margin-bottom: 0;
 }
 
-.plan-icon-free     { background: rgba(113,113,122,0.15); color: #71717A; }
+.plan-icon-free     { background: rgba(113,113,122,0.15); color: var(--text-muted); }
 .plan-icon-personal { background: rgba(245,158,11,0.12); color: #F59E0B; }
 .plan-icon-pro      { background: rgba(129,140,248,0.12); color: #818CF8; }
 
@@ -241,7 +241,7 @@
 .sub-plan-name {
   font-size: 17px;
   font-weight: 700;
-  color: #F4F4F5;
+  color: var(--text-primary);
   margin: 0 0 6px;
 }
 
@@ -255,7 +255,7 @@
 .sub-price-amount {
   font-size: 28px;
   font-weight: 800;
-  color: #F4F4F5;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
@@ -263,12 +263,12 @@
 
 .sub-price-period {
   font-size: 12px;
-  color: #71717A;
+  color: var(--text-muted);
 }
 
 .sub-plan-desc {
   font-size: 12px;
-  color: #71717A;
+  color: var(--text-muted);
   margin: 0 0 16px;
   line-height: 1.4;
   min-height: 32px;
@@ -293,11 +293,11 @@
   line-height: 1.35;
 }
 
-.feat-yes { color: #D4D4D8; }
-.feat-no  { color: #52525B; }
+.feat-yes { color: var(--text-primary); }
+.feat-no  { color: var(--text-muted); }
 
 .feat-check { color: #34D399; flex-shrink: 0; margin-top: 1px; }
-.feat-lock  { color: #3F3F46; flex-shrink: 0; margin-top: 1px; }
+.feat-lock  { color: var(--text-muted); flex-shrink: 0; margin-top: 1px; }
 
 /* ── PLAN ACTION BUTTONS ── */
 .sub-plan-action { margin-top: auto; }
@@ -320,9 +320,9 @@
 }
 
 .sub-btn-free {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: #71717A;
+  background: var(--border-subtle);
+  border-color: var(--border-focus);
+  color: var(--text-muted);
   cursor: default;
 }
 
@@ -351,7 +351,7 @@
 .sub-btn-upgrade {
   background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%);
   border: none;
-  color: #FFFFFF;
+  color: var(--text-primary);
   font-weight: 700;
   box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
 }
@@ -371,7 +371,7 @@
 
 /* ── FOOTER ── */
 .sub-modal-footer {
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid var(--border-subtle);
   padding: 16px 28px 20px;
   display: flex;
   flex-direction: column;
@@ -383,12 +383,12 @@
   align-items: center;
   gap: 7px;
   font-size: 12px;
-  color: #52525B;
+  color: var(--text-muted);
 }
 
 .sub-footer-legal {
   font-size: 11px;
-  color: #3F3F46;
+  color: var(--text-muted);
   line-height: 1.5;
   margin: 0;
 }
@@ -435,3 +435,4 @@
   .sub-modal-overlay { padding: 8px; }
   .sub-modal-card { border-radius: 16px; }
 }
+

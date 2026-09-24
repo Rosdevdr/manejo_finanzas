@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import { Bell, CreditCard as CardIcon, AlertTriangle, Calendar } from 'lucide-react'
 import type { CreditCard, CreditCardTransaction } from '../../types/finance'
 import { evaluateCardHealth } from '../../utils/creditAdvisor'
@@ -79,7 +79,7 @@ export function CardAlertsPopover({ creditCards, creditTransactions }: CardAlert
             top: -4,
             right: -4,
             background: '#EF4444',
-            color: '#FFF',
+            color: 'var(--text-primary)',
             fontSize: 9,
             fontWeight: 800,
             borderRadius: 10,
@@ -98,7 +98,7 @@ export function CardAlertsPopover({ creditCards, creditTransactions }: CardAlert
           top: 'calc(100% + 8px)',
           right: 0,
           width: 320,
-          background: '#12121A',
+          background: 'var(--bg-elevated)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
           borderRadius: 14,
           boxShadow: '0 12px 32px rgba(0, 0, 0, 0.5)',
@@ -106,15 +106,15 @@ export function CardAlertsPopover({ creditCards, creditTransactions }: CardAlert
           zIndex: 100,
           animation: 'fadeIn 0.15s ease',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#F3CA65', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--border-default)' }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold-hover)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Bell size={14} /> Centro de Alertas de Tarjeta
             </span>
-            <span style={{ fontSize: 11, color: '#9CA3AF' }}>{alertCount} pendientes</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{alertCount} pendientes</span>
           </div>
 
           {alerts.length === 0 ? (
-            <div style={{ padding: '16px 8px', textAlign: 'center', fontSize: 12, color: '#9CA3AF' }}>
+            <div style={{ padding: '16px 8px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
               ✅ No tienes cortes o vencimientos próximos de tarjeta.
             </div>
           ) : (
@@ -130,15 +130,15 @@ export function CardAlertsPopover({ creditCards, creditTransactions }: CardAlert
                   gap: 8,
                 }}>
                   {a.severity === 'danger' ? (
-                    <AlertTriangle size={14} style={{ color: '#EF4444', marginTop: 2, flexShrink: 0 }} />
+                    <AlertTriangle size={14} style={{ color: 'var(--rose-danger)', marginTop: 2, flexShrink: 0 }} />
                   ) : (
-                    <Calendar size={14} style={{ color: '#F59E0B', marginTop: 2, flexShrink: 0 }} />
+                    <Calendar size={14} style={{ color: 'var(--amber-warning)', marginTop: 2, flexShrink: 0 }} />
                   )}
                   <div>
                     <div style={{ fontSize: 11.5, fontWeight: 700, color: '#E5E7EB', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <CardIcon size={11} style={{ color: '#9CA3AF' }} /> {a.cardName}
+                      <CardIcon size={11} style={{ color: 'var(--text-muted)' }} /> {a.cardName}
                     </div>
-                    <div style={{ fontSize: 11, color: '#D1D5DB', marginTop: 2, lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.3 }}>
                       {a.message}
                     </div>
                   </div>

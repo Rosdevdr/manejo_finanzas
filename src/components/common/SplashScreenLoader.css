@@ -1,4 +1,4 @@
-/* ============================================ */
+﻿/* ============================================ */
 /* OVERLAY & CONTENEDOR                         */
 /* ============================================ */
 .splash-screen-overlay {
@@ -70,7 +70,7 @@
   height: 100%;
   border: 3.5px solid rgba(201, 168, 76, 0.15);
   border-top-color: #F1D97E;
-  border-right-color: #C9A84C;
+  border-right-color: var(--gold-primary);
   border-radius: 50%;
   animation: loaderRingSpin 1s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
   box-shadow: 0 0 20px rgba(201, 168, 76, 0.3);
@@ -96,7 +96,7 @@
 
 .splash-subtext {
   font-size: 13px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   margin: 8px 0 0 0;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -192,3 +192,4 @@
     transition-duration: 0.01ms !important;
   }
 }
+

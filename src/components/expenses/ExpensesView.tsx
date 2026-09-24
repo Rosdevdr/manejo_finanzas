@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { TrendingDown, Lock, Shuffle, Plus, Trash2, Pencil, X, Calendar, Search } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -140,8 +140,8 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
       {/* ── CABECERA INSTITUCIONAL ── */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
-          <div style={{ fontSize: 11, color: '#C9A84C', fontWeight: 700, letterSpacing: '0.15em', marginBottom: 4 }}>GESTIÓN DE EGRESOS</div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.02em', margin: 0 }}>Control de Gastos</h1>
+          <div style={{ fontSize: 11, color: 'var(--gold-primary)', fontWeight: 700, letterSpacing: '0.15em', marginBottom: 4 }}>GESTIÓN DE EGRESOS</div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', margin: 0 }}>Control de Gastos</h1>
         </div>
         <div>
           <button
@@ -149,7 +149,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
             onClick={() => setIsModalOpen(true)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              background: '#C9A84C', color: '#121420',
+              background: 'var(--gold-primary)', color: '#08080C',
               padding: '10px 20px', borderRadius: 10,
               fontWeight: 600, fontSize: 13, border: 'none',
               cursor: 'pointer', transition: 'all 0.2s'
@@ -168,8 +168,8 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
             <span className="expenses-obsidian-kpi-label">Total Gastado</span>
             <TrendingDown size={16} color="#F87171" />
           </div>
-          <div className="expenses-obsidian-kpi-val" style={{ color: '#F87171' }}>{formatCurrency(totalExp)}</div>
-          <div style={{ fontSize: 12, color: '#717182' }}>{pExp.length} egresos en {currentPeriod}</div>
+          <div className="expenses-obsidian-kpi-val" style={{ color: 'var(--rose-danger)' }}>{formatCurrency(totalExp)}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{pExp.length} egresos en {currentPeriod}</div>
         </div>
 
         <div className="expenses-obsidian-kpi-card">
@@ -178,7 +178,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
             <Lock size={16} color="#C9A84C" />
           </div>
           <div className="expenses-obsidian-kpi-val">{formatCurrency(fixedExp)}</div>
-          <div style={{ fontSize: 12, color: '#717182' }}>Compromisos innegociables</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Compromisos innegociables</div>
         </div>
 
         <div className="expenses-obsidian-kpi-card">
@@ -187,7 +187,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
             <Shuffle size={16} color="#D0D0DC" />
           </div>
           <div className="expenses-obsidian-kpi-val">{formatCurrency(varExp)}</div>
-          <div style={{ fontSize: 12, color: '#717182' }}>Presupuesto optimizable</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Presupuesto optimizable</div>
         </div>
       </div>
 
@@ -200,14 +200,14 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
           <div style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.3)', padding: 4, borderRadius: 10 }}>
             <button
               className={`obsidian-icon-btn ${!showAllPeriods ? 'active' : ''}`}
-              style={!showAllPeriods ? { background: '#2B2D3C', color: '#fff' } : {}}
+              style={!showAllPeriods ? { background: '#2B2D3C', color: 'var(--text-primary)' } : {}}
               onClick={() => setShowAllPeriods(false)}
             >
               <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Mes Actual</span>
             </button>
             <button
               className={`obsidian-icon-btn ${showAllPeriods ? 'active' : ''}`}
-              style={showAllPeriods ? { background: '#2B2D3C', color: '#fff' } : {}}
+              style={showAllPeriods ? { background: '#2B2D3C', color: 'var(--text-primary)' } : {}}
               onClick={() => setShowAllPeriods(true)}
             >
               <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Historial</span>
@@ -216,7 +216,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
         </div>
 
         {displayedExpenses.length === 0 ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#717182' }}>
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
             <Search size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
             <div style={{ fontSize: 14, fontWeight: 500 }}>No hay gastos en este período</div>
             <div style={{ fontSize: 12, marginTop: 4 }}>Registra un gasto usando el botón superior dorado.</div>
@@ -244,7 +244,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                         <td className="cell-date">{exp.date}</td>
                         <td>
                           <select
-                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12 }}
+                            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: 6, fontSize: 12 }}
                             value={editForm.category}
                             onChange={e => setEditForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}
                           >
@@ -255,7 +255,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                         </td>
                         <td>
                           <input
-                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: '100%' }}
+                            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: '100%' }}
                             value={editForm.description}
                             onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))}
                           />
@@ -263,7 +263,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                         <td>
                           <div style={{ display: 'flex', gap: 4 }}>
                             <select
-                              style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 8px', borderRadius: 6, fontSize: 11 }}
+                              style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 8px', borderRadius: 6, fontSize: 11 }}
                               value={editForm.type}
                               onChange={e => setEditForm(p => ({ ...p, type: e.target.value as ExpenseType }))}
                             >
@@ -271,7 +271,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                               <option value="variable">Variable</option>
                             </select>
                             <select
-                              style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 8px', borderRadius: 6, fontSize: 11 }}
+                              style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 8px', borderRadius: 6, fontSize: 11 }}
                               value={editForm.paymentMethod}
                               onChange={e => setEditForm(p => ({ ...p, paymentMethod: e.target.value as PaymentMethod }))}
                             >
@@ -285,14 +285,16 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                         <td style={{ textAlign: 'right' }}>
                           <input
                             type="number"
-                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: 90, textAlign: 'right' }}
+                            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: 90, textAlign: 'right' }}
                             value={editForm.amount}
                             onChange={e => setEditForm(p => ({ ...p, amount: e.target.value }))}
                           />
                         </td>
-                        <td className="action-cell">
-                          <button className="obsidian-icon-btn" style={{ color: '#34D399' }} onClick={() => saveEdit(exp)}>✓</button>
-                          <button className="obsidian-icon-btn" onClick={cancelEdit}>✕</button>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'inline-flex', gap: 4, justifyContent: 'flex-end' }}>
+                            <button className="obsidian-icon-btn" style={{ color: 'var(--emerald-success)' }} onClick={() => saveEdit(exp)}>✓</button>
+                            <button className="obsidian-icon-btn" onClick={cancelEdit}>✕</button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -304,11 +306,11 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontSize: 14 }}>{c.emoji}</span>
-                          <span style={{ fontWeight: 500, color: '#E2E2EB' }}>{c.label}</span>
+                          <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{c.label}</span>
                         </div>
                       </td>
                       <td>
-                        <span style={{ color: '#C0C0D0', fontWeight: 500 }}>
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
                           {exp.description}
                         </span>
                       </td>
@@ -317,7 +319,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                           <span style={{ fontSize: 11, color: exp.type === 'fixed' ? '#F87171' : '#34D399', fontWeight: 600 }}>
                             {exp.type === 'fixed' ? 'Obligatorio' : 'Optimizable'}
                           </span>
-                          <span style={{ fontSize: 10, color: '#717182' }}>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
                             {PAYMENT_MAP[exp.paymentMethod]}
                           </span>
                         </div>
@@ -325,9 +327,11 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                       <td className="cell-amount negative">
                         -{formatCurrency(exp.amount)}
                       </td>
-                      <td className="action-cell">
-                        <button className="obsidian-icon-btn" onClick={() => startEdit(exp)} title="Editar"><Pencil size={14} /></button>
-                        <button className="obsidian-icon-btn danger" onClick={() => onDeleteExpense(exp.id)} title="Eliminar"><Trash2 size={14} /></button>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: 4, justifyContent: 'flex-end' }}>
+                          <button className="obsidian-icon-btn" onClick={() => startEdit(exp)} title="Editar"><Pencil size={14} /></button>
+                          <button className="obsidian-icon-btn danger" onClick={() => onDeleteExpense(exp.id)} title="Eliminar"><Trash2 size={14} /></button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -341,19 +345,19 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
       {/* ── MODAL PARA REGISTRAR GASTO ── */}
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#121420', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 24px 48px rgba(0,0,0,0.5)' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 20, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: 'var(--shadow-modal), var(--specular-top)' }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 600, color: '#E2E2EB' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
                 <Plus size={18} color="#C9A84C" /> Registrar Nuevo Gasto
               </div>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: '#717182', cursor: 'pointer' }}><X size={18} /></button>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Descripción / Concepto</label>
                 <input
-                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                   placeholder="Ej: Supermercado, Alquiler..."
                   value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
                   autoFocus required
@@ -365,7 +369,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                   <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Monto (RD$)</label>
                   <input
                     type="number" step="0.01" min="0.01"
-                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                     value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
                     required
                   />
@@ -373,7 +377,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Categoría</label>
                   <select
-                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                     value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}
                   >
                     {Object.entries(CATEGORY_MAP).map(([k, v]) => (
@@ -387,7 +391,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Compromiso</label>
                   <select
-                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                     value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value as ExpenseType }))}
                   >
                     <option value="variable">Gasto Variable</option>
@@ -397,7 +401,7 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Método Pago</label>
                   <select
-                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                     value={form.paymentMethod} onChange={e => setForm(p => ({ ...p, paymentMethod: e.target.value as PaymentMethod }))}
                   >
                     <option value="debit_card">Tarjeta de Débito</option>
@@ -415,17 +419,17 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
                 </label>
                 <input
                   type="date"
-                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                   value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
                   required
                 />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'var(--text-primary)', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>
                   Cancelar
                 </button>
-                <button type="submit" style={{ background: '#C9A84C', border: 'none', color: '#121420', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button type="submit" style={{ background: 'var(--gold-primary)', border: 'none', color: '#08080C', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Plus size={16} /> Guardar
                 </button>
               </div>

@@ -55,7 +55,7 @@ export function FireCalculatorModal({
       <div className="modal-card fire-modal-card" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Flame size={20} style={{ color: '#F59E0B' }} />
+            <Flame size={20} style={{ color: 'var(--amber-warning)' }} />
             <h2 className="modal-title">Calculadora FIRE (Independencia Financiera)</h2>
           </div>
           <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar modal">
@@ -64,7 +64,7 @@ export function FireCalculatorModal({
         </div>
 
         <div className="modal-body" style={{ padding: '18px 22px' }}>
-          <p style={{ fontSize: 12.5, color: '#9CA3AF', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12.5, color: 'var(--text-muted)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
             El movimiento <strong>FIRE (Financial Independence, Retire Early)</strong> calcula cuándo tus inversiones financiarán tu estilo de vida de por vida usando la <strong>Regla del 4%</strong> (25 veces tu gasto anual).
           </p>
 
@@ -74,7 +74,7 @@ export function FireCalculatorModal({
             <div className="fire-control-card">
               <div className="fire-control-header">
                 <span className="fire-control-label">
-                  <Wallet size={14} style={{ color: '#FB7185' }} /> Gasto Mensual
+                  <Wallet size={14} style={{ color: 'var(--rose-danger)' }} /> Gasto Mensual
                 </span>
                 <span className="fire-control-val">{formatCurrency(monthlyExpense)}</span>
               </div>
@@ -105,7 +105,7 @@ export function FireCalculatorModal({
             <div className="fire-control-card">
               <div className="fire-control-header">
                 <span className="fire-control-label">
-                  <PiggyBank size={14} style={{ color: '#34D399' }} /> Ahorro / Inversión Mensual
+                  <PiggyBank size={14} style={{ color: 'var(--emerald-success)' }} /> Ahorro / Inversión Mensual
                 </span>
                 <span className="fire-control-val">{formatCurrency(monthlySavings)}</span>
               </div>
@@ -167,9 +167,9 @@ export function FireCalculatorModal({
             <div className="fire-control-card">
               <div className="fire-control-header">
                 <span className="fire-control-label">
-                  <Percent size={14} style={{ color: '#F3CA65' }} /> Retorno Anual Esperado
+                  <Percent size={14} style={{ color: 'var(--gold-hover)' }} /> Retorno Anual Esperado
                 </span>
-                <span className="fire-control-val" style={{ color: '#F3CA65' }}>{returnRate}% / año</span>
+                <span className="fire-control-val" style={{ color: 'var(--gold-hover)' }}>{returnRate}% / año</span>
               </div>
               <input
                 type="range"
@@ -199,15 +199,15 @@ export function FireCalculatorModal({
           <div className="fire-grid">
             <div className="fire-card">
               <div className="fire-info">
-                <span className="fire-title">🌱 Lean FIRE (Ajustado)</span>
+                <span className="fire-title">Lean FIRE (Ajustado)</span>
                 <span className="fire-sub">Estilo de vida austero (75% del gasto actual)</span>
               </div>
-              <span className="fire-value" style={{ color: '#9CA3AF' }}>{formatCurrency(fireNumberLean)}</span>
+              <span className="fire-value" style={{ color: 'var(--text-muted)' }}>{formatCurrency(fireNumberLean)}</span>
             </div>
 
             <div className="fire-card gold">
               <div className="fire-info">
-                <span className="fire-title" style={{ color: '#F3CA65' }}>🔥 Standard FIRE (Objetivo Principal)</span>
+                <span className="fire-title" style={{ color: 'var(--gold-hover)' }}>Standard FIRE (Objetivo Principal)</span>
                 <span className="fire-sub">Libertad financiera total (25x gastos anuales)</span>
               </div>
               <span className="fire-value">{formatCurrency(fireNumberStandard)}</span>
@@ -215,7 +215,7 @@ export function FireCalculatorModal({
 
             <div className="fire-card">
               <div className="fire-info">
-                <span className="fire-title">💎 Fat FIRE (Holgado)</span>
+                <span className="fire-title">Fat FIRE (Holgado)</span>
                 <span className="fire-sub">Estilo de vida premium (+50% de presupuesto extra)</span>
               </div>
               <span className="fire-value" style={{ color: '#60A5FA' }}>{formatCurrency(fireNumberFat)}</span>
@@ -224,27 +224,27 @@ export function FireCalculatorModal({
 
           {/* Projection Verdict */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(52, 211, 153, 0.12) 0%, rgba(18, 18, 26, 0.9) 100%)',
-            border: '1px solid rgba(52, 211, 153, 0.35)',
+            background: 'var(--emerald-glow)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
             borderRadius: 14,
             padding: '14px 16px',
             display: 'flex',
             alignItems: 'center',
             gap: 14,
           }}>
-            <TrendingUp size={26} style={{ color: '#34D399', flexShrink: 0 }} />
+            <TrendingUp size={26} style={{ color: 'var(--emerald-success)', flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#34D399' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--emerald-success)' }}>
                 Tiempo para la Independencia Financiera: {yearsToRetire} años
               </div>
-              <div style={{ fontSize: 11.5, color: '#D1D5DB', marginTop: 2, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.4 }}>
                 Invirtiendo <strong>{formatCurrency(monthlySavings)}/mes</strong> con un retorno del <strong>{returnRate}% anual</strong> y gastos de <strong>{formatCurrency(monthlyExpense)}/mes</strong>.
               </div>
             </div>
           </div>
         </div>
 
-        <div className="modal-footer" style={{ padding: '14px 22px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'flex-end', background: '#0E0E14' }}>
+        <div className="modal-footer" style={{ padding: '14px 22px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', background: 'var(--bg-surface)' }}>
           <button
             type="button"
             className="btn btn-primary"

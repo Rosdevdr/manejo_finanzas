@@ -41,6 +41,9 @@ import { usePlan } from './hooks/usePlan'
 export function App() {
   const [activeTab, setActiveTab]               = useState<TabType>('dashboard')
   const [currentPeriod, setCurrentPeriod]       = useState<string>(() => getCurrentSystemPeriod())
+  const [theme, setTheme]                       = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('aureus_theme') as 'light' | 'dark') || 'dark'
+  })
   const [isModuleLoading, setIsModuleLoading]   = useState(true)
   const [isExitingSplash, setIsExitingSplash]   = useState(false)
   const [splashText, setSplashText]             = useState({
@@ -58,6 +61,13 @@ export function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('aureus_theme', theme)
+  }, [theme])
+
+  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark')
 
   const { toasts, show: showToast, dismiss } = useToast()
   const { isInstallable, installApp } = usePwaInstall()
@@ -129,21 +139,13 @@ export function App() {
   const totalExpense   = periodExpenses.reduce((s, e) => s + e.amount, 0)
   const available      = cumulativeSummary.totalCumulativeBalance
 
-  // Navegación matemática dinámica e ilimitada de meses con notificación
+  // Navegación matemática dinámica e ilimitada de meses sin notificación redundante
   const prevPeriod = () => {
-    setCurrentPeriod(prev => {
-      const p = getPreviousPeriod(prev)
-      showToast(`Visualizando datos de ${formatPeriodLabel(p)}`, 'info')
-      return p
-    })
+    setCurrentPeriod(prev => getPreviousPeriod(prev))
   }
 
   const nextPeriod = () => {
-    setCurrentPeriod(prev => {
-      const n = getNextPeriod(prev)
-      showToast(`Visualizando datos de ${formatPeriodLabel(n)}`, 'info')
-      return n
-    })
+    setCurrentPeriod(prev => getNextPeriod(prev))
   }
 
   const periodLabel = useMemo(() => formatPeriodLabel(currentPeriod), [currentPeriod])
@@ -291,6 +293,8 @@ export function App() {
           isInstallable={isInstallable}
           onInstallApp={() => setShowInstallModal(true)}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
 
         <div ref={contentRef} className={`content ${activeTab === 'chat-advisor' ? 'content-chat-mode' : ''}`}>
@@ -306,6 +310,11 @@ export function App() {
               userEmail={user?.email}
               onNavigateTab={handleTabChange}
               onOpenTerms={() => setShowTermsModal(true)}
+              onOpenFireCalculator={() => setShowFireModal(true)}
+              onOpenSubscription={() => setShowSubscriptionModal(true)}
+              onOpenSecurity={() => setIsSecurityOpen(true)}
+              onOpenExport={() => setShowExportModal(true)}
+              onOpenScenarioSimulator={() => setShowScenarioModal(true)}
             />
           )}
           {activeTab === 'incomes' && (

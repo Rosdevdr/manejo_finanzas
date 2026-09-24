@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react'
+﻿import { useState, useEffect, type FormEvent } from 'react'
 import {
   Mail,
   Lock,
@@ -452,7 +452,7 @@ export function LoginView({
                   gap: 6,
                   background: 'transparent',
                   border: 'none',
-                  color: '#888898',
+                  color: 'var(--text-muted)',
                   fontSize: 12.5,
                   cursor: 'pointer',
                   marginBottom: 10,
@@ -461,19 +461,19 @@ export function LoginView({
                 <ArrowLeft size={14} />
                 <span>Volver al inicio de sesión</span>
               </button>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#FFFFFF', margin: '0 0 4px' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>
                 Recuperar Contraseña
               </h2>
-              <p style={{ fontSize: 12.5, color: '#888898', margin: 0, lineHeight: 1.4 }}>
+              <p style={{ fontSize: 12.5, color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
                 Ingresa tu correo y te enviaremos un enlace seguro para restablecerla.
               </p>
             </div>
           ) : tab === 'update-password' ? (
             <div style={{ marginBottom: 18 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#FFFFFF', margin: '0 0 4px' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>
                 Restablecer Contraseña
               </h2>
-              <p style={{ fontSize: 12.5, color: '#888898', margin: 0, lineHeight: 1.4 }}>
+              <p style={{ fontSize: 12.5, color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
                 Crea una nueva contraseña segura para tu cuenta de Aureus Finanzas.
               </p>
             </div>
@@ -488,7 +488,7 @@ export function LoginView({
                 borderRadius: 20,
                 background: 'rgba(243, 202, 101, 0.12)',
                 border: '1px solid rgba(243, 202, 101, 0.3)',
-                color: '#F3CA65',
+                color: 'var(--gold-hover)',
                 fontSize: 12,
                 fontWeight: 600,
                 marginBottom: 12,
@@ -496,10 +496,10 @@ export function LoginView({
                 <KeyRound size={14} />
                 <span>Autenticación de Dos Factores Activa</span>
               </div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#FFFFFF', margin: '0 0 4px' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>
                 Verificación 2FA Requerida
               </h2>
-              <p style={{ fontSize: 12.5, color: '#888898', margin: 0, lineHeight: 1.4 }}>
+              <p style={{ fontSize: 12.5, color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
                 Ingresa el código de 6 dígitos de tu app autenticadora para desbloquear el panel.
               </p>
             </div>
@@ -514,7 +514,7 @@ export function LoginView({
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              color: '#F87171',
+              color: 'var(--rose-danger)',
               fontSize: 12,
               fontWeight: 600,
               marginBottom: 16,
@@ -522,7 +522,7 @@ export function LoginView({
               <ShieldAlert size={18} style={{ flexShrink: 0 }} />
               <span>
                 Protección contra fuerza bruta activa. Intenta de nuevo en{' '}
-                <strong style={{ color: '#FFFFFF', fontSize: 13 }}>{lockSeconds}s</strong>
+                <strong style={{ color: 'var(--text-primary)', fontSize: 13 }}>{lockSeconds}s</strong>
               </span>
             </div>
           )}
@@ -542,7 +542,7 @@ export function LoginView({
               borderRadius: 10,
               padding: '10px 14px',
               fontSize: 12,
-              color: '#FBBF24',
+              color: 'var(--amber-warning)',
               marginBottom: 14,
               lineHeight: 1.4,
             }}>
@@ -607,7 +607,7 @@ export function LoginView({
                       background: 'rgba(243, 202, 101, 0.12)',
                       border: '1px solid rgba(243, 202, 101, 0.3)',
                       borderRadius: 8,
-                      color: '#F3CA65',
+                      color: 'var(--gold-hover)',
                       fontSize: 12,
                       fontWeight: 600,
                       marginBottom: 10,
@@ -700,7 +700,7 @@ export function LoginView({
                         style={{
                           background: 'transparent',
                           border: 'none',
-                          color: '#C9A84C',
+                          color: 'var(--gold-primary)',
                           fontSize: 11.5,
                           fontWeight: 500,
                           cursor: 'pointer',
@@ -864,7 +864,7 @@ export function LoginView({
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#C9A84C',
+                  color: 'var(--gold-primary)',
                   fontSize: 11,
                   fontWeight: 600,
                   textDecoration: 'underline',

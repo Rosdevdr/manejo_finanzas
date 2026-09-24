@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+﻿import { useEffect } from 'react'
 import { Scale, X, ExternalLink, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react'
 import { AureusLogo } from './AureusLogo'
 import { GithubIcon } from './GithubIcon'
@@ -56,13 +56,13 @@ export function MitLicenseModal({ isOpen, onClose }: MitLicenseModalProps) {
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#F1D97E' }}>
                   Autor y Creador Original del Proyecto
                 </div>
-                <div style={{ fontSize: 12, color: '#D0D0DC', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                   Desarrollado y mantenido por <strong>José Zapata</strong> (
                   <a
                     href="https://github.com/Rosdevdr"
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}
+                    style={{ color: 'var(--gold-primary)', textDecoration: 'none', fontWeight: 600 }}
                   >
                     @Rosdevdr
                   </a>
@@ -78,7 +78,7 @@ export function MitLicenseModal({ isOpen, onClose }: MitLicenseModalProps) {
             >
               <GithubIcon size={14} />
               <span>Ver Repo</span>
-              <ExternalLink size={12} style={{ color: '#888898' }} />
+              <ExternalLink size={12} style={{ color: 'var(--text-muted)' }} />
             </a>
           </div>
 
@@ -129,7 +129,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         {/* Footer */}
         <div className="mit-modal-footer">
           <div className="mit-footer-badge">
-            <ShieldCheck size={14} style={{ color: '#34D399' }} />
+            <ShieldCheck size={14} style={{ color: 'var(--emerald-success)' }} />
             <span>Open Source Community Initiative</span>
           </div>
 

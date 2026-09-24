@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { X, Sliders, TrendingUp, ArrowRightLeft, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { formatCurrency } from '../../utils/formatters'
 import type { Income, Expense } from '../../types/finance'
@@ -62,7 +62,7 @@ export function ScenarioSimulatorModal({
       <div className="modal-card scenario-modal-card" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Sliders size={20} style={{ color: '#F3CA65' }} />
+            <Sliders size={20} style={{ color: 'var(--gold-hover)' }} />
             <h2 className="modal-title">Simulador de Escenarios Financieros ("What-If")</h2>
           </div>
           <button type="button" className="modal-close" onClick={onClose}>
@@ -71,7 +71,7 @@ export function ScenarioSimulatorModal({
         </div>
 
         <div className="modal-body" style={{ padding: '18px 22px' }}>
-          <p style={{ fontSize: 12.5, color: '#9CA3AF', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12.5, color: 'var(--text-muted)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
             Experimenta cómo pequeñas decisiones u horizontes futuros alteran tu capacidad de ahorro proyectada en los próximos <strong>{projectionMonths} meses</strong>.
           </p>
 
@@ -198,10 +198,10 @@ export function ScenarioSimulatorModal({
             </div>
 
             <div className="scenario-card simulated">
-              <div className="scenario-card-title" style={{ color: '#F3CA65' }}>
+              <div className="scenario-card-title" style={{ color: 'var(--gold-hover)' }}>
                 <TrendingUp size={14} /> Escenario Simulado ("What-If")
               </div>
-              <div className="scenario-card-value" style={{ color: '#F3CA65' }}>
+              <div className="scenario-card-value" style={{ color: 'var(--gold-hover)' }}>
                 {formatCurrency(simAccumulated)}
               </div>
               <div className="scenario-card-sub">
@@ -220,15 +220,15 @@ export function ScenarioSimulatorModal({
             gap: 12,
           }}>
             {isPositiveGain ? (
-              <CheckCircle2 size={24} style={{ color: '#34D399', flexShrink: 0 }} />
+              <CheckCircle2 size={24} style={{ color: 'var(--emerald-success)', flexShrink: 0 }} />
             ) : (
-              <AlertTriangle size={24} style={{ color: '#EF4444', flexShrink: 0 }} />
+              <AlertTriangle size={24} style={{ color: 'var(--rose-danger)', flexShrink: 0 }} />
             )}
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: isPositiveGain ? '#34D399' : '#EF4444' }}>
                 Impacto Neto Proyectado: {isPositiveGain ? `+${formatCurrency(difference)}` : formatCurrency(difference)} en {projectionMonths} meses
               </div>
-              <div style={{ fontSize: 11.5, color: '#D1D5DB', marginTop: 2 }}>
+              <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 2 }}>
                 {isPositiveGain
                   ? 'Este escenario incrementa tu patrimonio libre y acelerará tus metas de ahorro e inversión.'
                   : 'Este escenario reduce tu margen de liquidez disponible. Te recomendamos compensar reduciendo gastos no esenciales.'}
@@ -237,7 +237,7 @@ export function ScenarioSimulatorModal({
           </div>
         </div>
 
-        <div className="modal-footer" style={{ padding: '14px 24px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'flex-end', background: '#0E0E14' }}>
+        <div className="modal-footer" style={{ padding: '14px 24px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'flex-end', background: 'var(--bg-surface)' }}>
           <button
             type="button"
             className="mit-submit-btn"

@@ -1,161 +1,364 @@
-/* src/components/layout/Sidebar.css - Apex Obsidian Sidebar */
+/* src/components/layout/Sidebar.css - Stitch Exact Implementation */
 
 .sidebar-obsidian {
   display: flex;
   flex-direction: column;
-  width: 260px;
+  justify-content: space-between;
+  width: 288px;
+  min-width: 288px;
   height: 100vh;
-  background: rgba(6, 7, 9, 0.65);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  height: 100dvh;
+  background-color: var(--color-surface-container-low, #181c24);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 24px 16px;
-  color: #D0D0DC;
+  padding: 16px;
+  color: var(--color-on-surface, #dfe2ee);
   position: relative;
-  z-index: 40;
-  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 50;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
+.sidebar-obsidian::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-obsidian::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Logo Area */
 .sidebar-obsidian .logo-container {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 8px 32px 8px;
+  gap: 10px;
+  padding: 4px 6px 20px 6px;
 }
 
+.sidebar-obsidian .logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-obsidian .logo-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-on-surface, #dfe2ee);
+  line-height: 1.2;
+}
+
+.sidebar-obsidian .logo-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-primary, #ffc174);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* Nav Sections */
 .sidebar-obsidian .nav-section {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .sidebar-obsidian .nav-label {
-  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #555566;
-  font-weight: 700;
-  padding: 0 12px 10px 12px;
+  letter-spacing: 0.08em;
+  color: var(--color-outline, #a08e7a);
+  padding: 4px 10px 6px 10px;
 }
 
-/* Nav Item - Apple Design Spring Physics */
+/* Nav Items */
 .sidebar-obsidian .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  color: #888899;
-  font-size: 13.5px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  color: var(--color-on-surface-variant, #d8c3ad);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
   font-weight: 500;
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: relative;
-  overflow: hidden;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
+  text-decoration: none;
+  width: 100%;
 }
 
-/* Hover effect */
 .sidebar-obsidian .nav-item:hover {
-  background: rgba(255, 255, 255, 0.03);
-  color: #D0D0DC;
-  transform: scale(1.02);
+  background-color: var(--color-surface-container-high, #262a33);
+  color: var(--color-on-surface, #dfe2ee);
 }
 
-/* Active Glow State */
+/* Active State Exact to Stitch */
 .sidebar-obsidian .nav-item.active {
-  background: rgba(201, 168, 76, 0.1);
-  border: 1px solid rgba(201, 168, 76, 0.2);
-  color: #F3CA65;
-  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.05), inset 0 1px 0 rgba(255,255,255,0.05);
+  background-color: var(--color-primary-container, #f59e0b) !important;
+  color: var(--color-on-primary, #472a00) !important;
   font-weight: 600;
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.18);
 }
 
 .sidebar-obsidian .nav-item.active .nav-icon {
-  color: #F3CA65;
-  filter: drop-shadow(0 0 6px rgba(201, 168, 76, 0.4));
+  color: var(--color-on-primary, #472a00) !important;
+}
+
+.sidebar-obsidian .nav-item.active span {
+  color: var(--color-on-primary, #472a00) !important;
 }
 
 .sidebar-obsidian .nav-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #717182;
-  transition: color 0.3s ease, filter 0.3s ease;
+  color: inherit;
+  flex-shrink: 0;
 }
 
-.sidebar-obsidian .nav-item:hover .nav-icon {
-  color: #D0D0DC;
+/* Divider */
+.sidebar-obsidian .nav-divider {
+  height: 1px;
+  background-color: rgba(49, 53, 62, 0.4);
+  margin: 10px 4px 14px 4px;
 }
 
-/* Emil Kowalski micro-interaction for active indicator */
-.sidebar-obsidian .nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 60%;
-  width: 3px;
-  background: #C9A84C;
-  border-radius: 0 4px 4px 0;
-  box-shadow: 0 0 8px rgba(201, 168, 76, 0.8);
+/* MIT Badge */
+.sidebar-obsidian .badge-mit {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--color-surface-variant, #31353e);
+  color: var(--color-on-surface-variant, #d8c3ad);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: auto;
 }
 
-/* Footer elements */
-.sidebar-obsidian .sidebar-footer {
-  margin-top: auto;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+/* Bottom Membresía Private Card Exact to Stitch */
+.sidebar-obsidian .sidebar-membership-card {
+  padding: 14px;
+  border-radius: 12px;
+  background-color: var(--color-surface-container, #1c2028);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sidebar-obsidian .membership-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.sidebar-obsidian .avatar-glass {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(201,168,76,0.2) 0%, rgba(15,15,23,0.8) 100%);
-  border: 1px solid rgba(201, 168, 76, 0.3);
+.sidebar-obsidian .membership-tag {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-primary, #ffc174);
+  letter-spacing: 0.08em;
+}
+
+.sidebar-obsidian .membership-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-obsidian .membership-tier {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-on-surface, #dfe2ee);
+}
+
+.sidebar-obsidian .membership-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: var(--color-tertiary, #56e5a9);
+  box-shadow: 0 0 8px rgba(86, 229, 169, 0.6);
+}
+
+.sidebar-obsidian .membership-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--color-on-surface-variant, #d8c3ad);
+}
+
+.sidebar-obsidian .membership-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 4px;
+}
+
+.sidebar-obsidian .user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sidebar-obsidian .user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: var(--color-surface-container-high, #262a33);
+  color: var(--color-primary, #ffc174);
+  font-size: 10px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: #F3CA65;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  flex-shrink: 0;
 }
 
-.sidebar-obsidian .user-details {
+.sidebar-obsidian .user-meta {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .sidebar-obsidian .user-name {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: #E2E2EB;
+  color: var(--color-on-surface, #dfe2ee);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
-.sidebar-obsidian .user-status {
+.sidebar-obsidian .user-sync {
   font-size: 10px;
+  color: var(--color-tertiary, #56e5a9);
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #34D399;
 }
 
-/* Mobile backdrop */
+.sidebar-obsidian .membership-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-obsidian .action-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-outline, #a08e7a);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.sidebar-obsidian .action-icon-btn:hover {
+  color: var(--color-on-surface, #dfe2ee);
+  background: var(--color-surface-container-high, #262a33);
+}
+
+/* Mobile Drawer Overlay */
 .sidebar-backdrop-glass {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 30;
-  animation: fadeIn 0.3s ease-out;
+  z-index: 45;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-obsidian {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+  }
+
+  .sidebar-obsidian.mobile-open {
+    transform: translateX(0);
+  }
+}
+
+/* ── Light Mode Overrides for Sidebar ── */
+[data-theme='light'] .sidebar-obsidian {
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='light'] .sidebar-obsidian .logo-title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .sidebar-obsidian .nav-label {
+  color: #64748b;
+}
+
+[data-theme='light'] .sidebar-obsidian .nav-item {
+  color: #334155;
+}
+
+[data-theme='light'] .sidebar-obsidian .nav-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+[data-theme='light'] .sidebar-obsidian .nav-item.active {
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
+[data-theme='light'] .sidebar-obsidian .nav-item.active .nav-icon,
+[data-theme='light'] .sidebar-obsidian .nav-item.active span {
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .sidebar-obsidian .nav-divider {
+  background-color: #e2e8f0;
+}
+
+[data-theme='light'] .sidebar-obsidian .membership-card {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+[data-theme='light'] .sidebar-obsidian .user-name {
+  color: #0f172a;
+}
+
+[data-theme='light'] .sidebar-obsidian .action-icon-btn {
+  color: #64748b;
+}
+
+[data-theme='light'] .sidebar-obsidian .action-icon-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }

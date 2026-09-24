@@ -1,14 +1,16 @@
-/* src/components/budgets/FireCalculatorModal.css - Apex Obsidian */
+/* src/components/budgets/FireCalculatorModal.css - Apex Obsidian / Stripe+Revolut */
 
 .fire-modal-card {
   width: 100%;
-  max-width: 650px;
-  background: rgba(10, 11, 16, 0.85);
+  max-width: min(94vw, 760px);
+  background: var(--bg-card);
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-default);
   border-radius: 20px;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: var(--shadow-modal), var(--specular-top);
   overflow: hidden;
+  color: var(--text-primary);
 }
 
 .fire-controls-grid {
@@ -19,16 +21,16 @@
 }
 
 .fire-control-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 16px;
-  transition: all 0.3s ease;
+  transition: all 0.25s var(--ease-spring);
 }
 
 .fire-control-card:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--bg-card-hover);
+  border-color: var(--border-default);
 }
 
 .fire-control-header {
@@ -44,24 +46,25 @@
   gap: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #888899;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .fire-control-val {
-  font-family: 'Space Grotesk', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 15px;
   font-weight: 700;
-  color: #E2E2EB;
+  color: var(--text-primary);
 }
 
 /* Base Slider Styling */
 .fire-slider {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-default);
   border-radius: 4px;
   outline: none;
   margin-bottom: 16px;
@@ -69,12 +72,13 @@
 
 .fire-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
+  appearance: none;
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #E2E2EB;
+  background: var(--gold-primary);
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(255,255,255,0.3);
+  box-shadow: 0 0 10px var(--gold-glow);
   transition: transform 0.2s;
 }
 
@@ -84,16 +88,16 @@
 
 /* Colored Sliders */
 .fire-slider.emerald::-webkit-slider-thumb {
-  background: #34D399;
-  box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+  background: var(--emerald-success);
+  box-shadow: 0 0 10px var(--emerald-glow);
 }
 .fire-slider.blue::-webkit-slider-thumb {
   background: #60A5FA;
-  box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.4);
 }
 .fire-slider.gold::-webkit-slider-thumb {
-  background: #C9A84C;
-  box-shadow: 0 0 10px rgba(201, 168, 76, 0.5);
+  background: var(--gold-primary);
+  box-shadow: 0 0 10px var(--gold-glow);
 }
 
 /* Presets */
@@ -104,10 +108,10 @@
 }
 
 .fire-preset-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  color: #A0A0B0;
+  color: var(--text-secondary);
   font-size: 10px;
   font-weight: 600;
   padding: 4px 8px;
@@ -116,70 +120,99 @@
 }
 
 .fire-preset-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
 }
 
 .fire-preset-btn.active {
-  background: rgba(201, 168, 76, 0.15);
-  border-color: rgba(201, 168, 76, 0.5);
-  color: #F3CA65;
+  background: var(--gold-subtle);
+  border-color: var(--gold-primary);
+  color: var(--gold-hover);
 }
 
 /* Fire Grid (Results) */
 .fire-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 24px;
 }
 
 .fire-card {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 16px;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .fire-card.gold {
-  background: rgba(201, 168, 76, 0.05);
-  border-color: rgba(201, 168, 76, 0.3);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(201,168,76,0.1);
+  background: var(--gold-subtle);
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: var(--shadow-card), var(--specular-top);
 }
 
 .fire-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .fire-title {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: #E2E2EB;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .fire-sub {
   font-size: 10px;
-  color: #717182;
-  line-height: 1.4;
+  color: var(--text-muted);
+  line-height: 1.35;
 }
 
 .fire-value {
-  font-family: 'Space Grotesk', monospace;
-  font-size: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(13px, 1.4vw, 17px);
   font-weight: 700;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .fire-controls-grid {
     grid-template-columns: 1fr;
   }
   .fire-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Light Mode Overrides for FireCalculatorModal */
+[data-theme='light'] .fire-modal-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+[data-theme='light'] .fire-control-card,
+[data-theme='light'] .fire-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+[data-theme='light'] .fire-title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .fire-control-val {
+  color: #0f172a;
 }

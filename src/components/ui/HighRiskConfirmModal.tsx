@@ -86,10 +86,10 @@ export function HighRiskConfirmModal({
         className="modal-card"
         style={{
           maxWidth: 480,
-          background: '#111117',
-          border: '1px solid rgba(201, 168, 76, 0.35)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-default)',
           borderRadius: 18,
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(201, 168, 76, 0.15)',
+          boxShadow: 'var(--shadow-modal), var(--specular-top)',
           overflow: 'hidden',
           padding: 24,
         }}
@@ -108,16 +108,16 @@ export function HighRiskConfirmModal({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#F3CA65',
+                color: 'var(--gold-hover)',
               }}
             >
               <ShieldAlert size={18} />
             </div>
             <div>
-              <div style={{ fontSize: 10, fontFamily: 'Space Mono, monospace', color: '#C9A84C', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: 10, fontFamily: 'Space Mono, monospace', color: 'var(--gold-primary)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                 Fricción Positiva de Seguridad
               </div>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF', margin: 0, fontFamily: 'Space Grotesk, sans-serif' }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: 'Space Grotesk, sans-serif' }}>
                 Transacción de Alto Impacto
               </h3>
             </div>
@@ -129,7 +129,7 @@ export function HighRiskConfirmModal({
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#888898',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               padding: 4,
             }}
@@ -141,21 +141,21 @@ export function HighRiskConfirmModal({
         {/* Amount Hero */}
         <div
           style={{
-            background: 'linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(14, 14, 20, 0.98) 100%)',
-            border: '1px solid rgba(201, 168, 76, 0.25)',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
             borderRadius: 14,
             padding: '16px 18px',
             textAlign: 'center',
             marginBottom: 16,
           }}
         >
-          <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Monto a Deducir
           </div>
-          <div style={{ fontSize: 28, fontWeight: 700, color: '#F3CA65', fontFamily: 'Space Mono, monospace', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--gold-hover)', fontFamily: 'Space Mono, monospace', letterSpacing: '-0.02em' }}>
             {formatCurrency(amount)}
           </div>
-          <div style={{ fontSize: 12, color: '#D0D0DC', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
             {concept} {categoryLabel ? `· ${categoryLabel}` : ''}
           </div>
         </div>
@@ -172,13 +172,13 @@ export function HighRiskConfirmModal({
               gap: 10,
               padding: '8px 12px',
               borderRadius: 8,
-              background: step >= 1 ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
-              border: `1px solid ${step >= 1 ? 'rgba(201, 168, 76, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
+              background: step >= 1 ? 'var(--bg-surface)' : 'transparent',
+              border: `1px solid ${step >= 1 ? 'var(--border-default)' : 'var(--border-subtle)'}`,
               transition: 'all 0.2s ease',
             }}
           >
-            <CheckCircle2 size={16} style={{ color: step >= 1 ? '#34D399' : '#555566' }} />
-            <div style={{ fontSize: 12, color: '#E0E0EC', flex: 1 }}>
+            <CheckCircle2 size={16} style={{ color: step >= 1 ? 'var(--emerald-success)' : 'var(--text-muted)' }} />
+            <div style={{ fontSize: 12, color: 'var(--text-primary)', flex: 1 }}>
               Verificación de umbral de capital (&gt; RD$ 25,000)
             </div>
           </div>
@@ -193,14 +193,14 @@ export function HighRiskConfirmModal({
               gap: 10,
               padding: '8px 12px',
               borderRadius: 8,
-              background: step >= 2 ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
-              border: `1px solid ${step >= 2 ? 'rgba(201, 168, 76, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
+              background: step >= 2 ? 'var(--bg-surface)' : 'transparent',
+              border: `1px solid ${step >= 2 ? 'var(--border-default)' : 'var(--border-subtle)'}`,
               transition: 'all 0.2s ease',
             }}
           >
-            <CheckCircle2 size={16} style={{ color: step >= 2 ? '#34D399' : '#555566' }} />
-            <div style={{ fontSize: 12, color: '#E0E0EC', flex: 1 }}>
-              Saldo libre resultante: <strong style={{ color: remainingBalance >= 0 ? '#34D399' : '#FB7185' }}>{formatCurrency(remainingBalance)}</strong>
+            <CheckCircle2 size={16} style={{ color: step >= 2 ? 'var(--emerald-success)' : 'var(--text-muted)' }} />
+            <div style={{ fontSize: 12, color: 'var(--text-primary)', flex: 1 }}>
+              Saldo libre resultante: <strong style={{ color: remainingBalance >= 0 ? 'var(--emerald-success)' : 'var(--rose-danger)' }}>{formatCurrency(remainingBalance)}</strong>
             </div>
           </div>
 
@@ -214,13 +214,13 @@ export function HighRiskConfirmModal({
               gap: 10,
               padding: '8px 12px',
               borderRadius: 8,
-              background: step >= 3 ? 'rgba(201, 168, 76, 0.08)' : 'transparent',
-              border: `1px solid ${step >= 3 ? 'rgba(201, 168, 76, 0.35)' : 'rgba(255, 255, 255, 0.05)'}`,
+              background: step >= 3 ? 'var(--gold-subtle)' : 'transparent',
+              border: `1px solid ${step >= 3 ? 'var(--border-focus)' : 'var(--border-subtle)'}`,
               transition: 'all 0.2s ease',
             }}
           >
-            <ShieldCheck size={16} style={{ color: step >= 3 ? '#F3CA65' : '#555566' }} />
-            <div style={{ fontSize: 12, color: '#E0E0EC', flex: 1 }}>
+            <ShieldCheck size={16} style={{ color: step >= 3 ? 'var(--gold-primary)' : 'var(--text-muted)' }} />
+            <div style={{ fontSize: 12, color: 'var(--text-primary)', flex: 1 }}>
               Sello de integridad AUREUS listo para estampar
             </div>
           </div>

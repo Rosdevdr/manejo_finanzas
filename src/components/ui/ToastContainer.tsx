@@ -14,28 +14,28 @@ const VARIANT_CONFIG: Record<
   success: {
     border: 'rgba(52, 211, 153, 0.35)',
     bg: 'rgba(12, 24, 18, 0.95)',
-    iconColor: '#34D399',
+    iconColor: 'var(--emerald-success)',
     icon: <CheckCircle2 size={16} />,
     glow: 'rgba(52, 211, 153, 0.15)',
   },
   error: {
     border: 'rgba(248, 113, 113, 0.4)',
     bg: 'rgba(28, 14, 16, 0.95)',
-    iconColor: '#F87171',
+    iconColor: 'var(--rose-danger)',
     icon: <AlertCircle size={16} />,
     glow: 'rgba(248, 113, 113, 0.18)',
   },
   warning: {
     border: 'rgba(251, 191, 36, 0.4)',
     bg: 'rgba(28, 22, 12, 0.95)',
-    iconColor: '#FBBF24',
+    iconColor: 'var(--amber-warning)',
     icon: <AlertTriangle size={16} />,
     glow: 'rgba(251, 191, 36, 0.18)',
   },
   info: {
     border: 'rgba(201, 168, 76, 0.35)',
     bg: 'rgba(22, 20, 14, 0.95)',
-    iconColor: '#F3CA65',
+    iconColor: 'var(--gold-hover)',
     icon: <Info size={16} />,
     glow: 'rgba(201, 168, 76, 0.15)',
   },
@@ -158,7 +158,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
           style={{
             background: 'rgba(201, 168, 76, 0.15)',
             border: '1px solid rgba(201, 168, 76, 0.35)',
-            color: '#F3CA65',
+            color: 'var(--gold-hover)',
             fontSize: 11,
             fontWeight: 700,
             padding: '5px 10px',
@@ -180,8 +180,8 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
         aria-label="Cerrar notificación"
         style={{
           background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          color: '#888898',
+          border: '1px solid var(--border-default)',
+          color: 'var(--text-muted)',
           cursor: 'pointer',
           padding: 4,
           borderRadius: 6,

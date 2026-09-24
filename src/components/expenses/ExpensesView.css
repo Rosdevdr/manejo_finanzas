@@ -1,4 +1,4 @@
-/* src/components/expenses/ExpensesView.css - Apex Obsidian Data Grid */
+﻿/* src/components/expenses/ExpensesView.css - Apex Obsidian Data Grid (Stripe + Revolut) */
 
 .expenses-obsidian-root {
   display: flex;
@@ -13,21 +13,23 @@
 }
 
 .expenses-obsidian-kpi-card {
-  background: rgba(12, 13, 20, 0.7);
+  background: var(--bg-card);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 16px 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: all 0.3s ease;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 300ms ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .expenses-obsidian-kpi-card:hover {
-  background: rgba(26, 29, 46, 0.7);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--bg-card-hover);
+  border-color: var(--border-focus);
   transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
 .expenses-obsidian-kpi-header {
@@ -40,14 +42,14 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #888899;
+  color: var(--text-muted);
   font-weight: 600;
 }
 
 .expenses-obsidian-kpi-val {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  color: #E2E2EB;
+  color: var(--text-primary);
   font-family: 'Space Grotesk', system-ui, sans-serif;
   letter-spacing: -0.02em;
 }
@@ -57,16 +59,17 @@
 
 /* High Density Data Grid */
 .obsidian-data-grid-container {
-  background: rgba(12, 13, 20, 0.6);
+  background: var(--bg-card);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
   border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
 .obsidian-data-grid-header {
   padding: 16px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -75,7 +78,7 @@
 .obsidian-data-grid-title {
   font-size: 14px;
   font-weight: 600;
-  color: #E2E2EB;
+  color: var(--text-primary);
 }
 
 .obsidian-table-wrapper {
@@ -90,21 +93,21 @@
 }
 
 .obsidian-table th {
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #717182;
+  color: var(--text-muted);
   padding: 12px 24px;
   font-weight: 600;
-  background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgba(128, 128, 128, 0.05);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .obsidian-table td {
   padding: 14px 24px;
-  font-size: 13px;
-  color: #C0C0D0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  font-size: 14px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
   transition: background 0.15s ease;
 }
 
@@ -113,29 +116,27 @@
 }
 
 .obsidian-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
-  color: #E2E2EB;
+  background: rgba(128, 128, 128, 0.03);
 }
 
 .obsidian-table .cell-date {
-  font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  color: #888899;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .obsidian-table .cell-amount {
-  font-family: 'Space Mono', monospace;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .obsidian-table .cell-amount.negative {
-  color: #F87171;
+  color: var(--rose-danger);
 }
 
 .obsidian-table .cell-amount.positive {
-  color: #34D399;
+  color: var(--emerald-success);
 }
 
 .obsidian-table .action-cell {
@@ -147,19 +148,19 @@
 .obsidian-icon-btn {
   background: transparent;
   border: none;
-  color: #717182;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .obsidian-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #E2E2EB;
+  background: rgba(128, 128, 128, 0.08);
+  color: var(--text-primary);
 }
 
 .obsidian-icon-btn.danger:hover {
-  background: rgba(248, 113, 113, 0.1);
-  color: #F87171;
+  background: var(--rose-glow);
+  color: var(--rose-danger);
 }

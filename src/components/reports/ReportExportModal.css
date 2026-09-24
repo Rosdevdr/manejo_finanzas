@@ -1,10 +1,13 @@
-/* src/components/reports/ReportExportModal.css */
+/* src/components/reports/ReportExportModal.css - Apex Obsidian / Stripe+Revolut */
 
 .export-modal-card {
   width: min(94vw, 680px) !important;
   max-width: 680px !important;
   box-sizing: border-box;
   overflow-x: hidden !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-modal), var(--specular-top) !important;
 }
 
 .export-modal-grid {
@@ -17,8 +20,8 @@
 }
 
 .export-action-card {
-  background: rgba(22, 22, 32, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
   border-radius: 14px;
   padding: 18px 20px;
   display: flex;
@@ -34,9 +37,9 @@
 
 .export-action-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(201, 168, 76, 0.35);
-  background: rgba(30, 30, 42, 0.95);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-color: var(--gold-primary);
+  background: var(--bg-card-hover);
+  box-shadow: var(--shadow-card);
 }
 
 .export-card-icon {
@@ -53,18 +56,18 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 14px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--text-primary);
 }
 
 .export-card-desc {
   font-size: 11.5px;
-  color: #888898;
+  color: var(--text-muted);
   line-height: 1.45;
 }
 
 .export-summary-box {
-  background: rgba(17, 17, 24, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 14px;
   margin-top: 12px;
@@ -82,15 +85,16 @@
 .export-summary-label {
   font-size: 10.5px;
   font-weight: 600;
-  color: #717182;
+  color: var(--text-muted);
   text-transform: uppercase;
   font-family: 'Space Grotesk', sans-serif;
 }
 
 .export-summary-val {
-  font-family: 'Space Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   font-weight: 700;
+  color: var(--text-primary);
 }
 
 @media (max-width: 600px) {

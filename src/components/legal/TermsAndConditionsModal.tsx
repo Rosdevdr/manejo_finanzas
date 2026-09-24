@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   FileText,
@@ -343,7 +343,7 @@ export function TermsAndConditionsModal({ isOpen, onClose, onOpenSecurity }: Ter
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Trash2 size={20} className="text-red" style={{ flexShrink: 0, marginTop: 2 }} />
                     <div>
-                      <strong style={{ color: '#F87171' }}>¿Cómo ejercer tu Derecho al Olvido en la plataforma?</strong>
+                      <strong style={{ color: 'var(--rose-danger)' }}>¿Cómo ejercer tu Derecho al Olvido en la plataforma?</strong>
                       <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.45, color: '#E4E4E7' }}>
                         1. Abre el menú de usuario o presiona el botón <strong>Seguridad</strong> en la barra superior.<br />
                         2. Localiza la sección <strong>"Zona de Peligro: Derecho a la Cancelación y al Olvido (Ley 172-13 / GDPR)"</strong>.<br />

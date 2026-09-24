@@ -1,4 +1,4 @@
-/* ============================================ */
+﻿/* ============================================ */
 /* OVERLAY & FONDOS                             */
 /* ============================================ */
 .transaction-confirmation-overlay {
@@ -25,7 +25,7 @@
   padding: 32px;
   max-width: 440px;
   width: 100%;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), 0 0 40px rgba(201, 168, 76, 0.08);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.1), 0 0 40px rgba(201, 168, 76, 0.08);
   position: relative;
   overflow: hidden;
   animation: slideInCard 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -37,7 +37,7 @@
   justify-content: space-between;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border-focus);
 }
 
 .transaction-security-badge {
@@ -85,7 +85,7 @@
   align-items: center;
   padding: 8px 0;
   font-size: 13.5px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--border-subtle);
   opacity: 0;
   animation: fadeInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -100,12 +100,12 @@
 .summary-row[data-row="4"] { animation-delay: 0.38s; }
 
 .summary-label {
-  color: #9CA3AF;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .summary-value {
-  color: #F5F5F5;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -159,7 +159,7 @@
 .authorization-title {
   font-size: 18px;
   font-weight: 700;
-  color: #F5F5F5;
+  color: var(--text-primary);
   margin-bottom: 8px;
   font-family: 'Space Grotesk', system-ui, sans-serif;
 }
@@ -167,7 +167,7 @@
 .authorization-message {
   font-size: 13px;
   line-height: 1.5;
-  color: #9CA3AF;
+  color: var(--text-muted);
   margin-bottom: 24px;
 }
 
@@ -230,8 +230,8 @@
 .btn-cancel-transaction {
   flex: 1;
   padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #D1D5DB;
+  background: var(--border-subtle);
+  color: var(--text-secondary);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   font-weight: 600;
@@ -304,7 +304,7 @@
   font-size: 20px;
   font-weight: 700;
   text-align: center;
-  color: #F5F5F5;
+  color: var(--text-primary);
   font-family: 'Space Grotesk', system-ui, sans-serif;
   animation: fadeInUp 0.4s ease-out 0.4s both;
 }
@@ -312,7 +312,7 @@
 .seal-transaction-details {
   margin-top: 10px;
   font-size: 13px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   text-align: center;
   animation: fadeInUp 0.4s ease-out 0.55s both;
 }
@@ -448,3 +448,4 @@
     transition-duration: 0.01ms !important;
   }
 }
+

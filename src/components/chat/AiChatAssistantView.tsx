@@ -198,11 +198,11 @@ export function AiChatAssistantView({
   const getInitialWelcomeMessage = (): ChatMessage => ({
     id: `msg-welcome-init-${userKey}`,
     sender: 'assistant',
-    text: `¡Bienvenido de nuevo, **${capitalizedName}**! 👋
+    text: `¡Bienvenido de nuevo, **${capitalizedName}**!
 
 Soy tu **Asesor Financiero con Inteligencia Artificial**. He cargado en vivo la información de tus **ingresos, gastos, tarjetas y presupuestos** para el período **${currentPeriod}**.
 
-💡 **Consejo Financiero del Día (${dailyTip.category.toUpperCase()}):**
+**Consejo Financiero del Día (${dailyTip.category.toUpperCase()}):**
 *${dailyTip.title}* — ${dailyTip.content}
 
 Tu historial conversacional está cifrado y **100% aislado para la cuenta (${userEmail || 'Modo Local'})**. ¿En qué puedo ayudarte hoy?`,
@@ -371,8 +371,8 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
         </div>
         <div className="chat-header-badges">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(52, 211, 153, 0.08)', padding: '4px 10px', borderRadius: 12, border: '1px solid rgba(52, 211, 153, 0.25)' }}>
-            <ShieldCheck size={13} style={{ color: '#34D399' }} />
-            <span style={{ fontSize: 10.5, color: '#34D399', fontFamily: 'Space Mono, monospace' }}>Art. 50 UE AI Act</span>
+            <ShieldCheck size={13} style={{ color: 'var(--emerald-success)' }} />
+            <span style={{ fontSize: 10.5, color: 'var(--emerald-success)', fontFamily: 'Space Mono, monospace' }}>Art. 50 UE AI Act</span>
           </div>
 
           <button
@@ -387,12 +387,12 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
           >
             {apiKey ? (
               <>
-                <Sparkles size={12} style={{ color: '#34D399' }} />
+                <Sparkles size={12} style={{ color: 'var(--emerald-success)' }} />
                 <span>Gemini AI Activo ({selectedModel})</span>
               </>
             ) : (
               <>
-                <Key size={12} style={{ color: '#F3CA65' }} />
+                <Key size={12} style={{ color: 'var(--gold-hover)' }} />
                 <span>Modo Local (Offline) · Conectar Gemini Gratis</span>
               </>
             )}
@@ -422,11 +422,11 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
 
           <div className="chat-header-actions">
             <div className="chat-context-pills">
-              <span className="context-pill" style={{ color: '#F3CA65', borderColor: 'rgba(243, 202, 101, 0.3)' }}>
+              <span className="context-pill" style={{ color: 'var(--gold-hover)', borderColor: 'rgba(243, 202, 101, 0.3)' }}>
                 Disponible: {formatCurrency(cumulative.totalCumulativeBalance)}
               </span>
               {cumulative.carriedOverBalance !== 0 && (
-                <span className="context-pill" style={{ color: '#34D399', borderColor: 'rgba(52, 211, 153, 0.3)' }}>
+                <span className="context-pill" style={{ color: 'var(--emerald-success)', borderColor: 'rgba(52, 211, 153, 0.3)' }}>
                   Arrastre: {formatCurrency(cumulative.carriedOverBalance)}
                 </span>
               )}
@@ -457,7 +457,7 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
               title="Configurar Google Gemini API Key"
             >
               <Key size={13} />
-              <span>{apiKey ? 'Configurar Gemini' : '⚡ Conectar Gemini'}</span>
+              <span>{apiKey ? 'Configurar Gemini' : 'Conectar Gemini'}</span>
             </button>
 
             <button
@@ -470,7 +470,7 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
               style={{ padding: '6px 12px', fontSize: 11.5, borderRadius: 8, gap: 6 }}
               title="Borrar historial privado de esta cuenta"
             >
-              <Trash2 size={13} style={{ color: '#FB7185' }} />
+              <Trash2 size={13} style={{ color: 'var(--rose-danger)' }} />
               <span className="chat-clear-btn-text">Limpiar Memoria</span>
             </button>
           </div>
@@ -496,7 +496,7 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
                   <span className="message-time">{msg.timestamp}</span>
                   {msg.sender === 'assistant' && (
                     <span className={`engine-source-tag ${msg.source === 'gemini' ? 'gemini' : 'local'}`}>
-                      {msg.source === 'gemini' ? '✨ Gemini AI' : '🛡️ Motor Local AUREUS'}
+                      {msg.source === 'gemini' ? 'Gemini AI' : 'Motor Local AUREUS'}
                     </span>
                   )}
                 </div>
@@ -520,8 +520,8 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
               <div className="ai-avatar-icon">
                 <Bot size={16} />
               </div>
-              <div className="message-bubble" style={{ color: '#9CA3AF', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={14} className="spin" style={{ color: '#F3CA65' }} /> Procesando datos de tu cartera...
+              <div className="message-bubble" style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Sparkles size={14} className="spin" style={{ color: 'var(--gold-hover)' }} /> Procesando datos de tu cartera...
               </div>
             </div>
           )}
@@ -529,7 +529,7 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
 
         {/* Quick Suggestion Chips */}
         <div className="prompt-chips-container">
-          <Sparkles size={14} style={{ color: '#F3CA65', flexShrink: 0 }} />
+          <Sparkles size={14} style={{ color: 'var(--gold-hover)', flexShrink: 0 }} />
           {QUICK_PROMPTS.map((prompt, idx) => (
             <button key={idx} className="chip-btn" onClick={() => handleSendMessage(prompt)}>
               {prompt}
@@ -561,22 +561,22 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
           <div
             className="mit-modal-card"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 520, background: '#12121A', border: '1px solid rgba(243, 202, 101, 0.3)', borderRadius: 16, padding: 24 }}
+            style={{ maxWidth: 520, background: 'var(--bg-card)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-modal), var(--specular-top)', borderRadius: 16, padding: 24 }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(243, 202, 101, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Key size={18} style={{ color: '#F3CA65' }} />
+                  <Key size={18} style={{ color: 'var(--gold-hover)' }} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 16, color: '#FFF', fontWeight: 700 }}>Conexión con Google Gemini AI</h3>
-                  <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>Alimenta al Asesor Financiero con Inteligencia Artificial real</p>
+                  <h3 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)', fontWeight: 700 }}>Conexión con Google Gemini AI</h3>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>Alimenta al Asesor Financiero con Inteligencia Artificial real</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(false)}
-                style={{ background: 'transparent', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
@@ -596,20 +596,20 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: 8,
-                    background: '#1A1A24',
+                    background: 'var(--bg-card-hover)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
-                    color: '#FFF',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                     fontFamily: 'monospace',
                   }}
                 />
-                <span style={{ fontSize: 11, color: '#9CA3AF', display: 'block', marginTop: 4 }}>
-                  🔑 Tu clave se guarda exclusivamente en tu navegador local (localStorage). Puedes obtenerla gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: '#F3CA65' }}>Google AI Studio</a>.
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginTop: 4 }}>
+                  Tu clave se guarda exclusivamente en tu navegador local (localStorage). Puedes obtenerla gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'var(--gold-hover)' }}>Google AI Studio</a>.
                 </span>
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#E5E7EB', display: 'block', marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
                   Modelo de Inteligencia Artificial:
                 </label>
                 <select
@@ -619,9 +619,9 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: 8,
-                    background: '#1A1A24',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    color: '#FFF',
+                    background: 'var(--bg-card-hover)',
+                    border: '1px solid var(--border-default)',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                   }}
                 >
@@ -633,13 +633,13 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
                 </select>
               </div>
 
-              <div style={{ background: 'rgba(52, 211, 153, 0.08)', border: '1px solid rgba(52, 211, 153, 0.25)', padding: '12px 14px', borderRadius: 8, fontSize: 11.5, color: '#D1D5DB', lineHeight: 1.55 }}>
-                🟢 <strong>Plan 100% GRATIS de Google AI Studio:</strong>
+              <div style={{ background: 'var(--emerald-glow)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '12px 14px', borderRadius: 8, fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                <strong>Plan 100% GRATIS de Google AI Studio:</strong>
                 <ul style={{ margin: '6px 0 0 0', paddingLeft: 18 }}>
                   <li><strong>Costo:</strong> RD$0.00 / US$0.00. No requiere pagar ningún plan ni suscripción a Google.</li>
                   <li><strong>Capacidad:</strong> 15 consultas por minuto y hasta 1,500 consultas por día sin costo.</li>
-                  <li><strong>¿Cómo obtenerla?:</strong> Ingresa a <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: '#34D399', textDecoration: 'underline' }}>aistudio.google.com/app/apikey</a> con tu cuenta Google y pulsa <em>"Create API Key in new project"</em>.</li>
-                  <li><strong>Permanente:</strong> También puedes colocar <code style={{ color: '#F3CA65' }}>VITE_GEMINI_API_KEY=tu_clave</code> en el archivo <code style={{ color: '#F3CA65' }}>.env.local</code> para que nunca expire en este equipo.</li>
+                  <li><strong>¿Cómo obtenerla?:</strong> Ingresa a <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'var(--emerald-success)', textDecoration: 'underline' }}>aistudio.google.com/app/apikey</a> con tu cuenta Google y pulsa <em>"Create API Key in new project"</em>.</li>
+                  <li><strong>Permanente:</strong> También puedes colocar <code style={{ color: 'var(--gold-hover)' }}>VITE_GEMINI_API_KEY=tu_clave</code> en el archivo <code style={{ color: 'var(--gold-hover)' }}>.env.local</code> para que nunca expire en este equipo.</li>
                 </ul>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Banknote, AlertTriangle, Plus, Trash2, Pencil, X, Calendar, Search } from 'lucide-react'
 import type { CashWithdrawal, CashReason, Expense } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -90,8 +90,8 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
       {/* ── CABECERA INSTITUCIONAL ── */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
-          <div style={{ fontSize: 11, color: '#C9A84C', fontWeight: 700, letterSpacing: '0.15em', marginBottom: 4 }}>LIQUIDEZ EN EFECTIVO</div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.02em', margin: 0 }}>Control de Efectivo</h1>
+          <div style={{ fontSize: 11, color: 'var(--gold-primary)', fontWeight: 700, letterSpacing: '0.15em', marginBottom: 4 }}>LIQUIDEZ EN EFECTIVO</div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', margin: 0 }}>Control de Efectivo</h1>
         </div>
         <div>
           <button
@@ -99,7 +99,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
             onClick={() => setIsModalOpen(true)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              background: '#C9A84C', color: '#121420',
+              background: 'var(--gold-primary)', color: '#08080C',
               padding: '10px 20px', borderRadius: 10,
               fontWeight: 600, fontSize: 13, border: 'none',
               cursor: 'pointer', transition: 'all 0.2s'
@@ -119,7 +119,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
             <Banknote size={16} color="#C9A84C" />
           </div>
           <div className="cash-obsidian-kpi-val">{formatCurrency(totalCash)}</div>
-          <div style={{ fontSize: 12, color: '#717182' }}>{pCash.length} retiros en {currentPeriod}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{pCash.length} retiros en {currentPeriod}</div>
         </div>
 
         <div className="cash-obsidian-kpi-card">
@@ -134,7 +134,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
             </span>
           </div>
           <div className="cash-obsidian-kpi-val" style={{ color: cashPct > 25 ? '#F87171' : '#F3CA65' }}>{cashPct.toFixed(1)}%</div>
-          <div style={{ fontSize: 12, color: '#717182' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             {cashPct > 25 ? 'Umbral excedido (> 25%)' : 'Nivel de fuga óptimo'}
           </div>
         </div>
@@ -147,7 +147,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
           <div className="cash-obsidian-kpi-val" style={{ color: hasRisk ? '#F87171' : '#34D399' }}>
             {hasRisk ? 'Vulnerable' : 'Controlado'}
           </div>
-          <div style={{ fontSize: 12, color: '#717182' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             {hasRisk ? 'Se detectaron retiros sin destino' : 'Trazabilidad impecable'}
           </div>
         </div>
@@ -162,14 +162,14 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
           <div style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.3)', padding: 4, borderRadius: 10 }}>
             <button
               className={`obsidian-icon-btn ${!showAllPeriods ? 'active' : ''}`}
-              style={!showAllPeriods ? { background: '#2B2D3C', color: '#fff' } : {}}
+              style={!showAllPeriods ? { background: '#2B2D3C', color: 'var(--text-primary)' } : {}}
               onClick={() => setShowAllPeriods(false)}
             >
               <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Mes Actual</span>
             </button>
             <button
               className={`obsidian-icon-btn ${showAllPeriods ? 'active' : ''}`}
-              style={showAllPeriods ? { background: '#2B2D3C', color: '#fff' } : {}}
+              style={showAllPeriods ? { background: '#2B2D3C', color: 'var(--text-primary)' } : {}}
               onClick={() => setShowAllPeriods(true)}
             >
               <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Historial</span>
@@ -178,7 +178,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
         </div>
 
         {displayedCash.length === 0 ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#717182' }}>
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
             <Search size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
             <div style={{ fontSize: 14, fontWeight: 500 }}>No hay movimientos en este período</div>
             <div style={{ fontSize: 12, marginTop: 4 }}>Registra un retiro usando el botón superior dorado.</div>
@@ -206,7 +206,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                         <td className="cell-date">{c.date}</td>
                         <td>
                           <select
-                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12 }}
+                            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: 6, fontSize: 12 }}
                             value={editReason}
                             onChange={e => setEditReason(e.target.value as CashReason)}
                           >
@@ -217,22 +217,22 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                         </td>
                         <td>
                           <input
-                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: '100%' }}
+                            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: '100%' }}
                             value={editNote}
                             onChange={e => setEditNote(e.target.value)}
                           />
                         </td>
-                        <td className="cell-date" style={{ color: '#C9A84C' }}>{c.period}</td>
+                        <td className="cell-date" style={{ color: 'var(--gold-primary)' }}>{c.period}</td>
                         <td style={{ textAlign: 'right' }}>
                           <input
                             type="number"
-                            style={{ background: '#121420', color: '#fff', border: '1px solid #333', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: 90, textAlign: 'right' }}
+                            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: 90, textAlign: 'right' }}
                             value={editAmount}
                             onChange={e => setEditAmount(e.target.value)}
                           />
                         </td>
                         <td className="action-cell">
-                          <button className="obsidian-icon-btn" style={{ color: '#34D399' }} onClick={() => saveEdit(c)}>✓</button>
+                          <button className="obsidian-icon-btn" style={{ color: 'var(--emerald-success)' }} onClick={() => saveEdit(c)}>✓</button>
                           <button className="obsidian-icon-btn" onClick={() => setEditingId(null)}>✕</button>
                         </td>
                       </tr>
@@ -245,7 +245,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontSize: 14 }}>{r.emoji}</span>
-                          <span style={{ fontWeight: 500, color: '#E2E2EB' }}>{r.label}</span>
+                          <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{r.label}</span>
                         </div>
                       </td>
                       <td>
@@ -253,7 +253,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                           {c.note || 'Sin nota'}
                         </span>
                       </td>
-                      <td className="cell-date" style={{ color: '#C9A84C' }}>{c.period}</td>
+                      <td className="cell-date" style={{ color: 'var(--gold-primary)' }}>{c.period}</td>
                       <td className="cell-amount negative">
                         -{formatCurrency(c.amount)}
                       </td>
@@ -273,12 +273,12 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
       {/* ── MODAL (Reutilizando los estilos base, pero simplificado) ── */}
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#121420', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 24px 48px rgba(0,0,0,0.5)' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 20, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: 'var(--shadow-modal), var(--specular-top)' }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 600, color: '#E2E2EB' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
                 <Banknote size={18} color="#C9A84C" /> Registrar Retiro
               </div>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: '#717182', cursor: 'pointer' }}><X size={18} /></button>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -287,7 +287,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                   <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Monto (RD$)</label>
                   <input
                     type="number" step="0.01" min="0.01"
-                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                     value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
                     autoFocus required
                   />
@@ -295,7 +295,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Destino</label>
                   <select
-                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                     value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value as CashReason }))}
                   >
                     {Object.entries(REASON_MAP).map(([k, v]) => (
@@ -319,7 +319,7 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Nota u origen (Opcional)</label>
                 <input
-                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                   placeholder="Ej: Cajero Bravo"
                   value={form.note} onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
                 />
@@ -332,17 +332,17 @@ export function CashView({ currentPeriod, withdrawals, expenses, availableBalanc
                 </label>
                 <input
                   type="date"
-                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: '#fff', fontSize: 14 }}
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
                   value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
                   required
                 />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'var(--text-primary)', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>
                   Cancelar
                 </button>
-                <button type="submit" style={{ background: '#C9A84C', border: 'none', color: '#121420', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button type="submit" style={{ background: 'var(--gold-primary)', border: 'none', color: '#08080C', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Plus size={16} /> Guardar
                 </button>
               </div>

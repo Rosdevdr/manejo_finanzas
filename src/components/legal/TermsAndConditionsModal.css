@@ -16,10 +16,10 @@
 }
 
 .terms-modal-card {
-  background: #111117 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-default) !important;
   border-radius: 18px !important;
-  max-width: 780px !important;
+  max-width: min(94vw, 880px) !important;
   width: 100% !important;
   max-height: 88vh !important;
   display: flex !important;
@@ -47,8 +47,8 @@
   justify-content: space-between;
   gap: 16px;
   padding: 22px 26px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(25, 25, 35, 0.5) 0%, transparent 100%);
+  border-bottom: 1px solid var(--border-focus);
+  background: var(--bg-surface);
 }
 
 .terms-header-left {
@@ -73,7 +73,7 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 9px;
   font-weight: 700;
-  color: #C9A84C;
+  color: var(--gold-primary);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-bottom: 3px;
@@ -83,7 +83,7 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 19px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
   margin: 0 0 6px;
 }
@@ -94,7 +94,7 @@
   gap: 12px;
   flex-wrap: wrap;
   font-size: 11px;
-  color: #888898;
+  color: var(--text-muted);
 }
 
 .terms-meta-item {
@@ -104,9 +104,9 @@
 }
 
 .terms-close-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #888898;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
   border-radius: 8px;
   width: 32px;
   height: 32px;
@@ -120,7 +120,7 @@
 
 .terms-close-btn:hover {
   background: rgba(255, 255, 255, 0.12);
-  color: #FFFFFF;
+  color: var(--text-primary);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -128,18 +128,30 @@
 .terms-tabs-bar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 10px 18px;
-  background: #0D0D12;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
   overflow-x: auto;
   white-space: nowrap;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.45) transparent;
 }
 
 .terms-tabs-bar::-webkit-scrollbar {
-  display: none;
+  height: 5px;
+  display: block;
+}
+
+.terms-tabs-bar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.terms-tabs-bar::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.45);
+  border-radius: 4px;
 }
 
 .terms-tab-btn {
@@ -148,7 +160,7 @@
   gap: 6px;
   background: transparent;
   border: 1px solid transparent;
-  color: #888898;
+  color: var(--text-muted);
   font-family: 'Space Grotesk', sans-serif;
   font-size: 11.5px;
   font-weight: 600;
@@ -156,11 +168,12 @@
   border-radius: 7px;
   cursor: pointer;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .terms-tab-btn:hover {
-  color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  background: var(--border-subtle);
 }
 
 .terms-tab-btn.active {
@@ -175,7 +188,7 @@
   padding: 22px 26px;
   overflow-y: auto;
   flex: 1;
-  color: #D1D5DB;
+  color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.65;
 }
@@ -224,7 +237,7 @@
 }
 
 .terms-card {
-  background: #15151F;
+  background: var(--bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
   padding: 16px 18px;
@@ -280,7 +293,7 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 9px;
   font-weight: 700;
-  color: #717182;
+  color: var(--text-muted);
   letter-spacing: 0.08em;
 }
 
@@ -288,13 +301,13 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 14.5px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--text-primary);
   margin: 0 0 8px;
 }
 
 .terms-card-desc {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   line-height: 1.55;
   margin: 0 0 12px;
 }
@@ -304,13 +317,13 @@
   color: #34D399;
   font-weight: 600;
   font-family: 'Space Grotesk', sans-serif;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-subtle);
   padding-top: 8px;
 }
 
 /* ── ARTICLES & CLAUSES ── */
 .terms-article {
-  background: #14141C;
+  background: var(--bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   padding: 18px 20px;
@@ -321,7 +334,7 @@
   font-family: 'Space Mono', monospace;
   font-size: 10px;
   font-weight: 700;
-  color: #C9A84C;
+  color: var(--gold-primary);
   letter-spacing: 0.08em;
   display: block;
   margin-bottom: 4px;
@@ -331,7 +344,7 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 15px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--text-primary);
   margin: 0 0 8px;
 }
 
@@ -348,12 +361,12 @@
   border-radius: 0 8px 8px 0;
   padding: 10px 14px;
   font-size: 12px;
-  color: #D1D5DB;
+  color: var(--text-secondary);
   margin-top: 12px;
 }
 
 .terms-highlight-box.gold {
-  border-left-color: #C9A84C;
+  border-left-color: var(--gold-primary);
   background: rgba(201, 168, 76, 0.06);
 }
 
@@ -388,7 +401,7 @@
 .terms-btn-danger-shortcut:hover {
   background: rgba(239, 68, 68, 0.22);
   border-color: #EF4444;
-  color: #FFFFFF;
+  color: var(--text-primary);
   transform: translateY(-1px);
 }
 
@@ -406,7 +419,7 @@
   align-items: flex-start;
   gap: 10px;
   font-size: 12.5px;
-  color: #D1D5DB;
+  color: var(--text-secondary);
 }
 
 /* ── FOOTER ── */
@@ -416,8 +429,8 @@
   justify-content: space-between;
   gap: 14px;
   padding: 16px 26px;
-  background: #0D0D12;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-focus);
   flex-wrap: wrap;
 }
 
@@ -425,9 +438,9 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #D1D5DB;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
   font-family: 'Space Grotesk', sans-serif;
   font-size: 12px;
   font-weight: 600;
@@ -438,8 +451,8 @@
 }
 
 .terms-btn-download:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #FFFFFF;
+  background: var(--border-focus);
+  color: var(--text-primary);
   border-color: rgba(201, 168, 76, 0.4);
 }
 
@@ -497,3 +510,4 @@
     min-height: 44px;
   }
 }
+

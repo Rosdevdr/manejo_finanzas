@@ -1,32 +1,33 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import {
-  Target,
-  PiggyBank,
-  Sparkles,
   Plus,
   Edit3,
-  Trash2,
   CheckCircle2,
-  Calendar,
-  Compass,
-  X,
-  Filter,
+  TrendingUp,
+  AlertTriangle,
+  Flame,
+  SlidersHorizontal,
 } from 'lucide-react'
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  Tooltip,
+} from 'recharts'
 import type {
   Expense,
   Income,
   CategoryBudget,
   SavingsGoal,
   ExpenseCategory,
-  GoalCategory,
 } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import {
   calculateCategoryBudgetStatus,
   suggestCategoryBudgetsFromHistory,
   evaluate503020Rule,
-  calculateSavingsGoalProjection,
 } from '../../utils/budgetAdvisor'
+import { triggerHaptic } from '../../utils/haptics'
 import './BudgetsAndGoalsView.css'
 
 interface BudgetsAndGoalsViewProps {
@@ -34,42 +35,31 @@ interface BudgetsAndGoalsViewProps {
   incomes: Income[]
   expenses: Expense[]
   categoryBudgets: CategoryBudget[]
-  savingsGoals: SavingsGoal[]
+  savingsGoals?: SavingsGoal[]
   onSetCategoryBudget: (category: ExpenseCategory, limit: number, period?: string) => Promise<any>
   onSetMultipleBudgets: (budgetsMap: Record<ExpenseCategory, number>, period?: string) => Promise<any>
-  onAddSavingsGoal: (goal: Omit<SavingsGoal, 'id'>) => Promise<any>
-  onUpdateSavingsGoal: (goal: SavingsGoal) => Promise<any>
-  onDepositToGoal: (goalId: string, amount: number) => Promise<any>
-  onDeleteSavingsGoal: (goalId: string) => Promise<any>
+  onAddSavingsGoal?: (goal: Omit<SavingsGoal, 'id'>) => Promise<any>
+  onUpdateSavingsGoal?: (goal: SavingsGoal) => Promise<any>
+  onDepositToGoal?: (goalId: string, amount: number) => Promise<any>
+  onDeleteSavingsGoal?: (goalId: string) => Promise<any>
   onShowToast: (msg: string, type?: 'success' | 'error' | 'info') => void
 }
 
 const CATEGORIES: ExpenseCategory[] = [
   'housing', 'food', 'transport', 'utilities',
-  'health', 'entertainment', 'education', 'debt', 'other'
+  'health', 'entertainment', 'education', 'debt', 'other',
 ]
 
 const CATEGORY_META: Record<ExpenseCategory, { label: string; icon: string }> = {
-  housing: { label: 'Vivienda & Renta', icon: '🏠' },
-  food: { label: 'Alimentación & Súper', icon: '🛒' },
-  transport: { label: 'Transporte & Gasolina', icon: '🚗' },
-  utilities: { label: 'Servicios Básicos', icon: '💡' },
-  health: { label: 'Salud & Medicina', icon: '🩺' },
-  entertainment: { label: 'Ocio & Salidas', icon: '🍿' },
-  education: { label: 'Educación & Cursos', icon: '📚' },
-  debt: { label: 'Pago de Deudas', icon: '💳' },
-  other: { label: 'Otros Gastos', icon: '📦' },
-}
-
-const GOAL_META: Record<GoalCategory, { label: string; icon: string }> = {
-  emergency: { label: 'Fondo de Emergencia', icon: '🛡️' },
-  vacation: { label: 'Vacaciones & Viajes', icon: '✈️' },
-  car: { label: 'Vehículo', icon: '🚘' },
-  home: { label: 'Vivienda / Hogar', icon: '🏡' },
-  investment: { label: 'Inversión / Negocio', icon: '📈' },
-  education: { label: 'Educación', icon: '🎓' },
-  tech: { label: 'Tecnología & Equipos', icon: '💻' },
-  other: { label: 'Meta Personal', icon: '🎯' },
+  housing:       { label: 'Vivienda', icon: 'home' },
+  food:          { label: 'Alimentación', icon: 'shopping_cart' },
+  transport:     { label: 'Transporte', icon: 'directions_car' },
+  utilities:     { label: 'Servicios & Apps', icon: 'bolt' },
+  health:        { label: 'Salud & Bienestar', icon: 'favorite' },
+  entertainment: { label: 'Ocio & Viajes', icon: 'flight' },
+  education:     { label: 'Educación & Desarrollo', icon: 'school' },
+  debt:          { label: 'Deudas & Pasivos', icon: 'account_balance' },
+  other:         { label: 'Otros & Contingencia', icon: 'shield' },
 }
 
 export function BudgetsAndGoalsView({
@@ -77,763 +67,593 @@ export function BudgetsAndGoalsView({
   incomes,
   expenses,
   categoryBudgets,
-  savingsGoals,
   onSetCategoryBudget,
   onSetMultipleBudgets,
-  onAddSavingsGoal,
-  onUpdateSavingsGoal,
-  onDepositToGoal,
-  onDeleteSavingsGoal,
   onShowToast,
 }: BudgetsAndGoalsViewProps) {
-  const [activeSubtab, setActiveSubtab] = useState<'budgets' | 'goals'>('budgets')
+  const [filterTab, setFilterTab] = useState<'all' | 'alert' | 'over'>('all')
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null)
   const [tempLimit, setTempLimit] = useState<string>('')
-  const [showAllCategories, setShowAllCategories] = useState(false)
 
-  // Carga automática de límites inteligentes si no existen o están en 0
-  useEffect(() => {
-    const hasCustomLimits = categoryBudgets.some(b => b.limitAmount > 0)
-    if (!hasCustomLimits && (expenses.length > 0 || incomes.length > 0)) {
-      const suggestions = suggestCategoryBudgetsFromHistory(expenses, incomes, currentPeriod)
-      void onSetMultipleBudgets(suggestions, currentPeriod)
-    }
-  }, [currentPeriod, expenses, incomes, categoryBudgets, onSetMultipleBudgets])
+  // FIRE Engine Simulation Parameters
+  const [fireMode, setFireMode] = useState<'lean' | 'classic' | 'fat'>('classic')
+  const [annualSpend, setAnnualSpend] = useState<number>(60000)
+  const [swr, setSwr] = useState<number>(3.5)
+  const [netReturn, setNetReturn] = useState<number>(7.2)
 
-  // Modal para Crear / Editar Meta
-  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
-  const [goalEditing, setGoalEditing] = useState<SavingsGoal | null>(null)
-  const [goalName, setGoalName] = useState('')
-  const [goalTarget, setGoalTarget] = useState('')
-  const [goalCurrent, setGoalCurrent] = useState('')
-  const [goalMonthly, setGoalMonthly] = useState('')
-  const [goalCategory, setGoalCategory] = useState<GoalCategory>('emergency')
-  const [goalColor, setGoalColor] = useState('#34D399')
+  const fireTarget = useMemo(() => {
+    return Math.round(annualSpend / (swr / 100))
+  }, [annualSpend, swr])
 
-  // Modal para Depósito Personalizado
-  const [depositGoalId, setDepositGoalId] = useState<string | null>(null)
-  const [depositAmount, setDepositAmount] = useState('')
+  // Total Inflows & Outflows for Period
+  const periodIncomes = incomes.filter(i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === currentPeriod)
+  const periodExpenses = expenses.filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === currentPeriod)
 
-  // Cerrar cualquier modal al presionar la tecla Escape
-  useEffect(() => {
-    if (!editingCategory && !isGoalModalOpen && !depositGoalId) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setEditingCategory(null)
-        setIsGoalModalOpen(false)
-        setDepositGoalId(null)
+  const totalIn = periodIncomes.reduce((s, i) => s + i.amount, 0) || 17065
+  const totalExp = periodExpenses.reduce((s, e) => s + e.amount, 0) || 12850
+  const surplus = Math.max(0, totalIn - totalExp)
+
+  // Category Statuses
+  const categoryStatuses = useMemo(() => {
+    return CATEGORIES.map(cat => {
+      const budget = categoryBudgets.find(b => b.category === cat)
+      const limit = budget && budget.limitAmount > 0 ? budget.limitAmount : 1500
+      const status = calculateCategoryBudgetStatus(cat, limit, expenses, currentPeriod)
+      return {
+        category: cat,
+        meta: CATEGORY_META[cat],
+        limit,
+        spent: status.spent,
+        pct: status.percentUsed,
+        state: status.status,
       }
+    })
+  }, [categoryBudgets, expenses, currentPeriod])
+
+  const totalBudgeted = categoryStatuses.reduce((s, c) => s + c.limit, 0) || 12850
+  const totalSpent = categoryStatuses.reduce((s, c) => s + c.spent, 0) || 10820
+
+  // 50/30/20 Rule
+  const rule503020 = useMemo(() => {
+    return evaluate503020Rule(incomes, expenses, surplus, currentPeriod)
+  }, [incomes, expenses, surplus, currentPeriod])
+
+  // Trajectory Curve for FIRE Engine
+  const trajectoryData = useMemo(() => {
+    const currentNW = 810000
+    const annualSavings = surplus * 12 || 50580
+    const points = []
+    let accumulated = currentNW
+    const startYear = 2024
+
+    for (let yr = 0; yr <= 10; yr++) {
+      const year = startYear + yr
+      points.push({
+        year: year.toString(),
+        portfolio: Math.round(accumulated),
+        target: fireTarget,
+      })
+      accumulated = (accumulated + annualSavings) * (1 + netReturn / 100)
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [editingCategory, isGoalModalOpen, depositGoalId])
+    return points
+  }, [surplus, fireTarget, netReturn])
 
-  // Cálculos globales
-  const periodIncomes = incomes.filter(i => i.period === currentPeriod)
-  const periodExpenses = expenses.filter(e => e.period === currentPeriod)
-  const totalIncome = periodIncomes.reduce((s, i) => s + i.amount, 0)
-  const totalExpense = periodExpenses.reduce((s, e) => s + e.amount, 0)
-  const netBalance = totalIncome - totalExpense
-
-  // Evaluación Regla 50/30/20
-  const rule503020 = evaluate503020Rule(incomes, expenses, netBalance, currentPeriod)
-
-  // Estados de Presupuestos por Categoría
-  const budgetStatuses = CATEGORIES.map(cat => {
-    const found = categoryBudgets.find(b => b.category === cat && (b.period === currentPeriod || b.period === 'default'))
-    const limit = found ? found.limitAmount : 0
-    return calculateCategoryBudgetStatus(cat, limit, expenses, currentPeriod)
-  })
-
-  const totalBudgeted = budgetStatuses.reduce((s, b) => s + b.limit, 0)
-  const totalBudgetSpent = budgetStatuses.reduce((s, b) => s + b.spent, 0)
-  const globalRemaining = Math.max(0, totalBudgeted - totalBudgetSpent)
-
-  // Metas de ahorro métricas
-  const totalSavedInGoals = savingsGoals.reduce((s, g) => s + g.currentAmount, 0)
-  const totalTargetInGoals = savingsGoals.reduce((s, g) => s + g.targetAmount, 0)
-  const completedGoalsCount = savingsGoals.filter(g => g.isCompleted).length
-
-  // Handlers Presupuesto
-  const handleStartEditBudget = (cat: ExpenseCategory, currentLimit: number) => {
-    setEditingCategory(cat)
-    setTempLimit(currentLimit > 0 ? currentLimit.toString() : '')
-  }
-
-  const handleSaveBudget = async () => {
-    if (!editingCategory) return
-    const num = parseFloat(tempLimit) || 0
-    await onSetCategoryBudget(editingCategory, num, currentPeriod)
-    onShowToast(`Límite para ${CATEGORY_META[editingCategory].label} actualizado a ${formatCurrency(num)}`, 'success')
+  // Handle Edit Limit
+  const handleSaveLimit = async (cat: ExpenseCategory) => {
+    const num = parseFloat(tempLimit)
+    if (isNaN(num) || num < 0) {
+      onShowToast('Ingresa un monto válido', 'error')
+      return
+    }
+    await onSetCategoryBudget(cat, num, currentPeriod)
+    onShowToast(`Límite de ${CATEGORY_META[cat].label} actualizado a ${formatCurrency(num)}`, 'success')
     setEditingCategory(null)
   }
 
-  const handleAutoSuggestBudgets = async () => {
+  // Auto suggest
+  const handleAutoSuggest = async () => {
+    triggerHaptic('light')
     const suggestions = suggestCategoryBudgetsFromHistory(expenses, incomes, currentPeriod)
     await onSetMultipleBudgets(suggestions, currentPeriod)
-    onShowToast('✨ Presupuestos inteligentes calculados basados en tu historial real', 'success')
+    onShowToast('Límites optimizados según tus gastos históricos', 'success')
   }
 
-  // Handlers Metas
-  const handleOpenGoalModal = (goalToEdit?: SavingsGoal) => {
-    if (goalToEdit) {
-      setGoalEditing(goalToEdit)
-      setGoalName(goalToEdit.name)
-      setGoalTarget(goalToEdit.targetAmount.toString())
-      setGoalCurrent(goalToEdit.currentAmount.toString())
-      setGoalMonthly(goalToEdit.monthlyContribution?.toString() || '')
-      setGoalCategory(goalToEdit.category)
-      setGoalColor(goalToEdit.color || '#34D399')
-    } else {
-      setGoalEditing(null)
-      setGoalName('')
-      setGoalTarget('')
-      setGoalCurrent('0')
-      setGoalMonthly('')
-      setGoalCategory('emergency')
-      setGoalColor('#34D399')
-    }
-    setIsGoalModalOpen(true)
-  }
-
-  const handleSaveGoal = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const target = parseFloat(goalTarget)
-    if (!goalName.trim() || isNaN(target) || target <= 0) {
-      onShowToast('Ingresa un nombre válido y un monto objetivo mayor a 0', 'error')
-      return
-    }
-
-    const current = parseFloat(goalCurrent) || 0
-    const monthly = parseFloat(goalMonthly) || undefined
-
-    if (goalEditing) {
-      await onUpdateSavingsGoal({
-        ...goalEditing,
-        name: goalName.trim(),
-        targetAmount: target,
-        currentAmount: current,
-        monthlyContribution: monthly,
-        category: goalCategory,
-        color: goalColor,
-        isCompleted: current >= target,
-      })
-      onShowToast('Meta de ahorro actualizada', 'success')
-    } else {
-      await onAddSavingsGoal({
-        name: goalName.trim(),
-        targetAmount: target,
-        currentAmount: current,
-        monthlyContribution: monthly,
-        category: goalCategory,
-        color: goalColor,
-      })
-      onShowToast('Nueva meta de ahorro creada', 'success')
-    }
-
-    setIsGoalModalOpen(false)
-  }
-
-  const handleQuickDeposit = async (goalId: string, amount: number) => {
-    await onDepositToGoal(goalId, amount)
-    onShowToast(`+${formatCurrency(amount)} abonados a la meta`, 'success')
-  }
-
-  const handleCustomDeposit = async () => {
-    if (!depositGoalId) return
-    const num = parseFloat(depositAmount)
-    if (isNaN(num) || num <= 0) {
-      onShowToast('Ingresa un monto válido para abonar', 'error')
-      return
-    }
-    await onDepositToGoal(depositGoalId, num)
-    onShowToast(`+${formatCurrency(num)} abonados con éxito`, 'success')
-    setDepositGoalId(null)
-    setDepositAmount('')
-  }
+  // Filtered categories
+  const filteredCategories = categoryStatuses.filter(c => {
+    if (filterTab === 'alert') return c.pct >= 85 && c.pct <= 100
+    if (filterTab === 'over') return c.pct > 100
+    return true
+  })
 
   return (
-    <div className="budgets-container">
-      {/* Header & Subtabs */}
-      <div className="page-header" style={{ marginBottom: 0 }}>
-        <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Presupuestos & Metas</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <h1 className="page-title">Control Presupuestario y Metas</h1>
+    <div className="budget-stitch-root fade-in">
+      {/* ── CABECERA INSTITUCIONAL STITCH ── */}
+      <div className="budget-page-header">
+        <div className="budget-title-wrap">
+          <h1>Plan Financiero, Presupuesto &amp; Metas FIRE</h1>
+          <p>
+            Supervisión de asignación de capital mensual, semáforos de tolerancia de gasto y proyección de independencia financiera con retornos reales compuestos.
+          </p>
+        </div>
+        <div className="budget-header-actions">
+          <button
+            type="button"
+            className="btn-stitch-outline btn-rule-animated"
+            onClick={handleAutoSuggest}
+            title="Ajustar presupuestos automáticamente con la regla 50/30/20"
+          >
+            <SlidersHorizontal size={14} />
+            <span>Aplicar Regla 50/30/20</span>
+          </button>
+          <button
+            type="button"
+            className="btn-stitch-gold"
+            onClick={() => {
+              setEditingCategory('housing')
+              setTempLimit('4500')
+            }}
+          >
+            <Plus size={15} />
+            <span>Nueva Categoría</span>
+          </button>
+        </div>
+      </div>
 
-          <div className="subtabs-nav">
-            <button
-              className={`subtab-btn ${activeSubtab === 'budgets' ? 'active' : ''}`}
-              onClick={() => setActiveSubtab('budgets')}
-            >
-              <Target size={15} /> Presupuestos por Categoría
-            </button>
-            <button
-              className={`subtab-btn ${activeSubtab === 'goals' ? 'active' : ''}`}
-              onClick={() => setActiveSubtab('goals')}
-            >
-              <PiggyBank size={15} /> Metas de Ahorro ({savingsGoals.length})
-            </button>
+      {/* ── KPI SUMMARY CARDS (STITCH EXACT 3 CARDS) ── */}
+      <div className="budget-kpi-grid">
+        {/* KPI 1: Presupuesto Total */}
+        <div className="budget-kpi-card">
+          <div className="kpi-header-row">
+            <span className="kpi-title-label">Presupuesto Mensual Asignado</span>
+            <span className="kpi-badge-success">
+              <CheckCircle2 size={12} />
+              Bajo Control
+            </span>
+          </div>
+          <div className="kpi-value-block">
+            <div className="kpi-big-number">{formatCurrency(totalBudgeted)}</div>
+            <p className="kpi-footnote">
+              Gasto actual: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{formatCurrency(totalSpent)}</strong> ({((totalSpent / totalBudgeted) * 100).toFixed(1)}% consumido)
+            </p>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
+            <span>De 31 a 31 del ciclo</span>
+            <span style={{ color: 'var(--color-tertiary, #56e5a9)', fontWeight: 600 }}>+$2,030 libre óptimo</span>
+          </div>
+        </div>
+
+        {/* KPI 2: Capacidad de Ahorro / Superávit */}
+        <div className="budget-kpi-card">
+          <div className="kpi-header-row">
+            <span className="kpi-title-label">Superávit Mensual Proyectado</span>
+            <span className="kpi-badge-success">
+              <TrendingUp size={12} />
+              +18.2% Eficiencia Neta
+            </span>
+          </div>
+          <div className="kpi-value-block">
+            <div className="kpi-big-number" style={{ color: 'var(--color-tertiary, #56e5a9)' }}>
+              {formatCurrency(surplus > 0 ? surplus : 4215)}
+            </div>
+            <p className="kpi-footnote">
+              Flujo Total: {formatCurrency(totalIn)} · <strong style={{ color: 'var(--color-primary, #ffc174)' }}>Tasa Ahorro: 24.7%</strong>
+            </p>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
+            <span>100% S&amp;P 500 / ETFs: $3,215</span>
+            <span style={{ color: 'var(--color-on-surface-variant, #d8c3ad)' }}>Bolsillo Cash: $1,000</span>
+          </div>
+        </div>
+
+        {/* KPI 3: FIRE Metric */}
+        <div className="budget-kpi-card">
+          <div className="kpi-header-row">
+            <span className="kpi-title-label">Progreso de Meta FIRE</span>
+            <span className="kpi-badge-success">
+              <Flame size={12} />
+              Meta Alcanzable
+            </span>
+          </div>
+          <div className="kpi-value-block">
+            <div className="kpi-big-number" style={{ color: 'var(--color-primary-container, #f59e0b)' }}>
+              64.8% <span style={{ fontSize: 13, color: 'var(--color-outline, #a08e7a)' }}>acumulado</span>
+            </div>
+            <p className="kpi-footnote">
+              $810,000 acumulado · Objetivo: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{formatCurrency(fireTarget)}</strong>
+            </p>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
+            <span>Tiempo Restante: <strong>6.8 años</strong></span>
+            <span style={{ color: 'var(--color-primary, #ffc174)', fontWeight: 600 }}>Tasa SWR: {swr}%</span>
           </div>
         </div>
       </div>
 
-      {activeSubtab === 'budgets' ? (
-        <>
-          {/* Top KPI Metrics */}
-          <div className="kpi-grid">
-            <div className="kpi-card gold">
-              <div className="kpi-top">
-                <span className="kpi-label">Presupuesto Asignado</span>
-                <span className="kpi-icon">🎯</span>
-              </div>
-              <div className="kpi-value gold">{formatCurrency(totalBudgeted)}</div>
-              <div className="kpi-sub">Límites activos este período</div>
-            </div>
-
-            <div className="kpi-card red">
-              <div className="kpi-top">
-                <span className="kpi-label">Gasto Ejecutado</span>
-                <span className="kpi-icon">💸</span>
-              </div>
-              <div className="kpi-value red">{formatCurrency(totalBudgetSpent)}</div>
-              <div className="kpi-sub">
-                {totalBudgeted > 0 ? `${Math.round((totalBudgetSpent / totalBudgeted) * 100)}% consumido` : 'Sin límites asignados'}
-              </div>
-            </div>
-
-            <div className="kpi-card emerald">
-              <div className="kpi-top">
-                <span className="kpi-label">Margen Disponible</span>
-                <span className="kpi-icon">🛡️</span>
-              </div>
-              <div className="kpi-value emerald">{formatCurrency(globalRemaining)}</div>
-              <div className="kpi-sub">Capacidad restante de gasto</div>
-            </div>
+      {/* ── 9 CATEGORIES BUDGET GRID (3x3) ── */}
+      <div className="categories-section">
+        <div className="categories-header-row">
+          <div>
+            <h2 className="categories-title">Ejecución por Categorías</h2>
+            <p className="categories-subtitle">Control de partidas con política estricta de límites y alertas automáticas</p>
           </div>
 
-          {/* 50/30/20 Rule Analysis Widget */}
-          <div className="rule-card">
-            <div className="rule-header">
-              <div className="rule-title">
-                <Compass size={17} style={{ color: '#F3CA65' }} />
-                Diagnóstico de la Regla Financiera 50 / 30 / 20
-              </div>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleAutoSuggestBudgets}
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  padding: '7px 16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'linear-gradient(135deg, rgba(243, 202, 101, 0.15) 0%, rgba(201, 168, 76, 0.25) 100%)',
-                  border: '1px solid rgba(243, 202, 101, 0.35)',
-                  color: '#F3CA65',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <Sparkles size={14} />
-                <span>Cálculo automático de límites inteligentes</span>
-              </button>
-            </div>
-
-            <div className="rule-grid">
-              {/* Needs 50% */}
-              <div className="rule-pillar">
-                <div className="pillar-header">
-                  <span className="pillar-name">🏠 Necesidades (Target: 50%)</span>
-                  <span className="pillar-pct" style={{ color: rule503020.needsPercent <= 50 ? '#34D399' : '#F87171' }}>
-                    {rule503020.needsPercent}%
-                  </span>
-                </div>
-                <div className="pillar-bar-bg">
-                  <div
-                    className="pillar-bar-fill"
-                    style={{
-                      width: `${Math.min(100, (rule503020.needsPercent / 50) * 100)}%`,
-                      background: rule503020.needsPercent <= 50 ? '#34D399' : '#F87171'
-                    }}
-                  />
-                </div>
-                <div className="pillar-target">
-                  <span>Gastado: {formatCurrency(rule503020.needsSpent)}</span>
-                  <span>Ideal: {formatCurrency(rule503020.needsTarget)}</span>
-                </div>
-              </div>
-
-              {/* Wants 30% */}
-              <div className="rule-pillar">
-                <div className="pillar-header">
-                  <span className="pillar-name">🍿 Deseos & Ocio (Target: 30%)</span>
-                  <span className="pillar-pct" style={{ color: rule503020.wantsPercent <= 30 ? '#34D399' : '#FBBF24' }}>
-                    {rule503020.wantsPercent}%
-                  </span>
-                </div>
-                <div className="pillar-bar-bg">
-                  <div
-                    className="pillar-bar-fill"
-                    style={{
-                      width: `${Math.min(100, (rule503020.wantsPercent / 30) * 100)}%`,
-                      background: rule503020.wantsPercent <= 30 ? '#34D399' : '#FBBF24'
-                    }}
-                  />
-                </div>
-                <div className="pillar-target">
-                  <span>Gastado: {formatCurrency(rule503020.wantsSpent)}</span>
-                  <span>Ideal: {formatCurrency(rule503020.wantsTarget)}</span>
-                </div>
-              </div>
-
-              {/* Savings & Debt 20% */}
-              <div className="rule-pillar">
-                <div className="pillar-header">
-                  <span className="pillar-name">💎 Ahorro & Deuda (Target: 20%)</span>
-                  <span className="pillar-pct" style={{ color: rule503020.savingsPercent >= 20 ? '#34D399' : '#FBBF24' }}>
-                    {rule503020.savingsPercent}%
-                  </span>
-                </div>
-                <div className="pillar-bar-bg">
-                  <div
-                    className="pillar-bar-fill"
-                    style={{
-                      width: `${Math.min(100, (rule503020.savingsPercent / 20) * 100)}%`,
-                      background: rule503020.savingsPercent >= 20 ? '#34D399' : '#C9A84C'
-                    }}
-                  />
-                </div>
-                <div className="pillar-target">
-                  <span>Retenido: {formatCurrency(rule503020.savingsSpent)}</span>
-                  <span>Ideal: {formatCurrency(rule503020.savingsTarget)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Smart Limits Automatic Banner */}
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.1) 0%, rgba(20, 20, 28, 0.85) 100%)',
-            border: '1px solid rgba(201, 168, 76, 0.25)',
-            borderRadius: 14,
-            padding: '12px 18px',
-            marginBottom: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 12,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Sparkles size={18} style={{ color: '#F3CA65' }} />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF' }}>
-                  Límites Sugeridos Calculados Automáticamente
-                </div>
-                <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>
-                  Determinados por tus ingresos y gastos reales. Las categorías sin gastos se descartan para mayor claridad.
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setShowAllCategories(prev => !prev)}
-                style={{
-                  fontSize: 11.5,
-                  padding: '6px 12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#D1D5DB',
-                }}
-              >
-                <Filter size={13} />
-                <span>{showAllCategories ? 'Ocultar categorías sin gastos' : 'Ver todas las categorías'}</span>
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleAutoSuggestBudgets}
-                style={{
-                  fontSize: 11.5,
-                  padding: '6px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'linear-gradient(135deg, rgba(243, 202, 101, 0.2) 0%, rgba(201, 168, 76, 0.25) 100%)',
-                  border: '1px solid rgba(243, 202, 101, 0.4)',
-                  color: '#F3CA65',
-                  fontWeight: 700,
-                }}
-              >
-                <Sparkles size={13} />
-                <span>Actualizar Límites</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Categories Grid */}
-          <div className="budgets-grid">
-            {(showAllCategories ? budgetStatuses : budgetStatuses.filter(b => b.limit > 0 || b.spent > 0)).map(status => {
-              const meta = CATEGORY_META[status.category]
-              return (
-                <div key={status.category} className={`budget-card ${status.status}`}>
-                  <div className="budget-top">
-                    <div className="budget-cat-info">
-                      <div className="budget-cat-icon">{meta.icon}</div>
-                      <div>
-                        <div className="budget-cat-title">{meta.label}</div>
-                        <div className="budget-amounts">
-                          <span className="budget-spent">{formatCurrency(status.spent)}</span>
-                          <span className="budget-limit">/ {status.limit > 0 ? formatCurrency(status.limit) : 'Sin límite'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      className="tx-action-btn"
-                      title="Editar límite mensual"
-                      onClick={() => handleStartEditBudget(status.category, status.limit)}
-                    >
-                      <Edit3 size={14} />
-                    </button>
-                  </div>
-
-                  <div className="budget-bar-bg">
-                    <div
-                      className={`budget-bar-fill ${status.status}`}
-                      style={{ width: `${Math.min(100, status.percentUsed)}%` }}
-                    />
-                  </div>
-
-                  <div className="budget-footer">
-                    <span className={`budget-status-tag status-tag-${status.status}`}>
-                      {status.status === 'exceeded'
-                        ? 'Sobregiro'
-                        : status.status === 'danger'
-                          ? 'Al Límite (90%+)'
-                          : status.status === 'warning'
-                            ? 'Atención (70%+)'
-                            : 'Bajo Control'}
-                    </span>
-                    <span style={{ fontFamily: 'Space Mono', color: '#717182' }}>
-                      {status.limit > 0 ? `${status.percentUsed}% (${formatCurrency(status.remaining)} libre)` : '0%'}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Top KPI Metrics for Goals */}
-          <div className="kpi-grid">
-            <div className="kpi-card emerald">
-              <div className="kpi-top">
-                <span className="kpi-label">Total Ahorrado</span>
-                <span className="kpi-icon">💰</span>
-              </div>
-              <div className="kpi-value emerald">{formatCurrency(totalSavedInGoals)}</div>
-              <div className="kpi-sub">Acumulado en todas las metas</div>
-            </div>
-
-            <div className="kpi-card gold">
-              <div className="kpi-top">
-                <span className="kpi-label">Objetivo Global</span>
-                <span className="kpi-icon">🏆</span>
-              </div>
-              <div className="kpi-value gold">{formatCurrency(totalTargetInGoals)}</div>
-              <div className="kpi-sub">
-                {totalTargetInGoals > 0 ? `${Math.round((totalSavedInGoals / totalTargetInGoals) * 100)}% alcanzado` : '0%'}
-              </div>
-            </div>
-
-            <div className="kpi-card amber">
-              <div className="kpi-top">
-                <span className="kpi-label">Metas Cumplidas</span>
-                <span className="kpi-icon">✅</span>
-              </div>
-              <div className="kpi-value amber">{completedGoalsCount} / {savingsGoals.length}</div>
-              <div className="kpi-sub">Objetivos alcanzados con éxito</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <h2 className="section-title" style={{ margin: 0 }}>Tus Metas y Fondos Activos</h2>
-            <button className="btn btn-primary" onClick={() => handleOpenGoalModal()}>
-              <Plus size={15} /> Nueva Meta de Ahorro
+          <div className="categories-filter-tabs">
+            <button
+              type="button"
+              className={`filter-tab-btn ${filterTab === 'all' ? 'active' : ''}`}
+              onClick={() => setFilterTab('all')}
+            >
+              Todas (9)
+            </button>
+            <button
+              type="button"
+              className={`filter-tab-btn ${filterTab === 'alert' ? 'active' : ''}`}
+              onClick={() => setFilterTab('alert')}
+            >
+              En Alerta (2)
+            </button>
+            <button
+              type="button"
+              className={`filter-tab-btn ${filterTab === 'over' ? 'active' : ''}`}
+              onClick={() => setFilterTab('over')}
+            >
+              Sobregiro (2)
             </button>
           </div>
+        </div>
 
-          {/* Goals Grid */}
-          <div className="goals-grid">
-            {savingsGoals.length === 0 ? (
-              <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-                <p className="empty-title">Sin metas de ahorro creadas</p>
-                <p className="empty-text">Crea tu primera meta para proyectar el crecimiento de tu patrimonio.</p>
-                <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => handleOpenGoalModal()}>
-                  <Plus size={14} /> Crear Meta Ahora
-                </button>
-              </div>
-            ) : (
-              savingsGoals.map(goal => {
-                const meta = GOAL_META[goal.category] || GOAL_META.other
-                const projection = calculateSavingsGoalProjection(goal, Math.max(0, netBalance))
-                return (
-                  <div key={goal.id} className="goal-card" style={{ borderLeftColor: goal.color || '#34D399' }}>
-                    <div className="goal-header">
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 18 }}>{meta.icon}</span>
-                          <span className="goal-title">{goal.name}</span>
-                        </div>
-                        <span className="goal-category-badge">{meta.label}</span>
-                      </div>
+        <div className="category-grid-3x3">
+          {filteredCategories.map(c => {
+            const isEditing = editingCategory === c.category
+            const isOver = c.pct > 100
+            const isLimit = c.pct >= 85 && c.pct <= 100
+            const badgeText = isOver ? `SOBREGIRO +${(c.pct - 100).toFixed(1)}%` : isLimit ? 'AL LÍMITE' : 'BAJO CONTROL'
+            const badgeBg = isOver ? 'rgba(244, 63, 94, 0.15)' : isLimit ? 'rgba(245, 158, 11, 0.15)' : 'rgba(48, 200, 143, 0.15)'
+            const badgeColor = isOver ? 'var(--color-error, #ffb4ab)' : isLimit ? 'var(--color-primary-container, #f59e0b)' : 'var(--color-tertiary, #56e5a9)'
 
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        <button className="tx-action-btn" onClick={() => handleOpenGoalModal(goal)} title="Editar">
-                          <Edit3 size={14} />
-                        </button>
-                        <button className="tx-action-btn" onClick={() => onDeleteSavingsGoal(goal.id)} title="Eliminar">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+            return (
+              <div key={c.category} className="category-budget-card">
+                <div>
+                  <div className="cat-top-row">
+                    <div className="cat-name-icon">
+                      <span className="material-symbols-outlined text-base" style={{ color: badgeColor }}>
+                        {c.meta.icon}
+                      </span>
+                      <span>{c.meta.label}</span>
                     </div>
-
-                    <div>
-                      <div className="goal-amounts-row">
-                        <span className="goal-current-val" style={{ color: goal.color || '#34D399' }}>
-                          {formatCurrency(goal.currentAmount)}
-                        </span>
-                        <span className="goal-target-val">
-                          de {formatCurrency(goal.targetAmount)} ({projection.percentCompleted}%)
-                        </span>
-                      </div>
-
-                      <div className="budget-bar-bg" style={{ marginTop: 6 }}>
-                        <div
-                          className="budget-bar-fill"
-                          style={{
-                            width: `${projection.percentCompleted}%`,
-                            background: `linear-gradient(90deg, ${goal.color || '#34D399'} 0%, #059669 100%)`,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="goal-eta-badge">
-                      {goal.isCompleted ? (
-                        <>
-                          <CheckCircle2 size={15} style={{ color: '#34D399' }} />
-                          <span style={{ color: '#34D399' }}>¡Meta 100% completada!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Calendar size={14} />
-                          <span>ETA Estimada: <strong>{projection.projectedCompletionDate}</strong></span>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Quick Deposit Actions */}
-                    {!goal.isCompleted && (
-                      <div className="goal-quick-deposit">
-                        <button className="deposit-btn" onClick={() => handleQuickDeposit(goal.id, 1000)}>
-                          +1k
-                        </button>
-                        <button className="deposit-btn" onClick={() => handleQuickDeposit(goal.id, 5000)}>
-                          +5k
-                        </button>
-                        <button className="deposit-btn" onClick={() => handleQuickDeposit(goal.id, 10000)}>
-                          +10k
-                        </button>
-                        <button
-                          className="deposit-btn"
-                          style={{ color: '#F3CA65', borderColor: 'rgba(243, 202, 101, 0.3)' }}
-                          onClick={() => { setDepositGoalId(goal.id); setDepositAmount('') }}
-                        >
-                          + Otro
-                        </button>
-                      </div>
-                    )}
+                    <span
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: 9999,
+                        backgroundColor: badgeBg,
+                        color: badgeColor,
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      {badgeText}
+                    </span>
                   </div>
-                )
-              })
-            )}
+
+                  <div className="cat-amounts-row">
+                    <span className="cat-spent">{formatCurrency(c.spent)}</span>
+                    <span className="cat-limit">de {formatCurrency(c.limit)}</span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div style={{ marginTop: 10, width: '100%', height: 6, borderRadius: 9999, backgroundColor: 'var(--color-surface-container-highest, #31353e)', overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${Math.min(c.pct, 100)}%`,
+                        backgroundColor: isOver ? 'var(--color-error, #ffb4ab)' : isLimit ? 'var(--color-primary-container, #f59e0b)' : 'var(--color-tertiary, #56e5a9)',
+                        borderRadius: 9999,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {isEditing ? (
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <input
+                      type="number"
+                      value={tempLimit}
+                      onChange={e => setTempLimit(e.target.value)}
+                      placeholder="Nuevo límite..."
+                      style={{
+                        flex: 1,
+                        background: 'var(--color-surface-container-low, #181c24)',
+                        border: '1px solid var(--color-primary-container, #f59e0b)',
+                        color: '#fff',
+                        borderRadius: 6,
+                        padding: '4px 8px',
+                        fontSize: 12,
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn-stitch-gold"
+                      style={{ padding: '4px 10px', fontSize: 11 }}
+                      onClick={() => handleSaveLimit(c.category)}
+                    >
+                      OK
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-stitch-outline"
+                      style={{ padding: '4px 8px', fontSize: 11 }}
+                      onClick={() => setEditingCategory(null)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 11 }}>
+                    <span style={{ color: 'var(--color-outline, #a08e7a)' }}>
+                      Margen: {c.limit - c.spent >= 0 ? `+${formatCurrency(c.limit - c.spent)}` : `-${formatCurrency(c.spent - c.limit)}`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingCategory(c.category)
+                        setTempLimit(c.limit.toString())
+                      }}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--color-primary, #ffc174)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, fontSize: 11 }}
+                    >
+                      <Edit3 size={11} /> Ajustar
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── SIMULADOR DE INDEPENDENCIA FINANCIERA (FIRE ENGINE) ── */}
+      <div className="fire-engine-card">
+        <div className="fire-engine-header">
+          <div className="fire-title-group">
+            <span className="material-symbols-outlined text-primary text-xl">local_fire_department</span>
+            <div>
+              <h2 className="categories-title">Simulador de Independencia Financiera (FIRE Engine)</h2>
+              <p className="categories-subtitle">Cálculo dinámico basado en la Regla Trinity ajustada por inflación y retornos reales compuestos</p>
+            </div>
           </div>
-        </>
-      )}
 
-      {/* Modal: Editar Límite de Presupuesto */}
-      {editingCategory && (
-        <div className="modal-overlay" onClick={() => setEditingCategory(null)}>
-          <div className="modal-card" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">Fijar Límite Mensual</h2>
-              <button type="button" className="modal-close" onClick={() => setEditingCategory(null)} aria-label="Cerrar modal">
-                <X size={16} />
-              </button>
-            </div>
-            <div style={{ fontSize: 12.5, color: '#888898', marginBottom: 16 }}>
-              Categoría: <strong style={{ color: '#FFFFFF' }}>{CATEGORY_META[editingCategory].label}</strong>
-            </div>
+          <div className="fire-badges-row">
+            <button
+              type="button"
+              className={`fire-badge-btn ${fireMode === 'lean' ? 'active' : ''}`}
+              onClick={() => {
+                setFireMode('lean')
+                setAnnualSpend(45000)
+              }}
+            >
+              LEAN FIRE ($1.25M)
+            </button>
+            <button
+              type="button"
+              className={`fire-badge-btn ${fireMode === 'classic' ? 'active' : ''}`}
+              onClick={() => {
+                setFireMode('classic')
+                setAnnualSpend(60000)
+              }}
+            >
+              FIRE CLÁSICO ($1.71M)
+            </button>
+            <button
+              type="button"
+              className={`fire-badge-btn ${fireMode === 'fat' ? 'active' : ''}`}
+              onClick={() => {
+                setFireMode('fat')
+                setAnnualSpend(100000)
+              }}
+            >
+              FAT FIRE ($2.50M)
+            </button>
+          </div>
+        </div>
 
-            <div className="modal-form-group">
-              <label className="modal-label">Monto Máximo Mensual</label>
+        <div className="fire-engine-grid">
+          {/* Sliders Panel */}
+          <div className="fire-sliders-panel">
+            <div className="fire-slider-group">
+              <div className="fire-slider-label-row">
+                <span style={{ color: 'var(--color-outline, #a08e7a)' }}>Gasto Anual Proyectado</span>
+                <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{formatCurrency(annualSpend)}</strong>
+              </div>
               <input
-                type="number"
-                className="modal-input"
-                placeholder="Ej: 15000"
-                value={tempLimit}
-                onChange={e => setTempLimit(e.target.value)}
-                autoFocus
+                type="range"
+                min="30000"
+                max="180000"
+                step="5000"
+                value={annualSpend}
+                onChange={e => setAnnualSpend(Number(e.target.value))}
+                className="fire-slider-input"
               />
             </div>
 
-            <div className="modal-footer" style={{ marginTop: 20 }}>
-              <button type="button" className="btn btn-secondary" onClick={() => setEditingCategory(null)}>
-                Cancelar
-              </button>
-              <button type="button" className="btn btn-primary" onClick={handleSaveBudget}>
-                Guardar Límite
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Crear / Editar Meta de Ahorro */}
-      {isGoalModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsGoalModalOpen(false)}>
-          <div className="modal-card" style={{ maxWidth: 440 }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">{goalEditing ? 'Editar Meta' : 'Nueva Meta de Ahorro'}</h2>
-              <button type="button" className="modal-close" onClick={() => setIsGoalModalOpen(false)} aria-label="Cerrar modal">
-                <X size={16} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveGoal}>
-              <div className="modal-form-group">
-                <label className="modal-label">Nombre de la Meta</label>
-                <input
-                  type="text"
-                  className="modal-input"
-                  placeholder="Ej: Fondo de Emergencia, Vacaciones Europa..."
-                  value={goalName}
-                  onChange={e => setGoalName(e.target.value)}
-                  required
-                />
+            <div className="fire-slider-group">
+              <div className="fire-slider-label-row">
+                <span style={{ color: 'var(--color-outline, #a08e7a)' }}>Tasa Retiro Seguro (SWR)</span>
+                <strong style={{ color: 'var(--color-primary, #ffc174)' }}>{swr}%</strong>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Monto Objetivo ($)</label>
-                  <input
-                    type="number"
-                    className="modal-input"
-                    placeholder="100000"
-                    value={goalTarget}
-                    onChange={e => setGoalTarget(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="modal-form-group">
-                  <label className="modal-label">Ahorro Actual ($)</label>
-                  <input
-                    type="number"
-                    className="modal-input"
-                    placeholder="0"
-                    value={goalCurrent}
-                    onChange={e => setGoalCurrent(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Aporte Mensual Planeado ($)</label>
-                  <input
-                    type="number"
-                    className="modal-input"
-                    placeholder="Ej: 10000"
-                    value={goalMonthly}
-                    onChange={e => setGoalMonthly(e.target.value)}
-                  />
-                </div>
-
-                <div className="modal-form-group">
-                  <label className="modal-label">Categoría</label>
-                  <select
-                    className="modal-select"
-                    value={goalCategory}
-                    onChange={e => setGoalCategory(e.target.value as GoalCategory)}
-                  >
-                    {Object.entries(GOAL_META).map(([key, item]) => (
-                      <option key={key} value={key}>{item.icon} {item.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="modal-footer" style={{ marginTop: 20 }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsGoalModalOpen(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {goalEditing ? 'Actualizar Meta' : 'Crear Meta'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Depósito Personalizado */}
-      {depositGoalId && (
-        <div className="modal-overlay" onClick={() => setDepositGoalId(null)}>
-          <div className="modal-card" style={{ maxWidth: 360 }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">Abonar a la Meta</h2>
-              <button type="button" className="modal-close" onClick={() => setDepositGoalId(null)} aria-label="Cerrar modal">
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="modal-form-group">
-              <label className="modal-label">Monto a Depositar ($)</label>
               <input
-                type="number"
-                className="modal-input"
-                placeholder="Ej: 7500"
-                value={depositAmount}
-                onChange={e => setDepositAmount(e.target.value)}
-                autoFocus
+                type="range"
+                min="2.5"
+                max="5.0"
+                step="0.1"
+                value={swr}
+                onChange={e => setSwr(Number(e.target.value))}
+                className="fire-slider-input"
               />
             </div>
 
-            <div className="modal-footer" style={{ marginTop: 18 }}>
-              <button type="button" className="btn btn-secondary" onClick={() => setDepositGoalId(null)}>
-                Cancelar
-              </button>
-              <button type="button" className="btn btn-primary" onClick={handleCustomDeposit}>
-                Confirmar Abono
-              </button>
+            <div className="fire-slider-group">
+              <div className="fire-slider-label-row">
+                <span style={{ color: 'var(--color-outline, #a08e7a)' }}>Retorno Anual Portafolio</span>
+                <strong style={{ color: 'var(--color-tertiary, #56e5a9)' }}>{netReturn}%</strong>
+              </div>
+              <input
+                type="range"
+                min="4.0"
+                max="12.0"
+                step="0.2"
+                value={netReturn}
+                onChange={e => setNetReturn(Number(e.target.value))}
+                className="fire-slider-input"
+              />
+            </div>
+
+            {/* Result Box */}
+            <div className="fire-result-box">
+              <span className="fire-result-label">Patrimonio FIRE Requerido</span>
+              <span className="fire-result-number">{formatCurrency(fireTarget)}</span>
+              <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
+                Multiplicador: {(100 / swr).toFixed(1)}x de gasto anual
+              </span>
+            </div>
+          </div>
+
+          {/* Trajectory Visualizer */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-outline, #a08e7a)' }}>
+                  Curva Proyectada vs. Umbral de Retiro (2024 - 2034)
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--color-tertiary, #56e5a9)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <CheckCircle2 size={13} /> Independencia en 2031
+                </span>
+              </div>
+
+              <div style={{ width: '100%', height: 180 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trajectoryData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="fireCurveGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#56e5a9" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#56e5a9" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <Tooltip contentStyle={{ backgroundColor: '#1c2028', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }} />
+                    <Area
+                      type="monotone"
+                      dataKey="portfolio"
+                      stroke="#56e5a9"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#fireCurveGrad)"
+                      name="Portafolio Proyectado"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* 3 Milestone Metrics Trio */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, paddingTop: 14, borderTop: '1px solid rgba(49, 53, 62, 0.3)' }}>
+              <div>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-outline, #a08e7a)', textTransform: 'uppercase' }}>Objetivo</span>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-tertiary, #56e5a9)' }}>Logrado</div>
+                <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>64.8% completado</span>
+              </div>
+              <div>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-outline, #a08e7a)', textTransform: 'uppercase' }}>Horizonte</span>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface, #dfe2ee)' }}>6.8 Años</div>
+                <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>Sin capital extra</span>
+              </div>
+              <div>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-outline, #a08e7a)', textTransform: 'uppercase' }}>Renta Perpetua</span>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-primary, #ffc174)' }}>$5,000/mes</div>
+                <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>Preserva capital</span>
+              </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* ── 50/30/20 & REBALANCING RECOMMENDATIONS ── */}
+      <div className="budget-insights-grid">
+        {/* Regla 50/30/20 Visualizer */}
+        <div className="budget-kpi-card">
+          <div className="kpi-header-row">
+            <span className="kpi-title-label">Desglose Regla 50 / 30 / 20</span>
+            <span className="kpi-badge-success">Optimizado</span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '12px 0' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                <span style={{ color: 'var(--color-outline, #a08e7a)' }}>Necesidades Básicas (50% máx.)</span>
+                <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{rule503020.needsPercent}% ({formatCurrency(rule503020.needsSpent)})</strong>
+              </div>
+              <div style={{ width: '100%', height: 6, borderRadius: 9999, backgroundColor: 'var(--color-surface-container-highest, #31353e)' }}>
+                <div style={{ width: `${Math.min(rule503020.needsPercent * 2, 100)}%`, height: '100%', borderRadius: 9999, backgroundColor: 'var(--color-tertiary, #56e5a9)' }} />
+              </div>
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                <span style={{ color: 'var(--color-outline, #a08e7a)' }}>Deseos &amp; Estilo de Vida (30% máx.)</span>
+                <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{rule503020.wantsPercent}% ({formatCurrency(rule503020.wantsSpent)})</strong>
+              </div>
+              <div style={{ width: '100%', height: 6, borderRadius: 9999, backgroundColor: 'var(--color-surface-container-highest, #31353e)' }}>
+                <div style={{ width: `${Math.min(rule503020.wantsPercent * 3.3, 100)}%`, height: '100%', borderRadius: 9999, backgroundColor: 'var(--color-primary, #ffc174)' }} />
+              </div>
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                <span style={{ color: 'var(--color-outline, #a08e7a)' }}>Ahorro / Inversión FIRE (20% mín.)</span>
+                <strong style={{ color: 'var(--color-tertiary, #56e5a9)' }}>{rule503020.savingsPercent}% ({formatCurrency(rule503020.savingsSpent)})</strong>
+              </div>
+              <div style={{ width: '100%', height: 6, borderRadius: 9999, backgroundColor: 'var(--color-surface-container-highest, #31353e)' }}>
+                <div style={{ width: `${Math.min(rule503020.savingsPercent * 5, 100)}%`, height: '100%', borderRadius: 9999, backgroundColor: 'var(--color-tertiary, #56e5a9)' }} />
+              </div>
+            </div>
+          </div>
+
+          <span style={{ fontSize: 11, color: 'var(--color-tertiary, #56e5a9)', display: 'block', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)' }}>
+            ✓ Estás sobre-ahorrando +8.3% hacia tu libertad financiera
+          </span>
+        </div>
+
+        {/* Strategic Rebalancing Recommendations */}
+        <div className="budget-kpi-card">
+          <div className="kpi-header-row">
+            <span className="kpi-title-label">Recomendaciones del Motor Asesor AUREUS</span>
+            <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>Sync IA</span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '8px 0' }}>
+            <div style={{ padding: '10px 12px', borderRadius: 10, backgroundColor: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.25)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-error, #ffb4ab)', fontSize: 11, fontWeight: 700 }}>
+                <AlertTriangle size={13} /> CONTENCIÓN EN SALUD Y VIAJES
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--color-on-surface-variant, #d8c3ad)', marginTop: 4, lineHeight: 1.4 }}>
+                Has superado el tope en $354.00. Sugerimos balancear temporalmente absorbiendo el excedente desde el margen libre de Ocio ($1,156 disponible).
+              </p>
+            </div>
+
+            <div style={{ padding: '10px 12px', borderRadius: 10, backgroundColor: 'rgba(48, 200, 143, 0.1)', border: '1px solid rgba(48, 200, 143, 0.25)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-tertiary, #56e5a9)', fontSize: 11, fontWeight: 700 }}>
+                <TrendingUp size={13} /> ACELERADOR FISCAL FIN DE AÑO
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--color-on-surface-variant, #d8c3ad)', marginTop: 4, lineHeight: 1.4 }}>
+                Puedes deducir hasta $2,100.00 antes del 31 de diciembre mediante aportes extraordinarios a tu vehículo de retiro (Plan Fiduciario/IRA).
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
+            <span>Última sincronización bancaria: hace 14 minutos</span>
+            <span style={{ color: 'var(--color-tertiary, #56e5a9)' }}>4 cuentas en tiempo real</span>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

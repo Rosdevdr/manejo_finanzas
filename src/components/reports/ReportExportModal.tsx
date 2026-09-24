@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import {
   FileText,
   FileSpreadsheet,
@@ -109,7 +109,7 @@ export function ReportExportModal({
       <div className="modal-card export-modal-card" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FileText size={18} style={{ color: '#F3CA65' }} />
+            <FileText size={18} style={{ color: 'var(--gold-hover)' }} />
             <h2 className="modal-title">Exportar Reportes Financieros</h2>
           </div>
           <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar modal">
@@ -117,7 +117,7 @@ export function ReportExportModal({
           </button>
         </div>
 
-        <div style={{ fontSize: 12.5, color: '#888898', margin: '4px 0 14px' }}>
+        <div style={{ fontSize: 12.5, color: 'var(--text-muted)', margin: '4px 0 14px' }}>
           Selecciona el período y el formato en el que deseas generar tu informe financiero:
         </div>
 
@@ -139,11 +139,11 @@ export function ReportExportModal({
         <div className="export-summary-box">
           <div className="export-summary-item">
             <span className="export-summary-label">Ingresos</span>
-            <span className="export-summary-val" style={{ color: '#34D399' }}>{formatCurrency(totalIncome)}</span>
+            <span className="export-summary-val" style={{ color: 'var(--emerald-success)' }}>{formatCurrency(totalIncome)}</span>
           </div>
           <div className="export-summary-item">
             <span className="export-summary-label">Gastos</span>
-            <span className="export-summary-val" style={{ color: '#FB7185' }}>{formatCurrency(totalExpense)}</span>
+            <span className="export-summary-val" style={{ color: 'var(--rose-danger)' }}>{formatCurrency(totalExpense)}</span>
           </div>
           <div className="export-summary-item">
             <span className="export-summary-label">Balance</span>
@@ -153,7 +153,7 @@ export function ReportExportModal({
           </div>
           <div className="export-summary-item">
             <span className="export-summary-label">Ahorro</span>
-            <span className="export-summary-val" style={{ color: '#F3CA65' }}>{savingsRate.toFixed(1)}%</span>
+            <span className="export-summary-val" style={{ color: 'var(--gold-hover)' }}>{savingsRate.toFixed(1)}%</span>
           </div>
         </div>
 
@@ -162,7 +162,7 @@ export function ReportExportModal({
           {/* PDF Report */}
           <div className="export-action-card" onClick={handleExportPDF}>
             <div>
-              <div className="export-card-icon" style={{ background: 'rgba(243, 202, 101, 0.12)', color: '#F3CA65' }}>
+              <div className="export-card-icon" style={{ background: 'rgba(243, 202, 101, 0.12)', color: 'var(--gold-hover)' }}>
                 <Printer size={20} />
               </div>
               <div className="export-card-title" style={{ marginTop: 10 }}>Estado Financiero (PDF)</div>
@@ -179,7 +179,7 @@ export function ReportExportModal({
           {/* Excel / CSV */}
           <div className="export-action-card" onClick={handleExportCSV}>
             <div>
-              <div className="export-card-icon" style={{ background: 'rgba(52, 211, 153, 0.12)', color: '#34D399' }}>
+              <div className="export-card-icon" style={{ background: 'rgba(52, 211, 153, 0.12)', color: 'var(--emerald-success)' }}>
                 <FileSpreadsheet size={20} />
               </div>
               <div className="export-card-title" style={{ marginTop: 10 }}>Exportar Excel (CSV)</div>

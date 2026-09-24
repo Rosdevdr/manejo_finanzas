@@ -1,6 +1,6 @@
 // src/components/ui/InstallAppModal.tsx
 import { useState, useEffect } from 'react'
-import { X, Smartphone, Download, Share2, PlusSquare, CheckCircle, Apple, Shield } from 'lucide-react'
+import { X, Smartphone, Download, Share2, PlusSquare, CheckCircle, Apple, Shield, Monitor, Sparkles } from 'lucide-react'
 import './InstallAppModal.css'
 
 interface InstallAppModalProps {
@@ -50,10 +50,10 @@ export function InstallAppModal({
               <Smartphone size={22} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: 16, color: '#FFFFFF', fontWeight: 700 }}>
+              <h3 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)', fontWeight: 700 }}>
                 Instalar AUREUS en tu Dispositivo
               </h3>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
                 Acceso ultra-rápido a pantalla completa sin navegador
               </p>
             </div>
@@ -63,9 +63,9 @@ export function InstallAppModal({
             onClick={onClose}
             style={{
               background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: '1px solid var(--border-default)',
               borderRadius: 8,
-              color: '#888898',
+              color: 'var(--text-muted)',
               width: 32,
               height: 32,
               display: 'flex',
@@ -111,7 +111,7 @@ export function InstallAppModal({
                 <span className="install-benefit-pill">
                   <Shield size={12} /> 100% Gratuito · Sin App Store
                 </span>
-                <span style={{ fontSize: 11, color: '#F3CA65', fontFamily: 'Space Mono, monospace' }}>
+                <span style={{ fontSize: 11, color: 'var(--gold-hover)', fontFamily: 'Space Mono, monospace' }}>
                   iOS Safari
                 </span>
               </div>
@@ -162,14 +162,14 @@ export function InstallAppModal({
                 <span className="install-benefit-pill">
                   <CheckCircle size={12} /> Compatible con Samsung, Xiaomi, Motorola, Pixel
                 </span>
-                <span style={{ fontSize: 11, color: '#34D399', fontFamily: 'Space Mono, monospace' }}>
+                <span style={{ fontSize: 11, color: 'var(--emerald-success)', fontFamily: 'Space Mono, monospace' }}>
                   Android APK
                 </span>
               </div>
 
               {isInstallable ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <p style={{ fontSize: 13, color: '#D1D5DB', margin: 0 }}>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
                     Tu navegador permite instalar AUREUS directamente en tu teléfono con 1 solo toque como aplicación nativa (WebAPK):
                   </p>
                   <button
@@ -195,15 +195,15 @@ export function InstallAppModal({
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(201, 168, 76, 0.08)', border: '1px solid rgba(201, 168, 76, 0.25)', borderRadius: 10, padding: 12, fontSize: 11.5, color: '#F3CA65' }}>
-                💡 <strong>Ventaja:</strong> No requiere cuenta de Google Play para instalarse; puedes distribuir el APK directamente por WhatsApp, Telegram o enlace directo de descarga.
+              <div style={{ background: 'var(--gold-subtle)', border: '1px solid rgba(212, 175, 55, 0.25)', borderRadius: 10, padding: 12, fontSize: 11.5, color: 'var(--gold-hover)' }}>
+                <Sparkles size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> <strong>Ventaja:</strong> No requiere cuenta de Google Play para instalarse; puedes distribuir el APK directamente por WhatsApp, Telegram o enlace directo de descarga.
               </div>
             </>
           )}
 
           {platform === 'desktop' && (
             <>
-              <p style={{ fontSize: 13, color: '#D1D5DB', margin: 0 }}>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
                 Puedes instalar AUREUS en tu computadora (Windows, Mac o Linux) para tener una ventana propia e independiente en tu barra de tareas:
               </p>
 
@@ -220,7 +220,7 @@ export function InstallAppModal({
                 </button>
               ) : (
                 <div className="install-step-card">
-                  <div className="install-step-num">💻</div>
+                  <div className="install-step-num"><Monitor size={15} /></div>
                   <div className="install-step-content">
                     <h4>Instalación desde Chrome / Edge</h4>
                     <p>
