@@ -95,6 +95,7 @@ export function App() {
 
   const {
     incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
+    dashboardSummary, fetchDashboardSummary,
     addIncome, updateIncome, deleteIncome,
     addExpense, updateExpense, deleteExpense,
     addWithdrawal, deleteWithdrawal,
@@ -104,6 +105,11 @@ export function App() {
     addSavingsGoal, updateSavingsGoal, depositToGoal, deleteSavingsGoal,
     purgeAllUserData,
   } = useFinanceStorage(user)
+
+  // Actualizar resumen del Dashboard al cambiar de período o mutar datos
+  useEffect(() => {
+    void fetchDashboardSummary(currentPeriod)
+  }, [currentPeriod, fetchDashboardSummary])
 
   // Derecho al Olvido (Ley No. 172-13 RD / Art. 17 GDPR)
   const handleDeleteAccount = async (): Promise<{ success: boolean; error?: string }> => {
@@ -308,6 +314,7 @@ export function App() {
               creditTransactions={creditTransactions}
               categoryBudgets={categoryBudgets}
               userEmail={user?.email}
+              dashboardSummary={dashboardSummary}
               onNavigateTab={handleTabChange}
               onOpenTerms={() => setShowTermsModal(true)}
               onOpenFireCalculator={() => setShowFireModal(true)}

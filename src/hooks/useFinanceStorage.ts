@@ -17,6 +17,7 @@ import type {
   GoalCategory,
 } from '../types/finance'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { apiClient, type DashboardSummaryData } from '../services/apiClient'
 import { sanitizeAmount } from '../utils/security'
 import {
   validateIncomeInput,
@@ -85,6 +86,121 @@ function saveLocal<T>(key: string, data: T[]) {
     localStorage.setItem(key, JSON.stringify(data))
   } catch {
     // fail silently
+  }
+}
+
+function calculateLocalSummary(
+  incomes: Income[],
+  expenses: Expense[],
+  cash: CashWithdrawal[],
+  creditCards: CreditCard[],
+  creditTransactions: CreditCardTransaction[],
+  categoryBudgets: CategoryBudget[],
+  savingsGoals: SavingsGoal[],
+  period: string
+): DashboardSummaryData {
+  const currentIncomes = incomes.filter(i => (i.period || i.date?.slice(0, 7)) === period)
+  const currentExpenses = expenses.filter(e => (e.period || e.date?.slice(0, 7)) === period)
+  const currentCash = cash.filter(c => (c.period || c.date?.slice(0, 7)) === period)
+  const currentCreditTx = creditTransactions.filter(t => (t.period || t.date?.slice(0, 7)) === period)
+
+  const totalIncome = currentIncomes.reduce((acc, curr) => acc + curr.amount, 0)
+  const fixedExpenses = currentExpenses.filter(e => e.type === 'fixed').reduce((acc, curr) => acc + curr.amount, 0)
+  const variableExpenses = currentExpenses.filter(e => e.type === 'variable').reduce((acc, curr) => acc + curr.amount, 0)
+  const totalExpenses = fixedExpenses + variableExpenses
+  const cashWithdrawals = currentCash.reduce((acc, curr) => acc + curr.amount, 0)
+  const netCashFlow = totalIncome - totalExpenses - cashWithdrawals
+
+  const priorIncomes = incomes.filter(i => (i.period || i.date?.slice(0, 7)) < period)
+  const priorExpenses = expenses.filter(e => (e.period || e.date?.slice(0, 7)) < period)
+  const priorCash = cash.filter(c => (c.period || c.date?.slice(0, 7)) < period)
+  const carryOver = priorIncomes.reduce((acc, curr) => acc + curr.amount, 0) -
+    priorExpenses.reduce((acc, curr) => acc + curr.amount, 0) -
+    priorCash.reduce((acc, curr) => acc + curr.amount, 0)
+
+  const availableBalance = netCashFlow + carryOver
+  const committedDebts = currentCreditTx.filter(t => !t.isPaid).reduce((acc, curr) => acc + curr.amount, 0)
+  const unencumberedLiquidity = availableBalance - committedDebts
+
+  const savingsRatePercentage = totalIncome > 0 ? Number(((netCashFlow / totalIncome) * 100).toFixed(2)) : 0
+  const fixedCostRatioPercentage = totalIncome > 0 ? Number(((fixedExpenses / totalIncome) * 100).toFixed(2)) : 0
+  const creditLimitTotal = creditCards.reduce((acc, curr) => acc + (curr.creditLimit || 0), 0)
+  const creditOutstanding = creditTransactions.filter(t => !t.isPaid).reduce((acc, curr) => acc + curr.amount, 0)
+  const creditUtilizationPercentage = creditLimitTotal > 0 ? Number(((creditOutstanding / creditLimitTotal) * 100).toFixed(2)) : 0
+  const debtCoverageRatio = committedDebts > 0 ? Number((availableBalance / committedDebts).toFixed(2)) : 999
+
+  const categoryTotals: Record<string, number> = {}
+  for (const exp of currentExpenses) {
+    categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount
+  }
+  const budgetMap = new Map<string, number>()
+  for (const b of categoryBudgets.filter(b => b.period === period || b.period === 'default')) {
+    budgetMap.set(b.category, b.limitAmount)
+  }
+  const allCats = Array.from(new Set([...Object.keys(categoryTotals), ...budgetMap.keys()]))
+  const categoryBreakdown = allCats.map(cat => {
+    const spent = Number((categoryTotals[cat] || 0).toFixed(2))
+    const budgetLimit = Number((budgetMap.get(cat) || 0).toFixed(2))
+    const percentageOfExpenses = totalExpenses > 0 ? Number(((spent / totalExpenses) * 100).toFixed(2)) : 0
+    const budgetUsedPercentage = budgetLimit > 0 ? Number(((spent / budgetLimit) * 100).toFixed(2)) : 0
+    let status: 'OK' | 'WARNING' | 'EXCEEDED' = 'OK'
+    if (budgetLimit > 0) {
+      if (spent > budgetLimit) status = 'EXCEEDED'
+      else if (spent >= budgetLimit * 0.85) status = 'WARNING'
+    }
+    return { category: cat, spent, percentageOfExpenses, budgetLimit, budgetUsedPercentage, status }
+  }).sort((a, b) => b.spent - a.spent)
+
+  const totalTarget = savingsGoals.reduce((acc, g) => acc + g.targetAmount, 0)
+  const totalSaved = savingsGoals.reduce((acc, g) => acc + g.currentAmount, 0)
+  const completionPercentage = totalTarget > 0 ? Number(((totalSaved / totalTarget) * 100).toFixed(2)) : 0
+  const completedGoalsCount = savingsGoals.filter(g => g.isCompleted || g.currentAmount >= g.targetAmount).length
+  const activeGoalsCount = savingsGoals.length - completedGoalsCount
+
+  let healthScore: 'EXCELLENT' | 'STABLE' | 'WARNING' | 'CRITICAL' = 'STABLE'
+  const advice: string[] = []
+  if (savingsRatePercentage >= 25 && creditUtilizationPercentage < 30) {
+    healthScore = 'EXCELLENT'
+    advice.push('Tu ratio de ahorro supera el 25% y mantienes el crédito bajo control óptimo.')
+  } else if (savingsRatePercentage < 0 || creditUtilizationPercentage > 75 || availableBalance < 0) {
+    healthScore = 'CRITICAL'
+    advice.push('Tus gastos y deudas superan tus ingresos del período. Revisa de inmediato los gastos variables.')
+  } else if (savingsRatePercentage < 10 || creditUtilizationPercentage > 50 || fixedCostRatioPercentage > 60) {
+    healthScore = 'WARNING'
+    advice.push('Tus costos fijos o nivel de endeudamiento son elevados. Prioriza reducir deudas con alto interés.')
+  } else {
+    healthScore = 'STABLE'
+    advice.push('Tus finanzas se encuentran en equilibrio operativo.')
+  }
+
+  return {
+    period,
+    totalIncome: Number(totalIncome.toFixed(2)),
+    totalExpenses: Number(totalExpenses.toFixed(2)),
+    fixedExpenses: Number(fixedExpenses.toFixed(2)),
+    variableExpenses: Number(variableExpenses.toFixed(2)),
+    cashWithdrawals: Number(cashWithdrawals.toFixed(2)),
+    netCashFlow: Number(netCashFlow.toFixed(2)),
+    carryOver: Number(carryOver.toFixed(2)),
+    availableBalance: Number(availableBalance.toFixed(2)),
+    committedDebts: Number(committedDebts.toFixed(2)),
+    unencumberedLiquidity: Number(unencumberedLiquidity.toFixed(2)),
+    savingsRatePercentage,
+    fixedCostRatioPercentage,
+    creditLimitTotal: Number(creditLimitTotal.toFixed(2)),
+    creditOutstanding: Number(creditOutstanding.toFixed(2)),
+    creditUtilizationPercentage,
+    debtCoverageRatio,
+    categoryBreakdown,
+    goalsProgress: {
+      totalTarget: Number(totalTarget.toFixed(2)),
+      totalSaved: Number(totalSaved.toFixed(2)),
+      completionPercentage,
+      activeGoalsCount,
+      completedGoalsCount,
+    },
+    healthScore,
+    advisorAdvice: advice,
   }
 }
 
@@ -283,11 +399,134 @@ export function useFinanceStorage(user?: User | null) {
     }
   }, [user])
 
-  // Consulta directa a Supabase
+  // Consulta a la API Thin-Client de AUREUS (con fallback a Supabase directo)
   const loadData = useCallback(async () => {
-    if (!user || !supabase || !isSupabaseConfigured) return
+    if (!user) return
     const userId = user.id
     const userKeys = getStorageKeys(userId)
+
+    if (navigator.onLine) {
+      try {
+        const [apiIncomes, apiExpenses, apiCash, apiCards, apiCtx, apiBudgets, apiGoals] = await Promise.all([
+          apiClient.incomes.list(),
+          apiClient.expenses.list(),
+          apiClient.cash.list(),
+          apiClient.credit.listCards(),
+          apiClient.credit.listTransactions(),
+          apiClient.budgets.list(new Date().toISOString().slice(0, 7)),
+          apiClient.goals.list(),
+        ])
+
+        if (!isMountedRef.current) return
+
+        if (Array.isArray(apiIncomes)) {
+          const mapped = apiIncomes.map((row: any) => ({
+            id: row.id,
+            period: ensurePeriod(row.period, row.date),
+            description: row.description,
+            amount: Number(row.amount),
+            type: row.type as IncomeType,
+            date: row.date,
+          }))
+          setIncomesState(mapped)
+          saveLocal(userKeys.incomes, mapped)
+        }
+
+        if (Array.isArray(apiExpenses)) {
+          const mapped = apiExpenses.map((row: any) => ({
+            id: row.id,
+            period: ensurePeriod(row.period, row.date),
+            description: row.description,
+            amount: Number(row.amount),
+            category: row.category as ExpenseCategory,
+            type: row.type as ExpenseType,
+            paymentMethod: (row.payment_method || row.paymentMethod) as PaymentMethod,
+            date: row.date,
+          }))
+          setExpensesState(mapped)
+          saveLocal(userKeys.expenses, mapped)
+        }
+
+        if (Array.isArray(apiCash)) {
+          const mapped = apiCash.map((row: any) => ({
+            id: row.id,
+            period: ensurePeriod(row.period, row.date),
+            amount: Number(row.amount),
+            reason: row.reason as CashReason,
+            note: row.note ?? undefined,
+            date: row.date,
+          }))
+          setCashState(mapped)
+          saveLocal(userKeys.cash, mapped)
+        }
+
+        if (Array.isArray(apiCards)) {
+          const mapped = apiCards.map((row: any) => ({
+            id: row.id,
+            name: row.name,
+            bank: row.bank,
+            lastFourDigits: row.last_four_digits || row.lastFourDigits || '0000',
+            creditLimit: Number(row.credit_limit ?? row.creditLimit ?? 0),
+            cutoffDay: Number(row.cutoff_day ?? row.cutoffDay ?? 15),
+            paymentDueDay: Number(row.payment_due_day ?? row.paymentDueDay ?? 30),
+            interestRate: row.interest_rate ?? row.interestRate ? Number(row.interest_rate ?? row.interestRate) : undefined,
+            color: (row.color || 'gold') as CardThemeColor,
+          }))
+          setCreditCardsState(mapped)
+          saveLocal(userKeys.creditCards, mapped)
+        }
+
+        if (Array.isArray(apiCtx)) {
+          const mapped = apiCtx.map((row: any) => ({
+            id: row.id,
+            cardId: row.card_id || row.cardId,
+            period: ensurePeriod(row.period, row.date),
+            description: row.description,
+            amount: Number(row.amount),
+            category: row.category as ExpenseCategory,
+            date: row.date,
+            installments: Number(row.installments || 1),
+            currentInstallment: Number(row.current_installment || row.currentInstallment || 1),
+            isPaid: Boolean(row.is_paid ?? row.isPaid),
+          }))
+          setCreditTransactionsState(mapped)
+          saveLocal(userKeys.creditTransactions, mapped)
+        }
+
+        if (Array.isArray(apiBudgets)) {
+          const mapped = apiBudgets.map((row: any) => ({
+            id: row.id,
+            period: row.period,
+            category: row.category as ExpenseCategory,
+            limitAmount: Number(row.limit_amount ?? row.limitAmount ?? 0),
+          }))
+          setCategoryBudgetsState(mapped)
+          saveLocal(userKeys.categoryBudgets, mapped)
+        }
+
+        if (Array.isArray(apiGoals)) {
+          const mapped = apiGoals.map((row: any) => ({
+            id: row.id,
+            name: row.name,
+            targetAmount: Number(row.target_amount ?? row.targetAmount ?? 0),
+            currentAmount: Number(row.current_amount ?? row.currentAmount ?? 0),
+            monthlyContribution: row.monthly_contribution ?? row.monthlyContribution ? Number(row.monthly_contribution ?? row.monthlyContribution) : undefined,
+            targetDate: row.target_date ?? row.targetDate ?? undefined,
+            category: row.category as GoalCategory,
+            color: row.color || '#34D399',
+            isCompleted: Boolean(row.is_completed ?? row.isCompleted),
+          }))
+          setSavingsGoalsState(mapped)
+          saveLocal(userKeys.savingsGoals, mapped)
+        }
+
+        return
+      } catch {
+        // Continuar con fallback directo a Supabase
+      }
+    }
+
+    if (!supabase || !isSupabaseConfigured) return
 
     try {
       // 1. Consultar tablas principales existentes
@@ -530,6 +769,31 @@ export function useFinanceStorage(user?: User | null) {
     return () => clearInterval(timer)
   }, [user, loadData])
 
+  // --- Resumen Financiero Centralizado (Backend Thin Client) ---
+  const [dashboardSummary, setDashboardSummary] = useState<DashboardSummaryData | null>(null)
+
+  const fetchDashboardSummary = useCallback(async (period: string) => {
+    const isOnlineMode = Boolean(user && navigator.onLine)
+    if (!isOnlineMode) {
+      const local = calculateLocalSummary(incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals, period)
+      setDashboardSummary(local)
+      return local
+    }
+    try {
+      const summary = await apiClient.dashboard.getSummary(period)
+      if (isMountedRef.current) {
+        setDashboardSummary(summary)
+      }
+      return summary
+    } catch {
+      const local = calculateLocalSummary(incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals, period)
+      if (isMountedRef.current) {
+        setDashboardSummary(local)
+      }
+      return local
+    }
+  }, [user, incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals])
+
   // --- Acciones de Ingresos ---
   const addIncome = async (d: Omit<Income, 'id'>) => {
     const val = validateIncomeInput(d)
@@ -547,16 +811,30 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('incomes').insert({
-        id: newId,
-        user_id: user.id,
-        period: cleanData.period,
-        description: cleanData.description,
-        amount: cleanData.amount,
-        type: cleanData.type,
-        date: cleanData.date,
-      })
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.incomes.create({
+          id: newId,
+          period: cleanData.period,
+          description: cleanData.description,
+          amount: cleanData.amount,
+          type: cleanData.type,
+          date: cleanData.date,
+        })
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('incomes').insert({
+            id: newId,
+            user_id: user.id,
+            period: cleanData.period,
+            description: cleanData.description,
+            amount: cleanData.amount,
+            type: cleanData.type,
+            date: cleanData.date,
+          })
+        }
+      }
       notifyMutation('incomes')
       void loadData()
     }
@@ -577,14 +855,27 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('incomes').update({
-        description: cleanItem.description,
-        amount: cleanItem.amount,
-        type: cleanItem.type,
-        date: cleanItem.date,
-        period: cleanItem.period,
-      }).eq('id', updated.id).eq('user_id', user.id)
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.incomes.update(updated.id, {
+          description: cleanItem.description,
+          amount: cleanItem.amount,
+          type: cleanItem.type,
+          date: cleanItem.date,
+          period: cleanItem.period,
+        })
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('incomes').update({
+            description: cleanItem.description,
+            amount: cleanItem.amount,
+            type: cleanItem.type,
+            date: cleanItem.date,
+            period: cleanItem.period,
+          }).eq('id', updated.id).eq('user_id', user.id)
+        }
+      }
       notifyMutation('incomes')
       void loadData()
     }
@@ -598,8 +889,15 @@ export function useFinanceStorage(user?: User | null) {
       saveLocal(keys.incomes, next)
       return next
     })
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('incomes').delete().eq('id', id).eq('user_id', user.id)
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.incomes.delete(id)
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('incomes').delete().eq('id', id).eq('user_id', user.id)
+        }
+      }
       notifyMutation('incomes')
       void loadData()
     }
@@ -622,18 +920,34 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('expenses').insert({
-        id: newId,
-        user_id: user.id,
-        period: cleanData.period,
-        description: cleanData.description,
-        amount: cleanData.amount,
-        category: cleanData.category,
-        type: cleanData.type,
-        payment_method: cleanData.paymentMethod,
-        date: cleanData.date,
-      })
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.expenses.create({
+          id: newId,
+          period: cleanData.period,
+          description: cleanData.description,
+          amount: cleanData.amount,
+          category: cleanData.category,
+          type: cleanData.type,
+          paymentMethod: cleanData.paymentMethod,
+          date: cleanData.date,
+        })
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('expenses').insert({
+            id: newId,
+            user_id: user.id,
+            period: cleanData.period,
+            description: cleanData.description,
+            amount: cleanData.amount,
+            category: cleanData.category,
+            type: cleanData.type,
+            payment_method: cleanData.paymentMethod,
+            date: cleanData.date,
+          })
+        }
+      }
       notifyMutation('expenses')
       void loadData()
     }
@@ -654,16 +968,31 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('expenses').update({
-        description: cleanItem.description,
-        amount: cleanItem.amount,
-        category: cleanItem.category,
-        type: cleanItem.type,
-        payment_method: cleanItem.paymentMethod,
-        date: cleanItem.date,
-        period: cleanItem.period,
-      }).eq('id', updated.id).eq('user_id', user.id)
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.expenses.update(updated.id, {
+          description: cleanItem.description,
+          amount: cleanItem.amount,
+          category: cleanItem.category,
+          type: cleanItem.type,
+          paymentMethod: cleanItem.paymentMethod,
+          date: cleanItem.date,
+          period: cleanItem.period,
+        })
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('expenses').update({
+            description: cleanItem.description,
+            amount: cleanItem.amount,
+            category: cleanItem.category,
+            type: cleanItem.type,
+            payment_method: cleanItem.paymentMethod,
+            date: cleanItem.date,
+            period: cleanItem.period,
+          }).eq('id', updated.id).eq('user_id', user.id)
+        }
+      }
       notifyMutation('expenses')
       void loadData()
     }
@@ -677,8 +1006,15 @@ export function useFinanceStorage(user?: User | null) {
       saveLocal(keys.expenses, next)
       return next
     })
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('expenses').delete().eq('id', id).eq('user_id', user.id)
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.expenses.delete(id)
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('expenses').delete().eq('id', id).eq('user_id', user.id)
+        }
+      }
       notifyMutation('expenses')
       void loadData()
     }
@@ -701,16 +1037,30 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('cash_withdrawals').insert({
-        id: newId,
-        user_id: user.id,
-        period: cleanData.period,
-        amount: cleanData.amount,
-        reason: cleanData.reason,
-        note: cleanData.note ?? null,
-        date: cleanData.date,
-      })
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.cash.create({
+          id: newId,
+          period: cleanData.period,
+          amount: cleanData.amount,
+          reason: cleanData.reason,
+          note: cleanData.note ?? undefined,
+          date: cleanData.date,
+        })
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('cash_withdrawals').insert({
+            id: newId,
+            user_id: user.id,
+            period: cleanData.period,
+            amount: cleanData.amount,
+            reason: cleanData.reason,
+            note: cleanData.note ?? null,
+            date: cleanData.date,
+          })
+        }
+      }
       notifyMutation('cash')
       void loadData()
     }
@@ -724,8 +1074,15 @@ export function useFinanceStorage(user?: User | null) {
       saveLocal(keys.cash, next)
       return next
     })
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('cash_withdrawals').delete().eq('id', id).eq('user_id', user.id)
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.cash.delete(id)
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('cash_withdrawals').delete().eq('id', id).eq('user_id', user.id)
+        }
+      }
       notifyMutation('cash')
       void loadData()
     }
@@ -748,19 +1105,36 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('credit_cards').insert({
-        id: newId,
-        user_id: user.id,
-        name: cleanData.name,
-        bank: cleanData.bank,
-        last_four_digits: cleanData.lastFourDigits,
-        credit_limit: cleanData.creditLimit,
-        cutoff_day: cleanData.cutoffDay,
-        payment_due_day: cleanData.paymentDueDay,
-        interest_rate: cleanData.interestRate ?? null,
-        color: cleanData.color,
-      })
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.credit.createCard({
+          id: newId,
+          name: cleanData.name,
+          bank: cleanData.bank,
+          lastFourDigits: cleanData.lastFourDigits,
+          creditLimit: cleanData.creditLimit,
+          cutoffDay: cleanData.cutoffDay,
+          paymentDueDay: cleanData.paymentDueDay,
+          interestRate: cleanData.interestRate,
+          color: cleanData.color,
+        })
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('credit_cards').insert({
+            id: newId,
+            user_id: user.id,
+            name: cleanData.name,
+            bank: cleanData.bank,
+            last_four_digits: cleanData.lastFourDigits,
+            credit_limit: cleanData.creditLimit,
+            cutoff_day: cleanData.cutoffDay,
+            payment_due_day: cleanData.paymentDueDay,
+            interest_rate: cleanData.interestRate ?? null,
+            color: cleanData.color,
+          })
+        }
+      }
       notifyMutation('credit_cards')
       void loadData()
     }
@@ -781,17 +1155,24 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('credit_cards').update({
-        name: cleanCard.name,
-        bank: cleanCard.bank,
-        last_four_digits: cleanCard.lastFourDigits,
-        credit_limit: cleanCard.creditLimit,
-        cutoff_day: cleanCard.cutoffDay,
-        payment_due_day: cleanCard.paymentDueDay,
-        interest_rate: cleanCard.interestRate ?? null,
-        color: cleanCard.color,
-      }).eq('id', updated.id).eq('user_id', user.id)
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.credit.updateCard(updated.id, cleanCard)
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('credit_cards').update({
+            name: cleanCard.name,
+            bank: cleanCard.bank,
+            last_four_digits: cleanCard.lastFourDigits,
+            credit_limit: cleanCard.creditLimit,
+            cutoff_day: cleanCard.cutoffDay,
+            payment_due_day: cleanCard.paymentDueDay,
+            interest_rate: cleanCard.interestRate ?? null,
+            color: cleanCard.color,
+          }).eq('id', updated.id).eq('user_id', user.id)
+        }
+      }
       notifyMutation('credit_cards')
       void loadData()
     }
@@ -811,9 +1192,16 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('credit_cards').delete().eq('id', id).eq('user_id', user.id)
-      await supabase.from('credit_card_transactions').delete().eq('card_id', id).eq('user_id', user.id)
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.credit.deleteCard(id)
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('credit_cards').delete().eq('id', id).eq('user_id', user.id)
+          await supabase.from('credit_card_transactions').delete().eq('card_id', id).eq('user_id', user.id)
+        }
+      }
       notifyMutation('credit_cards')
       void loadData()
     }
@@ -836,20 +1224,38 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('credit_card_transactions').insert({
-        id: newId,
-        user_id: user.id,
-        card_id: cleanData.cardId,
-        period: cleanData.period,
-        description: cleanData.description,
-        amount: cleanData.amount,
-        category: cleanData.category,
-        date: cleanData.date,
-        installments: cleanData.installments,
-        current_installment: cleanData.currentInstallment,
-        is_paid: cleanData.isPaid,
-      })
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.credit.createTransaction({
+          id: newId,
+          cardId: cleanData.cardId,
+          period: cleanData.period,
+          description: cleanData.description,
+          amount: cleanData.amount,
+          category: cleanData.category,
+          date: cleanData.date,
+          installments: cleanData.installments,
+          currentInstallment: cleanData.currentInstallment,
+          isPaid: cleanData.isPaid,
+        })
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('credit_card_transactions').insert({
+            id: newId,
+            user_id: user.id,
+            card_id: cleanData.cardId,
+            period: cleanData.period,
+            description: cleanData.description,
+            amount: cleanData.amount,
+            category: cleanData.category,
+            date: cleanData.date,
+            installments: cleanData.installments,
+            current_installment: cleanData.currentInstallment,
+            is_paid: cleanData.isPaid,
+          })
+        }
+      }
       notifyMutation('credit_transactions')
       void loadData()
     }
@@ -870,18 +1276,25 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('credit_card_transactions').update({
-        card_id: cleanItem.cardId,
-        description: cleanItem.description,
-        amount: cleanItem.amount,
-        category: cleanItem.category,
-        date: cleanItem.date,
-        period: cleanItem.period,
-        installments: cleanItem.installments,
-        current_installment: cleanItem.currentInstallment,
-        is_paid: cleanItem.isPaid,
-      }).eq('id', updated.id).eq('user_id', user.id)
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.credit.updateTransaction(updated.id, cleanItem)
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('credit_card_transactions').update({
+            card_id: cleanItem.cardId,
+            description: cleanItem.description,
+            amount: cleanItem.amount,
+            category: cleanItem.category,
+            date: cleanItem.date,
+            period: cleanItem.period,
+            installments: cleanItem.installments,
+            current_installment: cleanItem.currentInstallment,
+            is_paid: cleanItem.isPaid,
+          }).eq('id', updated.id).eq('user_id', user.id)
+        }
+      }
       notifyMutation('credit_transactions')
       void loadData()
     }
@@ -896,8 +1309,15 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user) {
-      await supabase.from('credit_card_transactions').delete().eq('id', id).eq('user_id', user.id)
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.credit.deleteTransaction(id)
+      } catch (apiErr) {
+        if (supabase && isSupabaseConfigured && user) {
+          await supabase.from('credit_card_transactions').delete().eq('id', id).eq('user_id', user.id)
+        }
+      }
       notifyMutation('credit_transactions')
       void loadData()
     }
@@ -907,6 +1327,18 @@ export function useFinanceStorage(user?: User | null) {
     const target = creditTransactions.find(t => t.id === id)
     if (!target) return
     const updated = { ...target, isPaid: !target.isPaid }
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.credit.togglePaid(id)
+        setCreditTransactionsState(prev => prev.map(t => t.id === id ? updated : t))
+        notifyMutation('credit_transactions')
+        void loadData()
+        return
+      } catch {
+        // Fallback al updater estándar
+      }
+    }
     await updateCreditTransaction(updated)
   }
 
@@ -928,23 +1360,37 @@ export function useFinanceStorage(user?: User | null) {
         return next
       })
 
-      if (supabase && isSupabaseConfigured && user && budgetsTableAvailableRef.current) {
+      const isOnline = Boolean(user && navigator.onLine)
+      if (isOnline) {
         try {
-          const res = await supabase.from('category_budgets').upsert({
+          await apiClient.budgets.set({
             id: existing.id,
-            user_id: user.id,
             period,
             category,
-            limit_amount: cleanLimit,
+            limitAmount: cleanLimit,
           })
-          if (res.error && (res.status === 404 || res.error.code === '42P01')) {
-            budgetsTableAvailableRef.current = false
-          } else {
-            notifyMutation('category_budgets')
-            void loadData()
-          }
+          notifyMutation('category_budgets')
+          void loadData()
         } catch {
-          budgetsTableAvailableRef.current = false
+          if (supabase && isSupabaseConfigured && user && budgetsTableAvailableRef.current) {
+            try {
+              const res = await supabase.from('category_budgets').upsert({
+                id: existing.id,
+                user_id: user.id,
+                period,
+                category,
+                limit_amount: cleanLimit,
+              })
+              if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+                budgetsTableAvailableRef.current = false
+              } else {
+                notifyMutation('category_budgets')
+                void loadData()
+              }
+            } catch {
+              budgetsTableAvailableRef.current = false
+            }
+          }
         }
       }
     } else {
@@ -956,23 +1402,37 @@ export function useFinanceStorage(user?: User | null) {
         return next
       })
 
-      if (supabase && isSupabaseConfigured && user && budgetsTableAvailableRef.current) {
+      const isOnline = Boolean(user && navigator.onLine)
+      if (isOnline) {
         try {
-          const res = await supabase.from('category_budgets').insert({
+          await apiClient.budgets.set({
             id: newId,
-            user_id: user.id,
             period,
             category,
-            limit_amount: cleanLimit,
+            limitAmount: cleanLimit,
           })
-          if (res.error && (res.status === 404 || res.error.code === '42P01')) {
-            budgetsTableAvailableRef.current = false
-          } else {
-            notifyMutation('category_budgets')
-            void loadData()
-          }
+          notifyMutation('category_budgets')
+          void loadData()
         } catch {
-          budgetsTableAvailableRef.current = false
+          if (supabase && isSupabaseConfigured && user && budgetsTableAvailableRef.current) {
+            try {
+              const res = await supabase.from('category_budgets').insert({
+                id: newId,
+                user_id: user.id,
+                period,
+                category,
+                limit_amount: cleanLimit,
+              })
+              if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+                budgetsTableAvailableRef.current = false
+              } else {
+                notifyMutation('category_budgets')
+                void loadData()
+              }
+            } catch {
+              budgetsTableAvailableRef.current = false
+            }
+          }
         }
       }
     }
@@ -994,24 +1454,33 @@ export function useFinanceStorage(user?: User | null) {
     setCategoryBudgetsState(newBudgets)
     saveLocal(keys.categoryBudgets, newBudgets)
 
-    if (supabase && isSupabaseConfigured && user && budgetsTableAvailableRef.current) {
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
       try {
-        const rows = newBudgets.map(b => ({
-          id: b.id,
-          user_id: user.id,
-          period: b.period,
-          category: b.category,
-          limit_amount: b.limitAmount,
-        }))
-        const res = await supabase.from('category_budgets').upsert(rows)
-        if (res.error && (res.status === 404 || res.error.code === '42P01')) {
-          budgetsTableAvailableRef.current = false
-        } else {
-          notifyMutation('category_budgets')
-          void loadData()
-        }
+        await apiClient.budgets.setBulk(period, newBudgets.map(b => ({ category: b.category, limitAmount: b.limitAmount })))
+        notifyMutation('category_budgets')
+        void loadData()
       } catch {
-        budgetsTableAvailableRef.current = false
+        if (supabase && isSupabaseConfigured && user && budgetsTableAvailableRef.current) {
+          try {
+            const rows = newBudgets.map(b => ({
+              id: b.id,
+              user_id: user.id,
+              period: b.period,
+              category: b.category,
+              limit_amount: b.limitAmount,
+            }))
+            const res = await supabase.from('category_budgets').upsert(rows)
+            if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+              budgetsTableAvailableRef.current = false
+            } else {
+              notifyMutation('category_budgets')
+              void loadData()
+            }
+          } catch {
+            budgetsTableAvailableRef.current = false
+          }
+        }
       }
     }
     return { success: true }
@@ -1041,28 +1510,37 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user && goalsTableAvailableRef.current) {
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
       try {
-        const res = await supabase.from('savings_goals').insert({
-          id: newId,
-          user_id: user.id,
-          name: cleanData.name,
-          target_amount: cleanData.targetAmount,
-          current_amount: cleanData.currentAmount,
-          monthly_contribution: cleanData.monthlyContribution ?? null,
-          target_date: g.targetDate ?? null,
-          category: cleanData.category,
-          color: g.color || '#34D399',
-          is_completed: item.isCompleted,
-        })
-        if (res.error && (res.status === 404 || res.error.code === '42P01')) {
-          goalsTableAvailableRef.current = false
-        } else {
-          notifyMutation('savings_goals')
-          void loadData()
-        }
+        await apiClient.goals.create(item)
+        notifyMutation('savings_goals')
+        void loadData()
       } catch {
-        goalsTableAvailableRef.current = false
+        if (supabase && isSupabaseConfigured && user && goalsTableAvailableRef.current) {
+          try {
+            const res = await supabase.from('savings_goals').insert({
+              id: newId,
+              user_id: user.id,
+              name: cleanData.name,
+              target_amount: cleanData.targetAmount,
+              current_amount: cleanData.currentAmount,
+              monthly_contribution: cleanData.monthlyContribution ?? null,
+              target_date: g.targetDate ?? null,
+              category: cleanData.category,
+              color: g.color || '#34D399',
+              is_completed: item.isCompleted,
+            })
+            if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+              goalsTableAvailableRef.current = false
+            } else {
+              notifyMutation('savings_goals')
+              void loadData()
+            }
+          } catch {
+            goalsTableAvailableRef.current = false
+          }
+        }
       }
     }
     return { success: true }
@@ -1091,26 +1569,35 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user && goalsTableAvailableRef.current) {
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
       try {
-        const res = await supabase.from('savings_goals').update({
-          name: cleanData.name,
-          target_amount: cleanData.targetAmount,
-          current_amount: cleanData.currentAmount,
-          monthly_contribution: cleanData.monthlyContribution ?? null,
-          target_date: updated.targetDate ?? null,
-          category: cleanData.category,
-          color: updated.color || '#34D399',
-          is_completed: isCompleted,
-        }).eq('id', updated.id).eq('user_id', user.id)
-        if (res.error && (res.status === 404 || res.error.code === '42P01')) {
-          goalsTableAvailableRef.current = false
-        } else {
-          notifyMutation('savings_goals')
-          void loadData()
-        }
+        await apiClient.goals.update(updated.id, cleanItem)
+        notifyMutation('savings_goals')
+        void loadData()
       } catch {
-        goalsTableAvailableRef.current = false
+        if (supabase && isSupabaseConfigured && user && goalsTableAvailableRef.current) {
+          try {
+            const res = await supabase.from('savings_goals').update({
+              name: cleanData.name,
+              target_amount: cleanData.targetAmount,
+              current_amount: cleanData.currentAmount,
+              monthly_contribution: cleanData.monthlyContribution ?? null,
+              target_date: updated.targetDate ?? null,
+              category: cleanData.category,
+              color: updated.color || '#34D399',
+              is_completed: isCompleted,
+            }).eq('id', updated.id).eq('user_id', user.id)
+            if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+              goalsTableAvailableRef.current = false
+            } else {
+              notifyMutation('savings_goals')
+              void loadData()
+            }
+          } catch {
+            goalsTableAvailableRef.current = false
+          }
+        }
       }
     }
     return { success: true }
@@ -1121,7 +1608,18 @@ export function useFinanceStorage(user?: User | null) {
     if (!target) return
     const cleanDeposit = sanitizeAmount(amount)
     const newCurrent = target.currentAmount + cleanDeposit
-    await updateSavingsGoal({ ...target, currentAmount: newCurrent })
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.goals.deposit(goalId, cleanDeposit)
+        notifyMutation('savings_goals')
+        void loadData()
+      } catch {
+        await updateSavingsGoal({ ...target, currentAmount: newCurrent })
+      }
+    } else {
+      await updateSavingsGoal({ ...target, currentAmount: newCurrent })
+    }
   }
 
   const deleteSavingsGoal = async (goalId: string) => {
@@ -1132,17 +1630,26 @@ export function useFinanceStorage(user?: User | null) {
       return next
     })
 
-    if (supabase && isSupabaseConfigured && user && goalsTableAvailableRef.current) {
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
       try {
-        const res = await supabase.from('savings_goals').delete().eq('id', goalId).eq('user_id', user.id)
-        if (res.error && (res.status === 404 || res.error.code === '42P01')) {
-          goalsTableAvailableRef.current = false
-        } else {
-          notifyMutation('savings_goals')
-          void loadData()
-        }
+        await apiClient.goals.delete(goalId)
+        notifyMutation('savings_goals')
+        void loadData()
       } catch {
-        goalsTableAvailableRef.current = false
+        if (supabase && isSupabaseConfigured && user && goalsTableAvailableRef.current) {
+          try {
+            const res = await supabase.from('savings_goals').delete().eq('id', goalId).eq('user_id', user.id)
+            if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+              goalsTableAvailableRef.current = false
+            } else {
+              notifyMutation('savings_goals')
+              void loadData()
+            }
+          } catch {
+            goalsTableAvailableRef.current = false
+          }
+        }
       }
     }
   }
@@ -1162,6 +1669,7 @@ export function useFinanceStorage(user?: User | null) {
     setCreditTransactionsState([])
     setCategoryBudgetsState([])
     setSavingsGoalsState([])
+    setDashboardSummary(null)
 
     // 2. Limpiar llaves locales de usuario
     const userKeys = getStorageKeys(userId)
@@ -1207,6 +1715,8 @@ export function useFinanceStorage(user?: User | null) {
 
   return {
     incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
+    dashboardSummary,
+    fetchDashboardSummary,
     refreshData: loadData,
     addIncome, updateIncome, deleteIncome,
     addExpense, updateExpense, deleteExpense,
