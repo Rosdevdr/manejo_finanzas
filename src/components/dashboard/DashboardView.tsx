@@ -33,6 +33,7 @@ import type {
   CategoryBudget,
 } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
+import type { DashboardSummaryData } from '../../services/apiClient'
 import { formatCurrency } from '../../utils/formatters'
 import {
   getPreviousPeriod,
@@ -53,6 +54,7 @@ interface DashboardViewProps {
   creditTransactions?: CreditCardTransaction[]
   categoryBudgets?: CategoryBudget[]
   userEmail?: string | null
+  dashboardSummary?: DashboardSummaryData | null
   onNavigateTab?: (t: TabType) => void
   onOpenTerms?: () => void
   onOpenFireCalculator?: () => void
@@ -104,6 +106,7 @@ export function DashboardView({
   cashWithdrawals = [],
   creditCards = [],
   creditTransactions = [],
+  dashboardSummary,
   onNavigateTab,
   onOpenFireCalculator,
   onOpenSubscription,
@@ -111,7 +114,7 @@ export function DashboardView({
   onOpenExport,
   onOpenScenarioSimulator,
 }: DashboardViewProps) {
-  // Current Period Calculations
+  // Current Period Calculations (Thin Client: backend single source of truth when connected)
   const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
   const pInc = incomes.filter(
     i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === currentPeriod
@@ -120,9 +123,9 @@ export function DashboardView({
     e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === currentPeriod
   )
 
-  const totalIn = pInc.reduce((s, i) => s + i.amount, 0)
-  const totalExp = pExp.reduce((s, e) => s + e.amount, 0)
-  const netBalance = totalIn - totalExp
+  const totalIn = dashboardSummary ? dashboardSummary.totalIncome : pInc.reduce((s, i) => s + i.amount, 0)
+  const totalExp = dashboardSummary ? dashboardSummary.totalExpenses : pExp.reduce((s, e) => s + e.amount, 0)
+  const netBalance = dashboardSummary ? dashboardSummary.netCashFlow : (totalIn - totalExp)
 
   // Previous Period Comparison
   const prevPeriod = getPreviousPeriod(currentPeriod)
@@ -138,13 +141,13 @@ export function DashboardView({
 
   // Credit and Debt Summary
   const creditSummary = getConsolidatedCreditSummary(creditCards, creditTransactions)
-  const totalCreditLimit = creditCards.reduce((sum, c) => sum + (c.creditLimit || 0), 0) || 76000
-  const totalDebt = creditSummary.totalDebt || 18420.30
-  const utilizationRatio = totalCreditLimit > 0 ? (totalDebt / totalCreditLimit) * 100 : 24.2
+  const totalCreditLimit = dashboardSummary ? dashboardSummary.creditLimitTotal : (creditCards.reduce((sum, c) => sum + (c.creditLimit || 0), 0) || 76000)
+  const totalDebt = dashboardSummary ? dashboardSummary.committedDebts : (creditSummary.totalDebt || 18420.30)
+  const utilizationRatio = dashboardSummary ? dashboardSummary.creditUtilizationPercentage : (totalCreditLimit > 0 ? (totalDebt / totalCreditLimit) * 100 : 24.2)
 
   // Survival Ratio (Liquid coverage)
   const monthlyBurn = totalExp > 0 ? totalExp : 8500
-  const totalLiquid = cumulative.totalCumulativeBalance > 0 ? cumulative.totalCumulativeBalance : 124580
+  const totalLiquid = dashboardSummary ? dashboardSummary.availableBalance : (cumulative.totalCumulativeBalance > 0 ? cumulative.totalCumulativeBalance : 124580)
   const survivalMonths = (totalLiquid / monthlyBurn).toFixed(1)
 
   // 6-Month Timeline for Sparklines and Flow Charts
