@@ -1,4 +1,4 @@
-﻿/* src/components/expenses/ExpensesView.css - Apex Obsidian Data Grid (Stripe + Revolut) */
+/* src/components/expenses/ExpensesView.css - Apex Obsidian Data Grid (Stripe + Revolut) */
 
 .expenses-obsidian-root {
   display: flex;
@@ -163,4 +163,15 @@
 .obsidian-icon-btn.danger:hover {
   background: var(--rose-glow);
   color: var(--rose-danger);
+}
+
+@media (max-width: 768px) {
+  .obsidian-data-grid-container {
+    padding: 14px 12px;
+  }
+  .obsidian-table th,
+  .obsidian-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
 }

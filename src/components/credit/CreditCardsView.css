@@ -544,3 +544,21 @@
 [data-theme='light'] .filter-search-input {
   color: #0f172a;
 }
+
+/* ── Mobile Responsiveness Overrides ── */
+@media (max-width: 768px) {
+  .credit-view-stitch-root {
+    padding: 16px 14px 56px 14px;
+    gap: 16px;
+  }
+  .credit-title-wrap h1 {
+    font-size: 22px;
+  }
+  .credit-header-actions {
+    width: 100%;
+  }
+  .credit-header-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+}

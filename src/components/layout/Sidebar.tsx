@@ -87,14 +87,12 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobile backdrop */}
-      {isOpen && (
-        <div
-          className="sidebar-backdrop-glass"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
+      {/* Persistent backdrop for smooth enter and exit transitions */}
+      <div
+        className={`sidebar-backdrop-glass ${isOpen ? 'active' : ''}`}
+        onClick={onClose}
+        aria-hidden={!isOpen}
+      />
 
       <aside className={`sidebar-obsidian ${isOpen ? 'mobile-open' : ''}`} aria-label="Navegación principal">
         <div>
@@ -106,11 +104,10 @@ export function Sidebar({
               <span className="logo-subtitle">Wealth Advisor</span>
             </div>
 
-            {onClose && isOpen && (
+            {onClose && (
               <button
                 type="button"
-                className="action-icon-btn"
-                style={{ marginLeft: 'auto' }}
+                className="sidebar-close-btn"
                 onClick={onClose}
                 title="Cerrar menú"
                 aria-label="Cerrar menú"
