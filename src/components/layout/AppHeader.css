@@ -221,18 +221,75 @@
 @media (max-width: 1024px) {
   .app-header-obsidian {
     padding: 0 16px;
+    height: 58px;
+    min-height: 58px;
   }
   .header-brand-title span:not(.header-icon) {
     display: none;
   }
+  .header-center {
+    margin: 0 12px;
+  }
 }
 
 @media (max-width: 768px) {
+  .app-header-obsidian {
+    padding: 0 12px;
+    height: 56px;
+    min-height: 56px;
+    gap: 8px;
+  }
+  .header-brand-title {
+    display: none;
+  }
+  .header-left {
+    gap: 8px;
+  }
+  .header-center {
+    margin: 0;
+    flex: 1;
+    justify-content: center;
+  }
+  .app-header-obsidian .period-nav {
+    padding: 3px 6px;
+    gap: 4px;
+  }
+  .app-header-obsidian .period-label {
+    font-size: 12px;
+    min-width: 100px;
+    padding: 0 4px;
+  }
+  .app-header-obsidian .nav-btn {
+    width: 22px;
+    height: 22px;
+  }
   .header-balance-pill {
     display: none;
   }
   .header-profile-meta {
     display: none;
+  }
+  .header-profile-widget {
+    padding-left: 0;
+    border-left: none;
+  }
+  .header-controls {
+    gap: 6px;
+  }
+  .icon-btn-glass {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  .header-profile-avatar {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-tip-btn {
+    display: none !important;
   }
 }
 

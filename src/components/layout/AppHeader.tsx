@@ -172,7 +172,7 @@ export function AppHeader({
           <div ref={tipRef} style={{ position: 'relative' }}>
             <button
               type="button"
-              className="icon-btn-glass"
+              className="icon-btn-glass header-tip-btn"
               onClick={() => setTipOpen(prev => !prev)}
               title="Consejo Financiero del Día"
               aria-label="Consejo Financiero del Día"

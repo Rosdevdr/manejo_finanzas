@@ -2390,7 +2390,7 @@ select.field-select {
     position: relative;
   }
 
-  /* Slide-over sidebar drawer */
+  /* Slide-over sidebar drawer with cinematic smooth bezier */
   .sidebar,
   .sidebar-obsidian {
     position: fixed !important;
@@ -2400,33 +2400,50 @@ select.field-select {
     width: 290px !important;
     max-width: 85vw !important;
     height: 100dvh !important;
-    z-index: 10001 !important;
+    z-index: 10000 !important;
     transform: translateX(-100%) !important;
-    transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
     box-shadow: none !important;
     display: flex !important;
     flex-direction: column !important;
-    background: var(--bg-surface) !important;
-    border-right: 1px solid var(--border-subtle) !important;
-    padding: 24px 16px !important;
-    padding-top: max(20px, env(safe-area-inset-top, 0px)) !important;
-    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)) !important;
+    background: var(--color-surface-container-low, #181c24) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 20px 16px !important;
+    padding-top: max(16px, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)) !important;
+    will-change: transform;
   }
   .sidebar.mobile-open,
   .sidebar-obsidian.mobile-open {
     transform: translateX(0) !important;
-    box-shadow: 10px 0 50px rgba(0, 0, 0, 0.85) !important;
+    box-shadow: 16px 0 50px rgba(0, 0, 0, 0.85) !important;
   }
   .sidebar-backdrop,
   .sidebar-backdrop-glass {
     position: fixed !important;
     inset: 0 !important;
-    z-index: 10000 !important;
-    background: rgba(0, 0, 0, 0.5) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    display: block !important;
-    animation: fadeIn 0.2s ease-out;
+    z-index: 9990 !important;
+    background: rgba(6, 10, 18, 0.62) !important;
+    backdrop-filter: blur(0px) !important;
+    -webkit-backdrop-filter: blur(0px) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                backdrop-filter 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                -webkit-backdrop-filter 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: opacity, backdrop-filter;
+    animation: none !important;
+  }
+  .sidebar-backdrop.active,
+  .sidebar-backdrop-glass.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
   }
   .sidebar-mobile-close {
     display: flex !important;
@@ -2487,7 +2504,7 @@ select.field-select {
   .header-export-btn,
   .header-github-btn { display: none !important; }
 
-  /* Main / content */
+  /* Main / content with cinematic smooth defocus transition */
   .main {
     flex: 1;
     display: flex !important;
@@ -2498,6 +2515,15 @@ select.field-select {
     min-width: 0;
     max-width: 100%;
     position: relative;
+    transition: filter 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: filter, transform;
+  }
+  .main.module-defocused {
+    filter: blur(6px) brightness(0.78) !important;
+    transform: scale(0.985) !important;
+    pointer-events: none !important;
+    user-select: none !important;
   }
   .app-header {
     position: sticky !important;
@@ -2519,7 +2545,7 @@ select.field-select {
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-y: contain;
-    padding: 16px 14px max(24px, env(safe-area-inset-bottom, 0px)) !important;
+    padding: 0 !important;
   }
   .content.content-chat-mode {
     padding: 8px 10px max(8px, env(safe-area-inset-bottom, 0px)) !important;

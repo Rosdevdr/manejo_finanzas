@@ -648,3 +648,56 @@
 [data-theme='light'] .tool-shortcut-desc {
   color: #64748b;
 }
+
+/* ── Mobile Responsiveness Overrides ── */
+@media (max-width: 768px) {
+  .dashboard-stitch-root {
+    padding: 16px 14px 56px 14px;
+  }
+  .dashboard-subbar {
+    margin-bottom: 16px;
+    padding: 4px 0 12px 0;
+  }
+  .dashboard-hero-grid {
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .stitch-card {
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+  .hero-balance-main {
+    font-size: clamp(24px, 7vw, 36px);
+    line-height: 1.2;
+  }
+  .hero-balance-compact {
+    font-size: clamp(18px, 5.5vw, 24px);
+    line-height: 1.25;
+  }
+  .dashboard-flow-grid {
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .dashboard-bento-lower {
+    gap: 14px;
+  }
+  .hero-actions-cluster {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .hero-actions-cluster .btn-stitch-gold,
+  .hero-actions-cluster .btn-stitch-outline {
+    justify-content: center;
+    padding: 9px 12px;
+    font-size: 12px;
+    width: 100%;
+  }
+  .hero-actions-cluster .btn-stitch-outline:last-child {
+    grid-column: span 2;
+  }
+  .card-header-row {
+    margin-bottom: 6px;
+  }
+}

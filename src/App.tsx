@@ -279,7 +279,7 @@ export function App() {
         currentPlan={plan}
       />
 
-      <div className="main">
+      <div className={`main ${isMobileMenuOpen ? 'module-defocused' : ''}`}>
         <AppHeader
           periodLabel={periodLabel}
           onPrev={prevPeriod}
