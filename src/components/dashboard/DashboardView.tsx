@@ -136,19 +136,19 @@ export function DashboardView({
     .filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === prevPeriod)
     .reduce((s, e) => s + e.amount, 0)
   const prevNet = prevInc - prevExp
-  const netDeltaPct = prevNet !== 0 ? ((netBalance - prevNet) / Math.abs(prevNet)) * 100 : 3.06
+  const netDeltaPct = prevNet !== 0 ? ((netBalance - prevNet) / Math.abs(prevNet)) * 100 : (netBalance > 0 ? 100 : 0)
   const isGrowth = netDeltaPct >= 0
 
   // Credit and Debt Summary
   const creditSummary = getConsolidatedCreditSummary(creditCards, creditTransactions)
-  const totalCreditLimit = dashboardSummary ? dashboardSummary.creditLimitTotal : (creditCards.reduce((sum, c) => sum + (c.creditLimit || 0), 0) || 76000)
-  const totalDebt = dashboardSummary ? dashboardSummary.committedDebts : (creditSummary.totalDebt || 18420.30)
-  const utilizationRatio = dashboardSummary ? dashboardSummary.creditUtilizationPercentage : (totalCreditLimit > 0 ? (totalDebt / totalCreditLimit) * 100 : 24.2)
+  const totalCreditLimit = dashboardSummary ? dashboardSummary.creditLimitTotal : (creditCards.reduce((sum, c) => sum + (c.creditLimit || 0), 0))
+  const totalDebt = dashboardSummary ? dashboardSummary.committedDebts : (creditSummary.totalDebt || 0)
+  const utilizationRatio = dashboardSummary ? dashboardSummary.creditUtilizationPercentage : (totalCreditLimit > 0 ? (totalDebt / totalCreditLimit) * 100 : 0)
 
   // Survival Ratio (Liquid coverage)
-  const monthlyBurn = totalExp > 0 ? totalExp : 8500
-  const totalLiquid = dashboardSummary ? dashboardSummary.availableBalance : (cumulative.totalCumulativeBalance > 0 ? cumulative.totalCumulativeBalance : 124580)
-  const survivalMonths = (totalLiquid / monthlyBurn).toFixed(1)
+  const monthlyBurn = totalExp > 0 ? totalExp : 0
+  const totalLiquid = dashboardSummary ? dashboardSummary.availableBalance : cumulative.totalCumulativeBalance
+  const survivalMonths = monthlyBurn > 0 ? (totalLiquid / monthlyBurn).toFixed(1) : (totalLiquid > 0 ? '∞' : '0.0')
 
   // 6-Month Timeline for Sparklines and Flow Charts
   const historyPeriods: string[] = []
@@ -170,15 +170,13 @@ export function DashboardView({
         .reduce((s, e) => s + e.amount, 0)
       const cum = calculateCumulativeBalance(incomes, expenses, p)
 
-      // Fallback realistic progression for aesthetic preview if local storage is low
-      const baseNW = 435000 + idx * 9500
-      const netWorthVal = cum.totalCumulativeBalance > 0 ? cum.totalCumulativeBalance : baseNW
+      const netWorthVal = cum.totalCumulativeBalance
 
       return {
         month: MONTH_SHORT_NAMES[mIdx] || p,
-        inflow: pIn || Math.round(18000 + idx * 800),
-        outflow: pEx || Math.round(12000 + idx * 400),
-        netWorth: netWorthVal,
+        inflow: pIn || 0,
+        outflow: pEx || 0,
+        netWorth: netWorthVal || 0,
       }
     })
   }, [historyPeriods, incomes, expenses])
@@ -189,23 +187,17 @@ export function DashboardView({
     categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount
   })
 
-  // If empty, supply default realistic Stitch breakdown
+  // Donut chart logic without dummy data
   const pieData = Object.keys(categoryTotals).length > 0
     ? Object.keys(categoryTotals).map(cat => ({
         name: CATEGORY_NAMES[cat] || cat,
         value: categoryTotals[cat],
         color: CATEGORY_COLORS[cat] || '#ffc174',
       }))
-    : [
-        { name: 'Vivienda (Hipoteca)', value: 4112, color: '#ffc174' },
-        { name: 'Aportes FIRE & Inv.', value: 3598, color: '#56e5a9' },
-        { name: 'Alimentación', value: 1799, color: '#30c88f' },
-        { name: 'Transporte & Auto', value: 1156, color: '#c3c0ff' },
-        { name: 'Ocio & Experiencias', value: 1156, color: '#ffddb8' },
-        { name: 'Servicios & Apps', value: 1029, color: '#ffb4ab' },
-      ]
+    : []
 
   const totalPie = pieData.reduce((s, d) => s + d.value, 0)
+  const pieDataToRender = pieData.length > 0 ? pieData : [{ name: 'Sin Datos', value: 1, color: '#31353e' }]
 
   // Payment Channel Totals
   const paymentTotals = {
@@ -234,9 +226,7 @@ export function DashboardView({
     }
   }
 
-  const netWorthSplit = formatSplitCurrency(
-    cumulative.totalCumulativeBalance > 0 ? cumulative.totalCumulativeBalance : 482920.45
-  )
+  const netWorthSplit = formatSplitCurrency(cumulative.totalCumulativeBalance)
   const liquidSplit = formatSplitCurrency(totalLiquid)
   const debtSplit = formatSplitCurrency(totalDebt)
 
@@ -269,7 +259,7 @@ export function DashboardView({
           <div>
             <div className="card-header-row">
               <div className="card-title-group">
-                <span className="material-symbols-outlined text-primary text-lg">account_balance</span>
+                <Building2 size={24} style={{ color: 'var(--color-primary, #ffc174)' }} />
                 <span className="card-title-label">Patrimonio Neto Consolidado</span>
               </div>
               <span className="pill-growth">
@@ -352,7 +342,7 @@ export function DashboardView({
           <div>
             <div className="card-header-row">
               <div className="card-title-group">
-                <span className="material-symbols-outlined text-tertiary text-lg">water_drop</span>
+                <Zap size={24} style={{ color: 'var(--color-tertiary, #56e5a9)' }} />
                 <span className="card-title-label">Activos Líquidos</span>
               </div>
               <span className="pill-neutral">Bajo Control</span>
@@ -407,7 +397,7 @@ export function DashboardView({
           <div>
             <div className="card-header-row">
               <div className="card-title-group">
-                <span className="material-symbols-outlined text-primary text-lg">credit_card</span>
+                <CardIcon size={24} style={{ color: 'var(--color-primary, #ffc174)' }} />
                 <span className="card-title-label">Pasivos Totales</span>
               </div>
               <span className="pill-neutral" style={{ color: 'var(--color-outline, #a08e7a)' }}>
@@ -515,15 +505,16 @@ export function DashboardView({
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={pieData}
+                      data={pieDataToRender}
                       dataKey="value"
                       cx="50%"
                       cy="50%"
                       innerRadius={54}
                       outerRadius={74}
                       paddingAngle={3}
+                      stroke="none"
                     >
-                      {pieData.map((entry, idx) => (
+                      {pieDataToRender.map((entry, idx) => (
                         <Cell key={idx} fill={entry.color} stroke="var(--color-surface-container, #1c2028)" strokeWidth={2} />
                       ))}
                     </Pie>

@@ -75,6 +75,10 @@ export function AppHeader({
   })
   const tipRef = useRef<HTMLDivElement>(null)
 
+  // Notifications popover
+  const [notificationOpen, setNotificationOpen] = useState(false)
+  const notificationRef = useRef<HTMLDivElement>(null)
+
   const activeTip = FINANCIAL_TIPS_BANK[tipIndex] || FINANCIAL_TIPS_BANK[0]
 
   const handleNextTip = (e: React.MouseEvent) => {
@@ -92,11 +96,15 @@ export function AppHeader({
       if (tipRef.current && !tipRef.current.contains(event.target as Node)) {
         setTipOpen(false)
       }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setNotificationOpen(false)
+      }
     }
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         setProfileOpen(false)
         setTipOpen(false)
+        setNotificationOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -238,16 +246,54 @@ export function AppHeader({
           </div>
 
           {/* Notifications Button */}
-          <button
-            type="button"
-            className="icon-btn-glass"
-            title="Notificaciones"
-            aria-label="Notificaciones"
-            onClick={() => setTipOpen(prev => !prev)}
-          >
-            <Bell size={17} />
-            <span className="icon-badge-dot" />
-          </button>
+          <div ref={notificationRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="icon-btn-glass"
+              title="Notificaciones"
+              aria-label="Notificaciones"
+              onClick={() => setNotificationOpen(prev => !prev)}
+            >
+              <Bell size={17} />
+              <span className="icon-badge-dot" />
+            </button>
+
+            {notificationOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: 10,
+                  width: 320,
+                  backgroundColor: 'var(--color-surface-container, #1c2028)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: 14,
+                  padding: 16,
+                  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.5)',
+                  zIndex: 99,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-surface, #dfe2ee)' }}>
+                    Notificaciones
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--color-on-surface-variant, #d8c3ad)', textAlign: 'center', padding: '20px 0' }}>
+                  No tienes notificaciones nuevas.
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 8, borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <button
+                    type="button"
+                    onClick={() => setNotificationOpen(false)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--color-outline, #a08e7a)', fontSize: 11, cursor: 'pointer' }}
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Theme Toggle Button */}
           {onToggleTheme && (
