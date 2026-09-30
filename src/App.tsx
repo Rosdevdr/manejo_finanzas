@@ -58,9 +58,21 @@ export function App() {
   const [showScenarioModal, setShowScenarioModal] = useState(false)
   const [showGuideModal, setShowGuideModal] = useState(false)
   const [guideInitialModule, setGuideInitialModule] = useState('dashboard')
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen]       = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+
+  // Cerrar sidebar al presionar tecla Escape
+  useEffect(() => {
+    if (!isSidebarOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsSidebarOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isSidebarOpen])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -260,8 +272,8 @@ export function App() {
         onTabChange={handleTabChange}
         userEmail={user?.email}
         isDemoMode={isDemoMode}
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
         onSignOut={signOut}
         onOpenSecurity={() => setIsSecurityOpen(true)}
         onOpenExport={() => setShowExportModal(true)}
@@ -279,7 +291,7 @@ export function App() {
         currentPlan={plan}
       />
 
-      <div className={`main ${isMobileMenuOpen ? 'module-defocused' : ''}`}>
+      <div className={`main ${isSidebarOpen ? 'module-defocused' : ''}`}>
         <AppHeader
           periodLabel={periodLabel}
           onPrev={prevPeriod}
@@ -298,7 +310,9 @@ export function App() {
           onOpenLicense={() => setShowLicenseModal(true)}
           isInstallable={isInstallable}
           onInstallApp={() => setShowInstallModal(true)}
-          onOpenMenu={() => setIsMobileMenuOpen(true)}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+          onOpenMenu={() => setIsSidebarOpen(prev => !prev)}
           theme={theme}
           onToggleTheme={toggleTheme}
         />
