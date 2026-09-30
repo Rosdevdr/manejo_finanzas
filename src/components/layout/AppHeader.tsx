@@ -40,6 +40,8 @@ interface AppHeaderProps {
   isInstallable?: boolean
   onInstallApp?: () => void
   onOpenMenu?: () => void
+  isSidebarOpen?: boolean
+  onToggleSidebar?: () => void
   theme?: 'light' | 'dark'
   onToggleTheme?: () => void
 }
@@ -56,6 +58,8 @@ export function AppHeader({
   onSignOut,
   onOpenSecurity,
   onOpenMenu,
+  isSidebarOpen,
+  onToggleSidebar,
   theme = 'dark',
   onToggleTheme,
 }: AppHeaderProps) {
@@ -110,13 +114,14 @@ export function AppHeader({
     <header className="app-header-obsidian">
       {/* Left: Mobile Toggle + Title + Period */}
       <div className="header-left">
-        {onOpenMenu && (
+        {(onToggleSidebar || onOpenMenu) && (
           <button
             type="button"
-            className="icon-btn-glass lg:hidden"
-            onClick={onOpenMenu}
-            title="Abrir menú"
-            aria-label="Abrir menú"
+            className={`header-menu-btn icon-btn-glass ${isSidebarOpen ? 'active' : ''}`}
+            onClick={onToggleSidebar || onOpenMenu}
+            title={isSidebarOpen ? 'Ocultar menú lateral' : 'Mostrar menú lateral'}
+            aria-label={isSidebarOpen ? 'Ocultar menú lateral' : 'Mostrar menú lateral'}
+            aria-expanded={isSidebarOpen}
           >
             <Menu size={18} />
           </button>
@@ -126,7 +131,8 @@ export function AppHeader({
           <span className="header-icon">
             <Shield size={18} />
           </span>
-          <span>Dashboard Financiero Consolidado</span>
+          <span className="header-title-full">Dashboard Financiero Consolidado</span>
+          <span className="header-title-short">Dashboard</span>
         </div>
       </div>
 
@@ -160,8 +166,8 @@ export function AppHeader({
       {/* Right: Available Total Pill + Tools + Theme + Profile */}
       <div className="header-right">
         {/* Disponible Total Pill */}
-        <div className="header-balance-pill">
-          <span className="header-balance-label">Disponible Total:</span>
+        <div className="header-balance-pill" title={`Disponible: ${balanceLabel}`}>
+          <span className="header-balance-label">Disponible:</span>
           <span className="header-balance-amount">{balanceLabel}</span>
           <span className="header-balance-badge">+3.8%</span>
         </div>
