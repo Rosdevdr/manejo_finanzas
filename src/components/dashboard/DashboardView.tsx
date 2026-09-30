@@ -159,7 +159,7 @@ export function DashboardView({
   }
 
   const timelineData = useMemo(() => {
-    return historyPeriods.map((p, idx) => {
+    return historyPeriods.map((p) => {
       const [, m] = p.split('-')
       const mIdx = (parseInt(m, 10) || 1) - 1
       const pIn = incomes
