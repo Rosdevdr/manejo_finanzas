@@ -35,7 +35,6 @@ import {
 import { TermsAndConditionsModal } from './components/legal/TermsAndConditionsModal'
 import { SplashScreenLoader } from './components/common/SplashScreenLoader'
 import { InstallAppModal } from './components/ui/InstallAppModal'
-import { usePlan } from './hooks/usePlan'
 
 export function App() {
   const [activeTab, setActiveTab]               = useState<TabType>('dashboard')
@@ -100,8 +99,6 @@ export function App() {
     updateUserPassword,
     enterDemoMode,
   } = useAuth()
-
-  const { plan } = usePlan(user, isDemoMode)
 
   const {
     incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
@@ -268,7 +265,6 @@ export function App() {
         }}
         isInstallable={isInstallable}
         onInstallApp={() => setShowInstallModal(true)}
-        currentPlan={plan}
       />
 
       <div className={`main ${isSidebarOpen ? 'module-defocused' : ''}`}>

@@ -43,7 +43,6 @@ interface SidebarProps {
   onOpenGuide?: () => void
   isInstallable?: boolean
   onInstallApp?: () => void
-  currentPlan?: 'free' | 'personal' | 'pro'
 }
 
 interface NavItemDef {
