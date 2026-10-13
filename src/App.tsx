@@ -35,7 +35,6 @@ import {
 import { TermsAndConditionsModal } from './components/legal/TermsAndConditionsModal'
 import { SplashScreenLoader } from './components/common/SplashScreenLoader'
 import { InstallAppModal } from './components/ui/InstallAppModal'
-import { SubscriptionModal } from './components/subscription/SubscriptionModal'
 import { usePlan } from './hooks/usePlan'
 
 export function App() {
@@ -60,7 +59,6 @@ export function App() {
   const [guideInitialModule, setGuideInitialModule] = useState('dashboard')
   const [isSidebarOpen, setIsSidebarOpen]       = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
 
   // Cerrar sidebar al presionar tecla Escape
   useEffect(() => {
@@ -103,7 +101,7 @@ export function App() {
     enterDemoMode,
   } = useAuth()
 
-  const { plan, refreshPlan } = usePlan(user, isDemoMode)
+  const { plan } = usePlan(user, isDemoMode)
 
   const {
     incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
@@ -174,23 +172,6 @@ export function App() {
       contentRef.current.scrollTop = 0
     }
   }, [activeTab])
-
-  // Manejar retorno de Stripe Checkout (éxito o cancelación)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const checkout = params.get('checkout')
-    const planParam = params.get('plan')
-    if (checkout === 'success' && planParam) {
-      showToast(`¡Plan ${planParam.charAt(0).toUpperCase() + planParam.slice(1)} activado correctamente! 🎉`, 'success')
-      refreshPlan()
-      // Limpiar parámetros de la URL sin recargar
-      window.history.replaceState(null, '', window.location.pathname)
-    } else if (checkout === 'cancelled') {
-      showToast('Proceso de pago cancelado. Puedes intentarlo de nuevo cuando quieras.', 'info')
-      window.history.replaceState(null, '', window.location.pathname)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Splash inicial estilo Stripe al montar la plataforma
   useEffect(() => {
@@ -287,7 +268,6 @@ export function App() {
         }}
         isInstallable={isInstallable}
         onInstallApp={() => setShowInstallModal(true)}
-        onOpenSubscription={() => setShowSubscriptionModal(true)}
         currentPlan={plan}
       />
 
@@ -332,7 +312,6 @@ export function App() {
               onNavigateTab={handleTabChange}
               onOpenTerms={() => setShowTermsModal(true)}
               onOpenFireCalculator={() => setShowFireModal(true)}
-              onOpenSubscription={() => setShowSubscriptionModal(true)}
               onOpenSecurity={() => setIsSecurityOpen(true)}
               onOpenExport={() => setShowExportModal(true)}
               onOpenScenarioSimulator={() => setShowScenarioModal(true)}
@@ -535,15 +514,6 @@ export function App() {
         onClose={() => setShowInstallModal(false)}
         isInstallable={isInstallable}
         onInstallPwa={installApp}
-      />
-      <SubscriptionModal
-        isOpen={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
-        currentPlan={plan}
-        userId={user?.id || null}
-        userEmail={user?.email}
-        isDemoMode={isDemoMode}
-        onRefreshPlan={refreshPlan}
       />
       {isModuleLoading && (
         <SplashScreenLoader

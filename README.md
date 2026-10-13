@@ -1,67 +1,55 @@
-# 💰 AUREUS · Frontend Client (Web & Mobile)
+# AUREUS · Dashboard Client
 
-Aplicación cliente de alta fidelidad para el sistema financiero **AUREUS Wealth Advisor**. Construida con React 19, TypeScript, Tailwind CSS v4, Recharts y Capacitor para Android, desacoplada por completo del backend para escalabilidad y mantenimiento profesional.
+> 🇪🇸 Versión en español: [README.es.md](./README.es.md)
 
----
+The React client of **AUREUS**, a zero-friction household finance assistant. Expenses and bills are captured through chat (Telegram first) by the [backend](https://github.com/Rosdevdr/manejo_finanzas-backend). This app is the **optional dashboard**: a place to review reports, upcoming due dates, and correct anything the assistant got wrong.
 
-## 🏛️ Arquitectura Desacoplada (Frontend / Backend Independientes)
+> **Status: in transition.** The client was built for the original fintech version of AUREUS and still works with local storage. It is being adapted to read data from the new backend. The previous version lives in the [`legacy-aureus`](../../tree/legacy-aureus) branch.
 
-Este proyecto ha sido separado de un monorepo a dos repositorios independientes:
-1. **Frontend Repo (`manejo_finanzas`)**: Interfaz de usuario, gráficos interactivos, modo oscuro/claro, PWA y cliente móvil Android.
-2. **Backend Repo (`manejo_finanzas-backend`)**: API REST en Express + TypeScript, orquestador Gemini AI, pasarela de suscripciones Stripe, migraciones analíticas y suite automatizada de QA con Vitest/Supertest.
+## Role in the System
 
----
+```
+Chat (Telegram / WhatsApp)  →  Backend (ledger + Sentinel)  →  Dashboard (this repo)
+```
 
-## 🚀 Tecnologías del Cliente
-- **Core:** React 19 + TypeScript + Vite 8
-- **Estilos:** Tailwind CSS v4 + Tokens de Diseño Stitch (Stripe + Revolut)
-- **Modos:** Dark Mode ("Apex Obsidian") y Light Mode ("Apex Alabaster")
-- **Visualización de Datos:** Recharts (Bento Grids, Donut de Distribución, Cash Flow)
-- **Móvil:** Capacitor 8 (Soporte nativo para Android)
-- **Testing:** Vitest 4
-- **API Proxy:** Vite Server Proxy integrado hacia el backend (`http://localhost:3001`)
+- **Read:** spending summaries, category breakdowns, cash flow, upcoming bills.
+- **Correct:** change a category or amount; the correction is sent to the backend and stored as training data.
+- **Not a data-entry tool:** daily capture happens in the chat, not here.
 
----
+## Tech Stack
 
-## 🎯 Estado del Proyecto
-- [x] **Fase 0:** Configuración de repositorio y convenciones Git.
-- [x] **Fase 1:** Inicialización del proyecto con Vite + TypeScript.
-- [x] **Fase 2:** Sistema de diseño base y layout 100% responsive (Mobile First, Tablet, Desktop).
-- [x] **Fase 3:** Modelado de datos robusto en TypeScript (`finance.ts`, `navigation.ts`).
-- [x] **Fase 4:** Módulo de gestión de ingresos multi-fuente (Sueldos, Freelance, Inversiones, Extras) con edición en línea.
-- [x] **Fase 5:** Módulo de gastos clasificados (Fijos vs Variables) y retiros de efectivo con motor de Asesoría en vivo.
-- [x] **Fase 6:** Dashboard integral con KPIs financieros en tiempo real, gráficos comparativos y balance neto.
-- [x] **Fase 7:** Persistencia desacoplada (LocalStorage Repository Pattern con inicialización segura).
-- [x] **Fase 8:** Motor de análisis predictivo y diagnóstico inteligente (Regla 50/30/20, Fondo de Emergencia, Veredicto de Inversión).
-- [x] **Fase 9:** Accesibilidad (a11y), contrastes certificados, selectores de fecha en blanco nítido, soporte táctil (mínimo 44px) y micro-animaciones.
-- [x] **Fase 10:** Testing unitario automatizado con Vitest (Asesor de efectivo, formateo de moneda y fechas).
-- [x] **Fase 11:** Despliegue en producción preparado para Vercel.
+React 19 · TypeScript · Vite · Tailwind CSS v4 · Recharts · Capacitor (Android, optional) · Vitest · Vercel
 
----
+## Roadmap
 
-## 📱 Características de Diseño Responsivo
-- **Móviles (< 768px):** Barra de navegación inferior ergonómica (`BottomNav`), formularios en columna fluida, botones de acción de ancho completo y área táctil optimizada.
-- **Tablets (768px - 1024px):** Cuadrículas elásticas de KPIs en 2 columnas, gráficos apilados y menú de navegación accesible.
-- **Desktop (> 1024px):** Barra lateral de alta fidelidad, vistas en 3 columnas y comparativas lado a lado.
-- **Inputs de Fecha:** Selector de calendario con contraste invertido en blanco luminoso sobre fondo oscuro en todos los navegadores.
+- [x] Responsive layout with dark and light themes
+- [x] Dashboard with KPIs, charts and cash-flow history
+- [x] Subscription and payment module removed (no monetization for now)
+- [ ] Replace local storage with the backend API
+- [ ] Authentication against the backend
+- [ ] Bill Sentinel view (due dates and reminder status)
+- [ ] Correction flow for extracted expenses
+- [ ] Weekly summary view
 
----
+## Getting Started
 
-## 🛠️ Instalación, Pruebas y Ejecución Local
+Requirements: Node.js 20+ and npm 10+.
 
 ```bash
-# 1. Clonar el repositorio
 git clone https://github.com/Rosdevdr/manejo_finanzas.git
-
-# 2. Instalar dependencias
 npm install
-
-# 3. Iniciar servidor de desarrollo
-npm run dev
-
-# 4. Ejecutar pruebas unitarias automatizadas
-npm run test
-
-# 5. Compilar para producción
-npm run build
+npm run dev      # development server
+npm run test     # unit tests
+npm run build    # production build
 ```
+
+The dev server proxies `/api` to the backend at `http://localhost:3001`.
+
+## Branch Strategy
+
+| Branch | Purpose |
+|---|---|
+| `develop` | Active development |
+| `qa` | Quality assurance and regression |
+| `main` | Stable, deployed to Vercel |
+| `legacy-aureus` | Frozen snapshot of the original fintech version |

@@ -58,7 +58,6 @@ interface DashboardViewProps {
   onNavigateTab?: (t: TabType) => void
   onOpenTerms?: () => void
   onOpenFireCalculator?: () => void
-  onOpenSubscription?: () => void
   onOpenSecurity?: () => void
   onOpenExport?: () => void
   onOpenScenarioSimulator?: () => void
@@ -109,7 +108,6 @@ export function DashboardView({
   dashboardSummary,
   onNavigateTab,
   onOpenFireCalculator,
-  onOpenSubscription,
   onOpenSecurity,
   onOpenExport,
   onOpenScenarioSimulator,
@@ -761,30 +759,6 @@ export function DashboardView({
               <span className="tool-badge">68%</span>
             </div>
             <span className="tool-desc">Progreso a la independencia financiera</span>
-          </div>
-          <ArrowRight size={16} style={{ color: 'var(--color-outline, #a08e7a)', marginLeft: 'auto' }} />
-        </button>
-
-        {/* Tool 2: Gestor de Suscripciones */}
-        <button
-          type="button"
-          className="tool-shortcut-card"
-          onClick={() => {
-            triggerHaptic('light')
-            onOpenSubscription ? onOpenSubscription() : onNavigateTab?.('budgets')
-          }}
-        >
-          <div className="tool-icon-box" style={{ color: 'var(--color-secondary, #c3c0ff)' }}>
-            <Zap size={20} />
-          </div>
-          <div className="tool-info">
-            <div className="tool-name-row">
-              <span className="tool-name">Suscripciones</span>
-              <span className="tool-badge" style={{ backgroundColor: 'rgba(195, 192, 255, 0.15)', color: 'var(--color-secondary, #c3c0ff)' }}>
-                12 Activas
-              </span>
-            </div>
-            <span className="tool-desc">Desembolso recurrente: $340/mes</span>
           </div>
           <ArrowRight size={16} style={{ color: 'var(--color-outline, #a08e7a)', marginLeft: 'auto' }} />
         </button>

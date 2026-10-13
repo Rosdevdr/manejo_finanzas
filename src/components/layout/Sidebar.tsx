@@ -43,7 +43,6 @@ interface SidebarProps {
   onOpenGuide?: () => void
   isInstallable?: boolean
   onInstallApp?: () => void
-  onOpenSubscription?: () => void
   currentPlan?: 'free' | 'personal' | 'pro'
 }
 
@@ -80,7 +79,6 @@ export function Sidebar({
   onOpenGuide,
   isInstallable,
   onInstallApp,
-  onOpenSubscription,
 }: SidebarProps) {
   const initials = userEmail ? userEmail.slice(0, 2).toUpperCase() : 'AS'
   const displayName = userEmail ? userEmail.split('@')[0] : 'Alejandro Silva'
@@ -275,18 +273,6 @@ export function Sidebar({
             </div>
 
             <div className="membership-actions">
-              {onOpenSubscription && (
-                <button
-                  type="button"
-                  className="action-icon-btn"
-                  onClick={onOpenSubscription}
-                  title="Gestionar Plan"
-                  aria-label="Gestionar Plan"
-                >
-                  <Shield size={14} />
-                </button>
-              )}
-
               {onOpenSecurity && (
                 <button
                   type="button"
