@@ -1,0 +1,704 @@
+/* ==============================================================================
+   🛡️ AUREUS · SENTINEL DASHBOARD VIEW STYLES (GLASSMORPHISM & OLED DARK THEME)
+   ============================================================================== */
+
+:root {
+  --aur-bg-canvas: #0B0F19;
+  --aur-surface-card: rgba(17, 24, 39, 0.75);
+  --aur-surface-card-hover: rgba(26, 36, 56, 0.85);
+  --aur-surface-raised: #1A2234;
+  --aur-surface-low: #111827;
+  --aur-border-subtle: rgba(255, 255, 255, 0.08);
+  --aur-border-active: rgba(245, 158, 11, 0.35);
+  
+  --aur-gold-primary: #F59E0B;
+  --aur-gold-bright: #FBBF24;
+  --aur-gold-glow: rgba(245, 158, 11, 0.25);
+  
+  --aur-emerald: #10B981;
+  --aur-emerald-glow: rgba(16, 185, 129, 0.2);
+  
+  --aur-crimson: #EF4444;
+  --aur-crimson-bg: rgba(239, 68, 68, 0.12);
+  --aur-crimson-border: rgba(239, 68, 68, 0.3);
+  
+  --aur-indigo: #6366F1;
+  --aur-indigo-bg: rgba(99, 102, 241, 0.12);
+  
+  --aur-text-primary: #F9FAFB;
+  --aur-text-secondary: #94A3B8;
+  --aur-text-muted: #64748B;
+}
+
+.sentinel-dashboard-container {
+  width: 100%;
+  max-width: 1540px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: var(--aur-text-primary);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* --- Top Header & Telemetry Bar --- */
+.sentinel-header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.sentinel-household-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--aur-surface-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--aur-border-subtle);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--aur-text-primary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.sentinel-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--aur-indigo-bg);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #A5B4FC;
+}
+
+.sentinel-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--aur-emerald);
+  box-shadow: 0 0 10px var(--aur-emerald);
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* --- Hero Banner: Escudo Centinela Anti-Moras --- */
+.sentinel-hero-shield {
+  position: relative;
+  background: linear-gradient(135deg, rgba(26, 34, 52, 0.85) 0%, rgba(17, 24, 39, 0.85) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--aur-border-subtle);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.sentinel-hero-shield::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, var(--aur-gold-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sentinel-shield-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sentinel-shield-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.sentinel-shield-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid var(--aur-gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--aur-gold-primary);
+  box-shadow: 0 0 20px var(--aur-gold-glow);
+}
+
+.sentinel-shield-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--aur-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sentinel-savings-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid var(--aur-emerald);
+  color: var(--aur-emerald);
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 15px var(--aur-emerald-glow);
+}
+
+/* Urgent Bill Alert Box */
+.sentinel-urgent-box {
+  background: var(--aur-crimson-bg);
+  border: 1px solid var(--aur-crimson-border);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.15);
+}
+
+.sentinel-urgent-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sentinel-urgent-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+  background: rgba(239, 68, 68, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--aur-crimson);
+  flex-shrink: 0;
+}
+
+.sentinel-urgent-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--aur-crimson);
+  color: #FFFFFF;
+  padding: 0.15rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sentinel-btn-pay {
+  background: linear-gradient(135deg, var(--aur-gold-primary) 0%, #D97706 100%);
+  color: #0B0F19;
+  border: none;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 16px var(--aur-gold-glow);
+  transition: all 0.2s ease;
+}
+
+.sentinel-btn-pay:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* --- Executive KPI 4-Grid --- */
+.sentinel-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.sentinel-kpi-card {
+  background: var(--aur-surface-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--aur-border-subtle);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.sentinel-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.sentinel-kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--aur-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sentinel-kpi-value {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--aur-text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.sentinel-kpi-value.gold {
+  color: var(--aur-gold-bright);
+}
+
+.sentinel-kpi-value.emerald {
+  color: var(--aur-emerald);
+}
+
+.sentinel-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.sentinel-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sentinel-progress-fill.gold {
+  background: var(--aur-gold-primary);
+}
+
+.sentinel-progress-fill.emerald {
+  background: var(--aur-emerald);
+}
+
+/* --- Main 2-Column Dashboard Grid --- */
+.sentinel-main-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .sentinel-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Commitments Card */
+.sentinel-card {
+  background: var(--aur-surface-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--aur-border-subtle);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.sentinel-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sentinel-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--aur-border-subtle);
+}
+
+.sentinel-filter-pill {
+  background: transparent;
+  border: none;
+  color: var(--aur-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sentinel-filter-pill.active {
+  background: var(--aur-gold-primary);
+  color: #0B0F19;
+  font-weight: 700;
+}
+
+/* Commitment Items List */
+.sentinel-commitment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.sentinel-commitment-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--aur-border-subtle);
+  border-radius: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.sentinel-commitment-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateX(2px);
+}
+
+.sentinel-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.sentinel-item-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sentinel-item-icon.electric { background: rgba(239, 68, 68, 0.2); color: var(--aur-crimson); }
+.sentinel-item-icon.telecom { background: rgba(245, 158, 11, 0.2); color: var(--aur-gold-primary); }
+.sentinel-item-icon.card { background: rgba(99, 102, 241, 0.2); color: var(--aur-indigo); }
+.sentinel-item-icon.education { background: rgba(16, 185, 129, 0.2); color: var(--aur-emerald); }
+.sentinel-item-icon.water { background: rgba(14, 165, 233, 0.2); color: #38BDF8; }
+
+.sentinel-item-name {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--aur-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sentinel-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.sentinel-badge.urgent {
+  background: var(--aur-crimson-bg);
+  border: 1px solid var(--aur-crimson-border);
+  color: var(--aur-crimson);
+}
+
+.sentinel-badge.pending {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--aur-gold-primary);
+}
+
+.sentinel-badge.paid {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--aur-emerald);
+}
+
+.sentinel-item-meta {
+  font-size: 0.8125rem;
+  color: var(--aur-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.sentinel-item-savings {
+  color: var(--aur-emerald);
+  font-weight: 600;
+}
+
+.sentinel-item-amount {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--aur-text-primary);
+}
+
+.sentinel-item-amount.paid {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+/* Category Composite Progress */
+.sentinel-composite-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.sentinel-composite-segment {
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.sentinel-composite-segment.c1 { background: var(--aur-gold-primary); }
+.sentinel-composite-segment.c2 { background: var(--aur-indigo); }
+.sentinel-composite-segment.c3 { background: var(--aur-emerald); }
+.sentinel-composite-segment.c4 { background: var(--aur-crimson); }
+
+.sentinel-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+.sentinel-category-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--aur-border-subtle);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* --- Right Column: Live Telegram Activity Stream --- */
+.sentinel-stream-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.sentinel-stream-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.25rem;
+}
+
+.sentinel-chat-bubble {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--aur-border-subtle);
+  border-radius: 0.875rem;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.2s ease;
+}
+
+.sentinel-chat-bubble:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.sentinel-chat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sentinel-chat-sender {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.sentinel-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.sentinel-avatar.mama { background: #EC4899; color: #FFFFFF; }
+.sentinel-avatar.papa { background: #3B82F6; color: #FFFFFF; }
+.sentinel-avatar.bot  { background: var(--aur-gold-primary); color: #0B0F19; }
+
+.sentinel-chat-time {
+  font-size: 0.75rem;
+  color: var(--aur-text-muted);
+}
+
+.sentinel-chat-text {
+  font-size: 0.875rem;
+  color: var(--aur-text-primary);
+  line-height: 1.4;
+}
+
+.sentinel-ai-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: var(--aur-indigo-bg);
+  color: #A5B4FC;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+/* Telegram Live Simulator Input */
+.sentinel-sim-box {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--aur-border-subtle);
+  border-radius: 0.75rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.sentinel-sim-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--aur-text-primary);
+  font-size: 0.875rem;
+  padding: 0.35rem 0.5rem;
+  outline: none;
+}
+
+.sentinel-sim-input::placeholder {
+  color: var(--aur-text-muted);
+}
+
+.sentinel-sim-btn {
+  background: var(--aur-indigo);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: opacity 0.2s ease;
+}
+
+.sentinel-sim-btn:hover {
+  opacity: 0.9;
+}
+
+/* --- Modal Styles --- */
+.sentinel-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.sentinel-modal-card {
+  background: #111827;
+  border: 1px solid var(--aur-border-subtle);
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: 480px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+.sentinel-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sentinel-form-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--aur-text-secondary);
+}
+
+.sentinel-form-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--aur-border-subtle);
+  border-radius: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  color: var(--aur-text-primary);
+  font-size: 0.9375rem;
+  outline: none;
+}
+
+.sentinel-form-input:focus {
+  border-color: var(--aur-gold-primary);
+  box-shadow: 0 0 0 3px var(--aur-gold-glow);
+}

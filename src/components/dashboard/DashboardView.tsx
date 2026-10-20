@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import { SentinelDashboardView } from './SentinelDashboardView'
 import {
   TrendingUp,
   CreditCard as CardIcon,
@@ -112,6 +113,8 @@ export function DashboardView({
   onOpenExport,
   onOpenScenarioSimulator,
 }: DashboardViewProps) {
+  const [viewMode, setViewMode] = useState<'sentinel' | 'classic'>('sentinel')
+
   // Current Period Calculations (Thin Client: backend single source of truth when connected)
   const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
   const pInc = incomes.filter(
@@ -230,8 +233,75 @@ export function DashboardView({
 
   return (
     <div className="dashboard-stitch-root">
-      {/* ── TOP QUICK CONTEXT SUB-BAR ── */}
-      <div className="dashboard-subbar">
+      {/* ── TOP VIEW SELECTOR BAR ── */}
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0 1.25rem 0' }}>
+        <div style={{
+          display: 'inline-flex',
+          background: 'rgba(17, 24, 39, 0.85)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '9999px',
+          padding: '4px',
+          gap: '4px',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+        }}>
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light')
+              setViewMode('sentinel')
+            }}
+            style={{
+              background: viewMode === 'sentinel' ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' : 'transparent',
+              color: viewMode === 'sentinel' ? '#0B0F19' : '#94A3B8',
+              fontWeight: 700,
+              fontSize: '13px',
+              border: 'none',
+              padding: '7px 18px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s',
+            }}
+          >
+            <Shield size={15} />
+            <span>🛡️ Centinela &amp; Familia (Live)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light')
+              setViewMode('classic')
+            }}
+            style={{
+              background: viewMode === 'classic' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+              color: viewMode === 'classic' ? '#FFFFFF' : '#94A3B8',
+              fontWeight: 600,
+              fontSize: '13px',
+              border: 'none',
+              padding: '7px 18px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s',
+            }}
+          >
+            <Sliders size={15} />
+            <span>📊 Métricas Detalladas</span>
+          </button>
+        </div>
+      </div>
+
+      {viewMode === 'sentinel' ? (
+        <SentinelDashboardView />
+      ) : (
+        <>
+          {/* ── TOP QUICK CONTEXT SUB-BAR ── */}
+          <div className="dashboard-subbar">
         <div className="subbar-left">
           <span className="subbar-live-badge">
             <span className="subbar-pulse-dot" />
@@ -784,7 +854,10 @@ export function DashboardView({
           </div>
           <ArrowRight size={16} style={{ color: 'var(--color-outline, #a08e7a)', marginLeft: 'auto' }} />
         </button>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
+

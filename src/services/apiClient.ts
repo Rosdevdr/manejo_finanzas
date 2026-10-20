@@ -282,6 +282,52 @@ class ApiClient {
     getSummary: (period: string) =>
       this.request<DashboardSummaryData>(`/api/dashboard/summary?period=${period}`),
   }
+
+  // --- Sentinel Anti-Moras Engine ---
+  public sentinel = {
+    getCommitments: (householdId?: string) =>
+      this.request<{
+        status: string
+        data: {
+          currentPeriod: string
+          commitments: Array<{
+            id: string
+            name: string
+            expectedAmount: string
+            expectedAmountCents: number | null
+            currency: string
+            dueDayOfMonth: number
+            estimatedLateFee: string
+            estimatedLateFeeCents: number
+            reminderDaysBefore: number[]
+            currentCycle: {
+              id: string
+              billingPeriod: string
+              dueDate: string
+              status: 'pending' | 'paid' | 'overdue' | 'dismissed'
+              paidAt: string | null
+              alertsSentCount: number
+            }
+          }>
+        }
+      }>(`/api/sentinel/commitments${householdId ? `?householdId=${householdId}` : ''}`),
+    createCommitment: (data: {
+      name: string
+      dueDayOfMonth: number
+      expectedAmount?: string | number
+      estimatedLateFee?: string | number
+      currency?: string
+    }) =>
+      this.request<{ status: string; data: any }>('/api/sentinel/commitments', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    triggerScan: () =>
+      this.request<{ status: string; data: any }>('/api/sentinel/scan', {
+        method: 'POST',
+      }),
+  }
 }
+
 
 export const apiClient = new ApiClient()
