@@ -156,6 +156,55 @@
   color: #A5B4FC;
 }
 
+/* --- Action Button: Nuevo Compromiso --- */
+.sentinel-new-commitment-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  height: 42px;
+  padding: 0 1.25rem 0 0.875rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #0B0F19;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.28);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1;
+}
+
+.sentinel-new-commitment-btn:hover {
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.42);
+  transform: translateY(-1px);
+}
+
+.sentinel-new-commitment-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.sentinel-new-commitment-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: rgba(11, 15, 25, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0B0F19;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.sentinel-new-commitment-btn:hover .sentinel-new-commitment-icon {
+  background: rgba(11, 15, 25, 0.26);
+}
+
 .sentinel-pulse-dot {
   width: 8px;
   height: 8px;
@@ -1025,5 +1074,26 @@
 [data-theme='light'] .sentinel-modal-cancel-btn:hover {
   background: #F1F5F9;
   color: #0F172A;
+}
+
+[data-theme='light'] .sentinel-new-commitment-btn {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #0B0F19;
+  border-color: rgba(217, 119, 6, 0.4);
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.22);
+}
+
+[data-theme='light'] .sentinel-new-commitment-btn:hover {
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  box-shadow: 0 6px 22px rgba(217, 119, 6, 0.35);
+}
+
+[data-theme='light'] .sentinel-new-commitment-icon {
+  background: rgba(11, 15, 25, 0.16);
+  color: #0B0F19;
+}
+
+[data-theme='light'] .sentinel-new-commitment-btn:hover .sentinel-new-commitment-icon {
+  background: rgba(11, 15, 25, 0.24);
 }
 

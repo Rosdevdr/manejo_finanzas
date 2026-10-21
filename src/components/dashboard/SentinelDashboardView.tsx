@@ -337,9 +337,11 @@ export function SentinelDashboardView() {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:brightness-110 active:scale-95 transition-all"
+            className="sentinel-new-commitment-btn"
           >
-            <Plus size={16} />
+            <span className="sentinel-new-commitment-icon">
+              <Plus size={14} strokeWidth={2.5} />
+            </span>
             <span>Nuevo Compromiso</span>
           </button>
         </div>
