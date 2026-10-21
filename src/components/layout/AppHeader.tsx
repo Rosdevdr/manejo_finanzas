@@ -13,10 +13,12 @@ import {
   RefreshCw,
   ChevronDown,
   Shield,
+  Calendar,
 } from 'lucide-react'
 import type { CreditCard, CreditCardTransaction } from '../../types/finance'
 import { getRandomDailyTip, FINANCIAL_TIPS_BANK } from '../../utils/financialTips'
 import { triggerHaptic } from '../../utils/haptics'
+import { PeriodSlideSelector } from './PeriodSlideSelector'
 import './AppHeader.css'
 
 interface AppHeaderProps {
@@ -32,6 +34,7 @@ interface AppHeaderProps {
   isDemoMode?: boolean
   userEmail?: string | null
   currentPeriod?: string
+  onSelectPeriod?: (period: string) => void
   creditCards?: CreditCard[]
   creditTransactions?: CreditCardTransaction[]
   onSignOut?: () => void
@@ -55,6 +58,7 @@ export function AppHeader({
   balanceLabel,
   userEmail,
   currentPeriod = '2026-09',
+  onSelectPeriod,
   onSignOut,
   onOpenSecurity,
   onOpenMenu,
@@ -64,6 +68,7 @@ export function AppHeader({
   onToggleTheme,
 }: AppHeaderProps) {
   const [profileOpen, setProfileOpen] = useState(false)
+  const [periodPickerOpen, setPeriodPickerOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
   // Daily tip modal / popover
@@ -144,31 +149,59 @@ export function AppHeader({
         </div>
       </div>
 
-      {/* Center: Period Selector Moved Left of Balance Pill for Perfect Visual Balance */}
+      {/* Center: Period Selector Sliding Box Trigger */}
       <div className="header-center">
-        <div className="period-nav" aria-label="Navegación de período">
+        <div className="period-nav-wrapper">
           <button
             type="button"
-            className="nav-btn"
-            onClick={onPrev}
-            disabled={prevDisabled}
-            title="Mes anterior"
-            aria-label="Mes anterior"
+            className="period-trigger-btn"
+            onClick={() => {
+              triggerHaptic('light')
+              setPeriodPickerOpen(true)
+            }}
+            title="Abrir selector de mes y año"
+            aria-label={`Período: ${periodLabel}. Clic para cambiar mes y año`}
           >
-            <ChevronLeft size={16} />
+            <Calendar size={14} className="period-trigger-icon" />
+            <span className="period-label">{periodLabel}</span>
+            <ChevronDown size={14} className="period-trigger-chevron" />
           </button>
-          <span className="period-label">{periodLabel}</span>
-          <button
-            type="button"
-            className="nav-btn"
-            onClick={onNext}
-            disabled={nextDisabled}
-            title="Mes siguiente"
-            aria-label="Mes siguiente"
-          >
-            <ChevronRight size={16} />
-          </button>
+
+          <div className="period-quick-arrows">
+            <button
+              type="button"
+              className="nav-btn"
+              onClick={onPrev}
+              disabled={prevDisabled}
+              title="Mes anterior"
+              aria-label="Mes anterior"
+            >
+              <ChevronLeft size={15} />
+            </button>
+            <button
+              type="button"
+              className="nav-btn"
+              onClick={onNext}
+              disabled={nextDisabled}
+              title="Mes siguiente"
+              aria-label="Mes siguiente"
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
         </div>
+
+        {/* Cuadro Deslizante para Selección de Mes y Año */}
+        <PeriodSlideSelector
+          isOpen={periodPickerOpen}
+          onClose={() => setPeriodPickerOpen(false)}
+          currentPeriod={currentPeriod}
+          onSelectPeriod={(p) => {
+            if (onSelectPeriod) {
+              onSelectPeriod(p)
+            }
+          }}
+        />
       </div>
 
       {/* Right: Available Total Pill + Tools + Theme + Profile */}

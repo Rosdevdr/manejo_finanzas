@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FileText,
   FileSpreadsheet,
@@ -95,13 +95,13 @@ export function ReportExportModal({
   const handleExportPDF = () => {
     triggerHaptic('success')
     printExecutiveFinancialReport(reportData)
-    onShowToast('📄 Vista de impresión / PDF generada', 'success')
+    onShowToast('Vista de impresión / PDF generada', 'success')
   }
 
   const handleExportCSV = () => {
     triggerHaptic('success')
     exportTransactionsToCSV(reportData)
-    onShowToast('📊 Archivo CSV descargado con éxito', 'success')
+    onShowToast('Archivo CSV descargado con éxito', 'success')
   }
 
   return (

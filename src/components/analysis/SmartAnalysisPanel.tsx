@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import {
   Sparkles,
   TrendingUp,
@@ -10,6 +10,7 @@ import {
   Lightbulb,
   ShieldCheck,
   Zap,
+  BarChart3,
 } from 'lucide-react'
 import type { Income, Expense, CashWithdrawal, CreditCard, CreditCardTransaction } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -185,8 +186,9 @@ export function SmartAnalysisPanel({
         padding: 18,
         marginBottom: 20,
       }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold-hover)', marginBottom: 12 }}>
-          📊 Comparativa: {formatPeriodLabel(currentPeriod)} vs. {formatPeriodLabel(prevPeriod)}
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold-hover)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <BarChart3 size={15} />
+          <span>Comparativa: {formatPeriodLabel(currentPeriod)} vs. {formatPeriodLabel(prevPeriod)}</span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
@@ -214,7 +216,7 @@ export function SmartAnalysisPanel({
               {expDiff >= 0 ? '+' : ''}{formatCurrency(expDiff)} ({expPctDiff >= 0 ? '+' : ''}{expPctDiff.toFixed(1)}%)
             </div>
             <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2 }}>
-              {expDiff <= 0 ? '✓ Gastaste menos que el mes pasado' : '⚠️ Aumentaron tus gastos'}
+              {expDiff <= 0 ? 'Gastaste menos que el mes pasado' : 'Aumentaron tus gastos'}
             </div>
           </div>
 

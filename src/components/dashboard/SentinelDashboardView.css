@@ -1,5 +1,5 @@
 /* ==============================================================================
-   🛡️ AUREUS · SENTINEL DASHBOARD VIEW STYLES (GLASSMORPHISM & OLED DARK THEME)
+   AUREUS · SENTINEL DASHBOARD VIEW STYLES (GLASSMORPHISM & OLED DARK THEME)
    ============================================================================== */
 
 :root {
@@ -40,6 +40,82 @@
   gap: 1.5rem;
   color: var(--aur-text-primary);
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.sentinel-title-text {
+  color: var(--aur-text-primary) !important;
+}
+
+.sentinel-subtitle-text {
+  color: var(--aur-text-secondary) !important;
+}
+
+.sentinel-muted-text {
+  color: var(--aur-text-muted) !important;
+}
+
+.sentinel-kpi-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--aur-emerald);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  display: inline-block;
+  margin-top: 0.25rem;
+}
+
+.sentinel-kpi-runway-text {
+  color: var(--aur-emerald);
+}
+
+.sentinel-kpi-fee-text {
+  color: var(--aur-gold-bright);
+}
+
+.sentinel-category-val-1 { color: #F59E0B; }
+.sentinel-category-val-2 { color: #818CF8; }
+.sentinel-category-val-3 { color: #10B981; }
+.sentinel-category-val-4 { color: #F87171; }
+
+.sentinel-modal-header {
+  border-bottom: 1px solid var(--aur-border-subtle);
+}
+
+.sentinel-modal-close-btn {
+  color: var(--aur-text-muted);
+  transition: color 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.sentinel-modal-close-btn:hover {
+  color: var(--aur-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sentinel-modal-cancel-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  color: var(--aur-text-secondary);
+  background: transparent;
+  border: 1px solid var(--aur-border-subtle);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sentinel-modal-cancel-btn:hover {
+  background: var(--aur-surface-card-hover);
+  color: var(--aur-text-primary);
 }
 
 /* --- Top Header & Telemetry Bar --- */
@@ -702,3 +778,252 @@
   border-color: var(--aur-gold-primary);
   box-shadow: 0 0 0 3px var(--aur-gold-glow);
 }
+
+/* --- Expanded Pay Button for List Items --- */
+.sentinel-item-pay-btn {
+  min-width: 92px;
+  height: 38px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1.5px solid rgba(245, 158, 11, 0.4);
+  color: var(--aur-gold-primary);
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.2s ease;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.sentinel-item-pay-btn:hover {
+  background: var(--aur-gold-primary);
+  color: #0B0F19;
+  box-shadow: 0 4px 14px var(--aur-gold-glow);
+  transform: translateY(-1px);
+}
+
+/* ==============================================================================
+   ☀️ AUREUS · LIGHT THEME PALETTE & OVERRIDES (FULL COMPATIBILITY)
+   ============================================================================== */
+
+[data-theme='light'] {
+  --aur-bg-canvas: #F8FAFC;
+  --aur-surface-card: #FFFFFF;
+  --aur-surface-card-hover: #F8FAFC;
+  --aur-surface-raised: #FFFFFF;
+  --aur-surface-low: #F1F5F9;
+  --aur-border-subtle: #E2E8F0;
+  --aur-border-active: rgba(217, 119, 6, 0.45);
+  
+  --aur-gold-primary: #D97706;
+  --aur-gold-bright: #B45309;
+  --aur-gold-glow: rgba(217, 119, 6, 0.15);
+  
+  --aur-emerald: #059669;
+  --aur-emerald-glow: rgba(5, 150, 105, 0.15);
+  
+  --aur-crimson: #DC2626;
+  --aur-crimson-bg: rgba(220, 38, 38, 0.08);
+  --aur-crimson-border: rgba(220, 38, 38, 0.25);
+  
+  --aur-indigo: #4F46E5;
+  --aur-indigo-bg: rgba(79, 70, 229, 0.08);
+  
+  --aur-text-primary: #0F172A;
+  --aur-text-secondary: #475569;
+  --aur-text-muted: #64748B;
+}
+
+[data-theme='light'] .sentinel-dashboard-container {
+  color: #0F172A;
+}
+
+[data-theme='light'] .sentinel-household-selector {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #0F172A;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .sentinel-sync-badge {
+  background: #EEF2FF;
+  border-color: #C7D2FE;
+  color: #4338CA;
+}
+
+[data-theme='light'] .sentinel-hero-shield {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.55) 0%, #FFFFFF 100%);
+  border-color: rgba(217, 119, 6, 0.25);
+  box-shadow: 0 8px 30px rgba(217, 119, 6, 0.08);
+}
+
+[data-theme='light'] .sentinel-hero-shield::after {
+  background: radial-gradient(circle at 80% 20%, rgba(217, 119, 6, 0.1) 0%, transparent 60%);
+}
+
+[data-theme='light'] .sentinel-shield-icon-badge {
+  background: #FEF3C7;
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+[data-theme='light'] .sentinel-savings-pill {
+  background: #ECFDF5;
+  border-color: rgba(5, 150, 105, 0.4);
+  color: #047857;
+  box-shadow: 0 2px 10px rgba(5, 150, 105, 0.1);
+}
+
+[data-theme='light'] .sentinel-urgent-box {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.08);
+}
+
+[data-theme='light'] .sentinel-urgent-icon {
+  background: #FEE2E2;
+}
+
+[data-theme='light'] .sentinel-kpi-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='light'] .sentinel-kpi-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .sentinel-progress-track {
+  background: #E2E8F0;
+}
+
+[data-theme='light'] .sentinel-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='light'] .sentinel-filter-pills {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+}
+
+[data-theme='light'] .sentinel-filter-pill {
+  color: #64748B;
+}
+
+[data-theme='light'] .sentinel-filter-pill.active {
+  background: #D97706;
+  color: #FFFFFF;
+}
+
+[data-theme='light'] .sentinel-commitment-item {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+[data-theme='light'] .sentinel-commitment-item:hover {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .sentinel-item-pay-btn {
+  background: rgba(217, 119, 6, 0.1);
+  border-color: rgba(217, 119, 6, 0.35);
+  color: #B45309;
+}
+
+[data-theme='light'] .sentinel-item-pay-btn:hover {
+  background: #D97706;
+  color: #FFFFFF;
+}
+
+[data-theme='light'] .sentinel-category-box {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+[data-theme='light'] .sentinel-composite-bar {
+  background: #E2E8F0;
+}
+
+[data-theme='light'] .sentinel-chat-bubble {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+[data-theme='light'] .sentinel-chat-bubble:hover {
+  border-color: #C7D2FE;
+  background: #FFFFFF;
+}
+
+[data-theme='light'] .sentinel-sim-box {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+[data-theme='light'] .sentinel-sim-input {
+  color: #0F172A;
+}
+
+[data-theme='light'] .sentinel-modal-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #0F172A;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .sentinel-form-input {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+  color: #0F172A;
+}
+
+[data-theme='light'] .sentinel-form-input:focus {
+  background: #FFFFFF;
+}
+
+[data-theme='light'] .sentinel-kpi-badge {
+  color: #047857;
+  background: #ECFDF5;
+  border-color: rgba(5, 150, 105, 0.3);
+}
+
+[data-theme='light'] .sentinel-kpi-runway-text {
+  color: #047857;
+}
+
+[data-theme='light'] .sentinel-kpi-fee-text {
+  color: #B45309;
+}
+
+[data-theme='light'] .sentinel-category-val-1 { color: #B45309; }
+[data-theme='light'] .sentinel-category-val-2 { color: #4338CA; }
+[data-theme='light'] .sentinel-category-val-3 { color: #047857; }
+[data-theme='light'] .sentinel-category-val-4 { color: #DC2626; }
+
+[data-theme='light'] .sentinel-modal-header {
+  border-bottom-color: #E2E8F0;
+}
+
+[data-theme='light'] .sentinel-modal-close-btn:hover {
+  background: #F1F5F9;
+}
+
+[data-theme='light'] .sentinel-modal-cancel-btn {
+  border-color: #CBD5E1;
+  color: #475569;
+}
+
+[data-theme='light'] .sentinel-modal-cancel-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+

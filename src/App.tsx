@@ -279,6 +279,7 @@ export function App() {
           isDemoMode={isDemoMode}
           userEmail={user?.email}
           currentPeriod={currentPeriod}
+          onSelectPeriod={setCurrentPeriod}
           creditCards={creditCards}
           creditTransactions={creditTransactions}
           onSignOut={signOut}

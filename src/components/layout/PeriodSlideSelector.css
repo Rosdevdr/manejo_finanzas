@@ -1,0 +1,398 @@
+/* ==============================================================================
+   📅 AUREUS · CUADRO DESLIZANTE DE SELECCIÓN DE PERÍODO (MES Y AÑO)
+   ============================================================================== */
+
+.period-slide-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 4.5rem;
+  animation: periodFadeIn 0.2s ease-out;
+}
+
+@keyframes periodFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.period-slide-panel {
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  width: 92%;
+  max-width: 440px;
+  overflow: hidden;
+  color: #F9FAFB;
+  font-family: inherit;
+  animation: periodSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes periodSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --- Panel Header --- */
+.period-slide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.period-slide-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.period-slide-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 0.5rem;
+  background: rgba(245, 158, 11, 0.12);
+  color: #F59E0B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.period-slide-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #F9FAFB;
+  margin: 0;
+}
+
+.period-slide-subtitle {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin: 0;
+}
+
+.period-slide-close {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.period-slide-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+/* --- Body --- */
+.period-slide-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.period-parameter-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94A3B8;
+  margin-bottom: 0.5rem;
+}
+
+/* Parameter 1: Año Stepper */
+.period-year-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1F2937;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.period-year-btn {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  width: 34px;
+  height: 34px;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.period-year-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #F9FAFB;
+}
+
+.period-year-display {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #F59E0B;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.period-year-quick-pills {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+.period-year-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94A3B8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.period-year-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+.period-year-pill.active {
+  background: #F59E0B;
+  color: #0B0F19;
+  border-color: #F59E0B;
+  font-weight: 700;
+}
+
+/* Parameter 2: Meses Grid (3x4) */
+.period-months-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.period-month-tile {
+  background: #1F2937;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.625rem;
+  padding: 0.65rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #D1D5DB;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.period-month-tile:hover {
+  background: #374151;
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.period-month-tile.active {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #0B0F19;
+  border-color: #F59E0B;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+/* --- Footer --- */
+.period-slide-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.period-current-btn {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s;
+}
+
+.period-current-btn:hover {
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.period-apply-btn {
+  background: #F59E0B;
+  color: #0B0F19;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  transition: all 0.15s;
+}
+
+.period-apply-btn:hover {
+  background: #FBBF24;
+  transform: translateY(-1px);
+}
+
+/* ==============================================================================
+   ☀️ LIGHT THEME SUPPORT
+   ============================================================================== */
+
+[data-theme='light'] .period-slide-backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+[data-theme='light'] .period-slide-panel {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #0F172A;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12), 0 0 0 1px #E2E8F0;
+}
+
+[data-theme='light'] .period-slide-header {
+  border-bottom-color: #E2E8F0;
+}
+
+[data-theme='light'] .period-slide-title {
+  color: #0F172A;
+}
+
+[data-theme='light'] .period-slide-subtitle {
+  color: #64748B;
+}
+
+[data-theme='light'] .period-slide-close {
+  color: #64748B;
+}
+
+[data-theme='light'] .period-slide-close:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+[data-theme='light'] .period-parameter-label {
+  color: #475569;
+}
+
+[data-theme='light'] .period-year-stepper {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+[data-theme='light'] .period-year-btn {
+  color: #475569;
+}
+
+[data-theme='light'] .period-year-btn:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+[data-theme='light'] .period-year-display {
+  color: #D97706;
+}
+
+[data-theme='light'] .period-year-pill {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #475569;
+}
+
+[data-theme='light'] .period-year-pill:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+[data-theme='light'] .period-year-pill.active {
+  background: #D97706;
+  color: #FFFFFF;
+  border-color: #D97706;
+}
+
+[data-theme='light'] .period-months-grid {
+  gap: 0.5rem;
+}
+
+[data-theme='light'] .period-month-tile {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+  color: #334155;
+}
+
+[data-theme='light'] .period-month-tile:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+  border-color: #CBD5E1;
+}
+
+[data-theme='light'] .period-month-tile.active {
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  color: #FFFFFF;
+  border-color: #D97706;
+  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.25);
+}
+
+[data-theme='light'] .period-slide-footer {
+  background: #F8FAFC;
+  border-top-color: #E2E8F0;
+}
+
+[data-theme='light'] .period-current-btn {
+  color: #64748B;
+}
+
+[data-theme='light'] .period-current-btn:hover {
+  color: #D97706;
+  background: rgba(217, 119, 6, 0.08);
+}
+
+[data-theme='light'] .period-apply-btn {
+  background: #D97706;
+  color: #FFFFFF;
+}
+
+[data-theme='light'] .period-apply-btn:hover {
+  background: #B45309;
+}

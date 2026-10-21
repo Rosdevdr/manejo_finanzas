@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Banknote, AlertTriangle, Info, AlertOctagon, CheckCircle, PlusCircle, Calendar } from 'lucide-react'
+import { Banknote, AlertTriangle, Info, AlertOctagon, CheckCircle, PlusCircle, Calendar, Sparkles } from 'lucide-react'
 import type { CashWithdrawal, CashReason } from '../../types/finance'
 import { evaluateCashWithdrawal } from '../../utils/cashAdvisor'
 import { getTodayDateString } from '../../utils/formatters'
@@ -153,8 +153,9 @@ export function CashWithdrawalForm({
             <span>{advice.title}</span>
           </div>
           <p className="text-xs text-[#F5F5F5] leading-relaxed">{advice.message}</p>
-          <p className="text-xs text-[#9CA3AF] leading-relaxed pt-2 border-t border-[#2C2C35]/50 font-medium">
-            💡 <strong>Consejo del Asesor:</strong> {advice.recommendation}
+          <p className="text-xs text-[#9CA3AF] leading-relaxed pt-2 border-t border-[#2C2C35]/50 font-medium flex items-center gap-1.5">
+            <Sparkles size={13} className="text-amber-400 flex-shrink-0" />
+            <span><strong>Consejo del Asesor:</strong> {advice.recommendation}</span>
           </p>
         </div>
       )}

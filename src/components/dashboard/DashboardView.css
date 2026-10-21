@@ -701,3 +701,85 @@
     margin-bottom: 6px;
   }
 }
+
+/* ── Top View Selector (Sentinel vs Classic) ── */
+.dashboard-view-mode-bar {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0 1.25rem 0;
+}
+
+.dashboard-view-mode-selector {
+  display: inline-flex;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  padding: 4px;
+  gap: 4px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.dashboard-view-mode-btn {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  border: none;
+  padding: 7px 18px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  background: transparent;
+  color: #94A3B8;
+}
+
+.dashboard-view-mode-btn.active.sentinel {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #0B0F19;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+.dashboard-view-mode-btn.active.classic {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.dashboard-view-mode-btn:hover:not(.active) {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Light Theme */
+[data-theme='light'] .dashboard-view-mode-selector {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='light'] .dashboard-view-mode-btn {
+  color: #64748B;
+}
+
+[data-theme='light'] .dashboard-view-mode-btn.active.sentinel {
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.25);
+}
+
+[data-theme='light'] .dashboard-view-mode-btn.active.classic {
+  background: #F1F5F9;
+  color: #0F172A;
+  border: 1px solid #E2E8F0;
+}
+
+[data-theme='light'] .dashboard-view-mode-btn:hover:not(.active) {
+  color: #0F172A;
+  background: #F8FAFC;
+}
+

@@ -93,24 +93,72 @@
   min-width: 0;
 }
 
-.app-header-obsidian .period-nav {
+.app-header-obsidian .period-nav-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--color-surface-container-low, #181c24);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  padding: 3px 4px 3px 6px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.period-trigger-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: var(--color-surface-container-low, #181c24);
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  background: transparent;
+  border: none;
+  cursor: pointer;
   padding: 4px 8px;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 9999px;
+  color: var(--color-on-surface, #dfe2ee);
+  transition: all 0.15s ease;
+}
+
+.period-trigger-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.period-trigger-icon {
+  color: #F59E0B;
+}
+
+.period-trigger-chevron {
+  color: var(--color-outline, #a08e7a);
+  transition: transform 0.2s ease;
+}
+
+.period-trigger-btn:hover .period-trigger-chevron {
+  transform: translateY(1px);
+  color: #F59E0B;
+}
+
+.app-header-obsidian .period-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-on-surface, #dfe2ee);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.period-quick-arrows {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  padding-left: 3px;
 }
 
 .app-header-obsidian .nav-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
   background: transparent;
   border: none;
   color: var(--color-outline, #a08e7a);
@@ -127,16 +175,6 @@
 .app-header-obsidian .nav-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-}
-
-.app-header-obsidian .period-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-on-surface, #dfe2ee);
-  min-width: 110px;
-  text-align: center;
-  white-space: nowrap;
 }
 
 /* ── RIGHT COLUMN (Never overflows) ── */
@@ -387,13 +425,30 @@
   color: #d97706;
 }
 
-[data-theme='light'] .app-header-obsidian .period-nav {
-  background-color: #f1f5f9;
+[data-theme='light'] .app-header-obsidian .period-nav-wrapper {
+  background-color: #ffffff;
   border-color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='light'] .period-trigger-btn:hover {
+  background: #f1f5f9;
+}
+
+[data-theme='light'] .period-trigger-icon {
+  color: #d97706;
+}
+
+[data-theme='light'] .period-trigger-chevron {
+  color: #64748b;
 }
 
 [data-theme='light'] .app-header-obsidian .period-label {
   color: #0f172a;
+}
+
+[data-theme='light'] .period-quick-arrows {
+  border-left-color: #e2e8f0;
 }
 
 [data-theme='light'] .app-header-obsidian .nav-btn {
@@ -401,7 +456,7 @@
 }
 
 [data-theme='light'] .app-header-obsidian .nav-btn:hover:not(:disabled) {
-  background-color: #e2e8f0;
+  background-color: #f1f5f9;
   color: #0f172a;
 }
 

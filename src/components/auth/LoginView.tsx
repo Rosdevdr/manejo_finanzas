@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import {
   Mail,
   Lock,
@@ -13,6 +13,7 @@ import {
   KeyRound,
   ArrowLeft,
   CheckCircle2,
+  Info,
 } from 'lucide-react'
 import { AureusLogo } from '../ui/AureusLogo'
 import { GithubIcon } from '../ui/GithubIcon'
@@ -543,10 +544,14 @@ export function LoginView({
               padding: '10px 14px',
               fontSize: 12,
               color: 'var(--amber-warning)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
               marginBottom: 14,
               lineHeight: 1.4,
             }}>
-              💡 <strong>Configuración en curso:</strong> Puedes explorar el <strong>Modo Demo</strong> o conectar Supabase agregando tus credenciales en el archivo <code>.env.local</code>.
+              <Info size={15} style={{ flexShrink: 0 }} />
+              <span><strong>Configuración en curso:</strong> Puedes explorar el <strong>Modo Demo</strong> o conectar Supabase agregando tus credenciales en el archivo <code>.env.local</code>.</span>
             </div>
           )}
 

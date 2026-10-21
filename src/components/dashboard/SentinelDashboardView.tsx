@@ -1,5 +1,5 @@
 // ==============================================================================
-// 🛡️ AUREUS · SENTINEL EXECUTIVE DASHBOARD & BILL PROTECTION SYSTEM
+// AUREUS · SENTINEL EXECUTIVE DASHBOARD & BILL PROTECTION SYSTEM
 // ==============================================================================
 
 import { useState, useEffect, useMemo } from 'react'
@@ -22,6 +22,7 @@ import {
   Check,
   X,
   AlertTriangle,
+  Home,
 } from 'lucide-react'
 import { apiClient } from '../../services/apiClient'
 import './SentinelDashboardView.css'
@@ -141,7 +142,7 @@ const INITIAL_FEED: TelegramFeedItem[] = [
     id: 'feed-3',
     sender: 'Centinela Bot',
     avatarType: 'bot',
-    text: '🛡️ Factura de CAASD conciliada y marcada como pagada. ¡Ahorraste RD$ 150.00 en mora! 🎉',
+    text: 'Factura de CAASD conciliada y marcada como pagada. Ahorraste RD$ 150.00 en mora.',
     timestamp: 'Hace 2 horas',
   },
 ]
@@ -234,7 +235,7 @@ export function SentinelDashboardView() {
       prev.map(c => (c.id === id ? { ...c, status: 'paid', daysRemaining: 0 } : c))
     )
 
-    const toastMsg = `🛡️ ¡Factura de "${name}" marcada como pagada! Ahorraste ${lateFee} en moras.`
+    const toastMsg = `Factura de "${name}" marcada como pagada. Ahorraste ${lateFee} en moras.`
     setCelebrationToast(toastMsg)
 
     // Agrega evento al stream de Telegram
@@ -323,8 +324,8 @@ export function SentinelDashboardView() {
       {/* 1. Header & Live Telemetry Bar */}
       <div className="sentinel-header-bar">
         <div className="sentinel-household-selector">
-          <span className="text-amber-400">🏡</span>
-          <span>Hogar Familia Pérez 🇩🇴 · DOP</span>
+          <Home size={15} className="text-amber-400" />
+          <span>Hogar Familia Pérez · DOP</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -338,8 +339,8 @@ export function SentinelDashboardView() {
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:brightness-110 active:scale-95 transition-all"
           >
-            <Plus className="w-4 h-4" />
-            <span>+ Nuevo Compromiso</span>
+            <Plus size={16} />
+            <span>Nuevo Compromiso</span>
           </button>
         </div>
       </div>
@@ -356,7 +357,7 @@ export function SentinelDashboardView() {
                 <span>Centinela Anti-Moras Activo</span>
                 <span className="sentinel-pulse-dot" />
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs sentinel-subtitle-text mt-0.5">
                 Monitoreando servicios domésticos y tarjetas familiares 24/7 vía Telegram & Gemini Flash
               </p>
             </div>
@@ -377,16 +378,16 @@ export function SentinelDashboardView() {
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-slate-100 text-base">{metrics.urgentBill.name}</span>
+                  <span className="font-bold sentinel-title-text text-base">{metrics.urgentBill.name}</span>
                   <span className="sentinel-urgent-pill">
                     <AlertTriangle className="w-3 h-3 mr-1" />
                     Vence en {metrics.urgentBill.daysRemaining} días ({metrics.urgentBill.dueDateStr})
                   </span>
                 </div>
-                <div className="text-xs text-slate-400 flex items-center gap-2 mt-1">
-                  <span>Monto: <strong className="text-amber-400 font-bold text-sm">{metrics.urgentBill.amountFormatted}</strong></span>
+                <div className="text-xs sentinel-subtitle-text flex items-center gap-2 mt-1">
+                  <span>Monto: <strong className="text-amber-500 font-bold text-sm">{metrics.urgentBill.amountFormatted}</strong></span>
                   <span>•</span>
-                  <span className="text-red-400 font-medium">Mora evitada si pagas hoy: +{metrics.urgentBill.lateFeeAvoided}</span>
+                  <span className="text-red-500 font-medium">Mora evitada si pagas hoy: +{metrics.urgentBill.lateFeeAvoided}</span>
                 </div>
               </div>
             </div>
@@ -415,13 +416,13 @@ export function SentinelDashboardView() {
         <div className="sentinel-kpi-card">
           <div className="sentinel-kpi-header">
             <span>Gastos del Mes</span>
-            <TrendingUp className="w-4 h-4 text-amber-400" />
+            <TrendingUp className="w-4 h-4 text-amber-500" />
           </div>
           <div>
             <div className="sentinel-kpi-value">
-              RD$ 48,250<span className="text-sm font-normal text-slate-400">.00</span>
+              RD$ 48,250<span className="text-sm font-normal sentinel-muted-text">.00</span>
             </div>
-            <span className="text-xs font-semibold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-full inline-block mt-1">
+            <span className="sentinel-kpi-badge">
               56% presupuesto consumido
             </span>
           </div>
@@ -434,13 +435,13 @@ export function SentinelDashboardView() {
         <div className="sentinel-kpi-card">
           <div className="sentinel-kpi-header">
             <span>Ingresos Consolidados</span>
-            <PiggyBank className="w-4 h-4 text-emerald-400" />
+            <PiggyBank className="w-4 h-4 text-emerald-500" />
           </div>
           <div>
             <div className="sentinel-kpi-value emerald">
-              RD$ 85,000<span className="text-sm font-normal text-slate-400">.00</span>
+              RD$ 85,000<span className="text-sm font-normal sentinel-muted-text">.00</span>
             </div>
-            <span className="text-xs text-slate-400 block mt-1">
+            <span className="text-xs sentinel-subtitle-text block mt-1">
               Q1: RD$ 42,500 &amp; Q2: RD$ 42,500 OK
             </span>
           </div>
@@ -453,13 +454,13 @@ export function SentinelDashboardView() {
         <div className="sentinel-kpi-card">
           <div className="sentinel-kpi-header">
             <span>Flujo Disponible (Runway)</span>
-            <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+            <ArrowUpRight className="w-4 h-4 text-emerald-500" />
           </div>
           <div>
             <div className="sentinel-kpi-value emerald">
-              RD$ 36,750<span className="text-sm font-normal text-slate-400">.00</span>
+              RD$ 36,750<span className="text-sm font-normal sentinel-muted-text">.00</span>
             </div>
-            <span className="text-xs font-semibold text-emerald-400 block mt-1">
+            <span className="text-xs font-semibold sentinel-kpi-runway-text block mt-1">
               Margen de liquidez saludable: 43.2%
             </span>
           </div>
@@ -472,13 +473,13 @@ export function SentinelDashboardView() {
         <div className="sentinel-kpi-card">
           <div className="sentinel-kpi-header">
             <span>Moras Evitadas (YTD)</span>
-            <ShieldAlert className="w-4 h-4 text-amber-400" />
+            <ShieldAlert className="w-4 h-4 text-amber-500" />
           </div>
           <div>
             <div className="sentinel-kpi-value gold">
-              RD$ 18,920<span className="text-sm font-normal text-slate-400">.00</span>
+              RD$ 18,920<span className="text-sm font-normal sentinel-muted-text">.00</span>
             </div>
-            <span className="text-xs text-amber-300 block mt-1 font-semibold">
+            <span className="text-xs sentinel-kpi-fee-text block mt-1 font-semibold">
               +RD$ 3,450.00 este periodo
             </span>
           </div>
@@ -496,11 +497,11 @@ export function SentinelDashboardView() {
           <div className="sentinel-card">
             <div className="sentinel-card-header">
               <div>
-                <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-amber-400" />
+                <h3 className="text-lg font-bold sentinel-title-text flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-amber-500" />
                   <span>Compromisos &amp; Facturas del Hogar</span>
                 </h3>
-                <p className="text-xs text-slate-400">Vencimientos bajo supervisión activa del Centinela</p>
+                <p className="text-xs sentinel-subtitle-text">Vencimientos bajo supervisión activa del Centinela</p>
               </div>
 
               <div className="sentinel-filter-pills">
@@ -552,7 +553,10 @@ export function SentinelDashboardView() {
                         <div className="sentinel-item-name">
                           <span>{c.name}</span>
                           {isPaid ? (
-                            <span className="sentinel-badge paid">Pagado ✅</span>
+                            <span className="sentinel-badge paid">
+                              <Check size={11} style={{ marginRight: '4px', display: 'inline' }} />
+                              Pagado
+                            </span>
                           ) : isUrgent ? (
                             <span className="sentinel-badge urgent">Vence en {c.daysRemaining} días</span>
                           ) : (
@@ -573,13 +577,13 @@ export function SentinelDashboardView() {
                         <div className={`sentinel-item-amount ${isPaid ? 'paid' : ''}`}>
                           {c.amountFormatted}
                         </div>
-                        <span className="text-xs text-slate-500">{c.contractNumber || 'Servicio'}</span>
+                        <span className="text-xs sentinel-muted-text">{c.contractNumber || 'Servicio'}</span>
                       </div>
 
                       {!isPaid && (
                         <button
                           onClick={() => handleMarkAsPaid(c.id, c.name, c.lateFeeAvoided)}
-                          className="bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition-all border border-amber-500/30"
+                          className="sentinel-item-pay-btn"
                         >
                           Pagar
                         </button>
@@ -594,8 +598,8 @@ export function SentinelDashboardView() {
           {/* Category Spending Breakdown */}
           <div className="sentinel-card">
             <div className="flex items-center justify-between">
-              <h4 className="font-bold text-slate-100 text-base">Distribución de Gastos Familiares</h4>
-              <span className="text-xs text-slate-400 uppercase tracking-wider">Octubre 2026</span>
+              <h4 className="font-bold sentinel-title-text text-base">Distribución de Gastos Familiares</h4>
+              <span className="text-xs sentinel-muted-text uppercase tracking-wider">Octubre 2026</span>
             </div>
 
             <div className="sentinel-composite-bar">
@@ -607,20 +611,20 @@ export function SentinelDashboardView() {
 
             <div className="sentinel-category-grid">
               <div className="sentinel-category-box">
-                <span className="text-xs text-slate-400">Alimentación &amp; Super</span>
-                <span className="font-bold text-amber-400 text-sm">RD$ 18,400.00 (38%)</span>
+                <span className="text-xs sentinel-subtitle-text">Alimentación &amp; Super</span>
+                <span className="font-bold sentinel-category-val-1 text-sm">RD$ 18,400.00 (38%)</span>
               </div>
               <div className="sentinel-category-box">
-                <span className="text-xs text-slate-400">Servicios &amp; Facturas</span>
-                <span className="font-bold text-indigo-400 text-sm">RD$ 12,230.00 (25%)</span>
+                <span className="text-xs sentinel-subtitle-text">Servicios &amp; Facturas</span>
+                <span className="font-bold sentinel-category-val-2 text-sm">RD$ 12,230.00 (25%)</span>
               </div>
               <div className="sentinel-category-box">
-                <span className="text-xs text-slate-400">Educación &amp; Salud</span>
-                <span className="font-bold text-emerald-400 text-sm">RD$ 12,500.00 (26%)</span>
+                <span className="text-xs sentinel-subtitle-text">Educación &amp; Salud</span>
+                <span className="font-bold sentinel-category-val-3 text-sm">RD$ 12,500.00 (26%)</span>
               </div>
               <div className="sentinel-category-box">
-                <span className="text-xs text-slate-400">Combustible &amp; Peajes</span>
-                <span className="font-bold text-red-400 text-sm">RD$ 5,120.00 (11%)</span>
+                <span className="text-xs sentinel-subtitle-text">Combustible &amp; Peajes</span>
+                <span className="font-bold sentinel-category-val-4 text-sm">RD$ 5,120.00 (11%)</span>
               </div>
             </div>
           </div>
@@ -632,11 +636,11 @@ export function SentinelDashboardView() {
             <div className="flex items-center gap-2">
               <Send className="w-5 h-5 text-indigo-400" />
               <div>
-                <h4 className="font-bold text-slate-100 text-base flex items-center gap-2">
+                <h4 className="font-bold sentinel-title-text text-base flex items-center gap-2">
                   Captura Zero-Fricción
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 </h4>
-                <p className="text-xs text-slate-400">Stream en vivo · Gemini AI Parser</p>
+                <p className="text-xs sentinel-subtitle-text">Stream en vivo · Gemini AI Parser</p>
               </div>
             </div>
             <span className="text-xs text-indigo-300 bg-indigo-950/60 border border-indigo-500/30 px-2 py-0.5 rounded-full font-semibold">
@@ -666,7 +670,7 @@ export function SentinelDashboardView() {
                       <span>{item.aiConfidence}% confianza IA</span>
                     </span>
                     {item.categoryTag && (
-                      <span className="text-xs text-slate-400">· {item.categoryTag}</span>
+                      <span className="text-xs sentinel-muted-text">· {item.categoryTag}</span>
                     )}
                   </div>
                 )}
@@ -695,14 +699,16 @@ export function SentinelDashboardView() {
       {isModalOpen && (
         <div className="sentinel-modal-overlay">
           <div className="sentinel-modal-card">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h3 className="font-bold text-slate-100 text-lg flex items-center gap-2">
-                <Shield className="w-5 h-5 text-amber-400" />
+            <div className="flex items-center justify-between pb-2 sentinel-modal-header">
+              <h3 className="font-bold sentinel-title-text text-lg flex items-center gap-2">
+                <Shield className="w-5 h-5 text-amber-500" />
                 <span>Nuevo Compromiso Recurrente</span>
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="sentinel-modal-close-btn"
+                title="Cerrar modal"
+                aria-label="Cerrar modal"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -756,7 +762,7 @@ export function SentinelDashboardView() {
                   onChange={e => setNewBillLateFee(e.target.value)}
                   className="sentinel-form-input"
                 />
-                <span className="text-xs text-slate-400">
+                <span className="text-xs sentinel-subtitle-text">
                   El Centinela te avisará 5 días y 2 días antes para evitar este recargo.
                 </span>
               </div>
@@ -765,7 +771,7 @@ export function SentinelDashboardView() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-300 hover:bg-slate-800 text-sm font-semibold transition-colors"
+                  className="sentinel-modal-cancel-btn"
                 >
                   Cancelar
                 </button>

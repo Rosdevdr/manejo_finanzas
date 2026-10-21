@@ -234,40 +234,18 @@ export function DashboardView({
   return (
     <div className="dashboard-stitch-root">
       {/* ── TOP VIEW SELECTOR BAR ── */}
-      <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0 1.25rem 0' }}>
-        <div style={{
-          display: 'inline-flex',
-          background: 'rgba(17, 24, 39, 0.85)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '9999px',
-          padding: '4px',
-          gap: '4px',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
-        }}>
+      <div className="dashboard-view-mode-bar">
+        <div className="dashboard-view-mode-selector">
           <button
             type="button"
             onClick={() => {
               triggerHaptic('light')
               setViewMode('sentinel')
             }}
-            style={{
-              background: viewMode === 'sentinel' ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' : 'transparent',
-              color: viewMode === 'sentinel' ? '#0B0F19' : '#94A3B8',
-              fontWeight: 700,
-              fontSize: '13px',
-              border: 'none',
-              padding: '7px 18px',
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s',
-            }}
+            className={`dashboard-view-mode-btn ${viewMode === 'sentinel' ? 'active sentinel' : ''}`}
           >
-            <Shield size={15} />
-            <span>🛡️ Centinela &amp; Familia (Live)</span>
+            <Shield size={14} />
+            <span>Centinela &amp; Familia</span>
           </button>
           <button
             type="button"
@@ -275,23 +253,10 @@ export function DashboardView({
               triggerHaptic('light')
               setViewMode('classic')
             }}
-            style={{
-              background: viewMode === 'classic' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-              color: viewMode === 'classic' ? '#FFFFFF' : '#94A3B8',
-              fontWeight: 600,
-              fontSize: '13px',
-              border: 'none',
-              padding: '7px 18px',
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s',
-            }}
+            className={`dashboard-view-mode-btn ${viewMode === 'classic' ? 'active classic' : ''}`}
           >
-            <Sliders size={15} />
-            <span>📊 Métricas Detalladas</span>
+            <Sliders size={14} />
+            <span>Métricas Detalladas</span>
           </button>
         </div>
       </div>
