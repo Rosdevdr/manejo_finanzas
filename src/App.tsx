@@ -76,7 +76,13 @@ export function App() {
     localStorage.setItem('aureus_theme', theme)
   }, [theme])
 
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+  const toggleTheme = () => {
+    document.documentElement.classList.add('theme-transitioning')
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transitioning')
+    }, 320)
+  }
 
   const { toasts, show: showToast, dismiss } = useToast()
   const { isInstallable, installApp } = usePwaInstall()
@@ -517,6 +523,7 @@ export function App() {
           message={splashText.message}
           subtext={splashText.subtext}
           isExiting={isExitingSplash}
+          theme={theme}
         />
       )}
       <Analytics />

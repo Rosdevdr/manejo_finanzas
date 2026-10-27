@@ -1,0 +1,341 @@
+/* ==============================================================================
+   AUREUS · ULTRA-FLUID CROSS-BROWSER ANIMATION ENGINE
+   Hardware-accelerated (GPU Compositor), zero layout-thrashing, multi-browser.
+   Works seamlessly across Chrome, Safari/WebKit, Edge, Firefox, iOS & Android.
+   ============================================================================== */
+
+/* ============================================ */
+/* 1. SMOOTH HARDWARE-ACCELERATED TRANSITIONS   */
+/* ============================================ */
+
+/* Global Smooth Theme Switching */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Enhanced View Fade & Slide Entrance */
+@keyframes aureusFadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@-webkit-keyframes aureusFadeSlideUp {
+  0% {
+    opacity: 0;
+    -webkit-transform: translate3d(0, 12px, 0);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}
+
+.fade-in,
+.animate-fade-in {
+  animation: aureusFadeSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  -webkit-animation: aureusFadeSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Gentle Scale Entrance for Modals and Overlays */
+@keyframes aureusScaleIn {
+  0% {
+    opacity: 0;
+    transform: scale3d(0.96, 0.96, 1) translate3d(0, 6px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+}
+
+.animate-scale-in {
+  animation: aureusScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  -webkit-animation: aureusScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Lateral Slide for Drawers & Floating Alerts */
+@keyframes aureusSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(18px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-slide-right {
+  animation: aureusSlideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  -webkit-animation: aureusSlideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* ============================================ */
+/* 2. STAGGERED ORCHESTRATED ENTRANCES         */
+/* ============================================ */
+.stagger-container > *:nth-child(1) { animation-delay: 35ms; }
+.stagger-container > *:nth-child(2) { animation-delay: 70ms; }
+.stagger-container > *:nth-child(3) { animation-delay: 105ms; }
+.stagger-container > *:nth-child(4) { animation-delay: 140ms; }
+.stagger-container > *:nth-child(5) { animation-delay: 175ms; }
+.stagger-container > *:nth-child(6) { animation-delay: 210ms; }
+.stagger-container > *:nth-child(7) { animation-delay: 245ms; }
+.stagger-container > *:nth-child(8) { animation-delay: 280ms; }
+
+.stagger-item {
+  opacity: 0;
+  animation: aureusFadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  -webkit-animation: aureusFadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ============================================ */
+/* 3. SPECULAR SHINE / LUXURY SHIMMER SWEEP    */
+/* ============================================ */
+.specular-sweep,
+.aureus-shimmer-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.specular-sweep::after,
+.aureus-shimmer-sweep::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+  background: linear-gradient(
+    65deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 65%
+  );
+  transform: translate3d(-100%, 0, 0) rotate(25deg);
+  -webkit-transform: translate3d(-100%, 0, 0) rotate(25deg);
+  pointer-events: none;
+  transition: transform 0.68s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-transition: -webkit-transform 0.68s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.specular-sweep:hover::after,
+.aureus-shimmer-sweep:hover::after {
+  transform: translate3d(100%, 0, 0) rotate(25deg);
+  -webkit-transform: translate3d(100%, 0, 0) rotate(25deg);
+}
+
+[data-theme='light'] .specular-sweep::after,
+[data-theme='light'] .aureus-shimmer-sweep::after {
+  background: linear-gradient(
+    65deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 65%
+  );
+}
+
+/* Auto periodic shine for VIP elements */
+@keyframes periodicShimmer {
+  0% {
+    transform: translate3d(-120%, 0, 0) rotate(25deg);
+  }
+  20%, 100% {
+    transform: translate3d(120%, 0, 0) rotate(25deg);
+  }
+}
+
+.shimmer-active::after {
+  animation: periodicShimmer 5s ease-in-out infinite;
+  -webkit-animation: periodicShimmer 5s ease-in-out infinite;
+}
+
+/* ============================================ */
+/* 4. FLUID CARD HOVER & ACTIVE ELEVATION      */
+/* ============================================ */
+.card-interactive,
+.aureus-card-interactive,
+.stitch-kpi-card,
+.credit-kpi-card {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease !important;
+  will-change: transform, box-shadow;
+}
+
+.card-interactive:hover,
+.aureus-card-interactive:hover,
+.stitch-kpi-card:hover,
+.credit-kpi-card:hover {
+  transform: translate3d(0, -3px, 0);
+  -webkit-transform: translate3d(0, -3px, 0);
+  box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.22),
+              0 4px 12px -2px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme='light'] .card-interactive:hover,
+[data-theme='light'] .aureus-card-interactive:hover,
+[data-theme='light'] .stitch-kpi-card:hover,
+[data-theme='light'] .credit-kpi-card:hover {
+  box-shadow: 0 14px 30px -8px rgba(15, 23, 42, 0.12),
+              0 4px 12px -2px rgba(15, 23, 42, 0.06);
+}
+
+.card-interactive:active,
+.aureus-card-interactive:active {
+  transform: translate3d(0, -1px, 0) scale3d(0.996, 0.996, 1);
+  -webkit-transform: translate3d(0, -1px, 0) scale3d(0.996, 0.996, 1);
+}
+
+/* ============================================ */
+/* 5. MICRO-INTERACTION BUTTON PRESS           */
+/* ============================================ */
+.btn-interactive,
+.stitch-btn-primary,
+.guide-btn-confirm,
+.terms-btn-primary {
+  transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.14s ease,
+              box-shadow 0.14s ease !important;
+  will-change: transform;
+}
+
+.btn-interactive:active,
+.stitch-btn-primary:active,
+.guide-btn-confirm:active,
+.terms-btn-primary:active {
+  transform: scale3d(0.965, 0.965, 1) !important;
+  -webkit-transform: scale3d(0.965, 0.965, 1) !important;
+}
+
+/* ============================================ */
+/* 6. SENTINEL BEACON & STATUS PULSE           */
+/* ============================================ */
+@keyframes beaconPulse {
+  0% {
+    transform: scale3d(0.95, 0.95, 1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+  }
+  70% {
+    transform: scale3d(1, 1, 1);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale3d(0.95, 0.95, 1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.pulse-beacon,
+.status-beacon-live {
+  border-radius: 50%;
+  animation: beaconPulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  -webkit-animation: beaconPulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, box-shadow;
+}
+
+@keyframes goldBeaconPulse {
+  0% {
+    transform: scale3d(0.95, 0.95, 1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6);
+  }
+  70% {
+    transform: scale3d(1, 1, 1);
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+  100% {
+    transform: scale3d(0.95, 0.95, 1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.pulse-beacon-gold {
+  border-radius: 50%;
+  animation: goldBeaconPulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  -webkit-animation: goldBeaconPulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, box-shadow;
+}
+
+/* ============================================ */
+/* 7. PROGRESS BAR GLOW & FLOW                 */
+/* ============================================ */
+@keyframes progressGradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.progress-flow-animated {
+  background-size: 200% 200% !important;
+  animation: progressGradientFlow 3.5s ease infinite !important;
+  -webkit-animation: progressGradientFlow 3.5s ease infinite !important;
+}
+
+/* ============================================ */
+/* 8. SKELETON WAVE SHIMMER                    */
+/* ============================================ */
+@keyframes skeletonWave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.1) 37%,
+    rgba(255, 255, 255, 0.04) 63%
+  );
+  background-size: 200% 100%;
+  animation: skeletonWave 1.6s ease-in-out infinite;
+  -webkit-animation: skeletonWave 1.6s ease-in-out infinite;
+}
+
+[data-theme='light'] .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #F1F5F9 25%,
+    #E2E8F0 37%,
+    #F1F5F9 63%
+  );
+  background-size: 200% 100%;
+}
+
+/* ============================================ */
+/* 9. ACCESSIBILITY & REDUCED MOTION           */
+/* ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

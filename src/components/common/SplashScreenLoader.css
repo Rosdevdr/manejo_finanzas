@@ -1,4 +1,8 @@
-﻿/* ============================================ */
+/* ==============================================================================
+   AUREUS · SPLASH SCREEN & MODULE LOADER STYLES (LIGHT & DARK THEMES)
+   ============================================================================== */
+
+/* ============================================ */
 /* OVERLAY & CONTENEDOR                         */
 /* ============================================ */
 .splash-screen-overlay {
@@ -12,12 +16,14 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   animation: splashFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
 }
 
 .splash-screen-overlay.exiting {
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
 }
 
 .splash-screen-container {
@@ -25,8 +31,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 24px;
   padding: 24px;
+  animation: splashContainerPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ============================================ */
@@ -47,6 +54,7 @@
   border-radius: 50%;
   background: radial-gradient(circle, rgba(201, 168, 76, 0.25) 0%, transparent 70%);
   animation: splashHaloPulse 2.4s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .splash-logo-svg {
@@ -54,6 +62,7 @@
   height: 100%;
   filter: drop-shadow(0 0 25px rgba(201, 168, 76, 0.5));
   animation: splashLogoPulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform, filter;
 }
 
 /* ============================================ */
@@ -61,19 +70,20 @@
 /* ============================================ */
 .splash-loader-ring {
   position: relative;
-  width: 54px;
-  height: 54px;
+  width: 48px;
+  height: 48px;
 }
 
 .loader-ring {
   width: 100%;
   height: 100%;
-  border: 3.5px solid rgba(201, 168, 76, 0.15);
+  border: 3px solid rgba(201, 168, 76, 0.15);
   border-top-color: #F1D97E;
-  border-right-color: var(--gold-primary);
+  border-right-color: var(--gold-primary, #F59E0B);
   border-radius: 50%;
-  animation: loaderRingSpin 1s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+  animation: loaderRingSpin 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
   box-shadow: 0 0 20px rgba(201, 168, 76, 0.3);
+  will-change: transform;
 }
 
 /* ============================================ */
@@ -81,13 +91,13 @@
 /* ============================================ */
 .splash-text {
   text-align: center;
-  animation: splashTextFadeIn 0.5s ease-out 0.2s both;
+  animation: splashTextFadeIn 0.45s ease-out 0.15s both;
 }
 
 .splash-loading-text {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
   color: #F1D97E;
   margin: 0;
   letter-spacing: -0.01em;
@@ -95,66 +105,161 @@
 }
 
 .splash-subtext {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 8px 0 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted, #94A3B8);
+  margin: 6px 0 0 0;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
 
 /* ============================================ */
-/* ANIMACIONES KEYFRAME                         */
+/* BARRA DE PROGRESO FLUIDA                    */
+/* ============================================ */
+.splash-progress-track {
+  width: 160px;
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+  margin-top: 2px;
+}
+
+.splash-progress-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 45%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #F3CA65 0%, #C9A84C 100%);
+  box-shadow: 0 0 12px rgba(243, 202, 101, 0.4);
+  animation: splashProgressFlow 1.35s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ============================================ */
+/* MODO CLARO (LIGHT THEME OVERRIDES)          */
+/* ============================================ */
+.splash-screen-overlay.light-mode,
+[data-theme='light'] .splash-screen-overlay {
+  background: radial-gradient(circle at 50% 36%, #FFFFFF 0%, #F8FAFC 54%, #EBF1F6 100%) !important;
+}
+
+.splash-screen-overlay.light-mode .splash-logo-halo,
+[data-theme='light'] .splash-screen-overlay .splash-logo-halo {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.04) 50%, transparent 70%) !important;
+}
+
+.splash-screen-overlay.light-mode .splash-logo-svg,
+[data-theme='light'] .splash-screen-overlay .splash-logo-svg {
+  filter: drop-shadow(0 8px 24px rgba(217, 119, 6, 0.22)) !important;
+}
+
+.splash-screen-overlay.light-mode .loader-ring,
+[data-theme='light'] .splash-screen-overlay .loader-ring {
+  border-color: #E2E8F0 !important;
+  border-top-color: #D97706 !important;
+  border-right-color: #B45309 !important;
+  box-shadow: 0 4px 18px rgba(217, 119, 6, 0.16) !important;
+}
+
+.splash-screen-overlay.light-mode .splash-loading-text,
+[data-theme='light'] .splash-screen-overlay .splash-loading-text {
+  color: #0F172A !important;
+  text-shadow: none !important;
+  font-weight: 700 !important;
+}
+
+.splash-screen-overlay.light-mode .splash-subtext,
+[data-theme='light'] .splash-screen-overlay .splash-subtext {
+  color: #64748B !important;
+  font-weight: 500 !important;
+}
+
+.splash-screen-overlay.light-mode .splash-progress-track,
+[data-theme='light'] .splash-screen-overlay .splash-progress-track {
+  background: #E2E8F0 !important;
+}
+
+.splash-screen-overlay.light-mode .splash-progress-indicator,
+[data-theme='light'] .splash-screen-overlay .splash-progress-indicator {
+  background: linear-gradient(90deg, #F59E0B 0%, #D97706 50%, #B45309 100%) !important;
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.3) !important;
+}
+
+/* ============================================ */
+/* KEYFRAMES ACELERADOS POR GPU                 */
 /* ============================================ */
 @keyframes splashFadeIn {
   from {
     opacity: 0;
-    backdrop-filter: blur(0px);
   }
   to {
     opacity: 1;
-    backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes splashContainerPop {
+  from {
+    opacity: 0;
+    transform: scale3d(0.96, 0.96, 1) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1) translateY(0);
   }
 }
 
 @keyframes splashLogoPulse {
   0%, 100% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.4));
+    transform: scale3d(1, 1, 1);
   }
   50% {
-    transform: scale(1.08);
-    filter: drop-shadow(0 0 35px rgba(201, 168, 76, 0.65));
+    transform: scale3d(1.06, 1.06, 1);
   }
 }
 
 @keyframes splashHaloPulse {
   0%, 100% {
-    transform: scale(0.9);
-    opacity: 0.4;
+    transform: scale3d(0.92, 0.92, 1);
+    opacity: 0.45;
   }
   50% {
-    transform: scale(1.15);
-    opacity: 0.8;
+    transform: scale3d(1.15, 1.15, 1);
+    opacity: 0.85;
   }
 }
 
 @keyframes loaderRingSpin {
   from {
-    transform: rotateZ(0deg);
+    transform: rotate(0deg);
   }
   to {
-    transform: rotateZ(360deg);
+    transform: rotate(360deg);
   }
 }
 
 @keyframes splashTextFadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translate3d(0, 8px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes splashProgressFlow {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  50% {
+    transform: translate3d(150%, 0, 0);
+  }
+  100% {
+    transform: translate3d(350%, 0, 0);
   }
 }
 
@@ -167,14 +272,17 @@
     height: 110px;
   }
   .splash-loader-ring {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
   .splash-loading-text {
     font-size: 17px;
   }
   .splash-subtext {
     font-size: 12px;
+  }
+  .splash-progress-track {
+    width: 130px;
   }
 }
 
@@ -183,13 +291,14 @@
 /* ============================================ */
 @media (prefers-reduced-motion: reduce) {
   .splash-screen-overlay,
+  .splash-screen-container,
   .splash-logo-svg,
   .splash-logo-halo,
   .loader-ring,
-  .splash-text {
+  .splash-text,
+  .splash-progress-indicator {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
-
