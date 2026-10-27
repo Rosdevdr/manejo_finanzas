@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { TrendingDown, Lock, Shuffle, Plus, Trash2, Pencil, X, Calendar, Search } from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
@@ -197,20 +197,20 @@ export function ExpensesView({ currentPeriod, expenses, onAddExpense, onUpdateEx
           <div className="obsidian-data-grid-title">
             {showAllPeriods ? 'Registro Histórico de Gastos' : `Movimientos de ${formatPeriodLabel(currentPeriod)}`}
           </div>
-          <div style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.3)', padding: 4, borderRadius: 10 }}>
+          <div className="obsidian-period-filter-switch">
             <button
-              className={`obsidian-icon-btn ${!showAllPeriods ? 'active' : ''}`}
-              style={!showAllPeriods ? { background: '#2B2D3C', color: 'var(--text-primary)' } : {}}
+              type="button"
+              className={`obsidian-period-filter-btn ${!showAllPeriods ? 'active' : ''}`}
               onClick={() => setShowAllPeriods(false)}
             >
-              <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Mes Actual</span>
+              Mes Actual
             </button>
             <button
-              className={`obsidian-icon-btn ${showAllPeriods ? 'active' : ''}`}
-              style={showAllPeriods ? { background: '#2B2D3C', color: 'var(--text-primary)' } : {}}
+              type="button"
+              className={`obsidian-period-filter-btn ${showAllPeriods ? 'active' : ''}`}
               onClick={() => setShowAllPeriods(true)}
             >
-              <span style={{ fontSize: 12, fontWeight: 600, padding: '0 8px' }}>Historial</span>
+              Historial
             </button>
           </div>
         </div>

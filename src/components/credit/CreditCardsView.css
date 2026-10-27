@@ -508,10 +508,114 @@
 
 [data-theme='light'] .credit-kpi-card,
 [data-theme='light'] .credit-advisor-box,
-[data-theme='light'] .stitch-table-container {
+[data-theme='light'] .stitch-table-container,
+[data-theme='light'] .stitch-credit-card-wrap,
+[data-theme='light'] .card-details-panel,
+[data-theme='light'] .transactions-table-panel {
   background-color: #ffffff;
   border-color: #e2e8f0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .stitch-credit-card-wrap:hover {
+  border-color: #f59e0b;
+}
+
+[data-theme='light'] .card-details-panel {
+  border-top-color: #f1f5f9;
+}
+
+[data-theme='light'] .card-metric-label {
+  color: #64748b;
+}
+
+[data-theme='light'] .card-debt-display {
+  color: #0f172a;
+}
+
+[data-theme='light'] .card-limit-display {
+  color: #64748b;
+}
+
+[data-theme='light'] .card-dates-row {
+  color: #64748b;
+  border-top-color: #f1f5f9;
+}
+
+[data-theme='light'] .card-actions-strip .btn-stitch-outline {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+[data-theme='light'] .card-actions-strip .btn-stitch-outline:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme='light'] .sandbox-pill-btn {
+  background: #f1f5f9;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+[data-theme='light'] .sandbox-pill-btn:hover {
+  color: #0f172a;
+}
+
+[data-theme='light'] .sandbox-pill-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Light Mode Card Plastics */
+[data-theme='light'] .plastic-silver {
+  background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 50%, #CBD5E1 100%);
+  border: 1px solid #CBD5E1;
+}
+
+[data-theme='light'] .plastic-silver .card-bank-name {
+  color: #D97706;
+}
+
+[data-theme='light'] .plastic-silver .card-product-name,
+[data-theme='light'] .plastic-silver .card-masked-number,
+[data-theme='light'] .plastic-silver .card-holder-name,
+[data-theme='light'] .plastic-silver .card-expiry-val {
+  color: #0F172A;
+  text-shadow: none;
+}
+
+[data-theme='light'] .plastic-silver .card-holder-label {
+  color: #64748B;
+}
+
+[data-theme='light'] .plastic-gold {
+  background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #D97706 100%);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+[data-theme='light'] .plastic-gold .card-bank-name {
+  color: #78350F;
+}
+
+[data-theme='light'] .plastic-gold .card-product-name,
+[data-theme='light'] .plastic-gold .card-masked-number,
+[data-theme='light'] .plastic-gold .card-holder-name,
+[data-theme='light'] .plastic-gold .card-expiry-val {
+  color: #1E293B;
+  text-shadow: none;
+}
+
+[data-theme='light'] .plastic-blue {
+  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 60%, #1E40AF 100%);
+}
+
+[data-theme='light'] .plastic-black {
+  background: linear-gradient(135deg, #334155 0%, #1E293B 60%, #0F172A 100%);
 }
 
 [data-theme='light'] .kpi-big-number {

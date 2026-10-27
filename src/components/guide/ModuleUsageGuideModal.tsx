@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import './ModuleUsageGuideModal.css'
 import {
   X,
   BookOpen,
@@ -168,53 +169,22 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
   const activeSection = GUIDE_SECTIONS.find(s => s.id === selectedId) || GUIDE_SECTIONS[0]
 
   return (
-    <div className="modal-overlay fade-in" onClick={onClose} style={{ zIndex: 1100 }}>
+    <div className="guide-modal-overlay" onClick={onClose}>
       <div
-        className="modal-content"
+        className="guide-modal-card"
         onClick={e => e.stopPropagation()}
-        style={{
-          maxWidth: 820,
-          width: '94%',
-          height: 'min(620px, 90vh)',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: 0,
-          overflow: 'hidden',
-          borderRadius: 18,
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-default)',
-          boxShadow: 'var(--shadow-modal), var(--specular-top)',
-        }}
       >
         {/* Modal Header */}
-        <div style={{
-          padding: '16px 22px',
-          borderBottom: '1px solid var(--border-default)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'var(--bg-surface)',
-          flexShrink: 0,
-        }}>
+        <div className="guide-modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'rgba(243, 202, 101, 0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--gold-hover)',
-            }}>
+            <div className="guide-header-icon-wrap">
               <BookOpen size={18} />
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Space Grotesk' }}>
+              <div className="guide-header-title">
                 Normativas y Guía de Uso del Sistema AUREUS
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              <div className="guide-header-subtitle">
                 Aprende cómo funciona cada módulo y sácale el máximo provecho a tus finanzas
               </div>
             </div>
@@ -222,38 +192,18 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
 
           <button
             type="button"
+            className="guide-close-btn"
             onClick={onClose}
-            style={{
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid var(--border-default)',
-              borderRadius: 8,
-              padding: 6,
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.15s ease',
-            }}
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Modal Body: Sidebar Selector + Content Pane */}
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+        <div className="guide-modal-body">
           {/* Module Nav Tabs (Left side) */}
-          <div style={{
-            width: 240,
-            borderRight: '1px solid var(--border-subtle)',
-            background: 'var(--bg-surface)',
-            padding: '12px 8px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-            overflowY: 'auto',
-          }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 10px' }}>
+          <div className="guide-modal-sidebar">
+            <div className="guide-sidebar-label">
               Módulos del Sistema
             </div>
             {GUIDE_SECTIONS.map(sec => {
@@ -263,26 +213,7 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
                   key={sec.id}
                   type="button"
                   onClick={() => setSelectedId(sec.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '9px 12px',
-                    borderRadius: 10,
-                    border: 'none',
-                    background: isSelected
-                      ? 'var(--gold-subtle)'
-                      : 'transparent',
-                    color: isSelected ? 'var(--gold-hover)' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    width: '100%',
-                    fontFamily: 'Space Grotesk',
-                    fontSize: 12,
-                    fontWeight: isSelected ? 700 : 500,
-                    transition: 'all 0.15s ease',
-                    borderLeft: isSelected ? '3px solid var(--gold-primary)' : '3px solid transparent',
-                  }}
+                  className={`guide-sidebar-btn ${isSelected ? 'active' : ''}`}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{sec.icon}</span>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sec.title.split(' (')[0]}</span>
@@ -292,55 +223,31 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
           </div>
 
           {/* Module Detailed Content (Right side) */}
-          <div style={{
-            flex: 1,
-            padding: '20px 24px',
-            overflowY: 'auto',
-            background: 'var(--bg-card)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-          }}>
+          <div className="guide-modal-content">
             {/* Header section badge & title */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={{
-                fontSize: 10.5,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                padding: '3px 8px',
-                borderRadius: 6,
-                background: 'rgba(243, 202, 101, 0.15)',
-                color: 'var(--gold-hover)',
-                border: '1px solid rgba(243, 202, 101, 0.3)',
-              }}>
+              <span className="guide-content-badge">
                 {activeSection.badge}
               </span>
             </div>
 
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 10px 0', fontFamily: 'Space Grotesk' }}>
+            <h3 className="guide-content-title" style={{ margin: '0 0 10px 0' }}>
               {activeSection.title}
             </h3>
 
-            <p style={{ fontSize: 13, color: '#A0A0B2', lineHeight: 1.55, margin: '0 0 18px 0' }}>
+            <p className="guide-content-desc" style={{ margin: '0 0 18px 0' }}>
               {activeSection.description}
             </p>
 
             {/* Best practices */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 12,
-              padding: '14px 16px',
-              marginBottom: 14,
-            }}>
+            <div className="guide-practices-box">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <CheckCircle2 size={16} style={{ color: 'var(--emerald-success)' }} />
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--emerald-success)', fontFamily: 'Space Grotesk' }}>
+                <span className="guide-practices-title">
                   Buenas Prácticas Recomendadas
                 </span>
               </div>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#E5E7EB', lineHeight: 1.6 }}>
+              <ul className="guide-practices-list">
                 {activeSection.bestPractices.map((bp, idx) => (
                   <li key={idx} style={{ marginBottom: 4 }}>{bp}</li>
                 ))}
@@ -348,20 +255,14 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
             </div>
 
             {/* Common mistakes */}
-            <div style={{
-              background: 'rgba(248, 113, 113, 0.04)',
-              border: '1px solid rgba(248, 113, 113, 0.15)',
-              borderRadius: 12,
-              padding: '14px 16px',
-              marginBottom: 14,
-            }}>
+            <div className="guide-mistakes-box">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <AlertTriangle size={16} style={{ color: 'var(--rose-danger)' }} />
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--rose-danger)', fontFamily: 'Space Grotesk' }}>
+                <span className="guide-mistakes-title">
                   Errores Comunes a Evitar
                 </span>
               </div>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#E5E7EB', lineHeight: 1.6 }}>
+              <ul className="guide-mistakes-list">
                 {activeSection.commonMistakes.map((cm, idx) => (
                   <li key={idx} style={{ marginBottom: 4 }}>{cm}</li>
                 ))}
@@ -369,17 +270,9 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
             </div>
 
             {/* Pro Tip */}
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.12) 0%, rgba(20, 20, 28, 0.8) 100%)',
-              border: '1px solid rgba(201, 168, 76, 0.3)',
-              borderRadius: 12,
-              padding: 12,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-            }}>
+            <div className="guide-tip-box">
               <Lightbulb size={18} style={{ color: 'var(--amber-warning)', flexShrink: 0 }} />
-              <div style={{ fontSize: 11.5, color: 'var(--gold-hover)', lineHeight: 1.45 }}>
+              <div className="guide-tip-text">
                 <strong>Tip del Asesor AUREUS:</strong> {activeSection.proTip}
               </div>
             </div>
@@ -387,34 +280,11 @@ export function ModuleUsageGuideModal({ isOpen, onClose, initialModule = 'dashbo
         </div>
 
         {/* Modal Footer */}
-        <div style={{
-          padding: '14px 22px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          background: '#0B0B10',
-          flexShrink: 0,
-        }}>
+        <div className="guide-modal-footer">
           <button
             type="button"
+            className="guide-btn-confirm"
             onClick={onClose}
-            style={{
-              background: 'linear-gradient(135deg, #F3CA65 0%, #C9A84C 100%)',
-              color: '#0B0B0F',
-              border: 'none',
-              borderRadius: 10,
-              padding: '9px 24px',
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: 'Space Grotesk',
-              cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(243, 202, 101, 0.25)',
-              transition: 'all 0.15s ease',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
           >
             Entendido, ¡gracias!
           </button>

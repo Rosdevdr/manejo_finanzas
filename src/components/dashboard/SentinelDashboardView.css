@@ -663,6 +663,27 @@
   padding-bottom: 0.25rem;
 }
 
+.sentinel-telegram-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.16);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #C7D2FE;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+}
+
+.sentinel-telegram-tag-icon {
+  color: #A5B4FC;
+}
+
 .sentinel-chat-bubble {
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--aur-border-subtle);
@@ -1096,4 +1117,16 @@
 [data-theme='light'] .sentinel-new-commitment-btn:hover .sentinel-new-commitment-icon {
   background: rgba(11, 15, 25, 0.24);
 }
+
+[data-theme='light'] .sentinel-telegram-tag {
+  background: #EEF2FF;
+  border-color: #C7D2FE;
+  color: #4338CA;
+  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.08);
+}
+
+[data-theme='light'] .sentinel-telegram-tag-icon {
+  color: #4F46E5;
+}
+
 

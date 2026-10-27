@@ -645,8 +645,9 @@ export function SentinelDashboardView() {
                 <p className="text-xs sentinel-subtitle-text">Stream en vivo · Gemini AI Parser</p>
               </div>
             </div>
-            <span className="text-xs text-indigo-300 bg-indigo-950/60 border border-indigo-500/30 px-2 py-0.5 rounded-full font-semibold">
-              Telegram Bot
+            <span className="sentinel-telegram-tag">
+              <Send size={11} className="sentinel-telegram-tag-icon" />
+              <span>Telegram Bot</span>
             </span>
           </div>
 
