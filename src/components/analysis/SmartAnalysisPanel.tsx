@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import './SmartAnalysisPanel.css'
 import {
   Sparkles,
   TrendingUp,
@@ -88,40 +89,20 @@ export function SmartAnalysisPanel({
   const isAlert = savingsRate < 5 || balance <= 0
 
   return (
-    <div className="fade-in" style={{ paddingBottom: 36 }}>
+    <div className="fade-in analysis-container">
       {/* Page Header */}
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+      <div className="page-header analysis-header">
         <div>
           <div className="breadcrumb">AUREUS · <span className="breadcrumb-accent">Asesor Financiero IA</span></div>
           <h1 className="page-title">Diagnóstico & Recomendaciones Inteligentes</h1>
         </div>
 
         {/* Dual Mode Switcher (Personal vs Emprendedor) */}
-        <div style={{
-          display: 'flex',
-          background: '#14141E',
-          border: '1px solid var(--border-default)',
-          borderRadius: 12,
-          padding: 4,
-          gap: 4,
-        }}>
+        <div className="analysis-mode-switcher">
           <button
             type="button"
             onClick={() => setProfileMode('personal')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 14px',
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: 'none',
-              transition: 'all 0.15s ease',
-              background: profileMode === 'personal' ? 'linear-gradient(135deg, #F3CA65 0%, #C9A84C 100%)' : 'transparent',
-              color: profileMode === 'personal' ? '#0B0B0F' : '#9CA3AF',
-            }}
+            className={`analysis-mode-btn ${profileMode === 'personal' ? 'active' : ''}`}
           >
             <Home size={14} />
             <span>Finanzas Personales</span>
@@ -129,20 +110,7 @@ export function SmartAnalysisPanel({
           <button
             type="button"
             onClick={() => setProfileMode('business')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 14px',
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: 'none',
-              transition: 'all 0.15s ease',
-              background: profileMode === 'business' ? 'linear-gradient(135deg, #F3CA65 0%, #C9A84C 100%)' : 'transparent',
-              color: profileMode === 'business' ? '#0B0B0F' : '#9CA3AF',
-            }}
+            className={`analysis-mode-btn ${profileMode === 'business' ? 'active' : ''}`}
           >
             <Briefcase size={14} />
             <span>Visión Emprendedor</span>
@@ -151,25 +119,16 @@ export function SmartAnalysisPanel({
       </div>
 
       {/* Mode Orientation Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.08) 0%, rgba(20, 20, 28, 0.85) 100%)',
-        border: '1px solid rgba(201, 168, 76, 0.25)',
-        borderRadius: 14,
-        padding: '12px 18px',
-        marginBottom: 16,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: 10,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Sparkles size={18} style={{ color: 'var(--gold-hover)' }} />
+      <div className="analysis-orientation-banner">
+        <div className="analysis-banner-left">
+          <div className="analysis-banner-icon">
+            <Sparkles size={18} />
+          </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+            <div className="analysis-banner-title">
               {profileMode === 'personal' ? 'Enfoque: Salud Financiera del Hogar y Tranquilidad Personal' : 'Enfoque: Gestión de Negocio, Proyectos y Flujo de Caja'}
             </div>
-            <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 1 }}>
+            <div className="analysis-banner-subtitle">
               {profileMode === 'personal'
                 ? 'Consejos directos y sin tecnicismos para que tu dinero rinda más y ahorres con seguridad.'
                 : 'Métricas prácticas para controlar tus ingresos variables, márgenes y reinversión de proyectos.'}
@@ -179,57 +138,51 @@ export function SmartAnalysisPanel({
       </div>
 
       {/* Month-over-Month Comparative Insight Card */}
-      <div style={{
-        background: 'var(--bg-elevated)',
-        border: '1px solid var(--border-default)',
-        borderRadius: 16,
-        padding: 18,
-        marginBottom: 20,
-      }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold-hover)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div className="analysis-comparative-card">
+        <div className="analysis-comparative-header">
           <BarChart3 size={15} />
           <span>Comparativa: {formatPeriodLabel(currentPeriod)} vs. {formatPeriodLabel(prevPeriod)}</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+        <div className="analysis-comparative-grid">
           {/* Income Comparison */}
-          <div style={{ padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="analysis-metric-box">
+            <div className="analysis-metric-top">
               <span>Tus Ingresos</span>
               {incDiff >= 0 ? <TrendingUp size={13} style={{ color: 'var(--emerald-success)' }} /> : <TrendingDown size={13} style={{ color: 'var(--rose-danger)' }} />}
             </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: incDiff >= 0 ? '#34D399' : '#F87171', marginTop: 4 }}>
+            <div className="analysis-metric-val" style={{ color: incDiff >= 0 ? '#34D399' : '#F87171' }}>
               {incDiff >= 0 ? '+' : ''}{formatCurrency(incDiff)} ({incPctDiff >= 0 ? '+' : ''}{incPctDiff.toFixed(1)}%)
             </div>
-            <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2 }}>
+            <div className="analysis-metric-sub">
               {prevTotalIncome > 0 ? `Mes ant: ${formatCurrency(prevTotalIncome)}` : 'Primer mes'}
             </div>
           </div>
 
           {/* Expense Comparison */}
-          <div style={{ padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="analysis-metric-box">
+            <div className="analysis-metric-top">
               <span>Tus Gastos</span>
               {expDiff <= 0 ? <TrendingDown size={13} style={{ color: 'var(--emerald-success)' }} /> : <TrendingUp size={13} style={{ color: 'var(--rose-danger)' }} />}
             </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: expDiff <= 0 ? '#34D399' : '#F87171', marginTop: 4 }}>
+            <div className="analysis-metric-val" style={{ color: expDiff <= 0 ? '#34D399' : '#F87171' }}>
               {expDiff >= 0 ? '+' : ''}{formatCurrency(expDiff)} ({expPctDiff >= 0 ? '+' : ''}{expPctDiff.toFixed(1)}%)
             </div>
-            <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2 }}>
+            <div className="analysis-metric-sub">
               {expDiff <= 0 ? 'Gastaste menos que el mes pasado' : 'Aumentaron tus gastos'}
             </div>
           </div>
 
           {/* Savings Rate Comparison */}
-          <div style={{ padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="analysis-metric-box">
+            <div className="analysis-metric-top">
               <span>Tasa de Ahorro</span>
               <span>{savingsRate.toFixed(1)}%</span>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: savingsRate >= prevSavingsRate ? '#34D399' : '#FBBF24', marginTop: 4 }}>
+            <div className="analysis-metric-val" style={{ color: savingsRate >= prevSavingsRate ? '#34D399' : '#FBBF24' }}>
               {savingsRate >= prevSavingsRate ? '+' : ''}{(savingsRate - prevSavingsRate).toFixed(1)}% de cambio
             </div>
-            <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2 }}>
+            <div className="analysis-metric-sub">
               {prevSavingsRate > 0 ? `Mes ant: ${prevSavingsRate.toFixed(1)}%` : 'Sin datos previos'}
             </div>
           </div>
@@ -237,12 +190,12 @@ export function SmartAnalysisPanel({
       </div>
 
       {/* Grid of Actionable Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+      <div className="analysis-cards-grid">
         {/* Card 1: Diagnóstico Central */}
-        <div className="advisor-panel" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <div className="analysis-advisor-card">
+          <div className="analysis-card-header">
             <ShieldCheck size={18} style={{ color: isHealthy ? '#34D399' : isModerate ? '#FBBF24' : '#F87171' }} />
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Diagnóstico de Tu Dinero</div>
+            <div className="analysis-card-title">Diagnóstico de Tu Dinero</div>
           </div>
 
           <div style={{ marginBottom: 14 }}>
@@ -253,10 +206,10 @@ export function SmartAnalysisPanel({
             <ProgressBar value={savingsRate} max={30} color={isHealthy ? 'emerald' : isModerate ? 'gold' : 'red'} />
           </div>
 
-          <div style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 10 }}>
-            {isHealthy && '🌟 ¡Excelente trabajo! Estás ahorrando más del 20% de tus ingresos. Esto te da gran tranquilidad para imprevistos o metas.'}
-            {isModerate && '👍 Vas bien, pero tienes margen de mejora. Intenta recortar pequeños gastos variables para superar el 20% de ahorro.'}
-            {isAlert && '⚠️ Cuidado: Este mes tus ahorros son bajos o estás gastando más de lo que ingresas. Revisa tus gastos variables para recuperar balance.'}
+          <div className="analysis-advice-box">
+            {isHealthy && 'Excelente trabajo. Estás ahorrando más del 20% de tus ingresos, lo que te otorga un sólido respaldo para imprevistos y metas.'}
+            {isModerate && 'Buen progreso, pero con margen de mejora. Ajustar pequeños consumos variables te permitirá alcanzar el 20% de ahorro recomendado.'}
+            {isAlert && 'Atención: Tu tasa de ahorro es reducida o los egresos superan los ingresos este mes. Conviene revisar gastos variables para restablecer el balance.'}
           </div>
 
           <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11.5 }}>
@@ -272,10 +225,10 @@ export function SmartAnalysisPanel({
         </div>
 
         {/* Card 2: Recomendación Práctica Inmediata */}
-        <div className="advisor-panel" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <div className="analysis-advisor-card">
+          <div className="analysis-card-header">
             <Lightbulb size={18} style={{ color: 'var(--gold-hover)' }} />
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Recomendaciones Prácticas</div>
+            <div className="analysis-card-title">Recomendaciones Prácticas</div>
           </div>
 
           {profileMode === 'personal' ? (
@@ -299,11 +252,11 @@ export function SmartAnalysisPanel({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12, color: 'var(--text-secondary)' }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                 <Zap size={15} style={{ color: 'var(--gold-hover)', flexShrink: 0, marginTop: 2 }} />
-                <span><strong>Separación de Cuentas:</strong> Asigna un "sueldo fijo" personal y no mezcles gastos personales con los de tus proyectos.</span>
+                <span><strong>Separación de Cuentas:</strong> Asigna un sueldo fijo personal y evita mezclar finanzas personales con proyectos de negocio.</span>
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                 <Zap size={15} style={{ color: 'var(--emerald-success)', flexShrink: 0, marginTop: 2 }} />
-                <span><strong>Colchón Fiscal y Operativo:</strong> Reserva entre el 15% y 20% de cada cobro para imprevistos operativos o impuestos.</span>
+                <span><strong>Colchón Operativo:</strong> Reserva entre el 15% y 20% de cada cobro para imprevistos operativos o contingencias.</span>
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                 <Zap size={15} style={{ color: '#60A5FA', flexShrink: 0, marginTop: 2 }} />
@@ -314,17 +267,17 @@ export function SmartAnalysisPanel({
         </div>
 
         {/* Card 3: Proyección del Mes & Calendario */}
-        <div className="advisor-panel" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <div className="analysis-advisor-card">
+          <div className="analysis-card-header">
             <Calendar size={18} style={{ color: '#60A5FA' }} />
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Ritmo de Gastos del Mes</div>
+            <div className="analysis-card-title">Ritmo de Gastos del Mes</div>
           </div>
 
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             <p style={{ margin: '0 0 8px 0' }}>
-              Vas en el <strong>día {monthProgress.currentDay} de {monthProgress.totalDays}</strong> ({monthProgress.percentPassed}% del mes transcurrido).
+              Día <strong>{monthProgress.currentDay} de {monthProgress.totalDays}</strong> ({monthProgress.percentPassed}% del mes transcurrido).
             </p>
-            <div style={{ background: 'rgba(255,255,255,0.03)', padding: 10, borderRadius: 8, marginBottom: 8 }}>
+            <div className="analysis-daily-burn-box">
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Gasto Promedio Diario:</div>
               <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--gold-hover)', fontFamily: 'Space Mono' }}>
                 {formatCurrency(dailyBurnRate)} / día
@@ -337,10 +290,10 @@ export function SmartAnalysisPanel({
         </div>
 
         {/* Card 4: Salud de Tarjetas de Crédito */}
-        <div className="advisor-panel" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <div className="analysis-advisor-card">
+          <div className="analysis-card-header">
             <CardIcon size={18} style={{ color: creditSummary.utilizationRate > 30 ? '#F87171' : '#34D399' }} />
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Salud de Tarjetas de Crédito</div>
+            <div className="analysis-card-title">Salud de Tarjetas de Crédito</div>
           </div>
 
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
@@ -357,8 +310,8 @@ export function SmartAnalysisPanel({
             <ProgressBar value={creditSummary.utilizationRate} max={100} color={creditSummary.utilizationRate > 30 ? 'red' : 'emerald'} />
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
               {creditSummary.utilizationRate <= 30
-                ? '✓ Tu nivel de endeudamiento en tarjetas es óptimo para tu historial crediticio.'
-                : '⚠️ Superas el 30% de uso de tus tarjetas. Paga el balance al corte para evitar intereses.'}
+                ? 'Tu nivel de endeudamiento en tarjetas es óptimo para tu historial crediticio.'
+                : 'Superas el 30% de uso de tus tarjetas. Procura liquidar el balance al corte para evitar cargos.'}
             </div>
           </div>
         </div>
@@ -366,3 +319,4 @@ export function SmartAnalysisPanel({
     </div>
   )
 }
+
