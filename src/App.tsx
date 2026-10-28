@@ -471,6 +471,14 @@ export function App() {
               expenses={expenses}
               availableBalance={available}
               onAddWithdrawal={async d => {
+                const safeAvailable = Math.max(0, available)
+                if (d.amount > safeAvailable) {
+                  showToast(
+                    `Saldo insuficiente: dispones de RD$ ${safeAvailable.toLocaleString('es-DO', { minimumFractionDigits: 2 })} y no puedes registrar un retiro que lleve tu saldo a negativo.`,
+                    'error'
+                  )
+                  return
+                }
                 const res = await addWithdrawal(d)
                 if (!res.success) {
                   showToast(res.error || 'Error al registrar retiro', 'error')

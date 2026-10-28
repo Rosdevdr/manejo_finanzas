@@ -54,9 +54,6 @@
   letter-spacing: -0.02em;
 }
 
-/* Modal styling is reused from inline styles of CashView, 
-   or global overrides if necessary */
-
 /* High Density Data Grid */
 .obsidian-data-grid-container {
   background: var(--bg-card);
@@ -233,21 +230,29 @@
   }
 }
 
-
 /* ==============================================================================
-   ADAPTIVE MODAL, INPUTS & OVERDRAFT GUARD (LIGHT & DARK THEME PARITY)
+   ADAPTIVE MODAL PORTAL, SCROLLABLE BACKDROP, INPUTS & OVERDRAFT GUARD
    ============================================================================== */
 
 .aureus-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(6, 8, 14, 0.65);
-  backdrop-filter: blur(8px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(6, 8, 14, 0.68);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  z-index: 120;
-  padding: 16px;
+  z-index: 10000;
+  padding: 28px 16px 64px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .aureus-modal-card {
@@ -255,7 +260,9 @@
   border: 1px solid var(--border-default, rgba(255, 255, 255, 0.12));
   border-radius: 20px;
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
+  margin: auto 0;
+  position: relative;
   box-shadow: var(--shadow-modal, 0 24px 60px rgba(0, 0, 0, 0.55));
 }
 
@@ -354,6 +361,10 @@
   font-size: 12.5px;
   font-weight: 600;
   line-height: 1.45;
+}
+
+[data-theme='light'] .aureus-modal-backdrop {
+  background: rgba(15, 23, 42, 0.45);
 }
 
 [data-theme='light'] .aureus-modal-card {

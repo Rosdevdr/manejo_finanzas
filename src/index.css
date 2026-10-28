@@ -4646,4 +4646,30 @@ path.recharts-curve[stroke="#D4AF37"] {
   }
 }
 
-
+
+
+/* =========================================================================
+   VIEWPORT-SAFE MODAL PORTAL & CONTAINING-BLOCK FIX
+   Prevents module containers (.main / .fade-in / .obsidian-data-grid-container)
+   from trapping position:fixed modals or drawing a border around the background module
+   ========================================================================= */
+.main:not(.module-defocused) {
+  will-change: auto !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.fade-in,
+.incomes-obsidian-root,
+.expenses-obsidian-root,
+.cash-obsidian-root {
+  transform: none !important;
+  filter: none !important;
+  will-change: auto !important;
+}
+
+.modal-overlay {
+  overflow-y: auto !important;
+  align-items: flex-start !important;
+  padding: 28px 16px 64px !important;
+}

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import {
   CreditCard as CardIcon,
   Plus,
@@ -13,17 +14,25 @@ import {
   ArrowDownCircle,
   X,
   ShieldCheck,
+  Home,
+  Utensils,
+  Car,
+  HeartPulse,
+  Gamepad2,
+  GraduationCap,
+  Package,
 } from 'lucide-react'
 import type {
   CreditCard,
   CreditCardTransaction,
   ExpenseCategory,
-  CardThemeColor
+  CardThemeColor,
 } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
 import { evaluateCardHealth, getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
 import { sanitizeCardLastFour } from '../../utils/security'
+import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
 import './CreditCardsView.css'
 
 interface CreditCardsViewProps {
@@ -39,17 +48,27 @@ interface CreditCardsViewProps {
   onTogglePaid: (id: string) => void
 }
 
-const CATEGORY_MAP: Record<ExpenseCategory, { label: string; badge: string; emoji: string }> = {
-  housing:       { label: 'Vivienda',     badge: 'badge-vivienda',     emoji: '🏠' },
-  food:          { label: 'Alimentación', badge: 'badge-alimentacion', emoji: '🛒' },
-  transport:     { label: 'Transporte',   badge: 'badge-transporte',   emoji: '🚗' },
-  utilities:     { label: 'Servicios',    badge: 'badge-servicios',    emoji: '⚡' },
-  health:        { label: 'Salud',        badge: 'badge-salud',        emoji: '💊' },
-  entertainment: { label: 'Ocio',         badge: 'badge-ocio',         emoji: '🎭' },
-  education:     { label: 'Educación',    badge: 'badge-inversion',    emoji: '📚' },
-  debt:          { label: 'Deudas',       badge: 'badge-fijo',         emoji: '💳' },
-  other:         { label: 'Otros',        badge: 'badge-fijo',         emoji: '📦' },
+const CATEGORY_MAP: Record<ExpenseCategory, { label: string; subtitle: string; badge: string; icon: ReactNode; color: string }> = {
+  housing:       { label: 'Vivienda',     subtitle: 'Renta, mantenimiento', badge: 'badge-vivienda',     icon: <Home size={14} />,          color: '#60A5FA' },
+  food:          { label: 'Alimentación', subtitle: 'Supermercado, despensa', badge: 'badge-alimentacion', icon: <Utensils size={14} />,    color: '#34D399' },
+  transport:     { label: 'Transporte',   subtitle: 'Combustible, movilidad', badge: 'badge-transporte',   icon: <Car size={14} />,         color: '#FBBF24' },
+  utilities:     { label: 'Servicios',    subtitle: 'Luz, internet, móvil', badge: 'badge-servicios',    icon: <Zap size={14} />,           color: '#38BDF8' },
+  health:        { label: 'Salud',        subtitle: 'Farmacia, consultas', badge: 'badge-salud',        icon: <HeartPulse size={14} />,    color: '#F87171' },
+  entertainment: { label: 'Ocio',         subtitle: 'Restaurantes, salidas', badge: 'badge-ocio',         icon: <Gamepad2 size={14} />,      color: '#A78BFA' },
+  education:     { label: 'Educación',    subtitle: 'Cursos, formación',   badge: 'badge-inversion',    icon: <GraduationCap size={14} />, color: '#C9A84C' },
+  debt:          { label: 'Deudas',       subtitle: 'Cuotas y abonos',     badge: 'badge-fijo',         icon: <CardIcon size={14} />,      color: '#FB7185' },
+  other:         { label: 'Otros',        subtitle: 'Misceláneos',         badge: 'badge-fijo',         icon: <Package size={14} />,       color: '#94A3B8' },
 }
+
+const CREDIT_CATEGORY_OPTIONS: CustomSelectOption<ExpenseCategory>[] = (
+  Object.entries(CATEGORY_MAP) as [ExpenseCategory, (typeof CATEGORY_MAP)[ExpenseCategory]][]
+).map(([value, meta]) => ({
+  value,
+  label: meta.label,
+  subtitle: meta.subtitle,
+  icon: meta.icon,
+  accentColor: meta.color,
+}))
 
 export function CreditCardsView({
   currentPeriod,
@@ -316,7 +335,7 @@ export function CreditCardsView({
   }
 
   return (
-    <div className="credit-view-stitch-root fade-in">
+    <div className="credit-view-stitch-root">
       {/* ── CABECERA INSTITUCIONAL STITCH ── */}
       <div className="credit-page-header">
         <div className="credit-title-wrap">
@@ -593,7 +612,7 @@ export function CreditCardsView({
       )}
 
       {/* ── TABLA DE CONCILIACIÓN & HISTORIAL STITCH ── */}
-      <div className="stitch-card transactions-table-panel" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="stitch-card transactions-table-panel" style={{ padding: 0, overflow: 'visible' }}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(49, 53, 62, 0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--color-on-surface, #dfe2ee)' }}>
@@ -644,7 +663,7 @@ export function CreditCardsView({
             )}
           </div>
         ) : (
-          <div className="stitch-table-container">
+          <div className="stitch-table-container" style={{ overflow: 'visible' }}>
             <table className="stitch-table">
               <thead>
                 <tr>
@@ -683,17 +702,14 @@ export function CreditCardsView({
                           />
                         </td>
                         <td style={{ fontSize: 11.5, color: 'var(--gold-primary)' }}>{card?.name}</td>
-                        <td>
-                          <select
-                            className="sandbox-edit-select"
-                            style={{ minWidth: 140 }}
+                        <td style={{ minWidth: 185 }}>
+                          <CustomIconSelect
+                            options={CREDIT_CATEGORY_OPTIONS}
                             value={editTxForm.category}
-                            onChange={e => setEditTxForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}
-                          >
-                            {Object.entries(CATEGORY_MAP).map(([k, v]) => (
-                              <option key={k} value={k}>{v.label}</option>
-                            ))}
-                          </select>
+                            onChange={val => setEditTxForm(p => ({ ...p, category: val }))}
+                            compact
+                            ariaLabel="Categoría"
+                          />
                         </td>
                         <td>—</td>
                         <td>
@@ -740,8 +756,8 @@ export function CreditCardsView({
                         {card?.name || 'Tarjeta'} (•••• {card?.lastFourDigits})
                       </td>
                       <td>
-                        <span className="sandbox-type-pill in">
-                          {c.emoji} {c.label}
+                        <span className="sandbox-type-pill in" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          {c.icon} {c.label}
                         </span>
                       </td>
                       <td>
@@ -788,29 +804,29 @@ export function CreditCardsView({
         )}
       </div>
 
-      {/* ── MODAL PARA REGISTRAR CARGO / CONSUMO ── */}
-      {showTxModal && (
-        <div className="modal-overlay" onClick={() => setShowTxModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">
+      {/* ── MODAL PARA REGISTRAR CARGO / CONSUMO (PORTAL EN DOCUMENT.BODY) ── */}
+      {showTxModal && createPortal(
+        <div className="aureus-modal-backdrop" onClick={() => setShowTxModal(false)}>
+          <div className="aureus-modal-card" style={{ overflow: 'visible' }} onClick={e => e.stopPropagation()}>
+            <div className="aureus-modal-header">
+              <h2 className="modal-title" style={{ margin: 0 }}>
                 <Plus size={16} className="text-gold" />
                 <span>Registrar Cargo en Tarjeta</span>
               </h2>
               <button
                 type="button"
-                className="modal-close"
+                className="aureus-modal-close"
                 onClick={() => setShowTxModal(false)}
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleAddTx}>
-              <div className="modal-form-group">
-                <label className="modal-label">Concepto / Comercio</label>
+            <form onSubmit={handleAddTx} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label className="aureus-field-label">Concepto / Comercio</label>
                 <input
-                  className="modal-input"
+                  className="aureus-adaptive-input"
                   placeholder="Ej: Supermercado Nacional, Hotel, Vuelo..."
                   value={txForm.description}
                   onChange={e => setTxForm(p => ({ ...p, description: e.target.value }))}
@@ -820,13 +836,13 @@ export function CreditCardsView({
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Monto (RD$)</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Monto (RD$)</label>
                   <input
                     type="number"
                     step="0.01"
                     min="0.01"
-                    className="modal-input"
+                    className="aureus-adaptive-input"
                     placeholder="0.00"
                     value={txForm.amount}
                     onChange={e => setTxForm(p => ({ ...p, amount: e.target.value }))}
@@ -834,10 +850,10 @@ export function CreditCardsView({
                   />
                 </div>
 
-                <div className="modal-form-group">
-                  <label className="modal-label">Tarjeta</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Tarjeta</label>
                   <select
-                    className="modal-select"
+                    className="aureus-adaptive-input"
                     value={txForm.cardId}
                     onChange={e => setTxForm(p => ({ ...p, cardId: e.target.value }))}
                     required
@@ -852,23 +868,20 @@ export function CreditCardsView({
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Categoría</label>
-                  <select
-                    className="modal-select"
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Categoría</label>
+                  <CustomIconSelect
+                    options={CREDIT_CATEGORY_OPTIONS}
                     value={txForm.category}
-                    onChange={e => setTxForm(p => ({ ...p, category: e.target.value as ExpenseCategory }))}
-                  >
-                    {Object.entries(CATEGORY_MAP).map(([k, v]) => (
-                      <option key={k} value={k}>{v.emoji} {v.label}</option>
-                    ))}
-                  </select>
+                    onChange={val => setTxForm(p => ({ ...p, category: val }))}
+                    ariaLabel="Categoría"
+                  />
                 </div>
 
-                <div className="modal-form-group">
-                  <label className="modal-label">Cuotas</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Cuotas</label>
                   <select
-                    className="modal-select"
+                    className="aureus-adaptive-input"
                     value={txForm.installments}
                     onChange={e => setTxForm(p => ({ ...p, installments: parseInt(e.target.value, 10) }))}
                   >
@@ -880,24 +893,24 @@ export function CreditCardsView({
                 </div>
               </div>
 
-              <div className="modal-form-group">
-                <label className="modal-label">
-                  <Calendar size={13} className="text-gold" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label className="aureus-field-label">
+                  <Calendar size={13} className="text-gold" style={{ marginRight: 4, verticalAlign: 'middle' }} />
                   <span>Fecha</span>
                 </label>
                 <input
                   type="date"
-                  className="modal-input"
+                  className="aureus-adaptive-input"
                   value={txForm.date}
                   onChange={e => setTxForm(p => ({ ...p, date: e.target.value }))}
                   required
                 />
               </div>
 
-              <div className="modal-footer">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="aureus-btn-secondary"
                   onClick={() => setShowTxModal(false)}
                 >
                   Cancelar
@@ -909,39 +922,40 @@ export function CreditCardsView({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* ── MODAL PARA ABONAR A DEUDA ── */}
-      {showAbonoModal && activeCard && cardHealth && (
-        <div className="modal-overlay" onClick={() => setShowAbonoModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">
+      {/* ── MODAL PARA ABONAR A DEUDA (PORTAL EN DOCUMENT.BODY) ── */}
+      {showAbonoModal && activeCard && cardHealth && createPortal(
+        <div className="aureus-modal-backdrop" onClick={() => setShowAbonoModal(false)}>
+          <div className="aureus-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="aureus-modal-header">
+              <h2 className="modal-title" style={{ margin: 0 }}>
                 <ArrowDownCircle size={16} className="text-emerald" />
                 <span>Abonar a Deuda: {activeCard.name}</span>
               </h2>
               <button
                 type="button"
-                className="modal-close"
+                className="aureus-modal-close"
                 onClick={() => setShowAbonoModal(false)}
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleApplyAbono}>
+            <form onSubmit={handleApplyAbono} style={{ padding: 24 }}>
               <div style={{ marginBottom: 14, fontSize: 12.5, color: 'var(--text-secondary)' }}>
                 Deuda Total Pendiente: <strong className="text-rose">{formatCurrency(cardHealth.totalDebt)}</strong>
               </div>
 
               <div className="modal-form-group">
-                <label className="modal-label">Monto a Abonar (RD$)</label>
+                <label className="aureus-field-label">Monto a Abonar (RD$)</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0.01"
-                  className="modal-input"
+                  className="aureus-adaptive-input"
                   value={abonoAmount}
                   onChange={e => setAbonoAmount(e.target.value)}
                   required
@@ -978,10 +992,10 @@ export function CreditCardsView({
                 </div>
               )}
 
-              <div className="modal-footer">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="aureus-btn-secondary"
                   onClick={() => setShowAbonoModal(false)}
                 >
                   Cerrar
@@ -992,32 +1006,33 @@ export function CreditCardsView({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* ── MODAL PARA CREAR / EDITAR TARJETA ── */}
-      {showCardModal && (
-        <div className="modal-overlay" onClick={() => setShowCardModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">
+      {/* ── MODAL PARA CREAR / EDITAR TARJETA (PORTAL EN DOCUMENT.BODY) ── */}
+      {showCardModal && createPortal(
+        <div className="aureus-modal-backdrop" onClick={() => setShowCardModal(false)}>
+          <div className="aureus-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="aureus-modal-header">
+              <h2 className="modal-title" style={{ margin: 0 }}>
                 <CardIcon size={16} className="text-gold" />
                 <span>{editingCard ? 'Editar Tarjeta' : 'Nueva Tarjeta'}</span>
               </h2>
               <button
                 type="button"
-                className="modal-close"
+                className="aureus-modal-close"
                 onClick={() => setShowCardModal(false)}
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveCard}>
-              <div className="modal-form-group">
-                <label className="modal-label">Nombre de la Tarjeta</label>
+            <form onSubmit={handleSaveCard} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label className="aureus-field-label">Nombre de la Tarjeta</label>
                 <input
-                  className="modal-input"
+                  className="aureus-adaptive-input"
                   placeholder="Ej: Visa Signature, Mastercard Platinum"
                   value={cardForm.name}
                   onChange={e => setCardForm(p => ({ ...p, name: e.target.value }))}
@@ -1026,23 +1041,23 @@ export function CreditCardsView({
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Banco</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Banco</label>
                   <input
-                    className="modal-input"
+                    className="aureus-adaptive-input"
                     placeholder="Ej: Banco BHD"
                     value={cardForm.bank}
                     onChange={e => setCardForm(p => ({ ...p, bank: e.target.value }))}
                     required
                   />
                 </div>
-                <div className="modal-form-group">
-                  <label className="modal-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <span>Últimos 4 Dígitos</span>
                     <span style={{ fontSize: 9.5, color: 'var(--gold-primary)', display: 'inline-flex', alignItems: 'center', gap: 2 }} title="Protección PCI-DSS: Nunca ingreses número completo ni CVV"><ShieldCheck size={11} /> Seguro</span>
                   </label>
                   <input
-                    className="modal-input"
+                    className="aureus-adaptive-input"
                     maxLength={4}
                     inputMode="numeric"
                     pattern="[0-9]{4}"
@@ -1054,22 +1069,22 @@ export function CreditCardsView({
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Límite (RD$)</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Límite (RD$)</label>
                   <input
                     type="number"
                     min="1"
-                    className="modal-input"
+                    className="aureus-adaptive-input"
                     placeholder="100000"
                     value={cardForm.creditLimit}
                     onChange={e => setCardForm(p => ({ ...p, creditLimit: e.target.value }))}
                     required
                   />
                 </div>
-                <div className="modal-form-group">
-                  <label className="modal-label">Estilo / Color</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Estilo / Color</label>
                   <select
-                    className="modal-select"
+                    className="aureus-adaptive-input"
                     value={cardForm.color}
                     onChange={e => setCardForm(p => ({ ...p, color: e.target.value as CardThemeColor }))}
                   >
@@ -1083,25 +1098,25 @@ export function CreditCardsView({
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="modal-form-group">
-                  <label className="modal-label">Día de Corte (1-31)</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Día de Corte (1-31)</label>
                   <input
                     type="number"
                     min="1"
                     max="31"
-                    className="modal-input"
+                    className="aureus-adaptive-input"
                     value={cardForm.cutoffDay}
                     onChange={e => setCardForm(p => ({ ...p, cutoffDay: parseInt(e.target.value, 10) || 1 }))}
                     required
                   />
                 </div>
-                <div className="modal-form-group">
-                  <label className="modal-label">Día Límite Pago (1-31)</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Día Límite Pago (1-31)</label>
                   <input
                     type="number"
                     min="1"
                     max="31"
-                    className="modal-input"
+                    className="aureus-adaptive-input"
                     value={cardForm.paymentDueDay}
                     onChange={e => setCardForm(p => ({ ...p, paymentDueDay: parseInt(e.target.value, 10) || 1 }))}
                     required
@@ -1109,10 +1124,10 @@ export function CreditCardsView({
                 </div>
               </div>
 
-              <div className="modal-footer">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="aureus-btn-secondary"
                   onClick={() => setShowCardModal(false)}
                 >
                   Cancelar
@@ -1123,7 +1138,8 @@ export function CreditCardsView({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Plus,
   Pencil,
@@ -338,15 +339,22 @@ export function IncomesView({
         )}
       </div>
 
-      {/* ── MODAL PARA REGISTRAR INGRESO ── */}
-      {isModalOpen && (
-        <div className="aureus-modal-backdrop">
-          <div className="aureus-modal-card" style={{ overflow: 'visible' }}>
+      {/* ── MODAL PARA REGISTRAR INGRESO (PORTAL EN DOCUMENT.BODY) ── */}
+      {isModalOpen && createPortal(
+        <div
+          className="aureus-modal-backdrop"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="aureus-modal-card"
+            style={{ overflow: 'visible' }}
+            onClick={e => e.stopPropagation()}
+          >
             <div className="aureus-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                 <Plus size={18} color="#34D399" /> Registrar Nuevo Ingreso
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="aureus-modal-close"><X size={18} /></button>
+              <button type="button" onClick={() => setIsModalOpen(false)} className="aureus-modal-close"><X size={18} /></button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -411,7 +419,8 @@ export function IncomesView({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
