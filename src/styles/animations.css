@@ -28,8 +28,8 @@ html.theme-transitioning *::after {
   }
   100% {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
+    transform: none;
+    -webkit-transform: none;
   }
 }
 
@@ -40,7 +40,7 @@ html.theme-transitioning *::after {
   }
   100% {
     opacity: 1;
-    -webkit-transform: translate3d(0, 0, 0);
+    -webkit-transform: none;
   }
 }
 
@@ -50,9 +50,6 @@ html.theme-transitioning *::after {
 .sentinel-dashboard-container {
   animation: aureusFadeSlideUp 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
   -webkit-animation: aureusFadeSlideUp 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  will-change: transform, opacity;
 }
 
 /* Gentle Scale Entrance for Modals and Overlays */

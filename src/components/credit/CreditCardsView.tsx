@@ -807,7 +807,7 @@ export function CreditCardsView({
       {/* ── MODAL PARA REGISTRAR CARGO / CONSUMO (PORTAL EN DOCUMENT.BODY) ── */}
       {showTxModal && createPortal(
         <div className="aureus-modal-backdrop" onClick={() => setShowTxModal(false)}>
-          <div className="aureus-modal-card" style={{ overflow: 'visible' }} onClick={e => e.stopPropagation()}>
+          <div className="aureus-modal-card" onClick={e => e.stopPropagation()}>
             <div className="aureus-modal-header">
               <h2 className="modal-title" style={{ margin: 0 }}>
                 <Plus size={16} className="text-gold" />
@@ -822,7 +822,7 @@ export function CreditCardsView({
               </button>
             </div>
 
-            <form onSubmit={handleAddTx} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleAddTx} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label className="aureus-field-label">Concepto / Comercio</label>
                 <input
@@ -835,7 +835,7 @@ export function CreditCardsView({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="aureus-modal-grid-2">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label className="aureus-field-label">Monto (RD$)</label>
                   <input
@@ -867,7 +867,7 @@ export function CreditCardsView({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="aureus-modal-grid-2">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label className="aureus-field-label">Categoría</label>
                   <CustomIconSelect
@@ -1028,7 +1028,7 @@ export function CreditCardsView({
               </button>
             </div>
 
-            <form onSubmit={handleSaveCard} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleSaveCard} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label className="aureus-field-label">Nombre de la Tarjeta</label>
                 <input
@@ -1040,7 +1040,7 @@ export function CreditCardsView({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="aureus-modal-grid-2">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label className="aureus-field-label">Banco</label>
                   <input
@@ -1068,7 +1068,7 @@ export function CreditCardsView({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="aureus-modal-grid-2">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label className="aureus-field-label">Límite (RD$)</label>
                   <input
@@ -1097,7 +1097,7 @@ export function CreditCardsView({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="aureus-modal-grid-2">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label className="aureus-field-label">Día de Corte (1-31)</label>
                   <input

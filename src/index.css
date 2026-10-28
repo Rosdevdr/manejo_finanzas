@@ -4660,6 +4660,10 @@ path.recharts-curve[stroke="#D4AF37"] {
 }
 
 .fade-in,
+.dashboard-stitch-root,
+.sentinel-dashboard-container,
+.credit-view-stitch-root,
+.budget-stitch-root,
 .incomes-obsidian-root,
 .expenses-obsidian-root,
 .cash-obsidian-root {
@@ -4669,7 +4673,30 @@ path.recharts-curve[stroke="#D4AF37"] {
 }
 
 .modal-overlay {
+  overflow: hidden !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: clamp(12px, 2.5vh, 24px) !important;
+}
+
+.modal-card {
+  height: auto !important;
+  max-height: calc(100dvh - clamp(24px, 5vh, 48px)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.modal-header,
+.modal-footer {
+  flex-shrink: 0 !important;
+}
+
+.modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
   overflow-y: auto !important;
-  align-items: flex-start !important;
-  padding: 28px 16px 64px !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
 }

@@ -112,29 +112,35 @@
 .sentinel-category-val-4 { color: #F87171; }
 
 .sentinel-modal-header {
+  flex-shrink: 0;
+  padding: clamp(14px, 2vh, 20px) clamp(16px, 3vw, 24px);
   border-bottom: 1px solid var(--aur-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .sentinel-modal-close-btn {
   color: var(--aur-text-muted);
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, background 0.2s ease;
   background: transparent;
   border: none;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 8px;
 }
 
 .sentinel-modal-close-btn:hover {
   color: var(--aur-text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(128, 128, 128, 0.1);
 }
 
 .sentinel-modal-cancel-btn {
-  padding: 0.55rem 1.1rem;
+  padding: 0.6rem 1.2rem;
   border-radius: 0.65rem;
   color: var(--aur-text-secondary);
   background: transparent;
@@ -148,6 +154,28 @@
 .sentinel-modal-cancel-btn:hover {
   background: var(--aur-surface-card-hover);
   color: var(--aur-text-primary);
+}
+
+.sentinel-modal-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.6rem 1.25rem;
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, #E5C47A 0%, #C8A962 100%);
+  color: #090B10;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(200, 169, 98, 0.28);
+  transition: all 0.2s ease;
+}
+
+.sentinel-modal-submit-btn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
 }
 
 /* --- 1. Top Header & Sovereign Telemetry Bar --- */
@@ -1282,40 +1310,96 @@
   opacity: 0.9;
 }
 
-/* --- Modal Styles --- */
+/* --- Modal Styles (Fixed Shell, Inner-Content Scroll Only, Responsive) --- */
 .sentinel-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  z-index: 100;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100dvh;
+  background: rgba(6, 8, 14, 0.68);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: clamp(12px, 2.5vh, 24px) clamp(12px, 3vw, 24px);
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .sentinel-modal-card {
   background: var(--aur-surface-card);
   border: 1px solid var(--aur-border-subtle);
-  border-radius: 1.25rem;
-  width: 100%;
-  max-width: 480px;
-  padding: 1.75rem;
+  border-radius: 20px;
+  width: min(100%, 500px);
+  max-width: 500px;
+  height: auto;
+  max-height: calc(100dvh - clamp(24px, 5vh, 48px));
+  padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+}
+
+.sentinel-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(200, 169, 98, 0.3) transparent;
+  padding: clamp(16px, 2.5vh, 24px) clamp(16px, 3vw, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sentinel-modal-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.sentinel-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+@media (max-width: 540px) {
+  .sentinel-modal-overlay {
+    padding: 10px;
+  }
+  .sentinel-modal-card {
+    border-radius: 16px;
+    max-height: calc(100dvh - 20px);
+  }
+  .sentinel-modal-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
 .sentinel-form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .sentinel-form-label {
-  font-size: 0.8125rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--aur-text-secondary);
 }
@@ -1323,16 +1407,22 @@
 .sentinel-form-input {
   background: var(--aur-surface-low);
   border: 1px solid var(--aur-border-subtle);
-  border-radius: 0.625rem;
-  padding: 0.625rem 0.875rem;
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
   color: var(--aur-text-primary);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .sentinel-form-input:focus {
   border-color: var(--aur-gold-primary);
   box-shadow: 0 0 0 3px var(--aur-gold-glow);
+}
+
+[data-theme='light'] .sentinel-modal-overlay {
+  background: rgba(15, 23, 42, 0.45);
 }
 
 /* ==============================================================================

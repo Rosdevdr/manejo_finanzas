@@ -3,6 +3,7 @@
 // ==============================================================================
 
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Shield,
   ShieldAlert,
@@ -34,6 +35,7 @@ import {
   syncDailyUsdDopRate,
   type DailyExchangeRateState,
 } from '../../utils/currencyConverter'
+import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
 import './SentinelDashboardView.css'
 
 interface CommitmentItem {
@@ -168,6 +170,51 @@ const INITIAL_FEED: TelegramFeedItem[] = [
 
 const AVAILABLE_LIQUIDITY_DOP = 413950
 
+const COMMITMENT_CATEGORY_OPTIONS: CustomSelectOption<CommitmentItem['category']>[] = [
+  {
+    value: 'electric',
+    label: 'Energía Eléctrica',
+    subtitle: 'Edesur, Edenorte, Edeeste',
+    icon: <Zap size={15} />,
+    accentColor: '#EF4444',
+  },
+  {
+    value: 'telecom',
+    label: 'Telecomunicaciones & Internet',
+    subtitle: 'Claro, Altice, Starlink',
+    icon: <Wifi size={15} />,
+    accentColor: '#C8A962',
+  },
+  {
+    value: 'card',
+    label: 'Tarjeta de Crédito / Préstamo',
+    subtitle: 'Corte bancario sin intereses',
+    icon: <CreditCard size={15} />,
+    accentColor: '#818CF8',
+  },
+  {
+    value: 'education',
+    label: 'Educación & Colegiatura',
+    subtitle: 'Colegio, universidad, cursos',
+    icon: <School size={15} />,
+    accentColor: '#10B981',
+  },
+  {
+    value: 'water',
+    label: 'Agua & Servicios Municipales',
+    subtitle: 'CAASD, mantenimiento, basura',
+    icon: <Droplets size={15} />,
+    accentColor: '#38BDF8',
+  },
+  {
+    value: 'other',
+    label: 'Otro Compromiso Recurrente',
+    subtitle: 'Seguros, suscripciones, alquiler',
+    icon: <Calendar size={15} />,
+    accentColor: '#94A3B8',
+  },
+]
+
 export function SentinelDashboardView() {
   const [commitments, setCommitments] = useState<CommitmentItem[]>(INITIAL_COMMITMENTS)
   const [feed, setFeed] = useState<TelegramFeedItem[]>(INITIAL_FEED)
@@ -184,9 +231,21 @@ export function SentinelDashboardView() {
 
   // Formulario nuevo compromiso
   const [newBillName, setNewBillName] = useState('')
+  const [newBillCategory, setNewBillCategory] = useState<CommitmentItem['category']>('electric')
   const [newBillDay, setNewBillDay] = useState(15)
   const [newBillAmount, setNewBillAmount] = useState('2000')
   const [newBillLateFee, setNewBillLateFee] = useState('350')
+
+  useEffect(() => {
+    if (!isModalOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsModalOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isModalOpen])
 
   // Sincronización automática de la tasa de cambio del día
   useEffect(() => {
@@ -360,7 +419,7 @@ export function SentinelDashboardView() {
       id: `comm-${Date.now()}`,
       name: newBillName,
       monogram,
-      category: 'other',
+      category: newBillCategory,
       dueDayOfMonth: Number(newBillDay),
       dueDateStr: `${newBillDay} Oct 2026`,
       status: 'pending',
@@ -390,9 +449,9 @@ export function SentinelDashboardView() {
 
   return (
     <div className="sentinel-dashboard-container">
-      {/* Toast de celebración */}
-      {celebrationToast && (
-        <div className="fixed top-20 right-6 z-50 bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in backdrop-blur-md">
+      {/* Toast de celebración (Portal en document.body) */}
+      {celebrationToast && createPortal(
+        <div className="fixed top-20 right-6 z-[10050] bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in backdrop-blur-md">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
           <span className="font-semibold text-sm">{celebrationToast}</span>
           <button
@@ -402,7 +461,8 @@ export function SentinelDashboardView() {
           >
             <X className="w-4 h-4" />
           </button>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 1. Barra de Telemetría Soberana (Sin emojis, diseño Revolut / Stripe) */}
@@ -1136,13 +1196,19 @@ export function SentinelDashboardView() {
         </div>
       </div>
 
-      {/* Modal: Nuevo Compromiso Recurrente */}
-      {isModalOpen && (
-        <div className="sentinel-modal-overlay">
-          <div className="sentinel-modal-card">
-            <div className="flex items-center justify-between pb-2 sentinel-modal-header">
-              <h3 className="font-bold sentinel-title-text text-lg flex items-center gap-2">
-                <Shield className="w-5 h-5 text-amber-500" />
+      {/* Modal: Nuevo Compromiso Recurrente (Portal en document.body con scroll solo en el contenido) */}
+      {isModalOpen && createPortal(
+        <div
+          className="sentinel-modal-overlay"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="sentinel-modal-card"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sentinel-modal-header">
+              <h3 className="font-bold sentinel-title-text text-base sm:text-lg flex items-center gap-2.5 m-0">
+                <Shield className="w-5 h-5 text-amber-500 flex-shrink-0" />
                 <span>Nuevo Compromiso Recurrente</span>
               </h3>
               <button
@@ -1156,12 +1222,13 @@ export function SentinelDashboardView() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateCommitment} className="flex flex-col gap-4">
+            <form onSubmit={handleCreateCommitment} className="sentinel-modal-body">
               <div className="sentinel-form-group">
                 <label className="sentinel-form-label">Nombre del Servicio / Compromiso</label>
                 <input
                   type="text"
                   required
+                  autoFocus
                   placeholder="ej: Luz Edesur, Internet Claro, Tarjeta..."
                   value={newBillName}
                   onChange={e => setNewBillName(e.target.value)}
@@ -1169,7 +1236,17 @@ export function SentinelDashboardView() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="sentinel-form-group">
+                <label className="sentinel-form-label">Categoría del Compromiso</label>
+                <CustomIconSelect
+                  options={COMMITMENT_CATEGORY_OPTIONS}
+                  value={newBillCategory}
+                  onChange={val => setNewBillCategory(val)}
+                  ariaLabel="Categoría del Compromiso"
+                />
+              </div>
+
+              <div className="sentinel-modal-grid-2">
                 <div className="sentinel-form-group">
                   <label className="sentinel-form-label">Día de Corte (1 - 31)</label>
                   <input
@@ -1187,6 +1264,8 @@ export function SentinelDashboardView() {
                   <label className="sentinel-form-label">Monto Nominal (RD$)</label>
                   <input
                     type="number"
+                    min="1"
+                    step="0.01"
                     required
                     value={newBillAmount}
                     onChange={e => setNewBillAmount(e.target.value)}
@@ -1201,6 +1280,8 @@ export function SentinelDashboardView() {
                 </label>
                 <input
                   type="number"
+                  min="0"
+                  step="0.01"
                   required
                   value={newBillLateFee}
                   onChange={e => setNewBillLateFee(e.target.value)}
@@ -1211,7 +1292,7 @@ export function SentinelDashboardView() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="sentinel-modal-actions">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -1221,14 +1302,16 @@ export function SentinelDashboardView() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                  className="sentinel-modal-submit-btn"
                 >
-                  Guardar Compromiso
+                  <Plus size={15} />
+                  <span>Guardar Compromiso</span>
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

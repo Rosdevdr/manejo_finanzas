@@ -512,7 +512,6 @@ export function ExpensesView({
         >
           <div
             className="aureus-modal-card"
-            style={{ overflow: 'visible' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="aureus-modal-header">
@@ -522,7 +521,7 @@ export function ExpensesView({
               <button type="button" onClick={() => setIsModalOpen(false)} className="aureus-modal-close"><X size={18} /></button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {availableBalance !== undefined && (
                 <div className={`aureus-balance-guard-banner ${isOverdraftDraft || availableBalance <= 0 ? 'danger' : 'safe'}`}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -569,7 +568,7 @@ export function ExpensesView({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="aureus-modal-grid-2">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label className="aureus-field-label">Monto (RD$)</label>
                   <input
@@ -598,7 +597,7 @@ export function ExpensesView({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="aureus-modal-grid-2">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label className="aureus-field-label">Compromiso</label>
                   <CustomIconSelect
