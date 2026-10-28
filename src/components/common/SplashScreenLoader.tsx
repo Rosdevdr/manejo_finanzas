@@ -47,33 +47,34 @@ export const SplashScreenLoader: React.FC<SplashScreenLoaderProps> = ({
 
   return (
     <div
-      className={`splash-screen-overlay ${isExiting ? 'exiting' : ''} ${resolvedTheme === 'light' ? 'light-mode' : 'dark-mode'}`}
+      className={`aureus-system-loader splash-screen-overlay ${isExiting ? 'exiting' : ''} ${resolvedTheme === 'light' ? 'light-mode' : 'dark-mode'}`}
       data-theme={resolvedTheme}
+      id="aureus-system-loader"
       role="status"
       aria-live="polite"
       aria-label={`${message}. ${subtext}`}
     >
-      <div className="splash-screen-container">
+      <div className="aureus-loader-container splash-screen-container">
         {/* Logo AUREUS animado con aura contextual */}
-        <div className="splash-logo-wrapper">
-          <div className="splash-logo-halo" />
-          <AureusLogo size={120} className="splash-logo-svg" />
+        <div className="aureus-logo-wrapper splash-logo-wrapper">
+          <div className="aureus-logo-halo splash-logo-halo" />
+          <AureusLogo size={120} className="aureus-logo-svg splash-logo-svg" />
         </div>
 
         {/* Loader circular dorado / champagne */}
-        <div className="splash-loader-ring">
-          <div className="loader-ring" />
+        <div className="aureus-loader-ring splash-loader-ring">
+          <div className="aureus-ring-spinner loader-ring" />
         </div>
 
         {/* Textos informativos de carga */}
-        <div className="splash-text">
-          <p className="splash-loading-text">{message}</p>
-          <p className="splash-subtext">{subtext}</p>
+        <div className="aureus-loader-text splash-text">
+          <p className="aureus-loading-title splash-loading-text">{message}</p>
+          <p className="aureus-loading-subtitle splash-subtext">{subtext}</p>
         </div>
 
         {/* Barra de progreso fluida de alta precisión */}
-        <div className="splash-progress-track">
-          <div className="splash-progress-indicator" />
+        <div className="aureus-progress-track splash-progress-track">
+          <div className="aureus-progress-bar splash-progress-indicator" />
         </div>
       </div>
     </div>

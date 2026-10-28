@@ -1,7 +1,7 @@
 /* ==============================================================================
    AUREUS · ULTRA-FLUID CROSS-BROWSER ANIMATION ENGINE
    Hardware-accelerated (GPU Compositor), zero layout-thrashing, multi-browser.
-   Works seamlessly across Chrome, Safari/WebKit, Edge, Firefox, iOS & Android.
+   Works seamlessly across Brave, Chrome, Safari/WebKit, Edge, Firefox, iOS & Android.
    ============================================================================== */
 
 /* ============================================ */
@@ -24,10 +24,12 @@ html.theme-transitioning *::after {
   0% {
     opacity: 0;
     transform: translate3d(0, 12px, 0);
+    -webkit-transform: translate3d(0, 12px, 0);
   }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
   }
 }
 
@@ -43,9 +45,13 @@ html.theme-transitioning *::after {
 }
 
 .fade-in,
-.animate-fade-in {
-  animation: aureusFadeSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  -webkit-animation: aureusFadeSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-fade-in,
+.dashboard-stitch-root,
+.sentinel-dashboard-container {
+  animation: aureusFadeSlideUp 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  -webkit-animation: aureusFadeSlideUp 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   will-change: transform, opacity;
 }
 
@@ -54,16 +60,29 @@ html.theme-transitioning *::after {
   0% {
     opacity: 0;
     transform: scale3d(0.96, 0.96, 1) translate3d(0, 6px, 0);
+    -webkit-transform: scale3d(0.96, 0.96, 1) translate3d(0, 6px, 0);
   }
   100% {
     opacity: 1;
     transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+    -webkit-transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+}
+
+@-webkit-keyframes aureusScaleIn {
+  0% {
+    opacity: 0;
+    -webkit-transform: scale3d(0.96, 0.96, 1) translate3d(0, 6px, 0);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
   }
 }
 
 .animate-scale-in {
-  animation: aureusScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  -webkit-animation: aureusScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: aureusScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  -webkit-animation: aureusScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
   will-change: transform, opacity;
 }
 
@@ -72,30 +91,79 @@ html.theme-transitioning *::after {
   0% {
     opacity: 0;
     transform: translate3d(18px, 0, 0);
+    -webkit-transform: translate3d(18px, 0, 0);
   }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}
+
+@-webkit-keyframes aureusSlideInRight {
+  0% {
+    opacity: 0;
+    -webkit-transform: translate3d(18px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: translate3d(0, 0, 0);
   }
 }
 
 .animate-slide-right {
-  animation: aureusSlideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  -webkit-animation: aureusSlideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: aureusSlideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  -webkit-animation: aureusSlideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
   will-change: transform, opacity;
 }
 
 /* ============================================ */
 /* 2. STAGGERED ORCHESTRATED ENTRANCES         */
 /* ============================================ */
-.stagger-container > *:nth-child(1) { animation-delay: 35ms; }
-.stagger-container > *:nth-child(2) { animation-delay: 70ms; }
-.stagger-container > *:nth-child(3) { animation-delay: 105ms; }
-.stagger-container > *:nth-child(4) { animation-delay: 140ms; }
-.stagger-container > *:nth-child(5) { animation-delay: 175ms; }
-.stagger-container > *:nth-child(6) { animation-delay: 210ms; }
-.stagger-container > *:nth-child(7) { animation-delay: 245ms; }
-.stagger-container > *:nth-child(8) { animation-delay: 280ms; }
+.stagger-container > *,
+.dashboard-hero-grid > *,
+.dashboard-flow-grid > *,
+.methods-grid-4 > *,
+.dashboard-tools-grid > *,
+.analysis-cards-grid > *,
+.analysis-comparative-grid > * {
+  animation: aureusFadeSlideUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  -webkit-animation: aureusFadeSlideUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.stagger-container > *:nth-child(1),
+.dashboard-hero-grid > *:nth-child(1),
+.dashboard-flow-grid > *:nth-child(1),
+.methods-grid-4 > *:nth-child(1),
+.dashboard-tools-grid > *:nth-child(1),
+.analysis-cards-grid > *:nth-child(1),
+.analysis-comparative-grid > *:nth-child(1) { animation-delay: 35ms; -webkit-animation-delay: 35ms; }
+
+.stagger-container > *:nth-child(2),
+.dashboard-hero-grid > *:nth-child(2),
+.dashboard-flow-grid > *:nth-child(2),
+.methods-grid-4 > *:nth-child(2),
+.dashboard-tools-grid > *:nth-child(2),
+.analysis-cards-grid > *:nth-child(2),
+.analysis-comparative-grid > *:nth-child(2) { animation-delay: 75ms; -webkit-animation-delay: 75ms; }
+
+.stagger-container > *:nth-child(3),
+.dashboard-hero-grid > *:nth-child(3),
+.dashboard-flow-grid > *:nth-child(3),
+.methods-grid-4 > *:nth-child(3),
+.dashboard-tools-grid > *:nth-child(3),
+.analysis-cards-grid > *:nth-child(3),
+.analysis-comparative-grid > *:nth-child(3) { animation-delay: 115ms; -webkit-animation-delay: 115ms; }
+
+.stagger-container > *:nth-child(4),
+.dashboard-hero-grid > *:nth-child(4),
+.methods-grid-4 > *:nth-child(4),
+.analysis-cards-grid > *:nth-child(4) { animation-delay: 155ms; -webkit-animation-delay: 155ms; }
+
+.stagger-container > *:nth-child(5) { animation-delay: 195ms; -webkit-animation-delay: 195ms; }
+.stagger-container > *:nth-child(6) { animation-delay: 235ms; -webkit-animation-delay: 235ms; }
 
 .stagger-item {
   opacity: 0;
@@ -107,13 +175,15 @@ html.theme-transitioning *::after {
 /* 3. SPECULAR SHINE / LUXURY SHIMMER SWEEP    */
 /* ============================================ */
 .specular-sweep,
-.aureus-shimmer-sweep {
+.aureus-shimmer-sweep,
+.stitch-card {
   position: relative;
   overflow: hidden;
 }
 
 .specular-sweep::after,
-.aureus-shimmer-sweep::after {
+.aureus-shimmer-sweep::after,
+.stitch-card::after {
   content: '';
   position: absolute;
   top: -60%;
@@ -123,7 +193,7 @@ html.theme-transitioning *::after {
   background: linear-gradient(
     65deg,
     transparent 35%,
-    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.06) 50%,
     transparent 65%
   );
   transform: translate3d(-100%, 0, 0) rotate(25deg);
@@ -135,13 +205,15 @@ html.theme-transitioning *::after {
 }
 
 .specular-sweep:hover::after,
-.aureus-shimmer-sweep:hover::after {
+.aureus-shimmer-sweep:hover::after,
+.stitch-card:hover::after {
   transform: translate3d(100%, 0, 0) rotate(25deg);
   -webkit-transform: translate3d(100%, 0, 0) rotate(25deg);
 }
 
 [data-theme='light'] .specular-sweep::after,
-[data-theme='light'] .aureus-shimmer-sweep::after {
+[data-theme='light'] .aureus-shimmer-sweep::after,
+[data-theme='light'] .stitch-card::after {
   background: linear-gradient(
     65deg,
     transparent 35%,
@@ -154,9 +226,11 @@ html.theme-transitioning *::after {
 @keyframes periodicShimmer {
   0% {
     transform: translate3d(-120%, 0, 0) rotate(25deg);
+    -webkit-transform: translate3d(-120%, 0, 0) rotate(25deg);
   }
   20%, 100% {
     transform: translate3d(120%, 0, 0) rotate(25deg);
+    -webkit-transform: translate3d(120%, 0, 0) rotate(25deg);
   }
 }
 
@@ -171,6 +245,9 @@ html.theme-transitioning *::after {
 .card-interactive,
 .aureus-card-interactive,
 .stitch-kpi-card,
+.stitch-card,
+.method-card,
+.analysis-advisor-card,
 .credit-kpi-card {
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
@@ -181,6 +258,9 @@ html.theme-transitioning *::after {
 .card-interactive:hover,
 .aureus-card-interactive:hover,
 .stitch-kpi-card:hover,
+.stitch-card:hover,
+.method-card:hover,
+.analysis-advisor-card:hover,
 .credit-kpi-card:hover {
   transform: translate3d(0, -3px, 0);
   -webkit-transform: translate3d(0, -3px, 0);
@@ -191,6 +271,9 @@ html.theme-transitioning *::after {
 [data-theme='light'] .card-interactive:hover,
 [data-theme='light'] .aureus-card-interactive:hover,
 [data-theme='light'] .stitch-kpi-card:hover,
+[data-theme='light'] .stitch-card:hover,
+[data-theme='light'] .method-card:hover,
+[data-theme='light'] .analysis-advisor-card:hover,
 [data-theme='light'] .credit-kpi-card:hover {
   box-shadow: 0 14px 30px -8px rgba(15, 23, 42, 0.12),
               0 4px 12px -2px rgba(15, 23, 42, 0.06);
@@ -207,6 +290,8 @@ html.theme-transitioning *::after {
 /* ============================================ */
 .btn-interactive,
 .stitch-btn-primary,
+.btn-stitch-gold,
+.btn-stitch-outline,
 .guide-btn-confirm,
 .terms-btn-primary {
   transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1),
@@ -217,6 +302,8 @@ html.theme-transitioning *::after {
 
 .btn-interactive:active,
 .stitch-btn-primary:active,
+.btn-stitch-gold:active,
+.btn-stitch-outline:active,
 .guide-btn-confirm:active,
 .terms-btn-primary:active {
   transform: scale3d(0.965, 0.965, 1) !important;
@@ -327,15 +414,25 @@ html.theme-transitioning *::after {
 }
 
 /* ============================================ */
-/* 9. ACCESSIBILITY & REDUCED MOTION           */
+/* 9. ACCESSIBILITY & REDUCED MOTION (SAFE)     */
 /* ============================================ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  /* Disable decorative parallax and large camera translations */
+  *:not(.loader-ring):not(.splash-progress-indicator):not(.aureus-ring-spinner):not(.aureus-progress-bar):not(.sentinel-pulse-dot):not([data-animate-essential="true"]) {
     scroll-behavior: auto !important;
+  }
+
+  /* Decorative specular sweeps and shimmers disabled for sensitive users */
+  .specular-sweep::after,
+  .aureus-shimmer-sweep::after,
+  .stitch-card::after,
+  .shimmer-active::after {
+    display: none !important;
+    animation: none !important;
+  }
+
+  /* Keep essential view reveals smooth without aggressive jarring motion */
+  .animate-slide-right {
+    animation: aureusFadeSlideUp 0.15s ease forwards;
   }
 }

@@ -60,10 +60,104 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+
+  <!-- Detección síncrona inmediata de tema (Sin FOUC y 100% compatible con Brave) -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('aureus_theme');
+        var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+        var theme = saved === 'light' || saved === 'dark' ? saved : (prefersLight ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
+  <style>
+    /* Pre-loader ultraliviano nativo visible al instante antes de que React cargue */
+    .aureus-instant-preloader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      background: radial-gradient(circle at 50% 40%, #10101A 0%, #060709 100%);
+      color: #F1D97E;
+      font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      z-index: 99999;
+      transition: opacity 0.25s ease;
+    }
+
+    [data-theme='light'] .aureus-instant-preloader {
+      background: radial-gradient(circle at 50% 36%, #FFFFFF 0%, #F8FAFC 54%, #EBF1F6 100%) !important;
+      color: #0F172A !important;
+    }
+
+    .aureus-instant-ring {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(201, 168, 76, 0.2);
+      border-top-color: #F1D97E;
+      border-right-color: #F59E0B;
+      border-radius: 50%;
+      animation: aureusPreSpin 0.85s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+      -webkit-animation: aureusPreSpin 0.85s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+    }
+
+    [data-theme='light'] .aureus-instant-ring {
+      border-color: #E2E8F0 !important;
+      border-top-color: #D97706 !important;
+      border-right-color: #B45309 !important;
+    }
+
+    .aureus-instant-text {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      opacity: 0.9;
+    }
+
+    [data-theme='light'] .aureus-instant-text {
+      color: #475569 !important;
+    }
+
+    @keyframes aureusPreSpin {
+      0% { transform: rotate(0deg); -webkit-transform: rotate(0deg); }
+      100% { transform: rotate(360deg); -webkit-transform: rotate(360deg); }
+    }
+    @-webkit-keyframes aureusPreSpin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div class="aureus-instant-preloader" id="aureus-instant-preloader">
+      <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 16px rgba(201, 168, 76, 0.4));">
+        <defs>
+          <linearGradient id="aureus-instant-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FCE592" />
+            <stop offset="35%" stopColor="#E5C365" />
+            <stop offset="70%" stopColor="#C9A84C" />
+            <stop offset="100%" stopColor="#997728" />
+          </linearGradient>
+        </defs>
+        <path d="M16 80 L44 14 L56 14 L36 62 L26 52 L16 80 Z" fill="url(#aureus-instant-grad)" />
+        <path d="M62 58 L72 80 L84 80 L67 48 L62 58 Z" fill="url(#aureus-instant-grad)" />
+        <path d="M50 14 L56 14 L68 38 L60 44 L50 14 Z" fill="url(#aureus-instant-grad)" />
+        <path d="M36 62 L52 74 L80 40 L76 36 L52 64 L42 56 Z" fill="url(#aureus-instant-grad)" />
+        <polygon points="86,30 68,36 78,46" fill="url(#aureus-instant-grad)" />
+      </svg>
+      <div class="aureus-instant-ring"></div>
+      <div class="aureus-instant-text">Cargando AUREUS...</div>
+    </div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
   <script>
     if ('serviceWorker' in navigator && window.location.protocol === 'https:') {

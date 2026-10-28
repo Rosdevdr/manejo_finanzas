@@ -1,4 +1,4 @@
-﻿/* ============================================ */
+/* ============================================ */
 /* OVERLAY & FONDOS                             */
 /* ============================================ */
 .transaction-confirmation-overlay {
@@ -434,18 +434,14 @@
 }
 
 /* ============================================ */
-/* ACCESIBILIDAD Y REDUCED MOTION               */
+/* ACCESIBILIDAD Y REDUCED MOTION (RESPETUOSO)  */
 /* ============================================ */
 @media (prefers-reduced-motion: reduce) {
-  .transaction-confirmation-overlay,
-  .transaction-flow-card,
-  .transaction-seal,
-  .seal-checkmark,
-  .summary-row,
+  .transaction-seal {
+    animation-duration: 1.5s !important;
+  }
   .seal-orbit-spin {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation-duration: 2.5s !important;
   }
 }
 

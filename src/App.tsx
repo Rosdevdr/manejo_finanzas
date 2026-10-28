@@ -169,6 +169,45 @@ export function App() {
 
   const periodLabel = useMemo(() => formatPeriodLabel(currentPeriod), [currentPeriod])
   const contentRef  = useRef<HTMLDivElement>(null)
+  const splashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const splashExitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearSplashTimers = () => {
+    if (splashTimerRef.current) {
+      clearTimeout(splashTimerRef.current)
+      splashTimerRef.current = null
+    }
+    if (splashExitTimerRef.current) {
+      clearTimeout(splashExitTimerRef.current)
+      splashExitTimerRef.current = null
+    }
+  }
+
+  // Orquestador unificado de pantallas de carga sincronizado con requestAnimationFrame
+  const triggerSplashLoader = (message: string, subtext: string, durationMs = 1100) => {
+    clearSplashTimers()
+    setSplashText({ message, subtext })
+    setIsExitingSplash(false)
+    setIsModuleLoading(true)
+
+    const scheduleTimers = () => {
+      splashTimerRef.current = setTimeout(() => {
+        setIsExitingSplash(true)
+        splashExitTimerRef.current = setTimeout(() => {
+          setIsModuleLoading(false)
+          setIsExitingSplash(false)
+        }, 380)
+      }, durationMs)
+    }
+
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(scheduleTimers)
+      })
+    } else {
+      scheduleTimers()
+    }
+  }
 
   useEffect(() => {
     if (contentRef.current) {
@@ -176,16 +215,11 @@ export function App() {
     }
   }, [activeTab])
 
-  // Splash inicial estilo Stripe al montar la plataforma
+  // Splash inicial estilo Stripe al montar la plataforma (garantizado en todos los navegadores)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsExitingSplash(true)
-      setTimeout(() => {
-        setIsModuleLoading(false)
-        setIsExitingSplash(false)
-      }, 400)
-    }, 1250)
-    return () => clearTimeout(timer)
+    triggerSplashLoader('Cargando AUREUS', 'Inicializando módulos financieros...', 1250)
+    return () => clearSplashTimers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Carga de módulos con micro-transición institucional
@@ -202,21 +236,27 @@ export function App() {
       'chat-advisor': 'Asistente IA AUREUS',
     }
 
-    setSplashText({
-      message: titles[tab] || 'Cargando AUREUS',
-      subtext: 'Sincronizando registros y balance...',
-    })
-    setIsModuleLoading(true)
-    setIsExitingSplash(false)
     setActiveTab(tab)
+    triggerSplashLoader(
+      titles[tab] || 'Cargando AUREUS',
+      'Sincronizando registros y balance...',
+      1100
+    )
+  }
 
-    setTimeout(() => {
-      setIsExitingSplash(true)
-      setTimeout(() => {
-        setIsModuleLoading(false)
-        setIsExitingSplash(false)
-      }, 350)
-    }, 1100)
+  // Transición fluida con pantalla de carga al entrar en Modo Demo
+  const handleEnterDemoMode = () => {
+    enterDemoMode()
+    triggerSplashLoader('Iniciando AUREUS', 'Preparando entorno financiero...', 1100)
+  }
+
+  // Transición fluida con pantalla de carga al iniciar sesión
+  const handleSignIn = async (email: string, pass: string) => {
+    const res = await signIn(email, pass)
+    if (!res.error && !res.needsMfa) {
+      triggerSplashLoader('Bienvenido a AUREUS', 'Sincronizando cuentas y balances...', 1100)
+    }
+    return res
   }
 
   // Mostrar pantalla de Login si no hay usuario ni modo demo (o si está en flujo de recuperación de contraseña o reto MFA)
@@ -224,11 +264,11 @@ export function App() {
     return (
       <>
         <LoginView
-          onSignIn={signIn}
+          onSignIn={handleSignIn}
           onSignUp={signUp}
           onSendPasswordReset={sendPasswordReset}
           onUpdateUserPassword={updateUserPassword}
-          onEnterDemoMode={enterDemoMode}
+          onEnterDemoMode={handleEnterDemoMode}
           isSupabaseConfigured={isSupabaseConfigured}
           isPasswordRecovery={isPasswordRecovery}
           onClearPasswordRecovery={clearPasswordRecovery}
@@ -243,6 +283,14 @@ export function App() {
           onClose={() => setShowTermsModal(false)}
           onOpenSecurity={() => setIsSecurityOpen(true)}
         />
+        {isModuleLoading && (
+          <SplashScreenLoader
+            message={splashText.message}
+            subtext={splashText.subtext}
+            isExiting={isExitingSplash}
+            theme={theme}
+          />
+        )}
         <ToastContainer toasts={toasts} onDismiss={dismiss} />
         <Analytics />
       </>

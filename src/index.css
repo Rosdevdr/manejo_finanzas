@@ -4630,15 +4630,19 @@ path.recharts-curve[stroke="#D4AF37"] {
   filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6));
 }
 
-/* ── Accessibility & Prefers-reduced-motion ── */
+/* ── Accessibility & Prefers-reduced-motion (Cross-Browser Safe) ── */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  /* Disable decorative parallax and large camera translations */
+  *:not(.loader-ring):not(.splash-progress-indicator):not(.aureus-ring-spinner):not(.aureus-progress-bar):not(.sentinel-pulse-dot):not([data-animate-essential="true"]) {
     scroll-behavior: auto !important;
+  }
+
+  /* Decorative specular sweeps and shimmers disabled for sensitive users */
+  .specular-sweep::after,
+  .aureus-shimmer-sweep::after,
+  .shimmer-active::after {
+    display: none !important;
+    animation: none !important;
   }
 }
 

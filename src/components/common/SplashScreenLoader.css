@@ -1,31 +1,36 @@
 /* ==============================================================================
-   AUREUS · SPLASH SCREEN & MODULE LOADER STYLES (LIGHT & DARK THEMES)
+   AUREUS · SHIELD-SAFE SYSTEM LOADER & MODULE SPLASH STYLES
+   Full cross-browser compatibility: Brave, Chrome, Safari, Edge & Firefox.
    ============================================================================== */
 
 /* ============================================ */
 /* OVERLAY & CONTENEDOR                         */
 /* ============================================ */
+.aureus-system-loader,
 .splash-screen-overlay {
   position: fixed;
   inset: 0;
   background: radial-gradient(circle at 50% 40%, #10101A 0%, #060709 100%);
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   z-index: 99999;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   animation: splashFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  -webkit-animation: splashFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity;
 }
 
+.aureus-system-loader.exiting,
 .splash-screen-overlay.exiting {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
 
+.aureus-loader-container,
 .splash-screen-container {
   display: flex;
   flex-direction: column;
@@ -34,11 +39,13 @@
   gap: 24px;
   padding: 24px;
   animation: splashContainerPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  -webkit-animation: splashContainerPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ============================================ */
 /* LOGO AUREUS ANIMADO                         */
 /* ============================================ */
+.aureus-logo-wrapper,
 .splash-logo-wrapper {
   position: relative;
   width: 140px;
@@ -48,32 +55,38 @@
   justify-content: center;
 }
 
+.aureus-logo-halo,
 .splash-logo-halo {
   position: absolute;
   inset: -20px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(201, 168, 76, 0.25) 0%, transparent 70%);
   animation: splashHaloPulse 2.4s ease-in-out infinite;
+  -webkit-animation: splashHaloPulse 2.4s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
+.aureus-logo-svg,
 .splash-logo-svg {
   width: 100%;
   height: 100%;
   filter: drop-shadow(0 0 25px rgba(201, 168, 76, 0.5));
   animation: splashLogoPulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  -webkit-animation: splashLogoPulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   will-change: transform, filter;
 }
 
 /* ============================================ */
 /* LOADER RING (ANILLO CIRCULAR DORADO)        */
 /* ============================================ */
+.aureus-loader-ring,
 .splash-loader-ring {
   position: relative;
   width: 48px;
   height: 48px;
 }
 
+.aureus-ring-spinner,
 .loader-ring {
   width: 100%;
   height: 100%;
@@ -81,7 +94,8 @@
   border-top-color: #F1D97E;
   border-right-color: var(--gold-primary, #F59E0B);
   border-radius: 50%;
-  animation: loaderRingSpin 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+  animation: loaderRingSpin 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite !important;
+  -webkit-animation: loaderRingSpin 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite !important;
   box-shadow: 0 0 20px rgba(201, 168, 76, 0.3);
   will-change: transform;
 }
@@ -89,11 +103,14 @@
 /* ============================================ */
 /* TEXTO INFORMATIVO                           */
 /* ============================================ */
+.aureus-loader-text,
 .splash-text {
   text-align: center;
   animation: splashTextFadeIn 0.45s ease-out 0.15s both;
+  -webkit-animation: splashTextFadeIn 0.45s ease-out 0.15s both;
 }
 
+.aureus-loading-title,
 .splash-loading-text {
   font-size: 19px;
   font-weight: 700;
@@ -104,6 +121,7 @@
   text-shadow: 0 0 16px rgba(201, 168, 76, 0.3);
 }
 
+.aureus-loading-subtitle,
 .splash-subtext {
   font-size: 12.5px;
   color: var(--text-muted, #94A3B8);
@@ -115,6 +133,7 @@
 /* ============================================ */
 /* BARRA DE PROGRESO FLUIDA                    */
 /* ============================================ */
+.aureus-progress-track,
 .splash-progress-track {
   width: 160px;
   height: 3px;
@@ -125,6 +144,7 @@
   margin-top: 2px;
 }
 
+.aureus-progress-bar,
 .splash-progress-indicator {
   position: absolute;
   top: 0;
@@ -134,132 +154,234 @@
   border-radius: 9999px;
   background: linear-gradient(90deg, #F3CA65 0%, #C9A84C 100%);
   box-shadow: 0 0 12px rgba(243, 202, 101, 0.4);
-  animation: splashProgressFlow 1.35s ease-in-out infinite;
+  animation: splashProgressFlow 1.35s ease-in-out infinite !important;
+  -webkit-animation: splashProgressFlow 1.35s ease-in-out infinite !important;
   will-change: transform;
 }
 
 /* ============================================ */
 /* MODO CLARO (LIGHT THEME OVERRIDES)          */
 /* ============================================ */
+.aureus-system-loader.light-mode,
 .splash-screen-overlay.light-mode,
+[data-theme='light'] .aureus-system-loader,
 [data-theme='light'] .splash-screen-overlay {
   background: radial-gradient(circle at 50% 36%, #FFFFFF 0%, #F8FAFC 54%, #EBF1F6 100%) !important;
 }
 
-.splash-screen-overlay.light-mode .splash-logo-halo,
-[data-theme='light'] .splash-screen-overlay .splash-logo-halo {
+.aureus-system-loader.light-mode .splash-logo-halo,
+.aureus-system-loader.light-mode .aureus-logo-halo,
+[data-theme='light'] .splash-logo-halo,
+[data-theme='light'] .aureus-logo-halo {
   background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.04) 50%, transparent 70%) !important;
 }
 
-.splash-screen-overlay.light-mode .splash-logo-svg,
-[data-theme='light'] .splash-screen-overlay .splash-logo-svg {
+.aureus-system-loader.light-mode .splash-logo-svg,
+.aureus-system-loader.light-mode .aureus-logo-svg,
+[data-theme='light'] .splash-logo-svg,
+[data-theme='light'] .aureus-logo-svg {
   filter: drop-shadow(0 8px 24px rgba(217, 119, 6, 0.22)) !important;
 }
 
-.splash-screen-overlay.light-mode .loader-ring,
-[data-theme='light'] .splash-screen-overlay .loader-ring {
+.aureus-system-loader.light-mode .loader-ring,
+.aureus-system-loader.light-mode .aureus-ring-spinner,
+[data-theme='light'] .loader-ring,
+[data-theme='light'] .aureus-ring-spinner {
   border-color: #E2E8F0 !important;
   border-top-color: #D97706 !important;
   border-right-color: #B45309 !important;
   box-shadow: 0 4px 18px rgba(217, 119, 6, 0.16) !important;
 }
 
-.splash-screen-overlay.light-mode .splash-loading-text,
-[data-theme='light'] .splash-screen-overlay .splash-loading-text {
+.aureus-system-loader.light-mode .splash-loading-text,
+.aureus-system-loader.light-mode .aureus-loading-title,
+[data-theme='light'] .splash-loading-text,
+[data-theme='light'] .aureus-loading-title {
   color: #0F172A !important;
   text-shadow: none !important;
   font-weight: 700 !important;
 }
 
-.splash-screen-overlay.light-mode .splash-subtext,
-[data-theme='light'] .splash-screen-overlay .splash-subtext {
+.aureus-system-loader.light-mode .splash-subtext,
+.aureus-system-loader.light-mode .aureus-loading-subtitle,
+[data-theme='light'] .splash-subtext,
+[data-theme='light'] .aureus-loading-subtitle {
   color: #64748B !important;
   font-weight: 500 !important;
 }
 
-.splash-screen-overlay.light-mode .splash-progress-track,
-[data-theme='light'] .splash-screen-overlay .splash-progress-track {
+.aureus-system-loader.light-mode .splash-progress-track,
+.aureus-system-loader.light-mode .aureus-progress-track,
+[data-theme='light'] .splash-progress-track,
+[data-theme='light'] .aureus-progress-track {
   background: #E2E8F0 !important;
 }
 
-.splash-screen-overlay.light-mode .splash-progress-indicator,
-[data-theme='light'] .splash-screen-overlay .splash-progress-indicator {
+.aureus-system-loader.light-mode .splash-progress-indicator,
+.aureus-system-loader.light-mode .aureus-progress-bar,
+[data-theme='light'] .splash-progress-indicator,
+[data-theme='light'] .aureus-progress-bar {
   background: linear-gradient(90deg, #F59E0B 0%, #D97706 50%, #B45309 100%) !important;
   box-shadow: 0 0 10px rgba(217, 119, 6, 0.3) !important;
 }
 
 /* ============================================ */
-/* KEYFRAMES ACELERADOS POR GPU                 */
+/* KEYFRAMES ACELERADOS POR GPU (COMPATIBILIDAD)*/
 /* ============================================ */
 @keyframes splashFadeIn {
-  from {
+  0% {
     opacity: 0;
   }
-  to {
+  100% {
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes splashFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
     opacity: 1;
   }
 }
 
 @keyframes splashContainerPop {
-  from {
+  0% {
     opacity: 0;
-    transform: scale3d(0.96, 0.96, 1) translateY(8px);
+    transform: scale(0.96) translateY(8px);
+    -webkit-transform: scale(0.96) translateY(8px);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: scale3d(1, 1, 1) translateY(0);
+    transform: scale(1) translateY(0);
+    -webkit-transform: scale(1) translateY(0);
+  }
+}
+
+@-webkit-keyframes splashContainerPop {
+  0% {
+    opacity: 0;
+    -webkit-transform: scale(0.96) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: scale(1) translateY(0);
   }
 }
 
 @keyframes splashLogoPulse {
   0%, 100% {
-    transform: scale3d(1, 1, 1);
+    transform: scale(1);
+    -webkit-transform: scale(1);
   }
   50% {
-    transform: scale3d(1.06, 1.06, 1);
+    transform: scale(1.06);
+    -webkit-transform: scale(1.06);
+  }
+}
+
+@-webkit-keyframes splashLogoPulse {
+  0%, 100% {
+    -webkit-transform: scale(1);
+  }
+  50% {
+    -webkit-transform: scale(1.06);
   }
 }
 
 @keyframes splashHaloPulse {
   0%, 100% {
-    transform: scale3d(0.92, 0.92, 1);
+    transform: scale(0.92);
+    -webkit-transform: scale(0.92);
     opacity: 0.45;
   }
   50% {
-    transform: scale3d(1.15, 1.15, 1);
+    transform: scale(1.15);
+    -webkit-transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+@-webkit-keyframes splashHaloPulse {
+  0%, 100% {
+    -webkit-transform: scale(0.92);
+    opacity: 0.45;
+  }
+  50% {
+    -webkit-transform: scale(1.15);
     opacity: 0.85;
   }
 }
 
 @keyframes loaderRingSpin {
-  from {
+  0% {
     transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
   }
-  to {
+  100% {
     transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes loaderRingSpin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
   }
 }
 
 @keyframes splashTextFadeIn {
-  from {
+  0% {
     opacity: 0;
-    transform: translate3d(0, 8px, 0);
+    transform: translateY(8px);
+    -webkit-transform: translateY(8px);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: translateY(0);
+    -webkit-transform: translateY(0);
+  }
+}
+
+@-webkit-keyframes splashTextFadeIn {
+  0% {
+    opacity: 0;
+    -webkit-transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: translateY(0);
   }
 }
 
 @keyframes splashProgressFlow {
   0% {
     transform: translate3d(-100%, 0, 0);
+    -webkit-transform: translate3d(-100%, 0, 0);
   }
   50% {
     transform: translate3d(150%, 0, 0);
+    -webkit-transform: translate3d(150%, 0, 0);
   }
   100% {
     transform: translate3d(350%, 0, 0);
+    -webkit-transform: translate3d(350%, 0, 0);
+  }
+}
+
+@-webkit-keyframes splashProgressFlow {
+  0% {
+    -webkit-transform: translate3d(-100%, 0, 0);
+  }
+  50% {
+    -webkit-transform: translate3d(150%, 0, 0);
+  }
+  100% {
+    -webkit-transform: translate3d(350%, 0, 0);
   }
 }
 
@@ -267,38 +389,53 @@
 /* RESPONSIVE (< 640px)                         */
 /* ============================================ */
 @media (max-width: 640px) {
+  .aureus-logo-wrapper,
   .splash-logo-wrapper {
     width: 110px;
     height: 110px;
   }
+  .aureus-loader-ring,
   .splash-loader-ring {
     width: 40px;
     height: 40px;
   }
+  .aureus-loading-title,
   .splash-loading-text {
     font-size: 17px;
   }
+  .aureus-loading-subtitle,
   .splash-subtext {
     font-size: 12px;
   }
+  .aureus-progress-track,
   .splash-progress-track {
     width: 130px;
   }
 }
 
 /* ============================================ */
-/* ACCESIBILIDAD Y REDUCED MOTION               */
+/* ACCESIBILIDAD Y REDUCED MOTION (RESPETUOSO)  */
 /* ============================================ */
 @media (prefers-reduced-motion: reduce) {
-  .splash-screen-overlay,
-  .splash-screen-container,
-  .splash-logo-svg,
-  .splash-logo-halo,
-  .loader-ring,
-  .splash-text,
+  /* Reduce halo scale to avoid visual pulsation, but keep gentle rotation so status is clear */
+  .aureus-logo-halo,
+  .splash-logo-halo {
+    animation: none !important;
+    opacity: 0.5 !important;
+    transform: none !important;
+  }
+  .aureus-logo-svg,
+  .splash-logo-svg {
+    animation: none !important;
+    transform: none !important;
+  }
+  /* Essential loading indicator remains active with smooth, gentle spin */
+  .aureus-ring-spinner,
+  .loader-ring {
+    animation-duration: 1.2s !important;
+  }
+  .aureus-progress-bar,
   .splash-progress-indicator {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation-duration: 2s !important;
   }
 }
