@@ -26,8 +26,14 @@ import {
   Home,
   Activity,
   PieChart,
+  RefreshCw,
 } from 'lucide-react'
 import { apiClient } from '../../services/apiClient'
+import {
+  getStoredDailyExchangeRate,
+  syncDailyUsdDopRate,
+  type DailyExchangeRateState,
+} from '../../utils/currencyConverter'
 import './SentinelDashboardView.css'
 
 interface CommitmentItem {
@@ -160,6 +166,8 @@ const INITIAL_FEED: TelegramFeedItem[] = [
   },
 ]
 
+const AVAILABLE_LIQUIDITY_DOP = 413950
+
 export function SentinelDashboardView() {
   const [commitments, setCommitments] = useState<CommitmentItem[]>(INITIAL_COMMITMENTS)
   const [feed, setFeed] = useState<TelegramFeedItem[]>(INITIAL_FEED)
@@ -168,11 +176,55 @@ export function SentinelDashboardView() {
   const [simText, setSimText] = useState('')
   const [celebrationToast, setCelebrationToast] = useState<string | null>(null)
 
+  // Estado de la Tasa de Cambio Diaria (USD -> DOP) con respaldo automático a la tasa anterior
+  const [fxState, setFxState] = useState<DailyExchangeRateState>(() =>
+    getStoredDailyExchangeRate()
+  )
+  const [isSyncingFx, setIsSyncingFx] = useState(false)
+
   // Formulario nuevo compromiso
   const [newBillName, setNewBillName] = useState('')
   const [newBillDay, setNewBillDay] = useState(15)
   const [newBillAmount, setNewBillAmount] = useState('2000')
   const [newBillLateFee, setNewBillLateFee] = useState('350')
+
+  // Sincronización automática de la tasa de cambio del día
+  useEffect(() => {
+    let isMounted = true
+    setIsSyncingFx(true)
+    syncDailyUsdDopRate(false)
+      .then(result => {
+        if (isMounted) {
+          setFxState(result)
+          setIsSyncingFx(false)
+        }
+      })
+      .catch(() => {
+        if (isMounted) setIsSyncingFx(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const handleRefreshExchangeRate = async () => {
+    if (isSyncingFx) return
+    setIsSyncingFx(true)
+    const updated = await syncDailyUsdDopRate(true)
+    setFxState(updated)
+    setIsSyncingFx(false)
+  }
+
+  // Equivalente en USD calculado con la tasa del día (o la anterior si no varió)
+  const liquidityInUsdFormatted = useMemo(() => {
+    const rate = fxState.rate > 0 ? fxState.rate : 60.25
+    const usdAmount = AVAILABLE_LIQUIDITY_DOP / rate
+    return usdAmount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }, [fxState.rate])
 
   // Carga inicial del backend
   useEffect(() => {
@@ -417,8 +469,44 @@ export function SentinelDashboardView() {
             <div className="sentinel-hero-balance-block">
               <span className="sentinel-hero-overline">Liquidez Inmediata Disponible</span>
               <div className="sentinel-hero-balance-row">
-                <h1 className="sentinel-hero-amount tabular-nums">RD$ 413,950.00</h1>
-                <span className="sentinel-hero-usd tabular-nums">~ US$ 6,882.00</span>
+                <h1 className="sentinel-hero-amount tabular-nums">
+                  RD$ {AVAILABLE_LIQUIDITY_DOP.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </h1>
+                <span className="sentinel-hero-usd tabular-nums">
+                  ~ US$ {liquidityInUsdFormatted}
+                </span>
+              </div>
+
+              {/* Píldora de Tasa de Cambio del Día (USD/DOP) con respaldo a tasa anterior */}
+              <div className="sentinel-fx-rate-bar">
+                <div className="sentinel-fx-rate-main tabular-nums">
+                  <span className="sentinel-fx-pair">Tasa USD/DOP:</span>
+                  <strong className="sentinel-fx-value">RD$ {fxState.rate.toFixed(2)}</strong>
+                </div>
+
+                <span className="sentinel-fx-divider">•</span>
+
+                <span
+                  className={`sentinel-fx-status-chip ${
+                    fxState.status === 'updated' ? 'updated' : 'unchanged'
+                  }`}
+                >
+                  {fxState.status === 'updated'
+                    ? `Actualizada hoy (${fxState.delta >= 0 ? `+${fxState.delta.toFixed(2)}` : fxState.delta.toFixed(2)})`
+                    : `Sin cambios · Tasa anterior (${fxState.dateISO})`}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={handleRefreshExchangeRate}
+                  disabled={isSyncingFx}
+                  className="sentinel-fx-refresh-btn"
+                  title="Verificar tasa de cambio del día"
+                  aria-label="Verificar tasa de cambio del día"
+                >
+                  <RefreshCw size={12} className={isSyncingFx ? 'animate-spin' : ''} />
+                  <span>{isSyncingFx ? 'Verificando...' : 'Al día'}</span>
+                </button>
               </div>
             </div>
 

@@ -1521,3 +1521,121 @@
 [data-theme='light'] .sentinel-form-input:focus {
   background: #FFFFFF;
 }
+
+
+/* --- Daily Exchange Rate Pill (Liquidez Inmediata Disponible) --- */
+.sentinel-fx-rate-bar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.65rem;
+  background: var(--aur-surface-low);
+  border: 1px solid var(--aur-border-subtle);
+  width: fit-content;
+  font-size: 0.74rem;
+}
+
+.sentinel-fx-rate-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sentinel-fx-pair {
+  color: var(--aur-text-secondary);
+  font-weight: 500;
+}
+
+.sentinel-fx-value {
+  color: var(--aur-gold-bright);
+  font-weight: 700;
+}
+
+.sentinel-fx-divider {
+  color: var(--aur-text-muted);
+  opacity: 0.5;
+}
+
+.sentinel-fx-status-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.12rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.sentinel-fx-status-chip.updated {
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--aur-emerald);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.sentinel-fx-status-chip.unchanged {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--aur-text-secondary);
+  border: 1px solid var(--aur-border-subtle);
+}
+
+.sentinel-fx-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 0.45rem;
+  background: rgba(200, 169, 98, 0.12);
+  border: 1px solid rgba(200, 169, 98, 0.28);
+  color: var(--aur-gold-bright);
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sentinel-fx-refresh-btn:hover:not(:disabled) {
+  background: var(--aur-gold-primary);
+  color: #090B10;
+}
+
+.sentinel-fx-refresh-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+[data-theme='light'] .sentinel-fx-rate-bar {
+  background: #F8FAFC;
+  border-color: #E3E8EE;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme='light'] .sentinel-fx-value {
+  color: #92400E;
+}
+
+[data-theme='light'] .sentinel-fx-status-chip.updated {
+  background: #ECFDF5;
+  color: #047857;
+  border-color: #A7F3D0;
+}
+
+[data-theme='light'] .sentinel-fx-status-chip.unchanged {
+  background: #F1F5F9;
+  color: #475569;
+  border-color: #CBD5E1;
+}
+
+[data-theme='light'] .sentinel-fx-refresh-btn {
+  background: #FEF3C7;
+  border-color: #FDE68A;
+  color: #92400E;
+}
+
+[data-theme='light'] .sentinel-fx-refresh-btn:hover:not(:disabled) {
+  background: #D97706;
+  border-color: #D97706;
+  color: #FFFFFF;
+}
