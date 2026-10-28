@@ -1,175 +1,145 @@
 import { useState, type FormEvent } from 'react'
-import { PlusCircle, CheckCircle2, X, Calendar } from 'lucide-react'
+import { Plus, Sparkles, Calendar, Tag, DollarSign, FileText, Briefcase, Laptop, TrendingUp, Zap } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
-import { getTodayDateString } from '../../utils/formatters'
+import { sanitizeAmount, sanitizeText, isValidDate } from '../../utils/security'
+import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
 
 interface IncomeFormProps {
-  currentPeriod: string;
-  incomeToEdit?: Income | null;
-  onSave: (income: Omit<Income, 'id'> | Income) => void;
-  onCancelEdit?: () => void;
+  currentPeriod: string
+  onAdd: (data: Omit<Income, 'id'>) => void
 }
 
-export function IncomeForm({ currentPeriod, incomeToEdit, onSave, onCancelEdit }: IncomeFormProps) {
-  const [description, setDescription] = useState(incomeToEdit?.description ?? '')
-  const [amount, setAmount] = useState(incomeToEdit?.amount.toString() ?? '')
-  const [type, setType] = useState<IncomeType>(incomeToEdit?.type ?? 'salary')
-  const [date, setDate] = useState(incomeToEdit?.date ?? getTodayDateString())
-  const [error, setError] = useState<string | null>(null)
-  const [prevEditId, setPrevEditId] = useState<string | null | undefined>(incomeToEdit?.id)
+const INCOME_TYPES: CustomSelectOption<IncomeType>[] = [
+  { value: 'salary',     label: 'Sueldo / Nómina',     subtitle: 'Ingreso recurrente',    icon: <Briefcase size={15} />,  accentColor: '#34D399' },
+  { value: 'freelance',  label: 'Freelance / Extra',   subtitle: 'Servicios & proyectos', icon: <Laptop size={15} />,     accentColor: '#38BDF8' },
+  { value: 'investment', label: 'Inversión / Interés', subtitle: 'Dividendos & rentas',   icon: <TrendingUp size={15} />, accentColor: '#C9A84C' },
+  { value: 'extra',      label: 'Otro Ingreso',        subtitle: 'Bonos & reembolsos',    icon: <Zap size={15} />,        accentColor: '#A78BFA' },
+]
 
-  if (incomeToEdit?.id !== prevEditId) {
-    setPrevEditId(incomeToEdit?.id)
-    setDescription(incomeToEdit?.description ?? '')
-    setAmount(incomeToEdit?.amount.toString() ?? '')
-    setType(incomeToEdit?.type ?? 'salary')
-    setDate(incomeToEdit?.date ?? getTodayDateString())
-    setError(null)
-  }
-
-  const resetForm = () => {
-    setDescription('')
-    setAmount('')
-    setType('salary')
-    setDate(getTodayDateString())
-    setError(null)
-  }
+export function IncomeForm({ currentPeriod, onAdd }: IncomeFormProps) {
+  const [description, setDescription] = useState('')
+  const [amount,      setAmount]      = useState('')
+  const [type,        setType]        = useState<IncomeType>('salary')
+  const [date,        setDate]        = useState(() => new Date().toISOString().slice(0, 10))
+  const [error,       setError]       = useState('')
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+    setError('')
 
-    if (!description.trim()) {
-      setError('La descripción del ingreso es obligatoria.')
+    const cleanDesc   = sanitizeText(description, 100)
+    const cleanAmount = sanitizeAmount(amount)
+
+    if (!cleanDesc) {
+      setError('Ingresa una descripción válida para el ingreso.')
+      return
+    }
+    if (cleanAmount <= 0) {
+      setError('El monto debe ser mayor a RD$0.')
+      return
+    }
+    if (!isValidDate(date)) {
+      setError('Selecciona una fecha válida.')
       return
     }
 
-    const parsedAmount = parseFloat(amount)
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setError('Por favor ingresa un monto válido mayor a 0.')
-      return
-    }
+    onAdd({
+      period: currentPeriod,
+      description: cleanDesc,
+      amount: cleanAmount,
+      type,
+      date,
+    })
 
-    if (incomeToEdit) {
-      onSave({
-        ...incomeToEdit,
-        description: description.trim(),
-        amount: parsedAmount,
-        type,
-        date,
-        period: currentPeriod,
-      })
-    } else {
-      onSave({
-        description: description.trim(),
-        amount: parsedAmount,
-        type,
-        date,
-        period: currentPeriod,
-      })
-      resetForm()
-    }
+    setDescription('')
+    setAmount('')
+    setType('salary')
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-[#16161A] border border-[#2C2C35] rounded-2xl p-7 sm:p-8 shadow-md space-y-6">
-      <div className="flex items-center justify-between border-b border-[#2C2C35] pb-4">
-        <div>
-          <span className="text-[11px] uppercase tracking-[0.14em] text-[#71717A] font-semibold block mb-0.5">
-            NUEVO REGISTRO
+    <div className="panel form-card-emerald">
+      <div className="panel-header">
+        <div className="panel-title">
+          <span className="title-icon-badge emerald">
+            <Sparkles size={14} />
           </span>
-          <h3 className="text-lg font-heading font-bold text-[#F5F5F5]">
-            {incomeToEdit ? 'Editar Ingreso' : 'Registrar Entrada de Capital'}
-          </h3>
+          Registrar Nuevo Ingreso
         </div>
-        {incomeToEdit && onCancelEdit && (
-          <button
-            type="button"
-            onClick={onCancelEdit}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#2C2C35] text-xs text-[#9CA3AF] hover:text-[#F5F5F5] hover:bg-[#202026] transition-colors cursor-pointer"
-          >
-            <X size={14} /> Cancelar edición
-          </button>
-        )}
+        <span className="badge badge-emerald">+ Capital</span>
       </div>
 
-      {error && (
-        <div className="p-4 rounded-xl bg-[rgba(248,113,113,0.12)] border border-[#F87171]/30 text-[#F87171] text-xs font-medium">
-          {error}
-        </div>
-      )}
+      <form onSubmit={handleSubmit} className="entry-form" noValidate>
+        {error && <div className="form-alert-error">{error}</div>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="lg:col-span-2">
-          <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#71717A] mb-2.5 block">
-            Descripción / Concepto
-          </label>
-          <input
-            type="text"
-            placeholder="Ej: Sueldo quincenal, Proyecto Web..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-3.5 min-h-[48px] text-sm text-[#F5F5F5] focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 outline-none transition-all"
-          />
-        </div>
+        <div className="form-grid-row">
+          <div className="form-field flex-2">
+            <label htmlFor="inc-desc">
+              <FileText size={12} /> Concepto o Fuente de Ingreso
+            </label>
+            <input
+              id="inc-desc"
+              type="text"
+              placeholder="Ej. Quincena, Proyecto Web, Dividendos..."
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              maxLength={100}
+              required
+            />
+          </div>
 
-        <div>
-          <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#71717A] mb-2.5 block">
-            Monto (RD$)
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-3.5 min-h-[48px] text-sm font-mono text-[#F5F5F5] focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 outline-none transition-all"
-          />
-        </div>
-
-        <div>
-          <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#71717A] mb-2.5 block">
-            Tipo de Ingreso
-          </label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as IncomeType)}
-            className="w-full bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-3.5 min-h-[48px] text-sm text-[#F5F5F5] focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 outline-none transition-all"
-          >
-            <option value="salary">Sueldo / Salario Fijo</option>
-            <option value="freelance">Freelance / Honorarios</option>
-            <option value="investment">Inversiones / Dividendos</option>
-            <option value="extra">Extra / Ocasional</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-        <div className="w-full sm:w-auto flex items-center gap-2">
-          <Calendar size={14} className="text-[#F3CA65] flex-shrink-0" />
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full sm:w-auto bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-2.5 min-h-[44px] text-xs text-[#9CA3AF] focus:border-[#C9A84C] outline-none"
-          />
+          <div className="form-field flex-1">
+            <label htmlFor="inc-amount">
+              <DollarSign size={12} /> Monto (RD$)
+            </label>
+            <input
+              id="inc-amount"
+              type="number"
+              step="0.01"
+              min="1"
+              max="999999999"
+              placeholder="0.00"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              required
+            />
+          </div>
         </div>
 
-        <button
-          type="submit"
-          className="w-full sm:w-auto px-7 py-3.5 min-h-[48px] rounded-xl bg-[#C9A84C] text-[#09090B] font-bold tracking-wide text-sm hover:bg-[#E2BC5E] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
-        >
-          {incomeToEdit ? (
-            <>
-              <CheckCircle2 size={18} /> Guardar Cambios
-            </>
-          ) : (
-            <>
-              <PlusCircle size={18} /> Registrar Ingreso
-            </>
-          )}
-        </button>
-      </div>
-    </form>
+        <div className="form-grid-row">
+          <div className="form-field flex-1">
+            <label htmlFor="inc-type">
+              <Tag size={12} /> Categoría de Ingreso
+            </label>
+            <CustomIconSelect
+              id="inc-type"
+              options={INCOME_TYPES}
+              value={type}
+              onChange={val => setType(val)}
+              ariaLabel="Categoría de Ingreso"
+            />
+          </div>
+
+          <div className="form-field flex-1">
+            <label htmlFor="inc-date">
+              <Calendar size={12} /> Fecha de Recepción
+            </label>
+            <input
+              id="inc-date"
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="form-field form-submit-col">
+            <button type="submit" className="btn-submit-emerald">
+              <Plus size={16} />
+              <span>Agregar Ingreso</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
   )
 }

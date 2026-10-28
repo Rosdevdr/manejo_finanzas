@@ -14,7 +14,6 @@ import {
   FileText,
   Download,
   X,
-  Bot,
   Flame,
   Sliders,
   BookOpen,
@@ -52,14 +51,13 @@ interface NavItemDef {
 }
 
 const PATRIMONIO_ITEMS: NavItemDef[] = [
-  { id: 'dashboard',    icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-  { id: 'incomes',      icon: <ArrowDownCircle size={18} />, label: 'Ingresos' },
-  { id: 'expenses',     icon: <ArrowUpCircle size={18} />,   label: 'Gastos' },
-  { id: 'budgets',      icon: <Target size={18} />,          label: 'Mi Plan (Presupuesto & FIRE)' },
-  { id: 'credit',       icon: <CreditCard size={18} />,      label: 'Tarjetas & Deudas' },
-  { id: 'cash',         icon: <Banknote size={18} />,        label: 'Efectivo' },
-  { id: 'advisor',      icon: <BrainCircuit size={18} />,    label: 'Análisis IA' },
-  { id: 'chat-advisor', icon: <Bot size={18} />,             label: 'Asistente IA' },
+  { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+  { id: 'incomes',   icon: <ArrowDownCircle size={18} />, label: 'Ingresos' },
+  { id: 'expenses',  icon: <ArrowUpCircle size={18} />,   label: 'Gastos' },
+  { id: 'budgets',   icon: <Target size={18} />,          label: 'Mi Plan (Presupuesto & FIRE)' },
+  { id: 'credit',    icon: <CreditCard size={18} />,      label: 'Tarjetas & Deudas' },
+  { id: 'cash',      icon: <Banknote size={18} />,        label: 'Efectivo' },
+  { id: 'advisor',   icon: <BrainCircuit size={18} />,    label: 'Análisis IA' },
 ]
 
 export function Sidebar({

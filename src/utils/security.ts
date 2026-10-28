@@ -68,3 +68,19 @@ export function sanitizeCardLastFour(input: unknown): string {
   return digits.slice(-4).padStart(4, '0')
 }
 
+
+/**
+ * Sanitizes text and truncates to an optional maximum length.
+ */
+export function sanitizeText(input: unknown, maxLength = 200): string {
+  const clean = sanitizeString(input)
+  return clean.slice(0, maxLength)
+}
+
+/**
+ * Validates ISO YYYY-MM-DD date string.
+ */
+export function isValidDate(dateStr: unknown): boolean {
+  if (typeof dateStr !== 'string') return false
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())
+}

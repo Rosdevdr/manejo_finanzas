@@ -1,231 +1,292 @@
-import { useState, useEffect } from 'react'
-import { Wallet, Briefcase, TrendingUp, Plus, Trash2, Pencil, X, Calendar, Search } from 'lucide-react'
+import { useState, type FormEvent, type ReactNode } from 'react'
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingUp,
+  Briefcase,
+  Zap,
+  Calendar,
+  X,
+  Laptop,
+  Check,
+} from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
-import { formatPeriodLabel } from '../../utils/calendar'
+import { sanitizeAmount, sanitizeText } from '../../utils/security'
+import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
 import './IncomesView.css'
-// IncomesView reuses the data-grid styles from ExpensesView for consistency
-import '../expenses/ExpensesView.css'
+
+const TYPE_MAP: Record<IncomeType, { label: string; subtitle: string; icon: ReactNode; color: string }> = {
+  salary:     { label: 'Sueldo / Fijo',     subtitle: 'Nómina recurrente',     icon: <Briefcase size={15} />,  color: '#34D399' },
+  freelance:  { label: 'Freelance',         subtitle: 'Servicios & proyectos', icon: <Laptop size={15} />,     color: '#38BDF8' },
+  investment: { label: 'Inversión',         subtitle: 'Dividendos & rentas',   icon: <TrendingUp size={15} />, color: '#C9A84C' },
+  extra:      { label: 'Extra / Ocasional', subtitle: 'Bonos & reembolsos',    icon: <Zap size={15} />,        color: '#A78BFA' },
+}
+
+const INCOME_TYPE_OPTIONS: CustomSelectOption<IncomeType>[] = [
+  { value: 'salary',     label: 'Sueldo / Fijo',     subtitle: 'Nómina recurrente',     icon: <Briefcase size={15} />,  accentColor: '#34D399' },
+  { value: 'freelance',  label: 'Freelance',         subtitle: 'Servicios & proyectos', icon: <Laptop size={15} />,     accentColor: '#38BDF8' },
+  { value: 'investment', label: 'Inversión',         subtitle: 'Dividendos & rentas',   icon: <TrendingUp size={15} />, accentColor: '#C9A84C' },
+  { value: 'extra',      label: 'Extra / Ocasional', subtitle: 'Bonos & reembolsos',    icon: <Zap size={15} />,        accentColor: '#A78BFA' },
+]
 
 interface IncomesViewProps {
-  currentPeriod: string
   incomes: Income[]
-  onAddIncome:    (d: Omit<Income, 'id'>) => void
-  onUpdateIncome: (u: Income) => void
+  currentPeriod: string
+  onAddIncome: (data: Omit<Income, 'id'>) => void
+  onUpdateIncome: (income: Income) => void
   onDeleteIncome: (id: string) => void
+  onFilterByType?: (type: IncomeType | null) => void
+  activeFilter?: IncomeType | null
 }
 
-const TYPE_MAP: Record<IncomeType, { label: string; badge: string; emoji: string }> = {
-  salary:     { label: 'Salario',   badge: 'badge-ingreso',   emoji: '💼' },
-  freelance:  { label: 'Freelance', badge: 'badge-freelance', emoji: '💻' },
-  investment: { label: 'Inversión', badge: 'badge-inversion', emoji: '📈' },
-  extra:      { label: 'Extra',     badge: 'badge-variable',  emoji: '⚡' },
-}
-
-export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncome, onDeleteIncome }: IncomesViewProps) {
-  const getPeriod = (inc: Income) => inc.period ?? inc.date?.slice(0, 7) ?? currentPeriod
-
-  const periodIncomes = incomes.filter(i => getPeriod(i) === currentPeriod)
-  const totalIncome   = periodIncomes.reduce((s, i) => s + i.amount, 0)
-  const salary        = periodIncomes.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0)
-  const extra         = periodIncomes.filter(i => i.type !== 'salary').reduce((s, i) => s + i.amount, 0)
-
-  // Modal de registro
+export function IncomesView({
+  incomes,
+  currentPeriod,
+  onAddIncome,
+  onUpdateIncome,
+  onDeleteIncome,
+  activeFilter,
+}: IncomesViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [periodMode, setPeriodMode] = useState<'current' | 'all'>('current')
   const [form, setForm] = useState({
-    description: '', amount: '', type: 'salary' as IncomeType,
+    description: '',
+    amount: '',
+    type: 'salary' as IncomeType,
     date: new Date().toISOString().slice(0, 10),
   })
 
-  // Escuchar tecla Escape para cerrar modal
-  useEffect(() => {
-    if (!isModalOpen) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsModalOpen(false)
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isModalOpen])
-
-  // Filtro de períodos
-  const [showAllPeriods, setShowAllPeriods] = useState(false)
-  const displayedIncomes = (showAllPeriods || (periodIncomes.length === 0 && incomes.length > 0))
-    ? [...incomes].sort((a, b) => b.date.localeCompare(a.date))
-    : periodIncomes
-
-  // Edición rápida inline
+  // Inline Edit State
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm]   = useState<{ description: string; amount: string; type: IncomeType; date: string }>({
-    description: '', amount: '', type: 'salary', date: '',
-  })
+  const [editDesc, setEditDesc] = useState('')
+  const [editAmount, setEditAmount] = useState('')
+  const [editType, setEditType] = useState<IncomeType>('salary')
+  const [editDate, setEditDate] = useState('')
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!form.description || !form.amount) return
-    const computedPeriod = form.date ? form.date.slice(0, 7) : currentPeriod
-    onAddIncome({ ...form, amount: parseFloat(form.amount), period: computedPeriod })
-    setForm({ description: '', amount: '', type: 'salary', date: new Date().toISOString().slice(0, 10) })
-    setIsModalOpen(false)
-  }
-
-  function startEdit(inc: Income) {
+  const startEdit = (inc: Income) => {
     setEditingId(inc.id)
-    setEditForm({ description: inc.description, amount: String(inc.amount), type: inc.type, date: inc.date })
+    setEditDesc(inc.description)
+    setEditAmount(String(inc.amount))
+    setEditType(inc.type)
+    setEditDate(inc.date)
   }
 
-  function cancelEdit() { setEditingId(null) }
+  const cancelEdit = () => setEditingId(null)
 
-  function saveEdit(inc: Income) {
-    const computedPeriod = editForm.date ? editForm.date.slice(0, 7) : inc.period
+  const saveEdit = (inc: Income) => {
+    const cleanAmount = sanitizeAmount(editAmount)
+    const cleanDesc = sanitizeText(editDesc, 100)
+    if (!cleanDesc || cleanAmount <= 0) return
+
+    const derivedPeriod = editDate && editDate.length >= 7 ? editDate.slice(0, 7) : inc.period
     onUpdateIncome({
       ...inc,
-      description: editForm.description,
-      amount: parseFloat(editForm.amount),
-      type: editForm.type,
-      date: editForm.date,
-      period: computedPeriod,
+      description: cleanDesc,
+      amount: cleanAmount,
+      type: editType,
+      date: editDate,
+      period: derivedPeriod,
     })
     setEditingId(null)
   }
 
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    const parsed = sanitizeAmount(form.amount)
+    const cleanDesc = sanitizeText(form.description, 100)
+    if (!cleanDesc || parsed <= 0) return
+
+    const derivedPeriod = form.date && form.date.length >= 7 ? form.date.slice(0, 7) : currentPeriod
+    onAddIncome({
+      description: cleanDesc,
+      amount: parsed,
+      type: form.type,
+      date: form.date,
+      period: derivedPeriod,
+    })
+    setForm({ description: '', amount: '', type: 'salary', date: new Date().toISOString().slice(0, 10) })
+    setIsModalOpen(false)
+  }
+
+  // Filtrado por período (Mes Actual vs Todo el Historial)
+  const periodScopedIncomes = periodMode === 'current'
+    ? incomes.filter(i => (i.period || i.date?.slice(0, 7)) === currentPeriod)
+    : incomes
+
+  // KPIs calculados sobre el alcance seleccionado
+  const totalIncomes = periodScopedIncomes.reduce((s, i) => s + i.amount, 0)
+  const salaryTotal = periodScopedIncomes.filter(i => i.type === 'salary').reduce((s, i) => s + i.amount, 0)
+  const extraTotal = totalIncomes - salaryTotal
+
+  const filtered = activeFilter
+    ? periodScopedIncomes.filter(i => i.type === activeFilter)
+    : periodScopedIncomes
+
   return (
-    <div className="incomes-obsidian-root fade-in">
-      {/* ── CABECERA INSTITUCIONAL ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 8 }}>
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--emerald-success)', fontWeight: 700, letterSpacing: '0.15em', marginBottom: 4 }}>GESTIÓN DE CAPITAL</div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', margin: 0 }}>Entradas & Salarios</h1>
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: '#34D399', color: '#042F2E',
-              padding: '10px 20px', borderRadius: 10,
-              fontWeight: 600, fontSize: 13, border: 'none',
-              cursor: 'pointer', transition: 'all 0.2s'
-            }}
-          >
-            <Plus size={16} />
-            <span>Registrar Ingreso</span>
-          </button>
-        </div>
-      </div>
+    <div className="incomes-obsidian-root">
 
-      {/* ── METRIC STRIP ── */}
+      {/* ── KPIs SUPERIORES (3 TARJETAS BENTO) ── */}
       <div className="incomes-obsidian-kpi-row">
-        <div className="incomes-obsidian-kpi-card" style={{ borderTop: '2px solid #34D399' }}>
-          <div className="incomes-obsidian-kpi-header">
-            <span className="incomes-obsidian-kpi-label">Total del Período</span>
-            <Wallet size={16} color="#34D399" />
-          </div>
-          <div className="incomes-obsidian-kpi-val" style={{ color: 'var(--emerald-success)' }}>{formatCurrency(totalIncome)}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{periodIncomes.length} ingresos en {currentPeriod}</div>
-        </div>
 
+        {/* Total Ingresos */}
         <div className="incomes-obsidian-kpi-card">
           <div className="incomes-obsidian-kpi-header">
-            <span className="incomes-obsidian-kpi-label">Ingresos Fijos</span>
+            <span className="incomes-obsidian-kpi-label">Flujo de Entrada Total</span>
+            <TrendingUp size={16} color="#34D399" />
+          </div>
+          <div className="incomes-obsidian-kpi-val" style={{ color: '#34D399' }}>
+            {formatCurrency(totalIncomes)}
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {incomes.length} transacciones registradas
+          </span>
+        </div>
+
+        {/* Ingresos Fijos / Sueldo */}
+        <div className="incomes-obsidian-kpi-card">
+          <div className="incomes-obsidian-kpi-header">
+            <span className="incomes-obsidian-kpi-label">Ingresos Recurrentes (Sueldo)</span>
             <Briefcase size={16} color="#C9A84C" />
           </div>
-          <div className="incomes-obsidian-kpi-val">{formatCurrency(salary)}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Salario principal y nómina</div>
+          <div className="incomes-obsidian-kpi-val">
+            {formatCurrency(salaryTotal)}
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {totalIncomes > 0 ? Math.round((salaryTotal / totalIncomes) * 100) : 0}% de tus entradas
+          </span>
         </div>
 
+        {/* Ingresos Variables / Extras */}
         <div className="incomes-obsidian-kpi-card">
           <div className="incomes-obsidian-kpi-header">
-            <span className="incomes-obsidian-kpi-label">Ingresos Variables</span>
-            <TrendingUp size={16} color="#60A5FA" />
+            <span className="incomes-obsidian-kpi-label">Variables (Freelance / Inv.)</span>
+            <Zap size={16} color="#38BDF8" />
           </div>
-          <div className="incomes-obsidian-kpi-val">{formatCurrency(extra)}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Honorarios, Freelance & Extra</div>
+          <div className="incomes-obsidian-kpi-val">
+            {formatCurrency(extraTotal)}
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {totalIncomes > 0 ? Math.round((extraTotal / totalIncomes) * 100) : 0}% de tus entradas
+          </span>
         </div>
+
       </div>
 
-      {/* ── HIGH DENSITY DATA GRID ── */}
-      <div className="obsidian-data-grid-container">
-        <div className="obsidian-data-grid-header">
-          <div className="obsidian-data-grid-title">
-            {showAllPeriods ? 'Registro Histórico Completo' : `Entradas de ${formatPeriodLabel(currentPeriod)}`}
+      {/* ── TABLA DE ALTA DENSIDAD (ESTILO STRIPE/LINEAR) ── */}
+      <div className="obsidian-data-grid-container" style={{ overflow: 'visible' }}>
+        <div className="obsidian-data-grid-header" style={{ flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <div className="obsidian-data-grid-title">Registro de Ingresos</div>
+
+            {/* Selector Mes Actual vs Todo el Historial */}
+            <div className="obsidian-period-filter-switch">
+              <button
+                type="button"
+                onClick={() => setPeriodMode('current')}
+                className={`obsidian-period-filter-btn ${periodMode === 'current' ? 'active' : ''}`}
+              >
+                Mes Actual ({currentPeriod})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriodMode('all')}
+                className={`obsidian-period-filter-btn ${periodMode === 'all' ? 'active' : ''}`}
+              >
+                Todo el Historial ({incomes.length})
+              </button>
+            </div>
           </div>
-          <div className="obsidian-period-filter-switch">
-            <button
-              type="button"
-              className={`obsidian-period-filter-btn ${!showAllPeriods ? 'active' : ''}`}
-              onClick={() => setShowAllPeriods(false)}
-            >
-              Mes Actual
-            </button>
-            <button
-              type="button"
-              className={`obsidian-period-filter-btn ${showAllPeriods ? 'active' : ''}`}
-              onClick={() => setShowAllPeriods(true)}
-            >
-              Historial
-            </button>
-          </div>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            style={{
+              background: '#34D399',
+              color: '#042F2E',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '8px 16px',
+              fontSize: '13px',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(52,211,153,0.2)',
+            }}
+          >
+            <Plus size={16} /> Añadir Ingreso
+          </button>
         </div>
 
-        {displayedIncomes.length === 0 ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <Search size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
-            <div style={{ fontSize: 14, fontWeight: 500 }}>No hay ingresos en este período</div>
-            <div style={{ fontSize: 12, marginTop: 4 }}>Registra un ingreso usando el botón verde superior.</div>
+        {filtered.length === 0 ? (
+          <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+            No hay ingresos registrados en este período. Haz clic en "+ Añadir Ingreso" para comenzar.
           </div>
         ) : (
-          <div className="obsidian-table-wrapper">
+          <div className="obsidian-table-wrapper" style={{ overflow: 'visible' }}>
             <table className="obsidian-table">
               <thead>
                 <tr>
-                  <th>FECHA</th>
-                  <th>TIPO</th>
-                  <th>CONCEPTO</th>
-                  <th>PERÍODO</th>
-                  <th style={{ textAlign: 'right' }}>MONTO</th>
-                  <th style={{ textAlign: 'right', width: 100 }}>ACCIONES</th>
+                  <th>Fecha</th>
+                  <th>Fuente / Concepto</th>
+                  <th>Categoría</th>
+                  <th style={{ textAlign: 'right' }}>Monto</th>
+                  <th style={{ width: '90px', textAlign: 'right' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {displayedIncomes.map(inc => {
-                  const t = TYPE_MAP[inc.type]
+                {filtered.map(inc => {
+                  const t = TYPE_MAP[inc.type] || TYPE_MAP.salary
 
                   if (editingId === inc.id) {
                     return (
-                      <tr key={inc.id}>
-                        <td className="cell-date">{inc.date}</td>
+                      <tr key={inc.id} style={{ background: 'rgba(52,211,153,0.06)' }}>
                         <td>
-                          <select
-                            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: 6, fontSize: 12 }}
-                            value={editForm.type}
-                            onChange={e => setEditForm(p => ({ ...p, type: e.target.value as IncomeType }))}
-                          >
-                            <option value="salary">Salario</option>
-                            <option value="freelance">Freelance</option>
-                            <option value="investment">Inversión</option>
-                            <option value="extra">Extra</option>
-                          </select>
+                          <input
+                            type="date"
+                            className="aureus-adaptive-input compact"
+                            value={editDate}
+                            onChange={e => setEditDate(e.target.value)}
+                          />
                         </td>
                         <td>
                           <input
-                            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: '100%' }}
-                            value={editForm.description}
-                            onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))}
+                            type="text"
+                            className="aureus-adaptive-input compact"
+                            style={{ width: '100%' }}
+                            value={editDesc}
+                            onChange={e => setEditDesc(e.target.value)}
                           />
                         </td>
-                        <td className="cell-date" style={{ color: 'var(--emerald-success)' }}>{inc.period}</td>
+                        <td style={{ minWidth: 190 }}>
+                          <CustomIconSelect
+                            options={INCOME_TYPE_OPTIONS}
+                            value={editType}
+                            onChange={val => setEditType(val)}
+                            compact
+                            ariaLabel="Tipo de Ingreso"
+                          />
+                        </td>
                         <td style={{ textAlign: 'right' }}>
                           <input
                             type="number"
-                            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: 6, fontSize: 12, width: 90, textAlign: 'right' }}
-                            value={editForm.amount}
-                            onChange={e => setEditForm(p => ({ ...p, amount: e.target.value }))}
+                            className="aureus-adaptive-input compact"
+                            style={{ width: 110, textAlign: 'right' }}
+                            value={editAmount}
+                            onChange={e => setEditAmount(e.target.value)}
                           />
                         </td>
-                        <td className="action-cell">
-                          <button className="obsidian-icon-btn" style={{ color: 'var(--emerald-success)' }} onClick={() => saveEdit(inc)}>✓</button>
-                          <button className="obsidian-icon-btn" onClick={cancelEdit}>✕</button>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'inline-flex', gap: 4 }}>
+                            <button className="obsidian-icon-btn" style={{ color: '#34D399' }} onClick={() => saveEdit(inc)} title="Guardar">
+                              <Check size={15} />
+                            </button>
+                            <button className="obsidian-icon-btn" onClick={cancelEdit} title="Cancelar">
+                              <X size={15} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -235,23 +296,38 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
                     <tr key={inc.id}>
                       <td className="cell-date">{inc.date}</td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>{t.emoji}</span>
-                          <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{t.label}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
+                        <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
                           {inc.description}
                         </span>
                       </td>
-                      <td className="cell-date" style={{ color: 'var(--emerald-success)' }}>{inc.period}</td>
+                      <td>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          <span
+                            style={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: 7,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: `${t.color}18`,
+                              border: `1px solid ${t.color}35`,
+                              color: t.color,
+                            }}
+                          >
+                            {t.icon}
+                          </span>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>{t.label}</span>
+                        </div>
+                      </td>
                       <td className="cell-amount positive">
                         +{formatCurrency(inc.amount)}
                       </td>
-                      <td className="action-cell">
-                        <button className="obsidian-icon-btn" onClick={() => startEdit(inc)} title="Editar"><Pencil size={14} /></button>
-                        <button className="obsidian-icon-btn danger" onClick={() => onDeleteIncome(inc.id)} title="Eliminar"><Trash2 size={14} /></button>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: 4, justifyContent: 'flex-end' }}>
+                          <button className="obsidian-icon-btn" onClick={() => startEdit(inc)} title="Editar"><Pencil size={14} /></button>
+                          <button className="obsidian-icon-btn danger" onClick={() => onDeleteIncome(inc.id)} title="Eliminar"><Trash2 size={14} /></button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -264,69 +340,73 @@ export function IncomesView({ currentPeriod, incomes, onAddIncome, onUpdateIncom
 
       {/* ── MODAL PARA REGISTRAR INGRESO ── */}
       {isModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 20, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: 'var(--shadow-modal), var(--specular-top)' }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
-                <Plus size={18} color="#34D399" /> Registrar Entrada de Capital
+        <div className="aureus-modal-backdrop">
+          <div className="aureus-modal-card" style={{ overflow: 'visible' }}>
+            <div className="aureus-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
+                <Plus size={18} color="#34D399" /> Registrar Nuevo Ingreso
               </div>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
+              <button onClick={() => setIsModalOpen(false)} className="aureus-modal-close"><X size={18} /></button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Descripción / Concepto</label>
+                <label className="aureus-field-label">Fuente / Descripción</label>
                 <input
-                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
-                  placeholder="Ej: Salario mensual, Dividendo..."
-                  value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                  autoFocus required
+                  className="aureus-adaptive-input"
+                  placeholder="Ej: Sueldo Quincenal, Proyecto Web..."
+                  value={form.description}
+                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                  autoFocus
+                  required
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Monto (RD$)</label>
+                  <label className="aureus-field-label">Monto (RD$)</label>
                   <input
-                    type="number" step="0.01" min="0.01"
-                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
-                    value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    className="aureus-adaptive-input"
+                    placeholder="0.00"
+                    value={form.amount}
+                    onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
                     required
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>Tipo de Ingreso</label>
-                  <select
-                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
-                    value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value as IncomeType }))}
-                  >
-                    <option value="salary">Sueldo / Fijo</option>
-                    <option value="freelance">Freelance</option>
-                    <option value="investment">Inversión</option>
-                    <option value="extra">Extra / Ocasional</option>
-                  </select>
+                  <label className="aureus-field-label">Categoría de Ingreso</label>
+                  <CustomIconSelect
+                    options={INCOME_TYPE_OPTIONS}
+                    value={form.type}
+                    onChange={val => setForm(p => ({ ...p, type: val }))}
+                    ariaLabel="Categoría de Ingreso"
+                  />
                 </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontSize: 12, color: '#888899', fontWeight: 600 }}>
+                <label className="aureus-field-label">
                   <Calendar size={12} style={{ marginRight: 4, display: 'inline-block', verticalAlign: 'middle' }} color="#34D399" />
                   Fecha
                 </label>
                 <input
                   type="date"
-                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', color: 'var(--text-primary)', fontSize: 14 }}
-                  value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+                  className="aureus-adaptive-input"
+                  value={form.date}
+                  onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
                   required
                 />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'var(--text-primary)', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="aureus-btn-secondary">
                   Cancelar
                 </button>
-                <button type="submit" style={{ background: '#34D399', border: 'none', color: '#042F2E', padding: '10px 20px', borderRadius: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Plus size={16} /> Guardar
+                <button type="submit" style={{ background: '#34D399', border: 'none', color: '#042F2E', padding: '10px 20px', borderRadius: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Plus size={16} /> Guardar Ingreso
                 </button>
               </div>
             </form>

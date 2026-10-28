@@ -1,253 +1,226 @@
 import { useState, type FormEvent } from 'react'
-import { PlusCircle, CheckCircle2, X, Calendar } from 'lucide-react'
+import {
+  Plus,
+  Receipt,
+  Calendar,
+  Tag,
+  DollarSign,
+  FileText,
+  CreditCard,
+  Layers,
+  Home,
+  Utensils,
+  Car,
+  Zap,
+  HeartPulse,
+  Gamepad2,
+  GraduationCap,
+  Package,
+  SlidersHorizontal,
+  Lock,
+  Landmark,
+  ArrowRightLeft,
+  Banknote,
+} from 'lucide-react'
 import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
-import { CATEGORY_MAP } from '../../utils/categoryHelpers'
-import { getTodayDateString } from '../../utils/formatters'
-import { TransactionConfirmationFlow } from '../common/TransactionConfirmationFlow'
-import { triggerHaptic } from '../../utils/haptics'
+import { sanitizeAmount, sanitizeText, isValidDate } from '../../utils/security'
+import { formatCurrency } from '../../utils/formatters'
+import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
 
 interface ExpenseFormProps {
-  currentPeriod: string;
-  expenseToEdit?: Expense | null;
-  onSave: (expense: Omit<Expense, 'id'> | Expense) => void;
-  onCancelEdit?: () => void;
+  currentPeriod: string
+  availableBalance?: number
+  onAdd: (data: Omit<Expense, 'id'>) => void
 }
 
-export function ExpenseForm({ currentPeriod, expenseToEdit, onSave, onCancelEdit }: ExpenseFormProps) {
-  const [description, setDescription] = useState(expenseToEdit?.description ?? '')
-  const [amount, setAmount] = useState(expenseToEdit?.amount.toString() ?? '')
-  const [category, setCategory] = useState<ExpenseCategory>(expenseToEdit?.category ?? 'food')
-  const [type, setType] = useState<ExpenseType>(expenseToEdit?.type ?? 'variable')
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(expenseToEdit?.paymentMethod ?? 'debit_card')
-  const [date, setDate] = useState(expenseToEdit?.date ?? getTodayDateString())
-  const [error, setError] = useState<string | null>(null)
-  const [prevEditId, setPrevEditId] = useState<string | null | undefined>(expenseToEdit?.id)
+const CATEGORIES: CustomSelectOption<ExpenseCategory>[] = [
+  { value: 'housing',       label: 'Vivienda / Alquiler', subtitle: 'Renta, mantenimiento', icon: <Home size={15} />,          accentColor: '#60A5FA' },
+  { value: 'food',          label: 'Alimentación / Súper', subtitle: 'Supermercado, despensa', icon: <Utensils size={15} />,   accentColor: '#34D399' },
+  { value: 'transport',     label: 'Transporte / Gasolina', subtitle: 'Combustible, movilidad', icon: <Car size={15} />,       accentColor: '#FBBF24' },
+  { value: 'utilities',     label: 'Servicios (Luz, Internet)', subtitle: 'Servicios básicos', icon: <Zap size={15} />,        accentColor: '#38BDF8' },
+  { value: 'health',        label: 'Salud & Farmacia',    subtitle: 'Consultas, seguro',    icon: <HeartPulse size={15} />,    accentColor: '#F87171' },
+  { value: 'entertainment', label: 'Entretenimiento & Salidas', subtitle: 'Ocio, restaurantes', icon: <Gamepad2 size={15} />,  accentColor: '#A78BFA' },
+  { value: 'education',     label: 'Educación & Cursos',  subtitle: 'Libros, formación',    icon: <GraduationCap size={15} />, accentColor: '#C9A84C' },
+  { value: 'debt',          label: 'Cuotas / Deudas',     subtitle: 'Préstamos y abonos',   icon: <CreditCard size={15} />,    accentColor: '#FB7185' },
+  { value: 'other',         label: 'Otros Gastos',        subtitle: 'Misceláneos',          icon: <Package size={15} />,       accentColor: '#94A3B8' },
+]
 
-  // Estado para confirmación de alto riesgo (> RD$ 25,000)
-  const [pendingHighRisk, setPendingHighRisk] = useState<{
-    amount: number
-    concept: string
-    categoryLabel: string
-    data: Omit<Expense, 'id'> | Expense
-  } | null>(null)
+const EXPENSE_TYPES: CustomSelectOption<ExpenseType>[] = [
+  { value: 'variable', label: 'Gasto Variable (Ajustable)', subtitle: 'Optimizable', icon: <SlidersHorizontal size={15} />, accentColor: '#34D399' },
+  { value: 'fixed',    label: 'Gasto Fijo (Obligatorio)',   subtitle: 'Compromiso fijo', icon: <Lock size={15} />,          accentColor: '#F87171' },
+]
 
-  if (expenseToEdit?.id !== prevEditId) {
-    setPrevEditId(expenseToEdit?.id)
-    setDescription(expenseToEdit?.description ?? '')
-    setAmount(expenseToEdit?.amount.toString() ?? '')
-    setCategory(expenseToEdit?.category ?? 'food')
-    setType(expenseToEdit?.type ?? 'variable')
-    setPaymentMethod(expenseToEdit?.paymentMethod ?? 'debit_card')
-    setDate(expenseToEdit?.date ?? getTodayDateString())
-    setError(null)
-  }
+const PAYMENT_METHODS: CustomSelectOption<PaymentMethod>[] = [
+  { value: 'debit_card',    label: 'Tarjeta de Débito',  subtitle: 'Cargo directo',       icon: <CreditCard size={15} />,     accentColor: '#38BDF8' },
+  { value: 'bank_transfer', label: 'Transferencia Bancaria', subtitle: 'ACH / Al instante', icon: <ArrowRightLeft size={15} />, accentColor: '#34D399' },
+  { value: 'credit_card',   label: 'Tarjeta de Crédito', subtitle: 'Al corte',            icon: <Landmark size={15} />,       accentColor: '#C9A84C' },
+  { value: 'cash',          label: 'Efectivo en Mano',   subtitle: 'Liquidez física',     icon: <Banknote size={15} />,       accentColor: '#A78BFA' },
+]
 
-  const resetForm = () => {
+export function ExpenseForm({ currentPeriod, availableBalance, onAdd }: ExpenseFormProps) {
+  const [description,   setDescription]   = useState('')
+  const [amount,        setAmount]        = useState('')
+  const [category,      setCategory]      = useState<ExpenseCategory>('food')
+  const [type,          setType]          = useState<ExpenseType>('variable')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('debit_card')
+  const [date,          setDate]          = useState(() => new Date().toISOString().slice(0, 10))
+  const [error,         setError]         = useState('')
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    const cleanDesc   = sanitizeText(description, 100)
+    const cleanAmount = sanitizeAmount(amount)
+
+    if (!cleanDesc) {
+      setError('Ingresa un concepto válido para el gasto.')
+      return
+    }
+    if (cleanAmount <= 0) {
+      setError('El monto del gasto debe ser mayor a RD$0.')
+      return
+    }
+    if (availableBalance !== undefined && cleanAmount > Math.max(0, availableBalance)) {
+      setError(
+        `Saldo insuficiente: dispones de ${formatCurrency(Math.max(0, availableBalance))} y no puedes registrar un gasto de ${formatCurrency(cleanAmount)} que lleve el balance a negativo.`
+      )
+      return
+    }
+    if (!isValidDate(date)) {
+      setError('Selecciona una fecha válida.')
+      return
+    }
+
+    onAdd({
+      period: currentPeriod,
+      description: cleanDesc,
+      amount: cleanAmount,
+      category,
+      type,
+      paymentMethod,
+      date,
+    })
+
     setDescription('')
     setAmount('')
     setCategory('food')
     setType('variable')
     setPaymentMethod('debit_card')
-    setDate(getTodayDateString())
-    setError(null)
-  }
-
-  const handleConfirmHighRisk = () => {
-    if (pendingHighRisk) {
-      onSave(pendingHighRisk.data)
-      setPendingHighRisk(null)
-      resetForm()
-    }
-  }
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-
-    if (!description.trim()) {
-      setError('La descripción del gasto es obligatoria.')
-      return
-    }
-
-    const parsedAmount = parseFloat(amount)
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setError('Por favor ingresa un monto válido mayor a 0.')
-      return
-    }
-
-    const expensePayload = {
-      description: description.trim(),
-      amount: parsedAmount,
-      category,
-      type,
-      paymentMethod,
-      date,
-      period: currentPeriod,
-    }
-
-    // Si el monto es igual o mayor a RD$ 25,000 y no es edición simple, activar fricción positiva de seguridad
-    if (parsedAmount >= 25000 && !expenseToEdit) {
-      setPendingHighRisk({
-        amount: parsedAmount,
-        concept: description.trim(),
-        categoryLabel: CATEGORY_MAP[category]?.label || 'Egreso',
-        data: expensePayload,
-      })
-      return
-    }
-
-    if (expenseToEdit) {
-      onSave({
-        ...expenseToEdit,
-        ...expensePayload,
-      })
-    } else {
-      triggerHaptic('success')
-      onSave(expensePayload)
-      resetForm()
-    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-[#16161A] border border-[#2C2C35] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
-      <div className="flex items-center justify-between border-b border-[#2C2C35] pb-3">
-        <h3 className="text-base font-heading font-bold text-[#F5F5F5]">
-          {expenseToEdit ? 'Editar Gasto' : 'Registrar Nuevo Egreso'}
-        </h3>
-        {expenseToEdit && onCancelEdit && (
-          <button
-            type="button"
-            onClick={onCancelEdit}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-xl border border-[#2C2C35] text-xs text-[#9CA3AF] hover:text-[#F5F5F5] hover:bg-[#202026] transition-colors cursor-pointer"
-          >
-            <X size={13} /> Cancelar edición
-          </button>
-        )}
+    <div className="panel form-card-rose">
+      <div className="panel-header">
+        <div className="panel-title">
+          <span className="title-icon-badge rose">
+            <Receipt size={14} />
+          </span>
+          Registrar Nuevo Gasto
+        </div>
+        <span className="badge badge-rose">- Egreso</span>
       </div>
 
-      {error && (
-        <div className="p-3.5 rounded-xl bg-[rgba(248,113,113,0.12)] border border-[#F87171]/30 text-[#F87171] text-xs font-medium">
-          {error}
-        </div>
-      )}
+      <form onSubmit={handleSubmit} className="entry-form" noValidate>
+        {error && <div className="form-alert-error">{error}</div>}
 
-      {/* Fila 1: Descripción (60%) + Monto (40%) */}
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-        <div className="sm:col-span-3">
-          <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#71717A] mb-1.5 block">
-            Descripción / Concepto
-          </label>
-          <input
-            type="text"
-            placeholder="Ej: Supermercado mensual, Pago de Internet..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-2.5 min-h-[44px] text-sm text-[#F5F5F5] focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 outline-none transition-all"
-          />
-        </div>
+        <div className="form-grid-row">
+          <div className="form-field flex-2">
+            <label htmlFor="exp-desc">
+              <FileText size={12} /> Concepto del Gasto
+            </label>
+            <input
+              id="exp-desc"
+              type="text"
+              placeholder="Ej. Supermercado Nacional, Alquiler, Combustible..."
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              maxLength={100}
+              required
+            />
+          </div>
 
-        <div className="sm:col-span-2">
-          <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#71717A] mb-1.5 block">
-            Monto (RD$)
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-mono text-[#F5F5F5] focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 outline-none transition-all"
-          />
-        </div>
-      </div>
-
-      {/* Fila 2: Categoría (33%) + Tipo (33%) + Método (33%) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#71717A] mb-1.5 block">
-            Categoría
-          </label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-            className="w-full bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-2.5 min-h-[44px] text-sm text-[#F5F5F5] focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 outline-none transition-all"
-          >
-            {Object.entries(CATEGORY_MAP).map(([key, info]) => (
-              <option key={key} value={key} className="bg-[#16161A]">
-                {info.label}
-              </option>
-            ))}
-          </select>
+          <div className="form-field flex-1">
+            <label htmlFor="exp-amount">
+              <DollarSign size={12} /> Monto (RD$)
+            </label>
+            <input
+              id="exp-amount"
+              type="number"
+              step="0.01"
+              min="1"
+              max={availableBalance !== undefined && availableBalance > 0 ? availableBalance : 999999999}
+              placeholder="0.00"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              required
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#71717A] mb-1.5 block">
-            Tipo de Compromiso
-          </label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as ExpenseType)}
-            className="w-full bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-2.5 min-h-[44px] text-sm text-[#F5F5F5] focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 outline-none transition-all"
-          >
-            <option value="fixed">Gasto Fijo (Obligatorio)</option>
-            <option value="variable">Gasto Variable (Controlable)</option>
-          </select>
+        <div className="form-grid-row">
+          <div className="form-field flex-1">
+            <label htmlFor="exp-cat">
+              <Tag size={12} /> Categoría
+            </label>
+            <CustomIconSelect
+              id="exp-cat"
+              options={CATEGORIES}
+              value={category}
+              onChange={val => setCategory(val)}
+              ariaLabel="Categoría"
+            />
+          </div>
+
+          <div className="form-field flex-1">
+            <label htmlFor="exp-type">
+              <Layers size={12} /> Naturaleza del Gasto
+            </label>
+            <CustomIconSelect
+              id="exp-type"
+              options={EXPENSE_TYPES}
+              value={type}
+              onChange={val => setType(val)}
+              ariaLabel="Naturaleza del Gasto"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#71717A] mb-1.5 block">
-            Método de Pago
-          </label>
-          <select
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-            className="w-full bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-2.5 min-h-[44px] text-sm text-[#F5F5F5] focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 outline-none transition-all"
-          >
-            <option value="debit_card">Tarjeta de Débito</option>
-            <option value="credit_card">Tarjeta de Crédito</option>
-            <option value="bank_transfer">Transferencia Bancaria</option>
-            <option value="cash">Efectivo</option>
-          </select>
+        <div className="form-grid-row">
+          <div className="form-field flex-1">
+            <label htmlFor="exp-method">
+              <CreditCard size={12} /> Método de Pago
+            </label>
+            <CustomIconSelect
+              id="exp-method"
+              options={PAYMENT_METHODS}
+              value={paymentMethod}
+              onChange={val => setPaymentMethod(val)}
+              ariaLabel="Método de Pago"
+            />
+          </div>
+
+          <div className="form-field flex-1">
+            <label htmlFor="exp-date">
+              <Calendar size={12} /> Fecha del Gasto
+            </label>
+            <input
+              id="exp-date"
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="form-field form-submit-col">
+            <button type="submit" className="btn-submit-rose">
+              <Plus size={16} />
+              <span>Registrar Gasto</span>
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Fila 3: Fecha + Botón Submit */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
-        <div className="w-full sm:w-auto flex items-center gap-2">
-          <Calendar size={14} className="text-[#F3CA65] flex-shrink-0" />
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full sm:w-auto bg-[#202026] border border-[#2C2C35] rounded-xl px-4 py-2 min-h-[40px] text-xs text-[#9CA3AF] focus:border-[#C9A84C] outline-none"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full sm:w-auto px-6 py-2.5 min-h-[44px] rounded-xl bg-[#F87171] text-[#09090B] font-bold tracking-wide text-sm hover:bg-[#F87171]/90 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
-        >
-          {expenseToEdit ? (
-            <>
-              <CheckCircle2 size={16} /> Guardar Cambios
-            </>
-          ) : (
-            <>
-              <PlusCircle size={16} /> Registrar Gasto
-            </>
-          )}
-        </button>
-      </div>
-
-      {pendingHighRisk && (
-        <TransactionConfirmationFlow
-          amount={pendingHighRisk.amount}
-          concept={pendingHighRisk.concept}
-          category={pendingHighRisk.categoryLabel}
-          onConfirm={handleConfirmHighRisk}
-          onCancel={() => setPendingHighRisk(null)}
-        />
-      )}
-    </form>
+      </form>
+    </div>
   )
 }

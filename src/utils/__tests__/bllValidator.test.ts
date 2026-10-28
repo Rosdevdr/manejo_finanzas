@@ -70,6 +70,21 @@ describe('BLL Validation Suite', () => {
       expect(validateExpenseInput({ description: '', amount: 100, date: '2026-09-01' }).isValid).toBe(false)
       expect(validateExpenseInput({ description: 'Gasolina', amount: -20, date: '2026-09-01' }).isValid).toBe(false)
     })
+
+    it('rejects expense that exceeds availableBalance (non-negative balance rule)', () => {
+      const overdraft = validateExpenseInput(
+        { description: 'Compra Mayor', amount: 15000, date: '2026-09-01', category: 'other' },
+        10000
+      )
+      expect(overdraft.isValid).toBe(false)
+      expect(overdraft.error).toContain('Saldo insuficiente')
+
+      const withinBalance = validateExpenseInput(
+        { description: 'Compra Permitida', amount: 8000, date: '2026-09-01', category: 'other' },
+        10000
+      )
+      expect(withinBalance.isValid).toBe(true)
+    })
   })
 
   describe('Credit Cards & Transactions', () => {

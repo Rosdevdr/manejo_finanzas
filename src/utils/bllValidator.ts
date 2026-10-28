@@ -114,9 +114,12 @@ export function validateIncomeInput(input: Partial<Income>): BllValidationResult
 }
 
 /**
- * BLL: Validación de Gasto
+ * BLL: Validación de Gasto (con protección opcional contra saldo negativo)
  */
-export function validateExpenseInput(input: Partial<Expense>): BllValidationResult<Omit<Expense, 'id'>> {
+export function validateExpenseInput(
+  input: Partial<Expense>,
+  availableBalance?: number
+): BllValidationResult<Omit<Expense, 'id'>> {
   const cleanDesc = sanitizeString(input.description || '')
   if (cleanDesc.length < 2) {
     return { isValid: false, error: 'La descripción del gasto debe tener al menos 2 caracteres.' }
@@ -127,6 +130,13 @@ export function validateExpenseInput(input: Partial<Expense>): BllValidationResu
     return { isValid: false, error: 'El monto del gasto debe ser mayor a 0.' }
   }
   const cleanAmount = sanitizeAmount(rawAmount)
+
+  if (availableBalance !== undefined && cleanAmount > Math.max(0, availableBalance)) {
+    return {
+      isValid: false,
+      error: 'Saldo insuficiente: el gasto supera tu saldo disponible y llevaría la cuenta a negativo.',
+    }
+  }
 
   const validCategories: ExpenseCategory[] = [
     'housing', 'food', 'transport', 'utilities', 'health',

@@ -9,7 +9,6 @@ import { CreditCardsView }   from './components/credit/CreditCardsView'
 import { CashView }          from './components/cash/CashView'
 import { BudgetsAndGoalsView } from './components/budgets/BudgetsAndGoalsView'
 import { SmartAnalysisPanel } from './components/analysis/SmartAnalysisPanel'
-import { AiChatAssistantView } from './components/chat/AiChatAssistantView'
 import { FireCalculatorModal } from './components/budgets/FireCalculatorModal'
 import { ScenarioSimulatorModal } from './components/scenarios/ScenarioSimulatorModal'
 import { ToastContainer }    from './components/ui/ToastContainer'
@@ -394,7 +393,16 @@ export function App() {
             <ExpensesView
               currentPeriod={currentPeriod}
               expenses={expenses}
+              availableBalance={available}
               onAddExpense={async d => {
+                const safeAvailable = Math.max(0, available)
+                if (d.amount > safeAvailable) {
+                  showToast(
+                    `Saldo insuficiente: dispones de RD$ ${safeAvailable.toLocaleString('es-DO', { minimumFractionDigits: 2 })} y no puedes registrar un gasto que lleve tu cuenta a negativo.`,
+                    'error'
+                  )
+                  return
+                }
                 const res = await addExpense(d)
                 if (!res.success) {
                   showToast(res.error || 'Error al registrar gasto', 'error')
@@ -405,6 +413,15 @@ export function App() {
                 }
               }}
               onUpdateExpense={async u => {
+                const prevExp = expenses.find(e => e.id === u.id)
+                const maxAllowed = Math.max(0, available + (prevExp?.amount || 0))
+                if (u.amount > maxAllowed) {
+                  showToast(
+                    `Saldo insuficiente: no puedes actualizar este gasto por encima de tu saldo disponible (RD$ ${maxAllowed.toLocaleString('es-DO', { minimumFractionDigits: 2 })}).`,
+                    'error'
+                  )
+                  return
+                }
                 const res = await updateExpense(u)
                 if (!res.success) showToast(res.error || 'Error al actualizar', 'error')
                 else showToast('Gasto actualizado', 'info')
@@ -482,7 +499,7 @@ export function App() {
               onShowToast={showToast}
             />
           )}
-          {activeTab === 'advisor' && (
+          {(activeTab === 'advisor' || activeTab === 'chat-advisor') && (
             <SmartAnalysisPanel
               currentPeriod={currentPeriod}
               incomes={incomes}
@@ -490,20 +507,7 @@ export function App() {
               cashWithdrawals={cash}
               creditCards={creditCards}
               creditTransactions={creditTransactions}
-            />
-          )}
-          {activeTab === 'chat-advisor' && (
-            <AiChatAssistantView
-              key={user?.email || (isDemoMode ? 'demo' : 'guest')}
-              currentPeriod={currentPeriod}
-              incomes={incomes}
-              expenses={expenses}
-              cashWithdrawals={cash}
-              creditCards={creditCards}
-              creditTransactions={creditTransactions}
-              categoryBudgets={categoryBudgets}
-              savingsGoals={savingsGoals}
-              userEmail={user?.email}
+              availableBalance={available}
             />
           )}
         </div>
