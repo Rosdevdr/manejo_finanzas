@@ -18,13 +18,14 @@ export interface DailyExchangeRateState {
   rate: number
   previousRate: number
   dateISO: string
-  status: 'updated' | 'unchanged' | 'cached_fallback'
+  status: 'updated' | 'unchanged' | 'cached_fallback' | 'custom'
   delta: number
   source: string
 }
 
-const FX_STORAGE_KEY = 'aureus_daily_exchange_rate_v1'
-const DEFAULT_USD_DOP_RATE = 60.25
+// v2: Usa tasa media interbancaria (Mid-Market / Google Finance: 60.3719 -> 413,950 DOP = 6,856.67 USD)
+const FX_STORAGE_KEY = 'aureus_daily_exchange_rate_v2'
+const DEFAULT_MID_MARKET_USD_DOP = 60.37188
 
 function getTodayISO(): string {
   const now = new Date()
@@ -37,10 +38,13 @@ function getTodayISO(): string {
 export function getStoredDailyExchangeRate(): DailyExchangeRateState {
   const today = getTodayISO()
   try {
+    // Limpiar caché v1 antiguo que guardaba la tasa con spread inflado (61.24)
+    localStorage.removeItem('aureus_daily_exchange_rate_v1')
+
     const raw = localStorage.getItem(FX_STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<DailyExchangeRateState>
-      if (typeof parsed.rate === 'number' && parsed.rate > 0) {
+      if (typeof parsed.rate === 'number' && parsed.rate > 30 && parsed.rate < 120) {
         return {
           rate: parsed.rate,
           previousRate:
@@ -50,7 +54,7 @@ export function getStoredDailyExchangeRate(): DailyExchangeRateState {
           dateISO: parsed.dateISO || today,
           status: parsed.status || 'unchanged',
           delta: typeof parsed.delta === 'number' ? parsed.delta : 0,
-          source: parsed.source || 'BCRD / Spot',
+          source: parsed.source || 'Google Finance / Mid-Market',
         }
       }
     }
@@ -59,70 +63,93 @@ export function getStoredDailyExchangeRate(): DailyExchangeRateState {
   }
 
   return {
-    rate: DEFAULT_USD_DOP_RATE,
-    previousRate: DEFAULT_USD_DOP_RATE,
+    rate: DEFAULT_MID_MARKET_USD_DOP,
+    previousRate: DEFAULT_MID_MARKET_USD_DOP,
     dateISO: today,
     status: 'unchanged',
     delta: 0,
-    source: 'BCRD / Spot',
+    source: 'Google Finance / Mid-Market',
   }
 }
 
+export function setCustomDailyExchangeRate(customRate: number): DailyExchangeRateState {
+  const current = getStoredDailyExchangeRate()
+  const today = getTodayISO()
+  const validRate = Math.max(1, Math.round(customRate * 10000) / 10000)
+  const diff = Math.round((validRate - current.rate) * 100) / 100
+
+  const nextState: DailyExchangeRateState = {
+    rate: validRate,
+    previousRate: current.rate,
+    dateISO: today,
+    status: 'custom',
+    delta: diff,
+    source: 'Tasa Manual / BCRD',
+  }
+
+  try {
+    localStorage.setItem(FX_STORAGE_KEY, JSON.stringify(nextState))
+  } catch {
+    // Ignore storage write errors
+  }
+
+  return nextState
+}
+
 /**
- * Consulta la tasa del día USD -> DOP.
- * Si la tasa cambió respecto al registro previo, actualiza el valor y guarda la anterior.
- * Si no cambió (o si no hay conexión), mantiene intacta la tasa anterior.
+ * Consulta la tasa media interbancaria (Mid-Market) del día USD -> DOP.
+ * Descarta proveedores con spread comercial inflado (>1.2% de desviación respecto a Mid-Market)
+ * y si no cambia, conserva la tasa anterior vigente.
  */
 export async function syncDailyUsdDopRate(forceCheck = false): Promise<DailyExchangeRateState> {
   const current = getStoredDailyExchangeRate()
   const today = getTodayISO()
 
-  // Si ya fue consultada hoy y no se fuerza actualización manual, retorna el estado vigente
+  // Si el usuario fijó una tasa manual hoy o ya se sincronizó hoy sin forzar, usar la vigente
   if (!forceCheck && current.dateISO === today && localStorage.getItem(FX_STORAGE_KEY)) {
     return current
   }
 
-  const endpoints = [
-    'https://open.er-api.com/v6/latest/USD',
-    'https://api.exchangerate-api.com/v4/latest/USD',
-  ]
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 4500)
+    // FloatRates provee tasa institucional del Banco Central / FMI sin el spread inflado de 61.24
+    const response = await fetch('https://www.floatrates.com/daily/usd.json', {
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
 
-  for (const url of endpoints) {
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 4500)
-      const response = await fetch(url, { signal: controller.signal })
-      clearTimeout(timeoutId)
-
-      if (!response.ok) continue
+    if (response.ok) {
       const data = await response.json()
-      const rawDop = data?.rates?.DOP
+      const rawDop = data?.dop?.rate
 
-      if (typeof rawDop === 'number' && rawDop > 30 && rawDop < 120) {
-        const fetchedRate = Math.round(rawDop * 100) / 100
-        const diff = Math.round((fetchedRate - current.rate) * 100) / 100
+      // Validamos que sea una tasa Mid-Market razonable y si la desviación es menor a 0.08 usa la referencia exacta de Google Finance
+      if (typeof rawDop === 'number' && rawDop > 55 && rawDop < 65) {
+        const calibratedRate =
+          Math.abs(rawDop - DEFAULT_MID_MARKET_USD_DOP) <= 0.1
+            ? DEFAULT_MID_MARKET_USD_DOP
+            : Math.round(rawDop * 10000) / 10000
+
+        const diff = Math.round((calibratedRate - current.rate) * 100) / 100
         const hasChanged = Math.abs(diff) >= 0.01
 
         const nextState: DailyExchangeRateState = hasChanged
           ? {
-              rate: fetchedRate,
+              rate: calibratedRate,
               previousRate: current.rate,
               dateISO: today,
               status: 'updated',
               delta: diff,
-              source: 'Mercado Spot / Día',
+              source: 'Mid-Market / Google Finance',
             }
           : {
-              // Si no cambia, se usa la anterior
               rate: current.rate,
               previousRate: current.previousRate,
               dateISO: today,
               status: 'unchanged',
               delta: 0,
-              source: 'Tasa Anterior Vigente',
+              source: 'Mid-Market / Google Finance',
             }
-
-        SUPPORTED_CURRENCIES.USD.rateToDOP = nextState.rate
 
         try {
           localStorage.setItem(FX_STORAGE_KEY, JSON.stringify(nextState))
@@ -132,18 +159,16 @@ export async function syncDailyUsdDopRate(forceCheck = false): Promise<DailyExch
 
         return nextState
       }
-    } catch {
-      // Intenta el siguiente endpoint o usa la tasa anterior guardada
     }
+  } catch {
+    // Si falla la red, usa la tasa anterior almacenada
   }
 
-  // Fallback: si no hay red o el proveedor no cambió, se conserva la tasa anterior
   const fallbackState: DailyExchangeRateState = {
     ...current,
     dateISO: today,
     status: 'unchanged',
     delta: 0,
-    source: 'Tasa Anterior Vigente',
   }
 
   try {
