@@ -117,6 +117,27 @@ describe('Calendar and Period Engine', () => {
       expect(res.periodNet).toBe(30000)
       expect(res.totalCumulativeBalance).toBe(60000)
     })
+
+    it('subtracts prior and current period cashWithdrawals from cumulative balance', () => {
+      const mockIncomes = [
+        { period: '2026-08', amount: 100000 },
+        { period: '2026-09', amount: 50000 },
+      ]
+      const mockExpenses = [
+        { period: '2026-08', amount: 60000 },
+        { period: '2026-09', amount: 20000 },
+      ]
+      const mockCash = [
+        { period: '2026-08', amount: 10000 },
+        { period: '2026-09', amount: 5000 },
+      ]
+
+      const res = calculateCumulativeBalance(mockIncomes, mockExpenses, '2026-09', mockCash)
+      expect(res.carriedOverBalance).toBe(30000) // 100,000 - 60,000 - 10,000
+      expect(res.periodCash).toBe(5000)
+      expect(res.periodNet).toBe(25000) // 50,000 - 20,000 - 5,000
+      expect(res.totalCumulativeBalance).toBe(55000)
+    })
   })
 
   describe('getAllAvailablePeriods', () => {

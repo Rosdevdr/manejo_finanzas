@@ -149,8 +149,8 @@ export function App() {
   }
 
   const cumulativeSummary = useMemo(
-    () => calculateCumulativeBalance(incomes, expenses, currentPeriod),
-    [incomes, expenses, currentPeriod]
+    () => calculateCumulativeBalance(incomes, expenses, currentPeriod, cash),
+    [incomes, expenses, currentPeriod, cash]
   )
 
   const periodExpenses = expenses.filter(e => e.period === currentPeriod)
@@ -365,6 +365,23 @@ export function App() {
               onOpenSecurity={() => setIsSecurityOpen(true)}
               onOpenExport={() => setShowExportModal(true)}
               onOpenScenarioSimulator={() => setShowScenarioModal(true)}
+              onAddExpense={async d => {
+                const safeAvailable = Math.max(0, available)
+                if (d.amount > safeAvailable) {
+                  showToast(
+                    `Saldo insuficiente: dispones de RD$ ${safeAvailable.toLocaleString('es-DO', { minimumFractionDigits: 2 })} y no puedes ejecutar este pago.`,
+                    'error'
+                  )
+                  return { success: false }
+                }
+                const res = await addExpense(d)
+                if (!res.success) {
+                  showToast(res.error || 'Error al registrar gasto', 'error')
+                  return { success: false }
+                }
+                return { success: true }
+              }}
+              onShowToast={showToast}
             />
           )}
           {activeTab === 'incomes' && (
@@ -434,6 +451,9 @@ export function App() {
               currentPeriod={currentPeriod}
               creditCards={creditCards}
               creditTransactions={creditTransactions}
+              availableBalance={available}
+              userEmail={user?.email}
+              onShowToast={showToast}
               onAddCard={async c => {
                 const res = await addCreditCard(c)
                 if (!res.success) showToast(res.error || 'Error al agregar tarjeta', 'error')
@@ -462,6 +482,19 @@ export function App() {
               }}
               onDeleteTransaction={id => { deleteCreditTransaction(id); showToast('Consumo eliminado', 'error') }}
               onTogglePaid={id => { toggleTransactionPaid(id); showToast('Estado de pago actualizado', 'info') }}
+              onPayCardDebt={async (amount, cardName) => {
+                const todayIso = new Date().toISOString().slice(0, 10)
+                await addExpense({
+                  period: currentPeriod,
+                  description: `Abono a Tarjeta: ${cardName}`,
+                  amount,
+                  category: 'debt',
+                  type: 'fixed',
+                  paymentMethod: 'bank_transfer',
+                  date: todayIso,
+                })
+                showToast(`Abono de ${formatCurrency(amount)} aplicado a ${cardName} y descontado de liquidez`, 'success')
+              }}
             />
           )}
           {activeTab === 'cash' && (

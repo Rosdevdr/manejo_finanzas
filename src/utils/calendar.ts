@@ -174,6 +174,7 @@ export interface CumulativePeriodSummary {
   currentPeriod: string
   periodIncome: number
   periodExpense: number
+  periodCash: number
   periodNet: number
   carriedOverBalance: number
   totalCumulativeBalance: number
@@ -181,16 +182,18 @@ export interface CumulativePeriodSummary {
 
 /**
  * Calcula el balance acumulado global arrastrado de meses previos
- * más el flujo neto del período actual.
+ * más el flujo neto del período actual (incluyendo retiros de efectivo).
  */
 export function calculateCumulativeBalance(
   incomes: { period: string; amount: number; date?: string }[],
   expenses: { period: string; amount: number; date?: string }[],
-  currentPeriod: string
+  currentPeriod: string,
+  cashWithdrawals: { period: string; amount: number; date?: string }[] = []
 ): CumulativePeriodSummary {
   let carriedOverBalance = 0
   let periodIncome = 0
   let periodExpense = 0
+  let periodCash = 0
 
   // Resilient period extraction: if period is null/empty, fall back to date slice
   const getP = (item: { period: string; date?: string }) => {
@@ -219,16 +222,25 @@ export function calculateCumulativeBalance(
     }
   })
 
-  const periodNet = periodIncome - periodExpense
+  cashWithdrawals.forEach(c => {
+    const p = getP(c)
+    if (p < currentPeriod) {
+      carriedOverBalance -= c.amount
+    } else if (p === currentPeriod) {
+      periodCash += c.amount
+    }
+  })
+
+  const periodNet = periodIncome - periodExpense - periodCash
   const totalCumulativeBalance = carriedOverBalance + periodNet
 
   return {
     currentPeriod,
     periodIncome,
     periodExpense,
+    periodCash,
     periodNet,
     carriedOverBalance,
     totalCumulativeBalance,
   }
 }
-

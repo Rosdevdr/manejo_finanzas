@@ -39,6 +39,8 @@ interface CreditCardsViewProps {
   currentPeriod: string
   creditCards: CreditCard[]
   creditTransactions: CreditCardTransaction[]
+  availableBalance?: number
+  userEmail?: string | null
   onAddCard: (card: Omit<CreditCard, 'id'>) => void
   onUpdateCard: (card: CreditCard) => void
   onDeleteCard: (id: string) => void
@@ -46,6 +48,8 @@ interface CreditCardsViewProps {
   onUpdateTransaction: (tx: CreditCardTransaction) => void
   onDeleteTransaction: (id: string) => void
   onTogglePaid: (id: string) => void
+  onPayCardDebt?: (amount: number, cardName: string) => void
+  onShowToast?: (msg: string, type?: 'success' | 'error' | 'info') => void
 }
 
 const CATEGORY_MAP: Record<ExpenseCategory, { label: string; subtitle: string; badge: string; icon: ReactNode; color: string }> = {
@@ -74,6 +78,8 @@ export function CreditCardsView({
   currentPeriod,
   creditCards,
   creditTransactions,
+  availableBalance,
+  userEmail,
   onAddCard,
   onUpdateCard,
   onDeleteCard,
@@ -81,6 +87,8 @@ export function CreditCardsView({
   onUpdateTransaction,
   onDeleteTransaction,
   onTogglePaid,
+  onPayCardDebt,
+  onShowToast,
 }: CreditCardsViewProps) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(creditCards[0]?.id || null)
   const [showCardModal, setShowCardModal] = useState(false)
@@ -91,6 +99,13 @@ export function CreditCardsView({
   // Abono a deuda
   const [customAbonoAmount, setCustomAbonoAmount] = useState<string | null>(null)
   const [abonoConfirmed, setAbonoConfirmed] = useState(false)
+  const [abonoError, setAbonoError] = useState<string | null>(null)
+
+  const holderName = userEmail
+    ? userEmail.split('@')[0].replace(/[._-]/g, ' ').toUpperCase()
+    : 'TITULAR AUREUS'
+
+  const safeAvailable = availableBalance !== undefined ? Math.max(0, availableBalance) : undefined
 
   // Cerrar cualquier modal al presionar la tecla Escape
   useEffect(() => {
@@ -100,6 +115,7 @@ export function CreditCardsView({
         setShowCardModal(false)
         setShowTxModal(false)
         setShowAbonoModal(false)
+        setAbonoError(null)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -166,12 +182,20 @@ export function CreditCardsView({
 
   const defaultAbono = cardHealth && cardHealth.totalDebt > 0 ? cardHealth.totalDebt.toFixed(2) : ''
   const abonoAmount = customAbonoAmount ?? defaultAbono
-  const setAbonoAmount = (val: string) => setCustomAbonoAmount(val)
+  const setAbonoAmount = (val: string) => {
+    setAbonoError(null)
+    setCustomAbonoAmount(val)
+  }
 
   const getPeriod = (t: { period?: string; date?: string }) =>
     t.period && t.period.trim().length === 7 ? t.period.trim() : (t.date ? t.date.slice(0, 7) : currentPeriod)
 
   const activePeriodTxs = creditTransactions.filter(t => getPeriod(t) === currentPeriod)
+
+  // Cashback & Puntos calculados dinámicamente (1.5% sobre el volumen de consumos del ciclo)
+  const totalCycleSpend = activePeriodTxs.reduce((s, t) => s + t.amount, 0)
+  const estimatedCashbackDop = Number((totalCycleSpend * 0.015).toFixed(2))
+  const estimatedPoints = Math.round(totalCycleSpend * 0.35)
 
   const [showAllCards, setShowAllCards] = useState(false)
   const [showAllPeriods, setShowAllPeriods] = useState(false)
@@ -259,12 +283,25 @@ export function CreditCardsView({
     e.preventDefault()
     if (!txForm.description || !txForm.amount || !txForm.cardId) return
 
+    const parsedAmount = parseFloat(txForm.amount)
+    const targetCard = creditCards.find(c => c.id === txForm.cardId)
+    if (targetCard) {
+      const targetHealth = evaluateCardHealth(targetCard, creditTransactions)
+      if (parsedAmount > targetHealth.availableCredit) {
+        onShowToast?.(
+          `Límite de crédito insuficiente en ${targetCard.name}: disponible ${formatCurrency(targetHealth.availableCredit)}.`,
+          'error'
+        )
+        return
+      }
+    }
+
     const computedPeriod = txForm.date ? txForm.date.slice(0, 7) : currentPeriod
     onAddTransaction({
       cardId: txForm.cardId,
       period: computedPeriod,
       description: txForm.description,
-      amount: parseFloat(txForm.amount),
+      amount: parsedAmount,
       category: txForm.category,
       date: txForm.date,
       installments: Number(txForm.installments) || 1,
@@ -311,21 +348,44 @@ export function CreditCardsView({
   function handleApplyAbono(e: React.FormEvent) {
     e.preventDefault()
     const abono = parseFloat(abonoAmount)
-    if (!abono || abono <= 0 || !activeCard) return
+    if (!abono || abono <= 0 || !activeCard || !cardHealth) return
 
+    if (safeAvailable !== undefined && abono > safeAvailable) {
+      const msg = `Saldo líquido insuficiente: dispones de ${formatCurrency(safeAvailable)} y no puedes abonar ${formatCurrency(abono)}.`
+      setAbonoError(msg)
+      onShowToast?.(msg, 'error')
+      return
+    }
+
+    const effectiveAbono = Math.min(abono, cardHealth.totalDebt)
+    if (effectiveAbono <= 0) return
+
+    // Ordenar cargos pendientes por antigüedad para saldar primero los más antiguos (o parciales)
     const pending = creditTransactions
       .filter(t => t.cardId === activeCard.id && !t.isPaid)
-      .sort((a, b) => b.amount - a.amount)
+      .sort((a, b) => a.date.localeCompare(b.date) || b.amount - a.amount)
 
-    let remaining = abono
+    let remaining = effectiveAbono
     for (const tx of pending) {
       if (remaining <= 0) break
-      if (tx.amount <= remaining) {
-        remaining -= tx.amount
+      if (tx.amount <= remaining + 0.005) {
+        remaining = Number(Math.max(0, remaining - tx.amount).toFixed(2))
         onTogglePaid(tx.id)
+      } else {
+        // Abono parcial: reduce el saldo pendiente de esta transacción
+        const newPendingAmount = Number((tx.amount - remaining).toFixed(2))
+        remaining = 0
+        onUpdateTransaction({
+          ...tx,
+          amount: newPendingAmount,
+        })
       }
     }
 
+    // Registrar salida de caja real en Egresos (pago de deuda de tarjeta)
+    onPayCardDebt?.(effectiveAbono, `${activeCard.name} (${activeCard.bank})`)
+
+    setAbonoError(null)
     setAbonoAmount('')
     setAbonoConfirmed(true)
     setTimeout(() => {
@@ -349,7 +409,10 @@ export function CreditCardsView({
             <button
               type="button"
               className="btn-stitch-outline"
-              onClick={() => setShowAbonoModal(true)}
+              onClick={() => {
+                setAbonoError(null)
+                setShowAbonoModal(true)
+              }}
             >
               <ArrowDownCircle size={15} />
               <span>Regla de Pago / Abono</span>
@@ -386,15 +449,15 @@ export function CreditCardsView({
             <span className="kpi-title-label">Línea de Crédito Total</span>
             <span className="kpi-badge-success">
               <CheckCircle2 size={12} />
-              {summary.utilizationRate.toFixed(1)}% Utilizado (Óptimo)
+              {summary.utilizationRate.toFixed(1)}% Utilizado ({summary.utilizationRate <= 30 ? 'Óptimo' : 'Atención'})
             </span>
           </div>
           <div className="kpi-value-block">
             <div className="kpi-big-number">
-              {formatCurrency(summary.totalLimit > 0 ? summary.totalLimit : 76000)}
+              {formatCurrency(summary.totalLimit)}
             </div>
             <p className="kpi-footnote">
-              Disponible consolidado: <strong style={{ color: 'var(--color-tertiary, #56e5a9)' }}>{formatCurrency(summary.availableCredit > 0 ? summary.availableCredit : 57579.70)}</strong>
+              Disponible consolidado: <strong style={{ color: 'var(--color-tertiary, #56e5a9)' }}>{formatCurrency(summary.availableCredit)}</strong>
             </p>
           </div>
           {/* Health Progress Bar */}
@@ -403,15 +466,15 @@ export function CreditCardsView({
               <div
                 style={{
                   height: '100%',
-                  width: `${Math.min(summary.utilizationRate || 24.2, 100)}%`,
-                  backgroundColor: 'var(--color-tertiary, #56e5a9)',
+                  width: `${Math.min(summary.utilizationRate, 100)}%`,
+                  backgroundColor: summary.utilizationRate > 50 ? 'var(--color-error, #ffb4ab)' : 'var(--color-tertiary, #56e5a9)',
                   borderRadius: 9999,
                 }}
               />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--color-outline, #a08e7a)', marginTop: 4 }}>
-              <span>Límites de crédito</span>
-              <span>75% corporativo | 25% personal</span>
+              <span>Límites de crédito ({creditCards.length} plásticos)</span>
+              <span>Umbral sano: &lt; 30%</span>
             </div>
           </div>
         </div>
@@ -422,27 +485,32 @@ export function CreditCardsView({
             <span className="kpi-title-label">Próximo Vencimiento Más Cercano</span>
             <span className="kpi-badge-warning">
               <Clock size={12} />
-              En corte ({activeCard ? `${cardHealth?.daysToCutoff || 15} días` : '15 días'})
+              En corte ({activeCard ? `${cardHealth?.daysToCutoff ?? 15} días` : 'Sin plásticos'})
             </span>
           </div>
           <div className="kpi-value-block">
             <div className="kpi-big-number" style={{ color: 'var(--color-primary, #ffc174)' }}>
-              {formatCurrency(summary.totalDebt > 0 ? summary.totalDebt : 4280)}
+              {formatCurrency(summary.totalDebt)}
             </div>
             <p className="kpi-footnote">
-              {activeCard ? `${activeCard.name} (${activeCard.bank})` : 'Sapphire Reserve Executive'}
+              {activeCard ? `${activeCard.name} (${activeCard.bank})` : 'Sin tarjeta activa'}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)' }}>
             <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>Pago sugerido sin intereses.</span>
-            <button
-              type="button"
-              className="btn-stitch-gold"
-              style={{ padding: '4px 12px', fontSize: 12 }}
-              onClick={() => setShowAbonoModal(true)}
-            >
-              Pagar Deuda
-            </button>
+            {summary.totalDebt > 0 && (
+              <button
+                type="button"
+                className="btn-stitch-gold"
+                style={{ padding: '4px 12px', fontSize: 12 }}
+                onClick={() => {
+                  setAbonoError(null)
+                  setShowAbonoModal(true)
+                }}
+              >
+                Pagar Deuda
+              </button>
+            )}
           </div>
         </div>
 
@@ -452,19 +520,19 @@ export function CreditCardsView({
             <span className="kpi-title-label">Cashback &amp; Recompensas del Ciclo</span>
             <span className="kpi-badge-success">
               <Sparkles size={12} />
-              +18.2% vs ciclo anterior
+              1.5% Retorno Estimado
             </span>
           </div>
           <div className="kpi-value-block">
             <div className="kpi-big-number" style={{ color: 'var(--color-tertiary, #56e5a9)' }}>
-              +$342.80 <span style={{ fontSize: 13, color: 'var(--color-outline, #a08e7a)' }}>USD</span>
+              +{formatCurrency(estimatedCashbackDop)}
             </div>
             <p className="kpi-footnote">
-              Puntos acumulados: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>14,920 pts</strong> (convertibles a cash)
+              Puntos del período: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{estimatedPoints.toLocaleString('es-DO')} pts</strong> (convertibles a saldo)
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
-            <span>Canje automático activo: Saldo principal</span>
+            <span>Volumen facturado: {formatCurrency(totalCycleSpend)}</span>
             <span style={{ color: 'var(--color-tertiary, #56e5a9)', fontWeight: 600 }}>100% Bonificado</span>
           </div>
         </div>
@@ -516,11 +584,11 @@ export function CreditCardsView({
                   <div className="card-bottom-row">
                     <div className="card-holder-info">
                       <span className="card-holder-label">Titular Autorizado</span>
-                      <span className="card-holder-name">ALEJANDRO SILVA</span>
+                      <span className="card-holder-name">{holderName}</span>
                     </div>
                     <div className="card-expiry-info">
-                      <span className="card-holder-label">Vence</span>
-                      <span className="card-expiry-val">09/28</span>
+                      <span className="card-holder-label">Corte / Pago</span>
+                      <span className="card-expiry-val">D{card.cutoffDay} / D{card.paymentDueDay}</span>
                     </div>
                   </div>
                 </div>
@@ -945,8 +1013,15 @@ export function CreditCardsView({
             </div>
 
             <form onSubmit={handleApplyAbono} style={{ padding: 24 }}>
-              <div style={{ marginBottom: 14, fontSize: 12.5, color: 'var(--text-secondary)' }}>
-                Deuda Total Pendiente: <strong className="text-rose">{formatCurrency(cardHealth.totalDebt)}</strong>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14, fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                <div>
+                  Deuda Total Pendiente: <strong className="text-rose">{formatCurrency(cardHealth.totalDebt)}</strong>
+                </div>
+                {safeAvailable !== undefined && (
+                  <div>
+                    Liquidez Disponible para Pago: <strong className="text-emerald">{formatCurrency(safeAvailable)}</strong>
+                  </div>
+                )}
               </div>
 
               <div className="modal-form-group">
@@ -955,6 +1030,7 @@ export function CreditCardsView({
                   type="number"
                   step="0.01"
                   min="0.01"
+                  max={safeAvailable !== undefined ? Math.min(cardHealth.totalDebt, safeAvailable) : cardHealth.totalDebt}
                   className="aureus-adaptive-input"
                   value={abonoAmount}
                   onChange={e => setAbonoAmount(e.target.value)}
@@ -962,7 +1038,7 @@ export function CreditCardsView({
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={() => setAbonoAmount(String(cardHealth.totalDebt.toFixed(2)))}
@@ -986,9 +1062,15 @@ export function CreditCardsView({
                 </button>
               </div>
 
+              {abonoError && (
+                <div style={{ color: 'var(--color-error, #ffb4ab)', fontSize: 12, marginBottom: 10 }}>
+                  {abonoError}
+                </div>
+              )}
+
               {abonoConfirmed && (
                 <div style={{ color: 'var(--emerald-success)', fontSize: 12, marginBottom: 10 }}>
-                  ✓ ¡Abono procesado y transacciones saldadas correctamente!
+                  ✓ ¡Abono procesado, deuda reducida y salida de liquidez registrada!
                 </div>
               )}
 

@@ -29,14 +29,38 @@ import {
   PieChart,
   RefreshCw,
 } from 'lucide-react'
+import type {
+  Income,
+  Expense,
+  CashWithdrawal,
+  CreditCard as CreditCardType,
+  CreditCardTransaction,
+  CategoryBudget,
+  ExpenseCategory,
+} from '../../types/finance'
 import { apiClient } from '../../services/apiClient'
 import {
   getStoredDailyExchangeRate,
   syncDailyUsdDopRate,
   type DailyExchangeRateState,
 } from '../../utils/currencyConverter'
+import { getCurrentSystemPeriod } from '../../utils/calendar'
 import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
 import './SentinelDashboardView.css'
+
+export interface SentinelDashboardViewProps {
+  currentPeriod?: string
+  incomes?: Income[]
+  expenses?: Expense[]
+  cashWithdrawals?: CashWithdrawal[]
+  creditCards?: CreditCardType[]
+  creditTransactions?: CreditCardTransaction[]
+  categoryBudgets?: CategoryBudget[]
+  availableBalance?: number
+  userEmail?: string | null
+  onAddExpense?: (expense: Omit<Expense, 'id'>) => Promise<{ success: boolean } | void>
+  onShowToast?: (msg: string, type?: 'success' | 'error' | 'info') => void
+}
 
 interface CommitmentItem {
   id: string
@@ -64,13 +88,16 @@ interface TelegramFeedItem {
   amountTag?: string
 }
 
+const COMMITMENTS_STORAGE_KEY = 'aureus_sentinel_commitments'
+const FEED_STORAGE_KEY = 'aureus_sentinel_feed'
+
 const INITIAL_COMMITMENTS: CommitmentItem[] = [
   {
     id: 'c-edesur',
     name: 'Edesur Dominicana',
     monogram: 'ED',
     category: 'electric',
-    dueDateStr: '20 Oct 2026',
+    dueDateStr: 'Día 20 del ciclo',
     dueDayOfMonth: 20,
     status: 'pending',
     amountFormatted: 'RD$ 2,450.00',
@@ -84,7 +111,7 @@ const INITIAL_COMMITMENTS: CommitmentItem[] = [
     name: 'Claro Telecomunicaciones',
     monogram: 'CL',
     category: 'telecom',
-    dueDateStr: '24 Oct 2026',
+    dueDateStr: 'Día 24 del ciclo',
     dueDayOfMonth: 24,
     status: 'pending',
     amountFormatted: 'RD$ 2,190.00',
@@ -98,7 +125,7 @@ const INITIAL_COMMITMENTS: CommitmentItem[] = [
     name: 'Banreservas Visa Oro',
     monogram: 'BR',
     category: 'card',
-    dueDateStr: '28 Oct 2026',
+    dueDateStr: 'Día 28 del ciclo',
     dueDayOfMonth: 28,
     status: 'pending',
     amountFormatted: 'RD$ 14,800.00',
@@ -112,7 +139,7 @@ const INITIAL_COMMITMENTS: CommitmentItem[] = [
     name: 'Colegio San Judas Tadeo',
     monogram: 'SJ',
     category: 'education',
-    dueDateStr: '05 Nov 2026',
+    dueDateStr: 'Día 05 del ciclo',
     dueDayOfMonth: 5,
     status: 'pending',
     amountFormatted: 'RD$ 12,500.00',
@@ -126,14 +153,14 @@ const INITIAL_COMMITMENTS: CommitmentItem[] = [
     name: 'CAASD (Agua Potable)',
     monogram: 'CA',
     category: 'water',
-    dueDateStr: '12 Oct 2026',
+    dueDateStr: 'Día 12 del ciclo',
     dueDayOfMonth: 12,
     status: 'paid',
     amountFormatted: 'RD$ 680.00',
     amountRaw: 680,
     lateFeeAvoided: 'RD$ 150.00',
     contractNumber: 'Contrato #44910',
-    daysRemaining: -6,
+    daysRemaining: 0,
   },
 ]
 
@@ -168,7 +195,7 @@ const INITIAL_FEED: TelegramFeedItem[] = [
   },
 ]
 
-const AVAILABLE_LIQUIDITY_DOP = 413950
+const FALLBACK_LIQUIDITY_DOP = 413950
 
 const COMMITMENT_CATEGORY_OPTIONS: CustomSelectOption<CommitmentItem['category']>[] = [
   {
@@ -215,13 +242,94 @@ const COMMITMENT_CATEGORY_OPTIONS: CustomSelectOption<CommitmentItem['category']
   },
 ]
 
-export function SentinelDashboardView() {
-  const [commitments, setCommitments] = useState<CommitmentItem[]>(INITIAL_COMMITMENTS)
-  const [feed, setFeed] = useState<TelegramFeedItem[]>(INITIAL_FEED)
+function loadSavedCommitments(): CommitmentItem[] {
+  try {
+    const raw = localStorage.getItem(COMMITMENTS_STORAGE_KEY)
+    if (!raw) return INITIAL_COMMITMENTS
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_COMMITMENTS
+  } catch {
+    return INITIAL_COMMITMENTS
+  }
+}
+
+function loadSavedFeed(): TelegramFeedItem[] {
+  try {
+    const raw = localStorage.getItem(FEED_STORAGE_KEY)
+    if (!raw) return INITIAL_FEED
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_FEED
+  } catch {
+    return INITIAL_FEED
+  }
+}
+
+function mapCommitmentCategoryToExpense(cat: CommitmentItem['category']): ExpenseCategory {
+  if (cat === 'electric' || cat === 'telecom' || cat === 'water') return 'utilities'
+  if (cat === 'card') return 'debt'
+  if (cat === 'education') return 'education'
+  return 'housing'
+}
+
+function inferTelegramCategory(text: string): { category: ExpenseCategory; tag: string } {
+  const lower = text.toLowerCase()
+  if (/cena|almuerzo|desayuno|comida|super|nacional|bravo|sirena|restaurante|cafe|pizza/.test(lower)) {
+    return { category: 'food', tag: 'Alimentación & Despensa' }
+  }
+  if (/luz|edesur|edenorte|agua|caasd|internet|claro|altice|factura|telefono/.test(lower)) {
+    return { category: 'utilities', tag: 'Servicios & Facturas' }
+  }
+  if (/gasolina|combustible|uber|taxi|peaje|parqueo|auto|mantenimiento/.test(lower)) {
+    return { category: 'transport', tag: 'Combustible & Movilidad' }
+  }
+  if (/farmacia|medico|consulta|salud|clinica|laboratorio/.test(lower)) {
+    return { category: 'health', tag: 'Salud & Bienestar' }
+  }
+  if (/colegio|universidad|curso|libro|educacion/.test(lower)) {
+    return { category: 'education', tag: 'Educación & Formación' }
+  }
+  if (/alquiler|renta|hipoteca|condominio/.test(lower)) {
+    return { category: 'housing', tag: 'Vivienda & Hogar' }
+  }
+  if (/cine|salida|fiesta|concierto|viaje|hotel|ocio/.test(lower)) {
+    return { category: 'entertainment', tag: 'Ocio & Recreación' }
+  }
+  return { category: 'other', tag: 'Captura Telegram Live' }
+}
+
+export function SentinelDashboardView({
+  currentPeriod,
+  incomes,
+  expenses,
+  cashWithdrawals = [],
+  creditCards = [],
+  creditTransactions = [],
+  categoryBudgets = [],
+  availableBalance,
+  userEmail,
+  onAddExpense,
+  onShowToast,
+}: SentinelDashboardViewProps = {}) {
+  const activePeriod = currentPeriod || getCurrentSystemPeriod()
+  const [commitments, setCommitments] = useState<CommitmentItem[]>(() => loadSavedCommitments())
+  const [feed, setFeed] = useState<TelegramFeedItem[]>(() => loadSavedFeed())
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'urgent'>('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [simText, setSimText] = useState('')
   const [celebrationToast, setCelebrationToast] = useState<string | null>(null)
+
+  // Persistir compromisos y feed en localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(COMMITMENTS_STORAGE_KEY, JSON.stringify(commitments))
+    } catch { }
+  }, [commitments])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(FEED_STORAGE_KEY, JSON.stringify(feed))
+    } catch { }
+  }, [feed])
 
   // Estado de la Tasa de Cambio Diaria (USD -> DOP) con respaldo automático a la tasa anterior
   const [fxState, setFxState] = useState<DailyExchangeRateState>(() =>
@@ -275,15 +383,21 @@ export function SentinelDashboardView() {
     setIsSyncingFx(false)
   }
 
+  // Liquidez real conectada al motor contable de AUREUS
+  const liquidityDop = useMemo(() => {
+    if (availableBalance !== undefined) return availableBalance
+    return FALLBACK_LIQUIDITY_DOP
+  }, [availableBalance])
+
   // Equivalente en USD calculado con la tasa del día (o la anterior si no varió)
   const liquidityInUsdFormatted = useMemo(() => {
     const rate = fxState.rate > 0 ? fxState.rate : 60.25
-    const usdAmount = AVAILABLE_LIQUIDITY_DOP / rate
+    const usdAmount = liquidityDop / rate
     return usdAmount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })
-  }, [fxState.rate])
+  }, [fxState.rate, liquidityDop])
 
   // Carga inicial del backend
   useEffect(() => {
@@ -305,10 +419,10 @@ export function SentinelDashboardView() {
             category: (c.name.toLowerCase().includes('luz') || c.name.toLowerCase().includes('ede')
               ? 'electric'
               : c.name.toLowerCase().includes('claro') || c.name.toLowerCase().includes('internet')
-              ? 'telecom'
-              : c.name.toLowerCase().includes('tarjeta') || c.name.toLowerCase().includes('visa')
-              ? 'card'
-              : 'other') as CommitmentItem['category'],
+                ? 'telecom'
+                : c.name.toLowerCase().includes('tarjeta') || c.name.toLowerCase().includes('visa')
+                  ? 'card'
+                  : 'other') as CommitmentItem['category'],
             dueDateStr: c.currentCycle.dueDate,
             dueDayOfMonth: c.dueDayOfMonth,
             status: c.currentCycle.status,
@@ -317,14 +431,14 @@ export function SentinelDashboardView() {
             lateFeeAvoided: c.estimatedLateFee || 'RD$ 0.00',
             daysRemaining: Math.ceil(
               (new Date(c.currentCycle.dueDate).getTime() - new Date().getTime()) /
-                (1000 * 60 * 60 * 24)
+              (1000 * 60 * 60 * 24)
             ),
           }
         })
         setCommitments(mapped)
       })
       .catch(() => {
-        // Si el backend no responde, conserva los datos demostrativos
+        // Si el backend no responde, conserva los datos persistidos localmente
       })
 
     return () => {
@@ -332,16 +446,88 @@ export function SentinelDashboardView() {
     }
   }, [])
 
-  // Métricas calculadas
+  // Métricas reales calculadas a partir del período activo
   const metrics = useMemo(() => {
-    const totalIncome = 170000
-    const totalSpent = 78420
+    const getP = (item: { period?: string; date?: string }) =>
+      item.period && item.period.trim().length === 7 ? item.period.trim() : (item.date ? item.date.slice(0, 7) : activePeriod)
+
+    const hasLiveStore = incomes !== undefined || expenses !== undefined
+    const periodIncomes = (incomes || []).filter(i => getP(i) === activePeriod)
+    const periodExpenses = (expenses || []).filter(e => getP(e) === activePeriod)
+    const periodCash = (cashWithdrawals || []).filter(c => getP(c) === activePeriod)
+
+    const computedIncome = periodIncomes.reduce((s, i) => s + i.amount, 0)
+    const computedSpent = periodExpenses.reduce((s, e) => s + e.amount, 0) + periodCash.reduce((s, c) => s + c.amount, 0)
+
+    const totalIncome = hasLiveStore ? computedIncome : 170000
+    const totalSpent = hasLiveStore ? computedSpent : 78420
     const netFlow = totalIncome - totalSpent
+
     const savedFeesTotal = commitments
       .filter(c => c.status === 'paid')
       .reduce((acc, c) => acc + (parseFloat(c.lateFeeAvoided.replace(/[^0-9.]/g, '')) || 0), 3450)
 
     const urgentBill = commitments.find(c => c.status === 'pending' && c.daysRemaining <= 2)
+
+    // Endeudamiento real de tarjetas
+    const totalCreditLimit = creditCards.reduce((s, c) => s + (c.creditLimit || 0), 0)
+    const totalCardDebt = creditTransactions.filter(t => !t.isPaid).reduce((s, t) => s + t.amount, 0)
+    const debtRatio = totalCreditLimit > 0
+      ? Number(((totalCardDebt / totalCreditLimit) * 100).toFixed(1))
+      : 14.8
+
+    // Regla 50/30/20 real del período
+    const needsCats: ExpenseCategory[] = ['housing', 'food', 'utilities', 'health', 'transport', 'education', 'debt']
+    const wantsCats: ExpenseCategory[] = ['entertainment', 'other']
+
+    const needsSpent = hasLiveStore
+      ? periodExpenses.filter(e => needsCats.includes(e.category)).reduce((s, e) => s + e.amount, 0)
+      : 81600
+    const wantsSpent = hasLiveStore
+      ? periodExpenses.filter(e => wantsCats.includes(e.category)).reduce((s, e) => s + e.amount, 0) + periodCash.reduce((s, c) => s + c.amount, 0)
+      : 40800
+    const savingsVal = Math.max(0, totalIncome - needsSpent - wantsSpent)
+    const denom = Math.max(1, totalIncome, needsSpent + wantsSpent + savingsVal)
+
+    const needsPct = Math.round((needsSpent / denom) * 100)
+    const wantsPct = Math.round((wantsSpent / denom) * 100)
+    const savingsPct = Math.max(0, 100 - needsPct - wantsPct)
+
+    // 4 Sobres Digitales reales
+    const getBudgetLimit = (cats: ExpenseCategory[], fallback: number) => {
+      const sum = categoryBudgets
+        .filter(b => cats.includes(b.category))
+        .reduce((s, b) => s + b.limitAmount, 0)
+      return sum > 0 ? sum : fallback
+    }
+
+    const envHousingSpent = hasLiveStore
+      ? periodExpenses.filter(e => e.category === 'housing' || e.category === 'utilities').reduce((s, e) => s + e.amount, 0)
+      : 18400
+    const envHousingLimit = getBudgetLimit(['housing', 'utilities'], 34500)
+    const envHousingPct = Math.min(100, Math.round((envHousingSpent / envHousingLimit) * 100))
+
+    const envFoodSpent = hasLiveStore
+      ? periodExpenses.filter(e => e.category === 'food').reduce((s, e) => s + e.amount, 0)
+      : 14230
+    const envFoodLimit = getBudgetLimit(['food'], 18000)
+    const envFoodPct = Math.min(100, Math.round((envFoodSpent / envFoodLimit) * 100))
+
+    const envEduSpent = hasLiveStore
+      ? periodExpenses.filter(e => e.category === 'education' || e.category === 'health').reduce((s, e) => s + e.amount, 0)
+      : 12500
+    const envEduLimit = getBudgetLimit(['education', 'health'], 8500)
+    const envEduPct = Math.min(100, Math.round((envEduSpent / envEduLimit) * 100))
+
+    const envLeisureSpent = hasLiveStore
+      ? periodExpenses.filter(e => e.category === 'entertainment' || e.category === 'transport').reduce((s, e) => s + e.amount, 0)
+      : 5120
+    const envLeisureLimit = getBudgetLimit(['entertainment', 'transport'], 14000)
+    const envLeisurePct = Math.min(100, Math.round((envLeisureSpent / envLeisureLimit) * 100))
+
+    const spendPctOfIncome = totalIncome > 0 ? Math.min(100, Number(((totalSpent / totalIncome) * 100).toFixed(1))) : 0
+    const savingsRatePct = totalIncome > 0 ? Math.max(0, Number(((netFlow / totalIncome) * 100).toFixed(1))) : 0
+    const runwayMonths = totalSpent > 0 ? (Math.max(0, liquidityDop) / totalSpent).toFixed(1) : '6.0'
 
     return {
       totalSpent,
@@ -349,8 +535,25 @@ export function SentinelDashboardView() {
       netFlow,
       savedFeesTotal,
       urgentBill,
+      debtRatio,
+      totalCardDebt,
+      spendPctOfIncome,
+      savingsRatePct,
+      runwayMonths,
+      needsSpent,
+      wantsSpent,
+      savingsVal,
+      needsPct,
+      wantsPct,
+      savingsPct,
+      envelopes: {
+        housing: { spent: envHousingSpent, pct: envHousingPct },
+        food: { spent: envFoodSpent, pct: envFoodPct },
+        edu: { spent: envEduSpent, pct: envEduPct },
+        leisure: { spent: envLeisureSpent, pct: envLeisurePct },
+      },
     }
-  }, [commitments])
+  }, [commitments, incomes, expenses, cashWithdrawals, creditCards, creditTransactions, categoryBudgets, activePeriod, liquidityDop])
 
   // Filtrado de compromisos
   const filteredCommitments = useMemo(() => {
@@ -362,13 +565,33 @@ export function SentinelDashboardView() {
     })
   }, [commitments, filter])
 
-  // Acción rápida: Marcar pagado
-  const handleMarkAsPaid = (id: string, name: string, lateFee: string) => {
+  // Acción rápida: Marcar pagado y descontar del saldo líquido real
+  const handleMarkAsPaid = async (item: CommitmentItem) => {
+    if (availableBalance !== undefined && item.amountRaw > Math.max(0, availableBalance)) {
+      const errMsg = `Saldo líquido insuficiente (${liquidityDop.toLocaleString('es-DO', { minimumFractionDigits: 2 })}) para pagar ${item.name} (${item.amountFormatted}).`
+      onShowToast?.(errMsg, 'error')
+      return
+    }
+
+    if (onAddExpense && item.amountRaw > 0) {
+      const todayIso = new Date().toISOString().slice(0, 10)
+      const res = await onAddExpense({
+        period: activePeriod,
+        description: `Pago Centinela: ${item.name}`,
+        amount: item.amountRaw,
+        category: mapCommitmentCategoryToExpense(item.category),
+        type: 'fixed',
+        paymentMethod: 'bank_transfer',
+        date: todayIso,
+      })
+      if (res && res.success === false) return
+    }
+
     setCommitments(prev =>
-      prev.map(c => (c.id === id ? { ...c, status: 'paid', daysRemaining: 0 } : c))
+      prev.map(c => (c.id === item.id ? { ...c, status: 'paid', daysRemaining: 0 } : c))
     )
 
-    const toastMsg = `Factura de "${name}" marcada como pagada. Ahorraste ${lateFee} en moras.`
+    const toastMsg = `Factura de "${item.name}" pagada y descontada de tu liquidez. Ahorraste ${item.lateFeeAvoided} en moras.`
     setCelebrationToast(toastMsg)
 
     setFeed(prev => [
@@ -378,6 +601,7 @@ export function SentinelDashboardView() {
         avatarType: 'bot',
         text: toastMsg,
         timestamp: 'Justo ahora',
+        amountTag: item.amountFormatted,
       },
       ...prev,
     ])
@@ -385,19 +609,50 @@ export function SentinelDashboardView() {
     setTimeout(() => setCelebrationToast(null), 5000)
   }
 
-  // Simulador de mensaje Telegram
-  const handleSimulateTelegram = (e: React.FormEvent) => {
+  // Simulador de mensaje Telegram conectado al registro real de gastos
+  const handleSimulateTelegram = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!simText.trim()) return
+    const raw = simText.trim()
+    if (!raw) return
+
+    const numMatch = raw.match(/(\d+(?:[.,]\d+)?)/)
+    const parsedAmount = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : 0
+    const { category, tag } = inferTelegramCategory(raw)
+    const cleanDesc = raw.replace(/(\d+(?:[.,]\d+)?)/g, '').replace(/\s+/g, ' ').trim() || 'Gasto Captura Telegram'
+
+    if (parsedAmount > 0 && onAddExpense) {
+      if (availableBalance !== undefined && parsedAmount > Math.max(0, availableBalance)) {
+        onShowToast?.(
+          `Saldo insuficiente para registrar RD$ ${parsedAmount.toLocaleString('es-DO', { minimumFractionDigits: 2 })} vía Telegram Bot.`,
+          'error'
+        )
+        return
+      }
+      const todayIso = new Date().toISOString().slice(0, 10)
+      const res = await onAddExpense({
+        period: activePeriod,
+        description: `${cleanDesc.charAt(0).toUpperCase() + cleanDesc.slice(1)} (Telegram Bot)`,
+        amount: parsedAmount,
+        category,
+        type: 'variable',
+        paymentMethod: 'debit_card',
+        date: todayIso,
+      })
+      if (res && res.success === false) return
+      onShowToast?.(`Gasto de RD$ ${parsedAmount.toLocaleString('es-DO', { minimumFractionDigits: 2 })} conciliado en Egresos`, 'success')
+    }
 
     const newFeedItem: TelegramFeedItem = {
       id: `sim-${Date.now()}`,
       sender: 'Mamá',
       avatarType: 'mama',
-      text: simText,
+      text: raw,
       timestamp: 'Justo ahora',
       aiConfidence: 99,
-      categoryTag: 'Captura Telegram Live',
+      categoryTag: tag,
+      amountTag: parsedAmount > 0
+        ? `RD$ ${parsedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : undefined,
     }
 
     setFeed(prev => [newFeedItem, ...prev])
@@ -421,7 +676,7 @@ export function SentinelDashboardView() {
       monogram,
       category: newBillCategory,
       dueDayOfMonth: Number(newBillDay),
-      dueDateStr: `${newBillDay} Oct 2026`,
+      dueDateStr: `Día ${newBillDay} (${activePeriod})`,
       status: 'pending',
       amountFormatted: `RD$ ${Number(newBillAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       amountRaw: Number(newBillAmount),
@@ -447,6 +702,21 @@ export function SentinelDashboardView() {
     setNewBillName('')
   }
 
+  const householdTitle = userEmail
+    ? `Hogar · ${userEmail.split('@')[0]}`
+    : 'Hogar Familia Pérez'
+
+  const splitCurr = (val: number) => {
+    const abs = Math.abs(val)
+    const str = abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    const [intPart, decPart] = str.split('.')
+    return { intPart, decPart: decPart || '00' }
+  }
+
+  const incSplit = splitCurr(metrics.totalIncome)
+  const expSplit = splitCurr(metrics.totalSpent)
+  const netSplit = splitCurr(metrics.netFlow)
+
   return (
     <div className="sentinel-dashboard-container">
       {/* Toast de celebración (Portal en document.body) */}
@@ -470,7 +740,7 @@ export function SentinelDashboardView() {
         <div className="flex items-center gap-3 flex-wrap">
           <div className="sentinel-household-selector">
             <Home size={15} className="sentinel-gold-icon" />
-            <span>Hogar Familia Pérez</span>
+            <span>{householdTitle}</span>
             <span className="sentinel-currency-chip">DOM · DOP</span>
           </div>
 
@@ -478,7 +748,7 @@ export function SentinelDashboardView() {
             <span className="sentinel-pulse-dot" />
             <span>Consola Soberana // ACH Activo</span>
             <span className="sentinel-telemetry-divider">·</span>
-            <span className="tabular-nums">Latencia 18ms</span>
+            <span className="tabular-nums">Ciclo {activePeriod}</span>
           </div>
         </div>
 
@@ -514,7 +784,9 @@ export function SentinelDashboardView() {
                 <span className="sentinel-tier-badge">Nivel Soberano Ultra</span>
                 <span className="sentinel-health-score-badge">
                   <span className="sentinel-pulse-dot" />
-                  <span>Salud Financiera: Óptima / Score A1</span>
+                  <span>
+                    Salud Financiera: {liquidityDop > 0 && metrics.netFlow >= 0 ? 'Óptima / Score A1' : 'En Observación'}
+                  </span>
                 </span>
               </div>
 
@@ -530,7 +802,7 @@ export function SentinelDashboardView() {
               <span className="sentinel-hero-overline">Liquidez Inmediata Disponible</span>
               <div className="sentinel-hero-balance-row">
                 <h1 className="sentinel-hero-amount tabular-nums">
-                  RD$ {AVAILABLE_LIQUIDITY_DOP.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  RD$ {liquidityDop.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </h1>
                 <span className="sentinel-hero-usd tabular-nums">
                   ~ US$ {liquidityInUsdFormatted}
@@ -547,9 +819,8 @@ export function SentinelDashboardView() {
                 <span className="sentinel-fx-divider">•</span>
 
                 <span
-                  className={`sentinel-fx-status-chip ${
-                    fxState.status === 'updated' ? 'updated' : 'unchanged'
-                  }`}
+                  className={`sentinel-fx-status-chip ${fxState.status === 'updated' ? 'updated' : 'unchanged'
+                    }`}
                 >
                   {fxState.status === 'updated'
                     ? `Actualizada hoy (${fxState.delta >= 0 ? `+${fxState.delta.toFixed(2)}` : fxState.delta.toFixed(2)})`
@@ -573,19 +844,23 @@ export function SentinelDashboardView() {
             {/* Sub-tarjetas gemelas de Patrimonio y Rendimiento */}
             <div className="sentinel-hero-subcards">
               <div className="sentinel-hero-subcard">
-                <span className="sentinel-subcard-label">Patrimonio Neto Consolidado</span>
-                <span className="sentinel-subcard-value tabular-nums">RD$ 1,280,500.00</span>
+                <span className="sentinel-subcard-label">Patrimonio Neto Operativo</span>
+                <span className="sentinel-subcard-value tabular-nums">
+                  RD$ {Math.max(0, liquidityDop - metrics.totalCardDebt).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
                 <span className="sentinel-subcard-delta positive">
                   <ArrowUpRight size={14} />
-                  <span>+14.2% YTD acumulado</span>
+                  <span>Libre de pasivos exigibles</span>
                 </span>
               </div>
 
               <div className="sentinel-hero-subcard">
                 <span className="sentinel-subcard-label">Reserva &amp; Bóveda de Liquidez</span>
-                <span className="sentinel-subcard-value tabular-nums">RD$ 321,260.00</span>
+                <span className="sentinel-subcard-value tabular-nums">
+                  RD$ {Math.max(0, liquidityDop * 0.65).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
                 <span className="sentinel-subcard-meta">
-                  TNA +10.45% · Colchón de 4.2 meses
+                  Colchón operativo de {metrics.runwayMonths} meses
                 </span>
               </div>
             </div>
@@ -604,7 +879,7 @@ export function SentinelDashboardView() {
                       </span>
                       <span className="sentinel-urgent-pill">
                         <AlertTriangle className="w-3 h-3 mr-1" />
-                        Vence en {metrics.urgentBill.daysRemaining * 24}h ({metrics.urgentBill.dueDateStr})
+                        Vence en {Math.max(1, metrics.urgentBill.daysRemaining) * 24}h ({metrics.urgentBill.dueDateStr})
                       </span>
                     </div>
                     <div className="text-xs sentinel-subtitle-text flex items-center gap-2 mt-1 flex-wrap">
@@ -624,13 +899,7 @@ export function SentinelDashboardView() {
 
                 <button
                   type="button"
-                  onClick={() =>
-                    handleMarkAsPaid(
-                      metrics.urgentBill!.id,
-                      metrics.urgentBill!.name,
-                      metrics.urgentBill!.lateFeeAvoided
-                    )
-                  }
+                  onClick={() => void handleMarkAsPaid(metrics.urgentBill!)}
                   className="sentinel-btn-pay"
                 >
                   <Check className="w-4 h-4" />
@@ -656,7 +925,7 @@ export function SentinelDashboardView() {
               </div>
               <span className="sentinel-inertia-badge">
                 <Activity size={13} />
-                <span>Inercia Positiva</span>
+                <span>{metrics.netFlow >= 0 ? 'Inercia Positiva' : 'Flujo Ajustado'}</span>
               </span>
             </div>
 
@@ -726,16 +995,22 @@ export function SentinelDashboardView() {
 
             <div className="sentinel-velocity-axis tabular-nums">
               <div className="sentinel-axis-point">
-                <span className="sentinel-axis-date">01 OCT</span>
-                <span className="sentinel-axis-val">RD$ 322K</span>
+                <span className="sentinel-axis-date">INICIO CICLO</span>
+                <span className="sentinel-axis-val">
+                  RD$ {(Math.max(0, liquidityDop - metrics.netFlow) / 1000).toFixed(1)}K
+                </span>
               </div>
               <div className="sentinel-axis-point">
-                <span className="sentinel-axis-date">15 OCT (Q1)</span>
-                <span className="sentinel-axis-val emerald">RD$ 380K</span>
+                <span className="sentinel-axis-date">QUINCENA 1</span>
+                <span className="sentinel-axis-val emerald">
+                  RD$ {(Math.max(0, liquidityDop - metrics.netFlow * 0.4) / 1000).toFixed(1)}K
+                </span>
               </div>
               <div className="sentinel-axis-point">
-                <span className="sentinel-axis-date">HOY (Q2)</span>
-                <span className="sentinel-axis-val gold">RD$ 413.9K</span>
+                <span className="sentinel-axis-date">ACTUAL</span>
+                <span className="sentinel-axis-val gold">
+                  RD$ {(liquidityDop / 1000).toFixed(1)}K
+                </span>
               </div>
             </div>
           </div>
@@ -753,11 +1028,11 @@ export function SentinelDashboardView() {
             </div>
           </div>
           <div className="sentinel-kpi-value tabular-nums">
-            RD$ 170,000<span className="sentinel-decimals">.00</span>
+            RD$ {incSplit.intPart}<span className="sentinel-decimals">.{incSplit.decPart}</span>
           </div>
           <div className="sentinel-kpi-footer">
             <div className="sentinel-kpi-meta-row">
-              <span className="sentinel-kpi-badge">+8.4% vs mes ant.</span>
+              <span className="sentinel-kpi-badge">Ciclo {activePeriod}</span>
               <span className="sentinel-kpi-target tabular-nums">Meta: 100%</span>
             </div>
             <div className="sentinel-progress-track">
@@ -775,15 +1050,17 @@ export function SentinelDashboardView() {
             </div>
           </div>
           <div className="sentinel-kpi-value tabular-nums">
-            RD$ 78,420<span className="sentinel-decimals">.00</span>
+            RD$ {expSplit.intPart}<span className="sentinel-decimals">.{expSplit.decPart}</span>
           </div>
           <div className="sentinel-kpi-footer">
             <div className="sentinel-kpi-meta-row">
-              <span className="sentinel-kpi-badge">-3.2% vs ppto</span>
-              <span className="sentinel-kpi-target tabular-nums">Consumo: 46%</span>
+              <span className="sentinel-kpi-badge">
+                {metrics.spendPctOfIncome <= 80 ? 'Bajo control' : 'Atención ppto'}
+              </span>
+              <span className="sentinel-kpi-target tabular-nums">Consumo: {metrics.spendPctOfIncome}%</span>
             </div>
             <div className="sentinel-progress-track">
-              <div className="sentinel-progress-fill gold" style={{ width: '46.1%' }} />
+              <div className="sentinel-progress-fill gold" style={{ width: `${metrics.spendPctOfIncome}%` }} />
             </div>
           </div>
         </div>
@@ -797,15 +1074,17 @@ export function SentinelDashboardView() {
             </div>
           </div>
           <div className="sentinel-kpi-value emerald tabular-nums">
-            +RD$ 91,580<span className="sentinel-decimals">.00</span>
+            {metrics.netFlow >= 0 ? '+' : '-'}RD$ {netSplit.intPart}<span className="sentinel-decimals">.{netSplit.decPart}</span>
           </div>
           <div className="sentinel-kpi-footer">
             <div className="sentinel-kpi-meta-row">
-              <span className="sentinel-kpi-badge">53.8% ahorro</span>
-              <span className="sentinel-kpi-runway-text">Superávit</span>
+              <span className="sentinel-kpi-badge">{metrics.savingsRatePct}% ahorro</span>
+              <span className="sentinel-kpi-runway-text">
+                {metrics.netFlow >= 0 ? 'Superávit' : 'Déficit'}
+              </span>
             </div>
             <div className="sentinel-progress-track">
-              <div className="sentinel-progress-fill emerald" style={{ width: '53.8%' }} />
+              <div className="sentinel-progress-fill emerald" style={{ width: `${Math.min(100, metrics.savingsRatePct)}%` }} />
             </div>
           </div>
         </div>
@@ -818,14 +1097,18 @@ export function SentinelDashboardView() {
               <ShieldAlert className="w-4 h-4" />
             </div>
           </div>
-          <div className="sentinel-kpi-value gold tabular-nums">14.8%</div>
+          <div className="sentinel-kpi-value gold tabular-nums">{metrics.debtRatio}%</div>
           <div className="sentinel-kpi-footer">
             <div className="sentinel-kpi-meta-row">
-              <span className="sentinel-kpi-badge neutral">Riesgo Bajo (Lím. 35%)</span>
-              <span className="sentinel-kpi-fee-text">Capacidad A+</span>
+              <span className="sentinel-kpi-badge neutral">
+                {metrics.debtRatio <= 30 ? 'Riesgo Bajo (Lím. 30%)' : 'Riesgo Moderado'}
+              </span>
+              <span className="sentinel-kpi-fee-text">
+                {metrics.debtRatio <= 30 ? 'Capacidad A+' : 'Vigilar'}
+              </span>
             </div>
             <div className="sentinel-progress-track">
-              <div className="sentinel-progress-fill gold" style={{ width: '28%' }} />
+              <div className="sentinel-progress-fill gold" style={{ width: `${Math.min(100, metrics.debtRatio)}%` }} />
             </div>
           </div>
         </div>
@@ -921,7 +1204,7 @@ export function SentinelDashboardView() {
                             </span>
                           ) : isUrgent ? (
                             <span className="sentinel-badge urgent">
-                              Vence en {c.daysRemaining * 24}h
+                              Vence en {Math.max(1, c.daysRemaining) * 24}h
                             </span>
                           ) : (
                             <span className="sentinel-badge pending">
@@ -955,7 +1238,7 @@ export function SentinelDashboardView() {
                       {!isPaid ? (
                         <button
                           type="button"
-                          onClick={() => handleMarkAsPaid(c.id, c.name, c.lateFeeAvoided)}
+                          onClick={() => void handleMarkAsPaid(c)}
                           className={`sentinel-item-pay-btn ${isUrgent ? 'urgent' : ''}`}
                         >
                           Pagar
@@ -989,37 +1272,39 @@ export function SentinelDashboardView() {
                   </p>
                 </div>
               </div>
-              <span className="sentinel-cycle-chip">CICLO 2026-10</span>
+              <span className="sentinel-cycle-chip">CICLO {activePeriod}</span>
             </div>
 
             {/* 1. Barra Compuesta 50 / 30 / 20 */}
             <div className="sentinel-doctrine-block">
               <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
                 <span className="sentinel-title-text">Regla 50/30/20 Institucional</span>
-                <span className="sentinel-kpi-runway-text font-mono">Balance Óptimo</span>
+                <span className="sentinel-kpi-runway-text font-mono">
+                  {metrics.savingsPct >= 20 ? 'Balance Óptimo' : 'En Ajuste'}
+                </span>
               </div>
               <div className="sentinel-composite-bar">
                 <div
                   className="sentinel-composite-segment c1"
-                  style={{ width: '48%' }}
-                  title="Necesidades: 48% (RD$ 81.6K)"
+                  style={{ width: `${metrics.needsPct}%` }}
+                  title={`Necesidades: ${metrics.needsPct}% (RD$ ${(metrics.needsSpent / 1000).toFixed(1)}K)`}
                 />
                 <div
                   className="sentinel-composite-segment c2"
-                  style={{ width: '24%' }}
-                  title="Deseos: 24% (RD$ 40.8K)"
+                  style={{ width: `${metrics.wantsPct}%` }}
+                  title={`Deseos: ${metrics.wantsPct}% (RD$ ${(metrics.wantsSpent / 1000).toFixed(1)}K)`}
                 />
                 <div
                   className="sentinel-composite-segment c3"
-                  style={{ width: '28%' }}
-                  title="Ahorro / Inversión: 28% (RD$ 47.6K)"
+                  style={{ width: `${metrics.savingsPct}%` }}
+                  title={`Ahorro / Inversión: ${metrics.savingsPct}% (RD$ ${(metrics.savingsVal / 1000).toFixed(1)}K)`}
                 />
               </div>
               <div className="flex items-center justify-between flex-wrap gap-2 text-xs sentinel-subtitle-text font-mono pt-1 tabular-nums">
-                <span>Necesidades: 48% (RD$ 81.6K)</span>
-                <span>Deseos: 24% (RD$ 40.8K)</span>
+                <span>Necesidades: {metrics.needsPct}% (RD$ {(metrics.needsSpent / 1000).toFixed(1)}K)</span>
+                <span>Deseos: {metrics.wantsPct}% (RD$ {(metrics.wantsSpent / 1000).toFixed(1)}K)</span>
                 <span className="sentinel-kpi-runway-text font-semibold">
-                  Ahorro: 28% (RD$ 47.6K)
+                  Ahorro: {metrics.savingsPct}% (RD$ {(metrics.savingsVal / 1000).toFixed(1)}K)
                 </span>
               </div>
             </div>
@@ -1029,52 +1314,60 @@ export function SentinelDashboardView() {
               <div className="sentinel-category-box">
                 <div className="flex items-center justify-between">
                   <span className="text-xs sentinel-subtitle-text">Vivienda &amp; Luz</span>
-                  <span className="text-xs font-mono sentinel-category-val-1 font-bold">85%</span>
+                  <span className="text-xs font-mono sentinel-category-val-1 font-bold">
+                    {metrics.envelopes.housing.pct}%
+                  </span>
                 </div>
                 <span className="font-bold sentinel-title-text text-sm tabular-nums">
-                  RD$ 18,400.00
+                  RD$ {metrics.envelopes.housing.spent.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
                 <div className="sentinel-progress-track">
-                  <div className="sentinel-progress-fill gold" style={{ width: '85%' }} />
+                  <div className="sentinel-progress-fill gold" style={{ width: `${metrics.envelopes.housing.pct}%` }} />
                 </div>
               </div>
 
               <div className="sentinel-category-box">
                 <div className="flex items-center justify-between">
                   <span className="text-xs sentinel-subtitle-text">Alimentación</span>
-                  <span className="text-xs font-mono sentinel-category-val-3 font-bold">62%</span>
+                  <span className="text-xs font-mono sentinel-category-val-3 font-bold">
+                    {metrics.envelopes.food.pct}%
+                  </span>
                 </div>
                 <span className="font-bold sentinel-title-text text-sm tabular-nums">
-                  RD$ 14,230.00
+                  RD$ {metrics.envelopes.food.spent.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
                 <div className="sentinel-progress-track">
-                  <div className="sentinel-progress-fill emerald" style={{ width: '62%' }} />
+                  <div className="sentinel-progress-fill emerald" style={{ width: `${metrics.envelopes.food.pct}%` }} />
                 </div>
               </div>
 
               <div className="sentinel-category-box">
                 <div className="flex items-center justify-between">
                   <span className="text-xs sentinel-subtitle-text">Educación &amp; Salud</span>
-                  <span className="text-xs font-mono sentinel-category-val-3 font-bold">100%</span>
+                  <span className="text-xs font-mono sentinel-category-val-3 font-bold">
+                    {metrics.envelopes.edu.pct}%
+                  </span>
                 </div>
                 <span className="font-bold sentinel-title-text text-sm tabular-nums">
-                  RD$ 12,500.00
+                  RD$ {metrics.envelopes.edu.spent.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
                 <div className="sentinel-progress-track">
-                  <div className="sentinel-progress-fill emerald" style={{ width: '100%' }} />
+                  <div className="sentinel-progress-fill emerald" style={{ width: `${metrics.envelopes.edu.pct}%` }} />
                 </div>
               </div>
 
               <div className="sentinel-category-box">
                 <div className="flex items-center justify-between">
                   <span className="text-xs sentinel-subtitle-text">Ocio &amp; Movilidad</span>
-                  <span className="text-xs font-mono sentinel-category-val-2 font-bold">40%</span>
+                  <span className="text-xs font-mono sentinel-category-val-2 font-bold">
+                    {metrics.envelopes.leisure.pct}%
+                  </span>
                 </div>
                 <span className="font-bold sentinel-title-text text-sm tabular-nums">
-                  RD$ 5,120.00
+                  RD$ {metrics.envelopes.leisure.spent.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
                 <div className="sentinel-progress-track">
-                  <div className="sentinel-progress-fill indigo" style={{ width: '40%' }} />
+                  <div className="sentinel-progress-fill indigo" style={{ width: `${metrics.envelopes.leisure.pct}%` }} />
                 </div>
               </div>
             </div>
@@ -1098,10 +1391,12 @@ export function SentinelDashboardView() {
                   <span className="font-bold text-xs sentinel-title-text">
                     Disciplina Kakebo Reflexivo
                   </span>
-                  <span className="sentinel-kpi-badge gold">+RD$ 9,300 evitados</span>
+                  <span className="sentinel-kpi-badge gold">
+                    +RD$ {metrics.savedFeesTotal.toLocaleString('en-US')} evitados
+                  </span>
                 </div>
                 <p className="text-xs sentinel-subtitle-text leading-relaxed">
-                  Gasto hormiga e impulsivo neutralizado por alertas preventivas este mes.
+                  Gasto hormiga y moras neutralizadas por alertas preventivas este mes.
                 </p>
               </div>
             </div>
@@ -1121,7 +1416,7 @@ export function SentinelDashboardView() {
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 </h4>
                 <p className="text-xs sentinel-subtitle-text">
-                  Pipeline multimodal · Gemini Flash OCR &amp; Voz
+                  Pipeline multimodal · Conciliación directa a Egresos
                 </p>
               </div>
             </div>

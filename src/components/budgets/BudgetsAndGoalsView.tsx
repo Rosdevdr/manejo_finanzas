@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Plus,
   Edit3,
@@ -7,6 +8,10 @@ import {
   AlertTriangle,
   Flame,
   SlidersHorizontal,
+  PiggyBank,
+  Trash2,
+  X,
+  ArrowUpRight,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -20,6 +25,7 @@ import type {
   CategoryBudget,
   SavingsGoal,
   ExpenseCategory,
+  GoalCategory,
 } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import {
@@ -27,6 +33,7 @@ import {
   suggestCategoryBudgetsFromHistory,
   evaluate503020Rule,
 } from '../../utils/budgetAdvisor'
+import { calculateCumulativeBalance } from '../../utils/calendar'
 import { triggerHaptic } from '../../utils/haptics'
 import './BudgetsAndGoalsView.css'
 
@@ -67,37 +74,72 @@ export function BudgetsAndGoalsView({
   incomes,
   expenses,
   categoryBudgets,
+  savingsGoals = [],
   onSetCategoryBudget,
   onSetMultipleBudgets,
+  onAddSavingsGoal,
+  onDepositToGoal,
+  onDeleteSavingsGoal,
   onShowToast,
 }: BudgetsAndGoalsViewProps) {
   const [filterTab, setFilterTab] = useState<'all' | 'alert' | 'over'>('all')
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null)
   const [tempLimit, setTempLimit] = useState<string>('')
 
+  // Modal para crear Meta de Ahorro o abonar a una meta
+  const [showGoalModal, setShowGoalModal] = useState(false)
+  const [depositGoal, setDepositGoal] = useState<SavingsGoal | null>(null)
+  const [depositAmount, setDepositAmount] = useState('')
+  const [goalForm, setGoalForm] = useState<{
+    name: string
+    targetAmount: string
+    currentAmount: string
+    monthlyContribution: string
+    category: GoalCategory
+  }>({
+    name: '',
+    targetAmount: '',
+    currentAmount: '0',
+    monthlyContribution: '',
+    category: 'emergency',
+  })
+
+  useEffect(() => {
+    if (!showGoalModal && !depositGoal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowGoalModal(false)
+        setDepositGoal(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showGoalModal, depositGoal])
+
   // FIRE Engine Simulation Parameters
   const [fireMode, setFireMode] = useState<'lean' | 'classic' | 'fat'>('classic')
-  const [annualSpend, setAnnualSpend] = useState<number>(60000)
-  const [swr, setSwr] = useState<number>(3.5)
-  const [netReturn, setNetReturn] = useState<number>(7.2)
+  const [annualSpend, setAnnualSpend] = useState<number>(360000)
+  const [swr, setSwr] = useState<number>(4.0)
+  const [netReturn, setNetReturn] = useState<number>(8.5)
 
   const fireTarget = useMemo(() => {
     return Math.round(annualSpend / (swr / 100))
   }, [annualSpend, swr])
 
-  // Total Inflows & Outflows for Period
+  // Total Inflows & Outflows for Period (100% reales)
   const periodIncomes = incomes.filter(i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === currentPeriod)
   const periodExpenses = expenses.filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === currentPeriod)
 
-  const totalIn = periodIncomes.reduce((s, i) => s + i.amount, 0) || 17065
-  const totalExp = periodExpenses.reduce((s, e) => s + e.amount, 0) || 12850
+  const totalIn = periodIncomes.reduce((s, i) => s + i.amount, 0)
+  const totalExp = periodExpenses.reduce((s, e) => s + e.amount, 0)
   const surplus = Math.max(0, totalIn - totalExp)
+  const savingsRatePct = totalIn > 0 ? Number(((surplus / totalIn) * 100).toFixed(1)) : 0
 
   // Category Statuses
   const categoryStatuses = useMemo(() => {
     return CATEGORIES.map(cat => {
       const budget = categoryBudgets.find(b => b.category === cat)
-      const limit = budget && budget.limitAmount > 0 ? budget.limitAmount : 1500
+      const limit = budget && budget.limitAmount > 0 ? budget.limitAmount : 5000
       const status = calculateCategoryBudgetStatus(cat, limit, expenses, currentPeriod)
       return {
         category: cat,
@@ -110,21 +152,37 @@ export function BudgetsAndGoalsView({
     })
   }, [categoryBudgets, expenses, currentPeriod])
 
-  const totalBudgeted = categoryStatuses.reduce((s, c) => s + c.limit, 0) || 12850
-  const totalSpent = categoryStatuses.reduce((s, c) => s + c.spent, 0) || 10820
+  const totalBudgeted = categoryStatuses.reduce((s, c) => s + c.limit, 0)
+  const totalSpent = categoryStatuses.reduce((s, c) => s + c.spent, 0)
+  const freeBudgetMargin = totalBudgeted - totalSpent
+  const budgetPctConsumed = totalBudgeted > 0 ? ((totalSpent / totalBudgeted) * 100).toFixed(1) : '0.0'
+
+  const alertCategories = categoryStatuses.filter(c => c.pct >= 85 && c.pct <= 100)
+  const overCategories = categoryStatuses.filter(c => c.pct > 100)
+  const safeCategories = categoryStatuses.filter(c => c.pct < 85 && c.limit > c.spent)
 
   // 50/30/20 Rule
   const rule503020 = useMemo(() => {
     return evaluate503020Rule(incomes, expenses, surplus, currentPeriod)
   }, [incomes, expenses, surplus, currentPeriod])
 
+  // Capital Acumulado Real (Metas de Ahorro + Liquidez Acumulada)
+  const cumulative = useMemo(
+    () => calculateCumulativeBalance(incomes, expenses, currentPeriod),
+    [incomes, expenses, currentPeriod]
+  )
+  const totalGoalsSaved = savingsGoals.reduce((s, g) => s + g.currentAmount, 0)
+  const totalGoalsTarget = savingsGoals.reduce((s, g) => s + g.targetAmount, 0)
+  const currentAccumulatedCapital = Math.max(0, totalGoalsSaved + Math.max(0, cumulative.totalCumulativeBalance))
+  const fireCompletionPct = fireTarget > 0 ? Math.min(100, Number(((currentAccumulatedCapital / fireTarget) * 100).toFixed(1))) : 0
+
   // Trajectory Curve for FIRE Engine
   const trajectoryData = useMemo(() => {
-    const currentNW = 810000
-    const annualSavings = surplus * 12 || 50580
+    const currentNW = currentAccumulatedCapital
+    const annualSavings = surplus > 0 ? surplus * 12 : 120000
     const points = []
     let accumulated = currentNW
-    const startYear = 2024
+    const startYear = Number(currentPeriod.slice(0, 4)) || new Date().getFullYear()
 
     for (let yr = 0; yr <= 10; yr++) {
       const year = startYear + yr
@@ -136,7 +194,19 @@ export function BudgetsAndGoalsView({
       accumulated = (accumulated + annualSavings) * (1 + netReturn / 100)
     }
     return points
-  }, [surplus, fireTarget, netReturn])
+  }, [currentAccumulatedCapital, surplus, fireTarget, netReturn, currentPeriod])
+
+  const yearsToFire = useMemo(() => {
+    if (currentAccumulatedCapital >= fireTarget) return '0.0'
+    const annualContribution = surplus > 0 ? surplus * 12 : 120000
+    const r = netReturn / 100
+    let bal = currentAccumulatedCapital
+    for (let y = 1; y <= 40; y++) {
+      bal = (bal + annualContribution) * (1 + r)
+      if (bal >= fireTarget) return y.toFixed(1)
+    }
+    return '25+'
+  }, [currentAccumulatedCapital, fireTarget, surplus, netReturn])
 
   // Handle Edit Limit
   const handleSaveLimit = async (cat: ExpenseCategory) => {
@@ -155,7 +225,52 @@ export function BudgetsAndGoalsView({
     triggerHaptic('light')
     const suggestions = suggestCategoryBudgetsFromHistory(expenses, incomes, currentPeriod)
     await onSetMultipleBudgets(suggestions, currentPeriod)
-    onShowToast('Límites optimizados según tus gastos históricos', 'success')
+    onShowToast('Límites optimizados según tus gastos e ingresos reales', 'success')
+  }
+
+  const handleCreateGoal = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const target = parseFloat(goalForm.targetAmount)
+    const current = parseFloat(goalForm.currentAmount) || 0
+    const monthly = parseFloat(goalForm.monthlyContribution) || 0
+    if (!goalForm.name.trim() || isNaN(target) || target <= 0) {
+      onShowToast('Completa el nombre y un monto objetivo válido', 'error')
+      return
+    }
+    if (onAddSavingsGoal) {
+      await onAddSavingsGoal({
+        name: goalForm.name.trim(),
+        targetAmount: target,
+        currentAmount: current,
+        monthlyContribution: monthly > 0 ? monthly : undefined,
+        category: goalForm.category,
+        color: '#34D399',
+        isCompleted: current >= target,
+      })
+      onShowToast(`Meta "${goalForm.name.trim()}" creada correctamente`, 'success')
+    }
+    setGoalForm({
+      name: '',
+      targetAmount: '',
+      currentAmount: '0',
+      monthlyContribution: '',
+      category: 'emergency',
+    })
+    setShowGoalModal(false)
+  }
+
+  const handleDepositSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!depositGoal || !onDepositToGoal) return
+    const amt = parseFloat(depositAmount)
+    if (isNaN(amt) || amt <= 0) {
+      onShowToast('Ingresa un monto de aporte válido', 'error')
+      return
+    }
+    await onDepositToGoal(depositGoal.id, amt)
+    onShowToast(`Aporte de ${formatCurrency(amt)} sumado a "${depositGoal.name}"`, 'success')
+    setDepositGoal(null)
+    setDepositAmount('')
   }
 
   // Filtered categories
@@ -164,6 +279,35 @@ export function BudgetsAndGoalsView({
     if (filterTab === 'over') return c.pct > 100
     return true
   })
+
+  // Recomendaciones dinámicas del Motor Asesor AUREUS
+  const primaryRecommendation = useMemo(() => {
+    if (overCategories.length > 0) {
+      const worst = [...overCategories].sort((a, b) => (b.spent - b.limit) - (a.spent - a.limit))[0]
+      const excess = worst.spent - worst.limit
+      const donor = [...safeCategories].sort((a, b) => (b.limit - b.spent) - (a.limit - a.spent))[0]
+      return {
+        isAlert: true,
+        title: `CONTENCIÓN EN ${worst.meta.label.toUpperCase()}`,
+        body: donor
+          ? `Has superado el tope asignado en ${formatCurrency(excess)}. Sugerimos absorber el excedente desde el margen libre de ${donor.meta.label} (${formatCurrency(donor.limit - donor.spent)} disponible).`
+          : `Has superado el tope asignado en ${formatCurrency(excess)}. Ajusta el límite o restringe consumos variables en esta partida durante el resto del ciclo.`,
+      }
+    }
+    if (alertCategories.length > 0) {
+      const warn = alertCategories[0]
+      return {
+        isAlert: true,
+        title: `UMBRAL PREVENTIVO EN ${warn.meta.label.toUpperCase()}`,
+        body: `Has consumido el ${warn.pct.toFixed(1)}% de tu presupuesto en ${warn.meta.label}. Te restan ${formatCurrency(Math.max(0, warn.limit - warn.spent))} para cerrar el período sin sobregiro.`,
+      }
+    }
+    return {
+      isAlert: false,
+      title: 'EJECUCIÓN PRESUPUESTARIA BAJO CONTROL',
+      body: `Todas tus 9 partidas operan dentro de los límites saludables. Dispones de un margen libre presupuestario de ${formatCurrency(Math.max(0, freeBudgetMargin))}.`,
+    }
+  }, [overCategories, alertCategories, safeCategories, freeBudgetMargin])
 
   return (
     <div className="budget-stitch-root fade-in">
@@ -188,13 +332,10 @@ export function BudgetsAndGoalsView({
           <button
             type="button"
             className="btn-stitch-gold"
-            onClick={() => {
-              setEditingCategory('housing')
-              setTempLimit('4500')
-            }}
+            onClick={() => setShowGoalModal(true)}
           >
             <Plus size={15} />
-            <span>Nueva Categoría</span>
+            <span>Nueva Meta de Ahorro</span>
           </button>
         </div>
       </div>
@@ -207,18 +348,20 @@ export function BudgetsAndGoalsView({
             <span className="kpi-title-label">Presupuesto Mensual Asignado</span>
             <span className="kpi-badge-success">
               <CheckCircle2 size={12} />
-              Bajo Control
+              {overCategories.length === 0 ? 'Bajo Control' : `${overCategories.length} con Sobregiro`}
             </span>
           </div>
           <div className="kpi-value-block">
             <div className="kpi-big-number">{formatCurrency(totalBudgeted)}</div>
             <p className="kpi-footnote">
-              Gasto actual: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{formatCurrency(totalSpent)}</strong> ({((totalSpent / totalBudgeted) * 100).toFixed(1)}% consumido)
+              Gasto actual: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{formatCurrency(totalSpent)}</strong> ({budgetPctConsumed}% consumido)
             </p>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
-            <span>De 31 a 31 del ciclo</span>
-            <span style={{ color: 'var(--color-tertiary, #56e5a9)', fontWeight: 600 }}>+$2,030 libre óptimo</span>
+            <span>Ciclo activo: {currentPeriod}</span>
+            <span style={{ color: freeBudgetMargin >= 0 ? 'var(--color-tertiary, #56e5a9)' : 'var(--color-error, #ffb4ab)', fontWeight: 600 }}>
+              {freeBudgetMargin >= 0 ? `+${formatCurrency(freeBudgetMargin)} libre` : `${formatCurrency(freeBudgetMargin)} excedido`}
+            </span>
           </div>
         </div>
 
@@ -228,20 +371,20 @@ export function BudgetsAndGoalsView({
             <span className="kpi-title-label">Superávit Mensual Proyectado</span>
             <span className="kpi-badge-success">
               <TrendingUp size={12} />
-              +18.2% Eficiencia Neta
+              {savingsRatePct}% Tasa Ahorro
             </span>
           </div>
           <div className="kpi-value-block">
             <div className="kpi-big-number" style={{ color: 'var(--color-tertiary, #56e5a9)' }}>
-              {formatCurrency(surplus > 0 ? surplus : 4215)}
+              {formatCurrency(surplus)}
             </div>
             <p className="kpi-footnote">
-              Flujo Total: {formatCurrency(totalIn)} · <strong style={{ color: 'var(--color-primary, #ffc174)' }}>Tasa Ahorro: 24.7%</strong>
+              Ingresos del ciclo: {formatCurrency(totalIn)} · <strong style={{ color: 'var(--color-primary, #ffc174)' }}>Egresos: {formatCurrency(totalExp)}</strong>
             </p>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
-            <span>100% S&amp;P 500 / ETFs: $3,215</span>
-            <span style={{ color: 'var(--color-on-surface-variant, #d8c3ad)' }}>Bolsillo Cash: $1,000</span>
+            <span>75% Inversión Indexada: {formatCurrency(surplus * 0.75)}</span>
+            <span style={{ color: 'var(--color-on-surface-variant, #d8c3ad)' }}>25% Liquidez: {formatCurrency(surplus * 0.25)}</span>
           </div>
         </div>
 
@@ -251,23 +394,116 @@ export function BudgetsAndGoalsView({
             <span className="kpi-title-label">Progreso de Meta FIRE</span>
             <span className="kpi-badge-success">
               <Flame size={12} />
-              Meta Alcanzable
+              {fireCompletionPct >= 50 ? 'En Tramo Sólido' : 'En Construcción'}
             </span>
           </div>
           <div className="kpi-value-block">
             <div className="kpi-big-number" style={{ color: 'var(--color-primary-container, #f59e0b)' }}>
-              64.8% <span style={{ fontSize: 13, color: 'var(--color-outline, #a08e7a)' }}>acumulado</span>
+              {fireCompletionPct}% <span style={{ fontSize: 13, color: 'var(--color-outline, #a08e7a)' }}>acumulado</span>
             </div>
             <p className="kpi-footnote">
-              $810,000 acumulado · Objetivo: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{formatCurrency(fireTarget)}</strong>
+              {formatCurrency(currentAccumulatedCapital)} acumulado · Objetivo: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{formatCurrency(fireTarget)}</strong>
             </p>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
-            <span>Tiempo Restante: <strong>6.8 años</strong></span>
+            <span>Horizonte Estimado: <strong>{yearsToFire} años</strong></span>
             <span style={{ color: 'var(--color-primary, #ffc174)', fontWeight: 600 }}>Tasa SWR: {swr}%</span>
           </div>
         </div>
       </div>
+
+      {/* ── METAS DE AHORRO ACTIVAS (CONECTADAS AL STORE) ── */}
+      {savingsGoals.length > 0 && (
+        <div className="categories-section" style={{ marginBottom: 24 }}>
+          <div className="categories-header-row">
+            <div>
+              <h2 className="categories-title">Metas de Ahorro &amp; Fondos con Propósito</h2>
+              <p className="categories-subtitle">
+                Acumulado en metas: {formatCurrency(totalGoalsSaved)} de {formatCurrency(totalGoalsTarget)} ({totalGoalsTarget > 0 ? ((totalGoalsSaved / totalGoalsTarget) * 100).toFixed(1) : '0.0'}%)
+              </p>
+            </div>
+          </div>
+
+          <div className="category-grid-3x3">
+            {savingsGoals.map(goal => {
+              const pct = goal.targetAmount > 0 ? Math.min(100, Number(((goal.currentAmount / goal.targetAmount) * 100).toFixed(1))) : 0
+              return (
+                <div key={goal.id} className="category-budget-card">
+                  <div>
+                    <div className="cat-top-row">
+                      <div className="cat-name-icon">
+                        <PiggyBank size={16} style={{ color: goal.color || '#34D399' }} />
+                        <span>{goal.name}</span>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: 9999,
+                          backgroundColor: 'rgba(48, 200, 143, 0.15)',
+                          color: 'var(--color-tertiary, #56e5a9)',
+                        }}
+                      >
+                        {pct}% COMPLETADO
+                      </span>
+                    </div>
+
+                    <div className="cat-amounts-row">
+                      <span className="cat-spent">{formatCurrency(goal.currentAmount)}</span>
+                      <span className="cat-limit">meta {formatCurrency(goal.targetAmount)}</span>
+                    </div>
+
+                    <div style={{ marginTop: 10, width: '100%', height: 6, borderRadius: 9999, backgroundColor: 'var(--color-surface-container-highest, #31353e)', overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${pct}%`,
+                          backgroundColor: goal.color || 'var(--color-tertiary, #56e5a9)',
+                          borderRadius: 9999,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 11 }}>
+                    <span style={{ color: 'var(--color-outline, #a08e7a)' }}>
+                      Restante: {formatCurrency(Math.max(0, goal.targetAmount - goal.currentAmount))}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {onDepositToGoal && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDepositGoal(goal)
+                            setDepositAmount(goal.monthlyContribution ? String(goal.monthlyContribution) : '5000')
+                          }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--color-tertiary, #56e5a9)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600 }}
+                        >
+                          <ArrowUpRight size={12} /> Abonar
+                        </button>
+                      )}
+                      {onDeleteSavingsGoal && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void onDeleteSavingsGoal(goal.id)
+                            onShowToast(`Meta "${goal.name}" eliminada`, 'info')
+                          }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--color-error, #ffb4ab)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          title="Eliminar meta"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── 9 CATEGORIES BUDGET GRID (3x3) ── */}
       <div className="categories-section">
@@ -283,21 +519,21 @@ export function BudgetsAndGoalsView({
               className={`filter-tab-btn ${filterTab === 'all' ? 'active' : ''}`}
               onClick={() => setFilterTab('all')}
             >
-              Todas (9)
+              Todas ({categoryStatuses.length})
             </button>
             <button
               type="button"
               className={`filter-tab-btn ${filterTab === 'alert' ? 'active' : ''}`}
               onClick={() => setFilterTab('alert')}
             >
-              En Alerta (2)
+              En Alerta ({alertCategories.length})
             </button>
             <button
               type="button"
               className={`filter-tab-btn ${filterTab === 'over' ? 'active' : ''}`}
               onClick={() => setFilterTab('over')}
             >
-              Sobregiro (2)
+              Sobregiro ({overCategories.length})
             </button>
           </div>
         </div>
@@ -365,7 +601,7 @@ export function BudgetsAndGoalsView({
                         flex: 1,
                         background: 'var(--color-surface-container-low, #181c24)',
                         border: '1px solid var(--color-primary-container, #f59e0b)',
-                        color: '#fff',
+                        color: 'var(--color-on-surface, #dfe2ee)',
                         borderRadius: 6,
                         padding: '4px 8px',
                         fontSize: 12,
@@ -428,30 +664,30 @@ export function BudgetsAndGoalsView({
               className={`fire-badge-btn ${fireMode === 'lean' ? 'active' : ''}`}
               onClick={() => {
                 setFireMode('lean')
-                setAnnualSpend(45000)
+                setAnnualSpend(240000)
               }}
             >
-              LEAN FIRE ($1.25M)
+              LEAN FIRE (RD$ 6.0M)
             </button>
             <button
               type="button"
               className={`fire-badge-btn ${fireMode === 'classic' ? 'active' : ''}`}
               onClick={() => {
                 setFireMode('classic')
-                setAnnualSpend(60000)
+                setAnnualSpend(360000)
               }}
             >
-              FIRE CLÁSICO ($1.71M)
+              FIRE CLÁSICO (RD$ 9.0M)
             </button>
             <button
               type="button"
               className={`fire-badge-btn ${fireMode === 'fat' ? 'active' : ''}`}
               onClick={() => {
                 setFireMode('fat')
-                setAnnualSpend(100000)
+                setAnnualSpend(600000)
               }}
             >
-              FAT FIRE ($2.50M)
+              FAT FIRE (RD$ 15.0M)
             </button>
           </div>
         </div>
@@ -466,9 +702,9 @@ export function BudgetsAndGoalsView({
               </div>
               <input
                 type="range"
-                min="30000"
-                max="180000"
-                step="5000"
+                min="120000"
+                max="1200000"
+                step="20000"
                 value={annualSpend}
                 onChange={e => setAnnualSpend(Number(e.target.value))}
                 className="fire-slider-input"
@@ -522,10 +758,10 @@ export function BudgetsAndGoalsView({
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-outline, #a08e7a)' }}>
-                  Curva Proyectada vs. Umbral de Retiro (2024 - 2034)
+                  Curva Proyectada a 10 Años (Interés Compuesto)
                 </span>
                 <span style={{ fontSize: 11, color: 'var(--color-tertiary, #56e5a9)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <CheckCircle2 size={13} /> Independencia en 2031
+                  <CheckCircle2 size={13} /> Horizonte: {yearsToFire} años
                 </span>
               </div>
 
@@ -538,7 +774,10 @@ export function BudgetsAndGoalsView({
                         <stop offset="100%" stopColor="#56e5a9" stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
-                    <Tooltip contentStyle={{ backgroundColor: '#1c2028', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#1c2028', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}
+                      formatter={(val) => [formatCurrency(Number(val)), 'Portafolio']}
+                    />
                     <Area
                       type="monotone"
                       dataKey="portfolio"
@@ -556,18 +795,18 @@ export function BudgetsAndGoalsView({
             {/* 3 Milestone Metrics Trio */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, paddingTop: 14, borderTop: '1px solid rgba(49, 53, 62, 0.3)' }}>
               <div>
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-outline, #a08e7a)', textTransform: 'uppercase' }}>Objetivo</span>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-tertiary, #56e5a9)' }}>Logrado</div>
-                <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>64.8% completado</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-outline, #a08e7a)', textTransform: 'uppercase' }}>Avance Actual</span>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-tertiary, #56e5a9)' }}>{fireCompletionPct}%</div>
+                <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>{formatCurrency(currentAccumulatedCapital)}</span>
               </div>
               <div>
                 <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-outline, #a08e7a)', textTransform: 'uppercase' }}>Horizonte</span>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface, #dfe2ee)' }}>6.8 Años</div>
-                <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>Sin capital extra</span>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface, #dfe2ee)' }}>{yearsToFire} Años</div>
+                <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>Al ritmo actual</span>
               </div>
               <div>
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-outline, #a08e7a)', textTransform: 'uppercase' }}>Renta Perpetua</span>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-primary, #ffc174)' }}>$5,000/mes</div>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-outline, #a08e7a)', textTransform: 'uppercase' }}>Renta Mensual FIRE</span>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-primary, #ffc174)' }}>{formatCurrency(annualSpend / 12)}</div>
                 <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>Preserva capital</span>
               </div>
             </div>
@@ -581,7 +820,7 @@ export function BudgetsAndGoalsView({
         <div className="budget-kpi-card">
           <div className="kpi-header-row">
             <span className="kpi-title-label">Desglose Regla 50 / 30 / 20</span>
-            <span className="kpi-badge-success">Optimizado</span>
+            <span className="kpi-badge-success">{rule503020.savingsPercent >= 20 ? 'Optimizado' : 'En Ajuste'}</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '12px 0' }}>
@@ -617,7 +856,9 @@ export function BudgetsAndGoalsView({
           </div>
 
           <span style={{ fontSize: 11, color: 'var(--color-tertiary, #56e5a9)', display: 'block', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)' }}>
-            ✓ Estás sobre-ahorrando +8.3% hacia tu libertad financiera
+            {rule503020.savingsPercent >= 20
+              ? `✓ Superas la meta mínima del 20% con ${rule503020.savingsPercent}% destinado a ahorro/patrimonio`
+              : `Prioriza reducir gastos variables para alcanzar el 20% de ahorro recomendado`}
           </span>
         </div>
 
@@ -629,31 +870,213 @@ export function BudgetsAndGoalsView({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '8px 0' }}>
-            <div style={{ padding: '10px 12px', borderRadius: 10, backgroundColor: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.25)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-error, #ffb4ab)', fontSize: 11, fontWeight: 700 }}>
-                <AlertTriangle size={13} /> CONTENCIÓN EN SALUD Y VIAJES
+            <div
+              style={{
+                padding: '10px 12px',
+                borderRadius: 10,
+                backgroundColor: primaryRecommendation.isAlert ? 'rgba(244, 63, 94, 0.1)' : 'rgba(48, 200, 143, 0.1)',
+                border: primaryRecommendation.isAlert ? '1px solid rgba(244, 63, 94, 0.25)' : '1px solid rgba(48, 200, 143, 0.25)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  color: primaryRecommendation.isAlert ? 'var(--color-error, #ffb4ab)' : 'var(--color-tertiary, #56e5a9)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                {primaryRecommendation.isAlert ? <AlertTriangle size={13} /> : <CheckCircle2 size={13} />}
+                <span>{primaryRecommendation.title}</span>
               </div>
               <p style={{ fontSize: 11, color: 'var(--color-on-surface-variant, #d8c3ad)', marginTop: 4, lineHeight: 1.4 }}>
-                Has superado el tope en $354.00. Sugerimos balancear temporalmente absorbiendo el excedente desde el margen libre de Ocio ($1,156 disponible).
+                {primaryRecommendation.body}
               </p>
             </div>
 
             <div style={{ padding: '10px 12px', borderRadius: 10, backgroundColor: 'rgba(48, 200, 143, 0.1)', border: '1px solid rgba(48, 200, 143, 0.25)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-tertiary, #56e5a9)', fontSize: 11, fontWeight: 700 }}>
-                <TrendingUp size={13} /> ACELERADOR FISCAL FIN DE AÑO
+                <TrendingUp size={13} /> CAPACIDAD DE CAPITALIZACIÓN DEL PERÍODO
               </div>
               <p style={{ fontSize: 11, color: 'var(--color-on-surface-variant, #d8c3ad)', marginTop: 4, lineHeight: 1.4 }}>
-                Puedes deducir hasta $2,100.00 antes del 31 de diciembre mediante aportes extraordinarios a tu vehículo de retiro (Plan Fiduciario/IRA).
+                Con tu superávit actual de {formatCurrency(surplus)}, puedes aportar {formatCurrency(surplus * 0.6)} a tus metas de ahorro e inversión sin comprometer tu liquidez operativa.
               </p>
             </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(49, 53, 62, 0.3)', fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>
-            <span>Última sincronización bancaria: hace 14 minutos</span>
-            <span style={{ color: 'var(--color-tertiary, #56e5a9)' }}>4 cuentas en tiempo real</span>
+            <span>Auditoría del ciclo {currentPeriod}</span>
+            <span style={{ color: 'var(--color-tertiary, #56e5a9)' }}>{savingsGoals.length} metas activas</span>
           </div>
         </div>
       </div>
+
+      {/* ── MODAL PARA CREAR META DE AHORRO (PORTAL EN DOCUMENT.BODY) ── */}
+      {showGoalModal && createPortal(
+        <div className="aureus-modal-backdrop" onClick={() => setShowGoalModal(false)}>
+          <div className="aureus-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="aureus-modal-header">
+              <h2 className="modal-title" style={{ margin: 0 }}>
+                <PiggyBank size={16} className="text-gold" />
+                <span>Nueva Meta de Ahorro</span>
+              </h2>
+              <button
+                type="button"
+                className="aureus-modal-close"
+                onClick={() => setShowGoalModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateGoal} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label className="aureus-field-label">Nombre de la Meta</label>
+                <input
+                  className="aureus-adaptive-input"
+                  placeholder="Ej: Fondo de Emergencia, Inicial Apartamento..."
+                  value={goalForm.name}
+                  onChange={e => setGoalForm(p => ({ ...p, name: e.target.value }))}
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <div className="aureus-modal-grid-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Monto Objetivo (RD$)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    className="aureus-adaptive-input"
+                    placeholder="150000"
+                    value={goalForm.targetAmount}
+                    onChange={e => setGoalForm(p => ({ ...p, targetAmount: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Ahorro Inicial (RD$)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="aureus-adaptive-input"
+                    placeholder="0"
+                    value={goalForm.currentAmount}
+                    onChange={e => setGoalForm(p => ({ ...p, currentAmount: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="aureus-modal-grid-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Aporte Mensual Sugerido (RD$)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="aureus-adaptive-input"
+                    placeholder="10000"
+                    value={goalForm.monthlyContribution}
+                    onChange={e => setGoalForm(p => ({ ...p, monthlyContribution: e.target.value }))}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Propósito</label>
+                  <select
+                    className="aureus-adaptive-input"
+                    value={goalForm.category}
+                    onChange={e => setGoalForm(p => ({ ...p, category: e.target.value as GoalCategory }))}
+                  >
+                    <option value="emergency">Fondo de Emergencia</option>
+                    <option value="investment">Portafolio / Inversión</option>
+                    <option value="housing">Vivienda / Inicial</option>
+                    <option value="vehicle">Vehículo</option>
+                    <option value="vacation">Viajes &amp; Vacaciones</option>
+                    <option value="education">Educación</option>
+                    <option value="other">Otro Propósito</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="aureus-btn-secondary"
+                  onClick={() => setShowGoalModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="sandbox-btn-gold">
+                  <Plus size={14} />
+                  <span>Crear Meta</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── MODAL PARA ABONAR A UNA META DE AHORRO (PORTAL EN DOCUMENT.BODY) ── */}
+      {depositGoal && createPortal(
+        <div className="aureus-modal-backdrop" onClick={() => setDepositGoal(null)}>
+          <div className="aureus-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="aureus-modal-header">
+              <h2 className="modal-title" style={{ margin: 0 }}>
+                <PiggyBank size={16} className="text-emerald" />
+                <span>Abonar a Meta: {depositGoal.name}</span>
+              </h2>
+              <button
+                type="button"
+                className="aureus-modal-close"
+                onClick={() => setDepositGoal(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleDepositSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                Acumulado actual: <strong className="text-emerald">{formatCurrency(depositGoal.currentAmount)}</strong> de {formatCurrency(depositGoal.targetAmount)}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label className="aureus-field-label">Monto a Aportar (RD$)</label>
+                <input
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  className="aureus-adaptive-input"
+                  value={depositAmount}
+                  onChange={e => setDepositAmount(e.target.value)}
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="aureus-btn-secondary"
+                  onClick={() => setDepositGoal(null)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="sandbox-btn-gold">
+                  <ArrowUpRight size={14} />
+                  <span>Confirmar Aporte</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

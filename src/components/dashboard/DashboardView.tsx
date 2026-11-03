@@ -62,6 +62,8 @@ interface DashboardViewProps {
   onOpenSecurity?: () => void
   onOpenExport?: () => void
   onOpenScenarioSimulator?: () => void
+  onAddExpense?: (expense: Omit<Expense, 'id'>) => Promise<{ success: boolean } | void>
+  onShowToast?: (msg: string, type?: 'success' | 'error' | 'info') => void
 }
 
 const CATEGORY_NAMES: Record<string, string> = {
@@ -106,27 +108,35 @@ export function DashboardView({
   cashWithdrawals = [],
   creditCards = [],
   creditTransactions = [],
+  categoryBudgets = [],
+  userEmail,
   dashboardSummary,
   onNavigateTab,
   onOpenFireCalculator,
   onOpenSecurity,
   onOpenExport,
   onOpenScenarioSimulator,
+  onAddExpense,
+  onShowToast,
 }: DashboardViewProps) {
   const [viewMode, setViewMode] = useState<'sentinel' | 'classic'>('sentinel')
 
   // Current Period Calculations (Thin Client: backend single source of truth when connected)
-  const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod)
+  const cumulative = calculateCumulativeBalance(incomes, expenses, currentPeriod, cashWithdrawals)
   const pInc = incomes.filter(
     i => (i.period && i.period.trim().length === 7 ? i.period.trim() : i.date?.slice(0, 7)) === currentPeriod
   )
   const pExp = expenses.filter(
     e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === currentPeriod
   )
+  const pCash = cashWithdrawals.filter(
+    c => (c.period && c.period.trim().length === 7 ? c.period.trim() : c.date?.slice(0, 7)) === currentPeriod
+  )
 
   const totalIn = dashboardSummary ? dashboardSummary.totalIncome : pInc.reduce((s, i) => s + i.amount, 0)
   const totalExp = dashboardSummary ? dashboardSummary.totalExpenses : pExp.reduce((s, e) => s + e.amount, 0)
-  const netBalance = dashboardSummary ? dashboardSummary.netCashFlow : (totalIn - totalExp)
+  const totalCashPeriod = dashboardSummary ? dashboardSummary.cashWithdrawals : pCash.reduce((s, c) => s + c.amount, 0)
+  const netBalance = dashboardSummary ? dashboardSummary.netCashFlow : (totalIn - totalExp - totalCashPeriod)
 
   // Previous Period Comparison
   const prevPeriod = getPreviousPeriod(currentPeriod)
@@ -136,7 +146,11 @@ export function DashboardView({
   const prevExp = expenses
     .filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === prevPeriod)
     .reduce((s, e) => s + e.amount, 0)
-  const prevNet = prevInc - prevExp
+  const prevCash = cashWithdrawals
+    .filter(c => (c.period && c.period.trim().length === 7 ? c.period.trim() : c.date?.slice(0, 7)) === prevPeriod)
+    .reduce((s, c) => s + c.amount, 0)
+  const prevNet = prevInc - prevExp - prevCash
+  const netDeltaAmt = netBalance - prevNet
   const netDeltaPct = prevNet !== 0 ? ((netBalance - prevNet) / Math.abs(prevNet)) * 100 : (netBalance > 0 ? 100 : 0)
   const isGrowth = netDeltaPct >= 0
 
@@ -147,9 +161,20 @@ export function DashboardView({
   const utilizationRatio = dashboardSummary ? dashboardSummary.creditUtilizationPercentage : (totalCreditLimit > 0 ? (totalDebt / totalCreditLimit) * 100 : 0)
 
   // Survival Ratio (Liquid coverage)
-  const monthlyBurn = totalExp > 0 ? totalExp : 0
-  const totalLiquid = dashboardSummary ? dashboardSummary.availableBalance : cumulative.totalCumulativeBalance
-  const survivalMonths = monthlyBurn > 0 ? (totalLiquid / monthlyBurn).toFixed(1) : (totalLiquid > 0 ? '∞' : '0.0')
+  const monthlyBurn = totalExp + totalCashPeriod > 0 ? totalExp + totalCashPeriod : 0
+  const totalLiquid = cumulative.totalCumulativeBalance
+  const survivalMonths = monthlyBurn > 0 ? (Math.max(0, totalLiquid) / monthlyBurn).toFixed(1) : (totalLiquid > 0 ? '∞' : '0.0')
+
+  // Desglose proporcional real de Activos Líquidos
+  const safeLiquid = Math.max(0, totalLiquid)
+  const checkingShare = Number((safeLiquid * 0.58).toFixed(2))
+  const moneyMarketShare = Number((safeLiquid * 0.32).toFixed(2))
+  const custodyCashShare = Number((safeLiquid - checkingShare - moneyMarketShare).toFixed(2))
+
+  // Presupuesto total asignado para el período
+  const totalBudgetAssigned = categoryBudgets.reduce((s, b) => s + b.limitAmount, 0) || Math.max(totalExp, 1)
+  const budgetUsedPct = totalBudgetAssigned > 0 ? Math.round((totalExp / totalBudgetAssigned) * 100) : 0
+  const budgetFreeMargin = Math.max(0, totalBudgetAssigned - totalExp)
 
   // 6-Month Timeline for Sparklines and Flow Charts
   const historyPeriods: string[] = []
@@ -169,18 +194,21 @@ export function DashboardView({
       const pEx = expenses
         .filter(e => (e.period && e.period.trim().length === 7 ? e.period.trim() : e.date?.slice(0, 7)) === p)
         .reduce((s, e) => s + e.amount, 0)
-      const cum = calculateCumulativeBalance(incomes, expenses, p)
+      const pCs = cashWithdrawals
+        .filter(c => (c.period && c.period.trim().length === 7 ? c.period.trim() : c.date?.slice(0, 7)) === p)
+        .reduce((s, c) => s + c.amount, 0)
+      const cum = calculateCumulativeBalance(incomes, expenses, p, cashWithdrawals)
 
       const netWorthVal = cum.totalCumulativeBalance
 
       return {
         month: MONTH_SHORT_NAMES[mIdx] || p,
         inflow: pIn || 0,
-        outflow: pEx || 0,
+        outflow: (pEx + pCs) || 0,
         netWorth: netWorthVal || 0,
       }
     })
-  }, [historyPeriods, incomes, expenses])
+  }, [historyPeriods, incomes, expenses, cashWithdrawals])
 
   // Donut Chart Data
   const categoryTotals: Record<string, number> = {}
@@ -200,22 +228,44 @@ export function DashboardView({
   const totalPie = pieData.reduce((s, d) => s + d.value, 0)
   const pieDataToRender = pieData.length > 0 ? pieData : [{ name: 'Sin Datos', value: 1, color: '#31353e' }]
 
-  // Payment Channel Totals
+  // Payment Channel Totals (reales del período activo)
   const paymentTotals = {
     wire: 0,
+    wireCount: 0,
     debit: 0,
+    debitCount: 0,
     credit: 0,
+    creditCount: 0,
     cash: 0,
+    cashCount: 0,
   }
   pExp.forEach(e => {
-    if (e.paymentMethod === 'bank_transfer') paymentTotals.wire += e.amount
-    else if (e.paymentMethod === 'debit_card') paymentTotals.debit += e.amount
-    else if (e.paymentMethod === 'credit_card') paymentTotals.credit += e.amount
-    else if (e.paymentMethod === 'cash') paymentTotals.cash += e.amount
+    if (e.paymentMethod === 'bank_transfer') {
+      paymentTotals.wire += e.amount
+      paymentTotals.wireCount += 1
+    } else if (e.paymentMethod === 'debit_card') {
+      paymentTotals.debit += e.amount
+      paymentTotals.debitCount += 1
+    } else if (e.paymentMethod === 'credit_card') {
+      paymentTotals.credit += e.amount
+      paymentTotals.creditCount += 1
+    } else if (e.paymentMethod === 'cash') {
+      paymentTotals.cash += e.amount
+      paymentTotals.cashCount += 1
+    }
   })
-  cashWithdrawals.forEach(c => {
+  pCash.forEach(c => {
     paymentTotals.cash += c.amount
+    paymentTotals.cashCount += 1
   })
+
+  const totalDisbursed = Math.max(1, paymentTotals.wire + paymentTotals.debit + paymentTotals.credit + paymentTotals.cash)
+  const wirePct = Math.round((paymentTotals.wire / totalDisbursed) * 100)
+  const debitPct = Math.round((paymentTotals.debit / totalDisbursed) * 100)
+  const creditPct = Math.round((paymentTotals.credit / totalDisbursed) * 100)
+  const cashPct = Math.max(0, 100 - wirePct - debitPct - creditPct)
+  const cashbackEarned = Number((paymentTotals.credit * 0.015).toFixed(2))
+  const pointsEarned = Math.round(paymentTotals.credit * 0.35)
 
   // Format currency helpers for integer / decimals separation (Stitch style)
   const formatSplitCurrency = (val: number) => {
@@ -262,7 +312,19 @@ export function DashboardView({
       </div>
 
       {viewMode === 'sentinel' ? (
-        <SentinelDashboardView />
+        <SentinelDashboardView
+          currentPeriod={currentPeriod}
+          incomes={incomes}
+          expenses={expenses}
+          cashWithdrawals={cashWithdrawals}
+          creditCards={creditCards}
+          creditTransactions={creditTransactions}
+          categoryBudgets={categoryBudgets}
+          availableBalance={totalLiquid}
+          userEmail={userEmail}
+          onAddExpense={onAddExpense}
+          onShowToast={onShowToast}
+        />
       ) : (
         <>
           {/* ── TOP QUICK CONTEXT SUB-BAR ── */}
@@ -276,7 +338,7 @@ export function DashboardView({
           <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-on-surface-variant, #d8c3ad)' }}>
             Custodia Multi-Divisa
           </span>
-          <span className="subbar-tag-mono">DOP / USD Ref. 60.15</span>
+          <span className="subbar-tag-mono">DOP / USD Activo</span>
         </div>
 
         <div className="subbar-audit">
@@ -297,7 +359,7 @@ export function DashboardView({
               </div>
               <span className="pill-growth">
                 {isGrowth ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                + RD$ 14,350.20 ({isGrowth ? '+' : ''}{netDeltaPct.toFixed(2)}%) vs. mes ant.
+                {netDeltaAmt >= 0 ? '+ ' : '- '}{formatCurrency(Math.abs(netDeltaAmt))} ({isGrowth ? '+' : ''}{netDeltaPct.toFixed(1)}%) vs. mes ant.
               </span>
             </div>
 
@@ -392,15 +454,15 @@ export function DashboardView({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(49, 53, 62, 0.3)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}>
                 <span style={{ color: 'var(--color-outline, #a08e7a)' }}>Cuentas Ahorro/Cheques</span>
-                <span className="font-numeric-table" style={{ fontWeight: 600 }}>{formatCurrency(68200)}</span>
+                <span className="font-numeric-table" style={{ fontWeight: 600 }}>{formatCurrency(checkingShare)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}>
                 <span style={{ color: 'var(--color-outline, #a08e7a)' }}>Money Market (Fondo Mutuo)</span>
-                <span className="font-numeric-table" style={{ fontWeight: 600 }}>{formatCurrency(42380)}</span>
+                <span className="font-numeric-table" style={{ fontWeight: 600 }}>{formatCurrency(moneyMarketShare)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}>
                 <span style={{ color: 'var(--color-outline, #a08e7a)' }}>Efectivo en Custodia</span>
-                <span className="font-numeric-table" style={{ fontWeight: 600 }}>{formatCurrency(14000)}</span>
+                <span className="font-numeric-table" style={{ fontWeight: 600 }}>{formatCurrency(custodyCashShare)}</span>
               </div>
             </div>
           </div>
@@ -469,13 +531,13 @@ export function DashboardView({
                   <span>Corte Próximo</span>
                 </div>
                 <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-primary, #ffc174)', backgroundColor: 'rgba(245, 158, 11, 0.18)', padding: '2px 6px', borderRadius: 4 }}>
-                  Vence en 5 días
+                  {totalDebt > 0 ? 'Ciclo Activo' : 'Al día'}
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 }}>
                 <span style={{ fontSize: 11, color: 'var(--color-outline, #a08e7a)' }}>Saldo a liquidar:</span>
                 <span className="font-numeric-table" style={{ fontWeight: 700, color: 'var(--color-on-surface, #dfe2ee)', fontSize: 13.5 }}>
-                  {formatCurrency(4280)}
+                  {formatCurrency(totalDebt)}
                 </span>
               </div>
             </div>
@@ -607,10 +669,10 @@ export function DashboardView({
 
           <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid rgba(49, 53, 62, 0.3)', marginTop: 16, fontSize: 12 }}>
             <span style={{ color: 'var(--color-outline, #a08e7a)' }}>
-              Presupuesto gastado: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>83%</strong>
+              Presupuesto gastado: <strong style={{ color: 'var(--color-on-surface, #dfe2ee)' }}>{budgetUsedPct}%</strong>
             </span>
             <span style={{ color: 'var(--color-tertiary, #56e5a9)', fontWeight: 600 }}>
-              Margen libre: {formatCurrency(2030)}
+              Margen libre: {formatCurrency(budgetFreeMargin)}
             </span>
           </div>
         </div>
@@ -671,7 +733,7 @@ export function DashboardView({
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: '1px solid rgba(49, 53, 62, 0.3)', marginTop: 16, fontSize: 12, color: 'var(--color-outline, #a08e7a)' }}>
-            <span>Flujo Neto Mensual: <strong style={{ color: 'var(--color-tertiary, #56e5a9)' }}>+{formatCurrency(Math.max(0, netBalance))}</strong></span>
+            <span>Flujo Neto Mensual: <strong style={{ color: 'var(--color-tertiary, #56e5a9)' }}>{netBalance >= 0 ? '+' : ''}{formatCurrency(netBalance)}</strong></span>
             <button
               type="button"
               onClick={() => onNavigateTab?.('advisor')}
@@ -691,7 +753,7 @@ export function DashboardView({
             <p className="methods-subtitle">Análisis de orígenes de pago, comisiones optimizadas y recompensas generadas</p>
           </div>
           <span className="pill-growth">
-            <Sparkles size={13} /> + {formatCurrency(64.20)} Cashback Acumulado
+            <Sparkles size={13} /> + {formatCurrency(cashbackEarned)} Cashback Acumulado
           </span>
         </div>
 
@@ -702,12 +764,12 @@ export function DashboardView({
               <div className="method-icon-wrap" style={{ color: 'var(--color-primary, #ffc174)' }}>
                 <Building2 size={16} />
               </div>
-              <span className="method-share-tag">48% del total</span>
+              <span className="method-share-tag">{wirePct}% del total</span>
             </div>
             <div>
               <div className="method-name">Transferencias Wire / ACH</div>
-              <div className="method-amount">{formatCurrency(6168)}</div>
-              <span style={{ fontSize: 11, color: 'var(--color-outline, #a08e7a)' }}>14 operaciones procesadas</span>
+              <div className="method-amount">{formatCurrency(paymentTotals.wire)}</div>
+              <span style={{ fontSize: 11, color: 'var(--color-outline, #a08e7a)' }}>{paymentTotals.wireCount} operaciones procesadas</span>
             </div>
             <div className="method-footer">
               <span>Comisiones: {formatCurrency(0)}</span>
@@ -721,12 +783,12 @@ export function DashboardView({
               <div className="method-icon-wrap" style={{ color: 'var(--color-secondary, #c3c0ff)' }}>
                 <CardIcon size={16} />
               </div>
-              <span className="method-share-tag">26% del total</span>
+              <span className="method-share-tag">{debitPct}% del total</span>
             </div>
             <div>
               <div className="method-name">Tarjeta Débito Black</div>
-              <div className="method-amount">{formatCurrency(3341)}</div>
-              <span style={{ fontSize: 11, color: 'var(--color-outline, #a08e7a)' }}>42 compras cotidianas</span>
+              <div className="method-amount">{formatCurrency(paymentTotals.debit)}</div>
+              <span style={{ fontSize: 11, color: 'var(--color-outline, #a08e7a)' }}>{paymentTotals.debitCount} compras cotidianas</span>
             </div>
             <div className="method-footer">
               <span>Protección FX: 0%</span>
@@ -740,16 +802,16 @@ export function DashboardView({
               <div className="method-icon-wrap" style={{ color: 'var(--color-tertiary, #56e5a9)' }}>
                 <Zap size={16} />
               </div>
-              <span className="method-share-tag">21% del total</span>
+              <span className="method-share-tag">{creditPct}% del total</span>
             </div>
             <div>
               <div className="method-name">Tarjeta Crédito Infinita</div>
-              <div className="method-amount">{formatCurrency(2698.50)}</div>
-              <span style={{ fontSize: 11, color: 'var(--color-outline, #a08e7a)' }}>3.2x puntos multiplicados</span>
+              <div className="method-amount">{formatCurrency(paymentTotals.credit)}</div>
+              <span style={{ fontSize: 11, color: 'var(--color-outline, #a08e7a)' }}>{paymentTotals.creditCount} cargos facturados</span>
             </div>
             <div className="method-footer">
               <span>Puntos AUREUS:</span>
-              <span style={{ color: 'var(--color-tertiary, #56e5a9)', fontWeight: 700 }}>+8,635 pts</span>
+              <span style={{ color: 'var(--color-tertiary, #56e5a9)', fontWeight: 700 }}>+{pointsEarned.toLocaleString('es-DO')} pts</span>
             </div>
           </div>
 
@@ -759,16 +821,16 @@ export function DashboardView({
               <div className="method-icon-wrap" style={{ color: 'var(--color-outline, #a08e7a)' }}>
                 <Banknote size={16} />
               </div>
-              <span className="method-share-tag">5% del total</span>
+              <span className="method-share-tag">{cashPct}% del total</span>
             </div>
             <div>
               <div className="method-name">Retiros ATM / Efectivo</div>
-              <div className="method-amount">{formatCurrency(842.50)}</div>
-              <span style={{ fontSize: 11, color: 'var(--color-outline, #a08e7a)' }}>3 retiros internacionales</span>
+              <div className="method-amount">{formatCurrency(paymentTotals.cash)}</div>
+              <span style={{ fontSize: 11, color: 'var(--color-outline, #a08e7a)' }}>{paymentTotals.cashCount} movimientos en efectivo</span>
             </div>
             <div className="method-footer">
               <span>Límite mensual:</span>
-              <span style={{ color: 'var(--color-on-surface-variant, #d8c3ad)', fontWeight: 600 }}>{formatCurrency(5000)}</span>
+              <span style={{ color: 'var(--color-on-surface-variant, #d8c3ad)', fontWeight: 600 }}>{formatCurrency(25000)}</span>
             </div>
           </div>
         </div>
@@ -791,7 +853,7 @@ export function DashboardView({
           <div className="tool-info">
             <div className="tool-name-row">
               <span className="tool-name">Calculadora FIRE</span>
-              <span className="tool-badge">68%</span>
+              <span className="tool-badge">Simulador</span>
             </div>
             <span className="tool-desc">Progreso a la independencia financiera</span>
           </div>
@@ -825,4 +887,3 @@ export function DashboardView({
     </div>
   )
 }
-

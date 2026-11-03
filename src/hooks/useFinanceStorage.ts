@@ -19,6 +19,7 @@ import type {
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { apiClient, type DashboardSummaryData } from '../services/apiClient'
 import { sanitizeAmount } from '../utils/security'
+import { getCurrentSystemPeriod, getPreviousPeriod } from '../utils/calendar'
 import {
   validateIncomeInput,
   validateExpenseInput,
@@ -204,47 +205,51 @@ function calculateLocalSummary(
   }
 }
 
+const DEMO_P0 = getCurrentSystemPeriod()
+const DEMO_P1 = getPreviousPeriod(DEMO_P0)
+const DEMO_P2 = getPreviousPeriod(DEMO_P1)
+
 const DEFAULT_INCOMES: Income[] = [
-  // Septiembre 2026 (Período actual)
-  { id: 'inc-demo-sep-1', description: 'Sueldo Principal (Senior Software Engineer)', amount: 95000, type: 'salary', date: '2026-09-01', period: '2026-09' },
-  { id: 'inc-demo-sep-2', description: 'Desarrollo App Móvil Freelance', amount: 28000, type: 'freelance', date: '2026-09-05', period: '2026-09' },
-  { id: 'inc-demo-sep-3', description: 'Rendimientos / Dividendos ETF', amount: 4500, type: 'investment', date: '2026-09-10', period: '2026-09' },
+  // Período actual del sistema
+  { id: 'inc-demo-sep-1', description: 'Sueldo Principal (Senior Software Engineer)', amount: 95000, type: 'salary', date: `${DEMO_P0}-01`, period: DEMO_P0 },
+  { id: 'inc-demo-sep-2', description: 'Desarrollo App Móvil Freelance', amount: 28000, type: 'freelance', date: `${DEMO_P0}-05`, period: DEMO_P0 },
+  { id: 'inc-demo-sep-3', description: 'Rendimientos / Dividendos ETF', amount: 4500, type: 'investment', date: `${DEMO_P0}-10`, period: DEMO_P0 },
 
-  // Agosto 2026 (Mes anterior para comparativa)
-  { id: 'inc-demo-ago-1', description: 'Sueldo Principal (Senior Software Engineer)', amount: 95000, type: 'salary', date: '2026-08-01', period: '2026-08' },
-  { id: 'inc-demo-ago-2', description: 'Consultoría Web E-commerce', amount: 22500, type: 'freelance', date: '2026-08-08', period: '2026-08' },
-  { id: 'inc-demo-ago-3', description: 'Rendimientos Fondo Indexado', amount: 4200, type: 'investment', date: '2026-08-10', period: '2026-08' },
+  // Mes anterior para comparativa
+  { id: 'inc-demo-ago-1', description: 'Sueldo Principal (Senior Software Engineer)', amount: 95000, type: 'salary', date: `${DEMO_P1}-01`, period: DEMO_P1 },
+  { id: 'inc-demo-ago-2', description: 'Consultoría Web E-commerce', amount: 22500, type: 'freelance', date: `${DEMO_P1}-08`, period: DEMO_P1 },
+  { id: 'inc-demo-ago-3', description: 'Rendimientos Fondo Indexado', amount: 4200, type: 'investment', date: `${DEMO_P1}-10`, period: DEMO_P1 },
 
-  // Julio 2026 (Histórico)
-  { id: 'inc-demo-jul-1', description: 'Sueldo Principal', amount: 90000, type: 'salary', date: '2026-07-01', period: '2026-07' },
-  { id: 'inc-demo-jul-2', description: 'Proyecto Frontend Web', amount: 18000, type: 'freelance', date: '2026-07-15', period: '2026-07' },
+  // Dos meses atrás (Histórico)
+  { id: 'inc-demo-jul-1', description: 'Sueldo Principal', amount: 90000, type: 'salary', date: `${DEMO_P2}-01`, period: DEMO_P2 },
+  { id: 'inc-demo-jul-2', description: 'Proyecto Frontend Web', amount: 18000, type: 'freelance', date: `${DEMO_P2}-15`, period: DEMO_P2 },
 ]
 
 const DEFAULT_EXPENSES: Expense[] = [
-  // Septiembre 2026
-  { id: 'exp-demo-sep-1', description: 'Alquiler Apartamento Torre Bella Vista', amount: 28000, category: 'housing', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-09-02', period: '2026-09' },
-  { id: 'exp-demo-sep-2', description: 'Supermercado Nacional & Despensa', amount: 13500, category: 'food', type: 'variable', paymentMethod: 'debit_card', date: '2026-09-03', period: '2026-09' },
-  { id: 'exp-demo-sep-3', description: 'Servicios (Internet Fibra + Luz)', amount: 3400, category: 'utilities', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-09-04', period: '2026-09' },
-  { id: 'exp-demo-sep-4', description: 'Combustible Vehículo', amount: 5500, category: 'transport', type: 'variable', paymentMethod: 'credit_card', date: '2026-09-05', period: '2026-09' },
-  { id: 'exp-demo-sep-5', description: 'Cena Restaurante & Salida Fin de Semana', amount: 3600, category: 'entertainment', type: 'variable', paymentMethod: 'credit_card', date: '2026-09-06', period: '2026-09' },
+  // Período actual del sistema
+  { id: 'exp-demo-sep-1', description: 'Alquiler Apartamento Torre Bella Vista', amount: 28000, category: 'housing', type: 'fixed', paymentMethod: 'bank_transfer', date: `${DEMO_P0}-02`, period: DEMO_P0 },
+  { id: 'exp-demo-sep-2', description: 'Supermercado Nacional & Despensa', amount: 13500, category: 'food', type: 'variable', paymentMethod: 'debit_card', date: `${DEMO_P0}-03`, period: DEMO_P0 },
+  { id: 'exp-demo-sep-3', description: 'Servicios (Internet Fibra + Luz)', amount: 3400, category: 'utilities', type: 'fixed', paymentMethod: 'bank_transfer', date: `${DEMO_P0}-04`, period: DEMO_P0 },
+  { id: 'exp-demo-sep-4', description: 'Combustible Vehículo', amount: 5500, category: 'transport', type: 'variable', paymentMethod: 'credit_card', date: `${DEMO_P0}-05`, period: DEMO_P0 },
+  { id: 'exp-demo-sep-5', description: 'Cena Restaurante & Salida Fin de Semana', amount: 3600, category: 'entertainment', type: 'variable', paymentMethod: 'credit_card', date: `${DEMO_P0}-06`, period: DEMO_P0 },
 
-  // Agosto 2026
-  { id: 'exp-demo-ago-1', description: 'Alquiler Apartamento', amount: 28000, category: 'housing', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-08-02', period: '2026-08' },
-  { id: 'exp-demo-ago-2', description: 'Supermercado & Despensa', amount: 14500, category: 'food', type: 'variable', paymentMethod: 'debit_card', date: '2026-08-04', period: '2026-08' },
-  { id: 'exp-demo-ago-3', description: 'Servicios Básicos', amount: 3200, category: 'utilities', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-08-05', period: '2026-08' },
-  { id: 'exp-demo-ago-4', description: 'Gasolina', amount: 6000, category: 'transport', type: 'variable', paymentMethod: 'credit_card', date: '2026-08-06', period: '2026-08' },
-  { id: 'exp-demo-ago-5', description: 'Ocio y Salidas', amount: 4800, category: 'entertainment', type: 'variable', paymentMethod: 'credit_card', date: '2026-08-07', period: '2026-08' },
+  // Mes anterior
+  { id: 'exp-demo-ago-1', description: 'Alquiler Apartamento', amount: 28000, category: 'housing', type: 'fixed', paymentMethod: 'bank_transfer', date: `${DEMO_P1}-02`, period: DEMO_P1 },
+  { id: 'exp-demo-ago-2', description: 'Supermercado & Despensa', amount: 14500, category: 'food', type: 'variable', paymentMethod: 'debit_card', date: `${DEMO_P1}-04`, period: DEMO_P1 },
+  { id: 'exp-demo-ago-3', description: 'Servicios Básicos', amount: 3200, category: 'utilities', type: 'fixed', paymentMethod: 'bank_transfer', date: `${DEMO_P1}-05`, period: DEMO_P1 },
+  { id: 'exp-demo-ago-4', description: 'Gasolina', amount: 6000, category: 'transport', type: 'variable', paymentMethod: 'credit_card', date: `${DEMO_P1}-06`, period: DEMO_P1 },
+  { id: 'exp-demo-ago-5', description: 'Ocio y Salidas', amount: 4800, category: 'entertainment', type: 'variable', paymentMethod: 'credit_card', date: `${DEMO_P1}-07`, period: DEMO_P1 },
 
-  // Julio 2026
-  { id: 'exp-demo-jul-1', description: 'Alquiler Apartamento', amount: 28000, category: 'housing', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-07-02', period: '2026-07' },
-  { id: 'exp-demo-jul-2', description: 'Supermercado', amount: 16200, category: 'food', type: 'variable', paymentMethod: 'debit_card', date: '2026-07-05', period: '2026-07' },
-  { id: 'exp-demo-jul-3', description: 'Servicios (Luz e Internet)', amount: 3100, category: 'utilities', type: 'fixed', paymentMethod: 'bank_transfer', date: '2026-07-06', period: '2026-07' },
+  // Dos meses atrás
+  { id: 'exp-demo-jul-1', description: 'Alquiler Apartamento', amount: 28000, category: 'housing', type: 'fixed', paymentMethod: 'bank_transfer', date: `${DEMO_P2}-02`, period: DEMO_P2 },
+  { id: 'exp-demo-jul-2', description: 'Supermercado', amount: 16200, category: 'food', type: 'variable', paymentMethod: 'debit_card', date: `${DEMO_P2}-05`, period: DEMO_P2 },
+  { id: 'exp-demo-jul-3', description: 'Servicios (Luz e Internet)', amount: 3100, category: 'utilities', type: 'fixed', paymentMethod: 'bank_transfer', date: `${DEMO_P2}-06`, period: DEMO_P2 },
 ]
 
 const DEFAULT_CASH: CashWithdrawal[] = [
-  { id: 'cash-demo-1', amount: 8000, reason: 'pocket_money', note: 'Cajero Plaza Central (Gastos menores)', date: '2026-09-02', period: '2026-09' },
-  { id: 'cash-demo-2', amount: 10000, reason: 'pocket_money', note: 'Cajero Bella Vista', date: '2026-08-03', period: '2026-08' },
-  { id: 'cash-demo-3', amount: 8000, reason: 'pocket_money', note: 'Cajero Bella Vista', date: '2026-07-04', period: '2026-07' },
+  { id: 'cash-demo-1', amount: 8000, reason: 'pocket_money', note: 'Cajero Plaza Central (Gastos menores)', date: `${DEMO_P0}-02`, period: DEMO_P0 },
+  { id: 'cash-demo-2', amount: 10000, reason: 'pocket_money', note: 'Cajero Bella Vista', date: `${DEMO_P1}-03`, period: DEMO_P1 },
+  { id: 'cash-demo-3', amount: 8000, reason: 'pocket_money', note: 'Cajero Bella Vista', date: `${DEMO_P2}-04`, period: DEMO_P2 },
 ]
 
 const DEFAULT_CARDS: CreditCard[] = [
@@ -276,11 +281,11 @@ const DEFAULT_CARD_TRANSACTIONS: CreditCardTransaction[] = [
   {
     id: 'ctx-demo-1',
     cardId: 'card-1',
-    period: '2026-09',
+    period: DEMO_P0,
     description: 'Boletos Aéreos Vacaciones',
     amount: 18500,
     category: 'entertainment',
-    date: '2026-09-03',
+    date: `${DEMO_P0}-03`,
     installments: 3,
     currentInstallment: 1,
     isPaid: false,
@@ -288,11 +293,11 @@ const DEFAULT_CARD_TRANSACTIONS: CreditCardTransaction[] = [
   {
     id: 'ctx-demo-2',
     cardId: 'card-1',
-    period: '2026-09',
+    period: DEMO_P0,
     description: 'Renovación Licencias & Software IDE',
     amount: 6800,
     category: 'education',
-    date: '2026-09-05',
+    date: `${DEMO_P0}-05`,
     installments: 1,
     currentInstallment: 1,
     isPaid: false,
@@ -300,17 +305,16 @@ const DEFAULT_CARD_TRANSACTIONS: CreditCardTransaction[] = [
   {
     id: 'ctx-demo-3',
     cardId: 'card-2',
-    period: '2026-09',
+    period: DEMO_P0,
     description: 'Mantenimiento Preventivo Vehículo',
     amount: 12500,
     category: 'transport',
-    date: '2026-09-04',
+    date: `${DEMO_P0}-04`,
     installments: 1,
     currentInstallment: 1,
     isPaid: false,
   },
 ]
-
 const DEFAULT_BUDGETS: CategoryBudget[] = [
   { id: 'bud-1', period: 'default', category: 'housing',       limitAmount: 30000 },
   { id: 'bud-2', period: 'default', category: 'food',          limitAmount: 18000 },
