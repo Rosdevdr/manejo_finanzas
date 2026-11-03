@@ -9,7 +9,6 @@ import {
   Lightbulb,
   ShieldCheck,
   LogOut,
-  Sparkles,
   RefreshCw,
   ChevronDown,
   Shield,
@@ -245,7 +244,7 @@ export function AppHeader({
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: 'var(--color-primary, #ffc174)' }}>
-                    <Sparkles size={14} />
+                    <Lightbulb size={14} />
                     <span>Inteligencia AUREUS</span>
                   </div>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(245, 158, 11, 0.15)', color: 'var(--color-primary-container, #f59e0b)' }}>

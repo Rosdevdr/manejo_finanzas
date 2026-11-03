@@ -1,6 +1,6 @@
 // src/components/ui/InstallAppModal.tsx
 import { useState, useEffect } from 'react'
-import { X, Smartphone, Download, Share2, PlusSquare, CheckCircle, Apple, Shield, Monitor, Sparkles } from 'lucide-react'
+import { X, Smartphone, Download, Share2, PlusSquare, CheckCircle, Apple, Shield, Monitor } from 'lucide-react'
 import './InstallAppModal.css'
 
 interface InstallAppModalProps {
@@ -196,7 +196,7 @@ export function InstallAppModal({
               </div>
 
               <div style={{ background: 'var(--gold-subtle)', border: '1px solid rgba(212, 175, 55, 0.25)', borderRadius: 10, padding: 12, fontSize: 11.5, color: 'var(--gold-hover)' }}>
-                <Sparkles size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> <strong>Ventaja:</strong> No requiere cuenta de Google Play para instalarse; puedes distribuir el APK directamente por WhatsApp, Telegram o enlace directo de descarga.
+                <CheckCircle size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> <strong>Ventaja:</strong> No requiere cuenta de Google Play para instalarse; puedes distribuir el APK directamente por WhatsApp, Telegram o enlace directo de descarga.
               </div>
             </>
           )}

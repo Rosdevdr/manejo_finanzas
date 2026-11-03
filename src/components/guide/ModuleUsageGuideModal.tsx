@@ -8,7 +8,7 @@ import {
   CreditCard,
   Wallet,
   Target,
-  Sparkles,
+  BrainCircuit,
   Sliders,
   CheckCircle2,
   AlertTriangle,
@@ -121,7 +121,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: 'ai-advisor',
     title: 'Asistente Financiero IA',
-    icon: <Sparkles size={18} style={{ color: '#A78BFA' }} />,
+    icon: <BrainCircuit size={18} style={{ color: '#A78BFA' }} />,
     badge: 'Inteligencia Financiera',
     description: 'Motor inteligente de diagnóstico financiero. Responde consultas prácticas, evalúa tu capacidad de gasto y te ofrece estrategias en Finanzas Personales o Visión Emprendedor.',
     bestPractices: [

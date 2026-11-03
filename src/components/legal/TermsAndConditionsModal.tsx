@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   FileText,
@@ -6,7 +6,7 @@ import {
   Download,
   ShieldCheck,
   Lock,
-  Sparkles,
+  Cpu,
   UserCheck,
   CheckCircle2,
   Clock,
@@ -85,7 +85,7 @@ export function TermsAndConditionsModal({ isOpen, onClose, onOpenSecurity }: Ter
               setActiveTab('summary')
             }}
           >
-            <Sparkles size={13} />
+            <Cpu size={13} />
             <span>Resumen Ejecutivo</span>
           </button>
           <button
@@ -118,7 +118,7 @@ export function TermsAndConditionsModal({ isOpen, onClose, onOpenSecurity }: Ter
               setActiveTab('ai')
             }}
           >
-            <Sparkles size={13} />
+            <Cpu size={13} />
             <span>IA (EU AI Act)</span>
           </button>
           <button
@@ -182,7 +182,7 @@ export function TermsAndConditionsModal({ isOpen, onClose, onOpenSecurity }: Ter
                 <div className="terms-card">
                   <div className="terms-card-header">
                     <div className="terms-card-icon blue">
-                      <Sparkles size={18} />
+                      <Cpu size={18} />
                     </div>
                     <span className="terms-card-tag">EU AI ACT (ART. 50)</span>
                   </div>

@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   PlayCircle,
-  Sparkles,
   Zap,
   KeyRound,
   ArrowLeft,
@@ -848,7 +847,7 @@ export function LoginView({
               >
                 <PlayCircle size={16} className="text-[#C9A84C]" />
                 <span>Continuar en Modo Demo (Local)</span>
-                <Sparkles size={14} className="text-[#C9A84C]" />
+                <ArrowRight size={14} className="text-[#C9A84C]" />
               </button>
             </>
           )}

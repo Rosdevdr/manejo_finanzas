@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Plus, Sparkles, Calendar, Tag, DollarSign, FileText, Briefcase, Laptop, TrendingUp, Zap } from 'lucide-react'
+import { Plus, Calendar, Tag, DollarSign, FileText, Briefcase, Laptop, TrendingUp, Zap } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { sanitizeAmount, sanitizeText, isValidDate } from '../../utils/security'
 import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
@@ -61,7 +61,7 @@ export function IncomeForm({ currentPeriod, onAdd }: IncomeFormProps) {
       <div className="panel-header">
         <div className="panel-title">
           <span className="title-icon-badge emerald">
-            <Sparkles size={14} />
+            <Plus size={14} />
           </span>
           Registrar Nuevo Ingreso
         </div>

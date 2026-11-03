@@ -11,7 +11,7 @@ import {
   Search,
   Wallet,
   Wrench,
-  Sparkles,
+  Gamepad2,
   ShieldAlert,
   HelpCircle,
   ShieldCheck,
@@ -36,7 +36,7 @@ interface CashViewProps {
 const REASON_MAP: Record<CashReason, { label: string; subtitle: string; icon: ReactNode; color: string; badge: string }> = {
   pocket_money:     { label: 'Bolsillo / Menudeo',  subtitle: 'Gastos menores diarios',        icon: <Wallet size={15} />,      color: '#C9A84C', badge: 'badge-bolsillo' },
   specific_service: { label: 'Servicio Específico', subtitle: 'Pago técnico o servicio puntual', icon: <Wrench size={15} />,    color: '#38BDF8', badge: 'badge-servicios' },
-  leisure_nightout: { label: 'Ocio / Salida',       subtitle: 'Recreación, eventos y salidas', icon: <Sparkles size={15} />,    color: '#A78BFA', badge: 'badge-ocio' },
+  leisure_nightout: { label: 'Ocio / Salida',       subtitle: 'Recreación, eventos y salidas', icon: <Gamepad2 size={15} />,    color: '#A78BFA', badge: 'badge-ocio' },
   emergency:        { label: 'Emergencia',          subtitle: 'Imprevisto urgente',            icon: <ShieldAlert size={15} />, color: '#F87171', badge: 'badge-salud' },
   unassigned:       { label: 'Sin Destino Claro',   subtitle: 'Retiro pendiente de clasificar', icon: <HelpCircle size={15} />, color: '#94A3B8', badge: 'badge-fijo' },
 }

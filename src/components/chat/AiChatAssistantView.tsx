@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, Trash2, Copy, Volume2, Sparkles, ShieldCheck, Key, Check, X, Lock } from 'lucide-react'
+import { Bot, Send, Trash2, Copy, Volume2, RefreshCw, ShieldCheck, Key, Check, X, Lock } from 'lucide-react'
 import type {
   Income,
   Expense,
@@ -387,7 +387,7 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
           >
             {apiKey ? (
               <>
-                <Sparkles size={12} style={{ color: 'var(--emerald-success)' }} />
+                <ShieldCheck size={12} style={{ color: 'var(--emerald-success)' }} />
                 <span>Gemini AI Activo ({selectedModel})</span>
               </>
             ) : (
@@ -521,7 +521,7 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
                 <Bot size={16} />
               </div>
               <div className="message-bubble" style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={14} className="spin" style={{ color: 'var(--gold-hover)' }} /> Procesando datos de tu cartera...
+                <RefreshCw size={14} className="spin" style={{ color: 'var(--gold-hover)' }} /> Procesando datos de tu cartera...
               </div>
             </div>
           )}
@@ -529,7 +529,7 @@ Tu historial conversacional está cifrado y **100% aislado para la cuenta (${use
 
         {/* Quick Suggestion Chips */}
         <div className="prompt-chips-container">
-          <Sparkles size={14} style={{ color: 'var(--gold-hover)', flexShrink: 0 }} />
+          <ShieldCheck size={14} style={{ color: 'var(--gold-hover)', flexShrink: 0 }} />
           {QUICK_PROMPTS.map((prompt, idx) => (
             <button key={idx} className="chip-btn" onClick={() => handleSendMessage(prompt)}>
               {prompt}

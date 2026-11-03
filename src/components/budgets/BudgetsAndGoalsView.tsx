@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Plus,
@@ -12,6 +12,16 @@ import {
   Trash2,
   X,
   ArrowUpRight,
+  Home,
+  Utensils,
+  Car,
+  Zap,
+  HeartPulse,
+  Gamepad2,
+  GraduationCap,
+  CreditCard,
+  Package,
+  RefreshCw,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -57,16 +67,16 @@ const CATEGORIES: ExpenseCategory[] = [
   'health', 'entertainment', 'education', 'debt', 'other',
 ]
 
-const CATEGORY_META: Record<ExpenseCategory, { label: string; icon: string }> = {
-  housing:       { label: 'Vivienda', icon: 'home' },
-  food:          { label: 'Alimentación', icon: 'shopping_cart' },
-  transport:     { label: 'Transporte', icon: 'directions_car' },
-  utilities:     { label: 'Servicios & Apps', icon: 'bolt' },
-  health:        { label: 'Salud & Bienestar', icon: 'favorite' },
-  entertainment: { label: 'Ocio & Viajes', icon: 'flight' },
-  education:     { label: 'Educación & Desarrollo', icon: 'school' },
-  debt:          { label: 'Deudas & Pasivos', icon: 'account_balance' },
-  other:         { label: 'Otros & Contingencia', icon: 'shield' },
+const CATEGORY_META: Record<ExpenseCategory, { label: string; icon: ReactNode }> = {
+  housing:       { label: 'Vivienda', icon: <Home size={16} /> },
+  food:          { label: 'Alimentación', icon: <Utensils size={16} /> },
+  transport:     { label: 'Transporte', icon: <Car size={16} /> },
+  utilities:     { label: 'Servicios & Apps', icon: <Zap size={16} /> },
+  health:        { label: 'Salud & Bienestar', icon: <HeartPulse size={16} /> },
+  entertainment: { label: 'Ocio & Viajes', icon: <Gamepad2 size={16} /> },
+  education:     { label: 'Educación & Desarrollo', icon: <GraduationCap size={16} /> },
+  debt:          { label: 'Deudas & Pasivos', icon: <CreditCard size={16} /> },
+  other:         { label: 'Otros & Contingencia', icon: <Package size={16} /> },
 }
 
 export function BudgetsAndGoalsView({
@@ -552,7 +562,7 @@ export function BudgetsAndGoalsView({
                 <div>
                   <div className="cat-top-row">
                     <div className="cat-name-icon">
-                      <span className="material-symbols-outlined text-base" style={{ color: badgeColor }}>
+                      <span style={{ color: badgeColor, display: 'inline-flex', alignItems: 'center' }}>
                         {c.meta.icon}
                       </span>
                       <span>{c.meta.label}</span>
@@ -651,7 +661,7 @@ export function BudgetsAndGoalsView({
       <div className="fire-engine-card">
         <div className="fire-engine-header">
           <div className="fire-title-group">
-            <span className="material-symbols-outlined text-primary text-xl">local_fire_department</span>
+            <Flame size={22} style={{ color: 'var(--color-primary-container, #f59e0b)', flexShrink: 0 }} />
             <div>
               <h2 className="categories-title">Simulador de Independencia Financiera (FIRE Engine)</h2>
               <p className="categories-subtitle">Cálculo dinámico basado en la Regla Trinity ajustada por inflación y retornos reales compuestos</p>
@@ -866,7 +876,9 @@ export function BudgetsAndGoalsView({
         <div className="budget-kpi-card">
           <div className="kpi-header-row">
             <span className="kpi-title-label">Recomendaciones del Motor Asesor AUREUS</span>
-            <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)' }}>Sync IA</span>
+            <span style={{ fontSize: 10, color: 'var(--color-outline, #a08e7a)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <RefreshCw size={11} /> Sync Activo
+            </span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '8px 0' }}>

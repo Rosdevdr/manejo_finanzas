@@ -14,7 +14,7 @@ import {
   TrendingDown,
   Building2,
   Banknote,
-  Sparkles,
+  RefreshCw,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -753,7 +753,7 @@ export function DashboardView({
             <p className="methods-subtitle">Análisis de orígenes de pago, comisiones optimizadas y recompensas generadas</p>
           </div>
           <span className="pill-growth">
-            <Sparkles size={13} /> + {formatCurrency(cashbackEarned)} Cashback Acumulado
+            <RefreshCw size={13} /> + {formatCurrency(cashbackEarned)} Cashback Acumulado
           </span>
         </div>
 

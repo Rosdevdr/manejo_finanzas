@@ -1,4 +1,4 @@
-import { Briefcase, Sparkles, TrendingUp, DollarSign, Pencil, Trash2 } from 'lucide-react'
+import { Briefcase, Laptop, TrendingUp, DollarSign, Pencil, Trash2 } from 'lucide-react'
 import type { Income, IncomeType } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 
@@ -14,7 +14,7 @@ export function IncomeList({ incomes, onEdit, onDelete }: IncomeListProps) {
       case 'salary':
         return { label: 'Sueldo Base', icon: Briefcase, color: 'text-[#C9A84C] bg-[rgba(201,168,76,0.14)] border-[#C9A84C]/30' }
       case 'freelance':
-        return { label: 'Freelance', icon: Sparkles, color: 'text-[#A855F7] bg-[rgba(168,85,247,0.14)] border-[#A855F7]/30' }
+        return { label: 'Freelance', icon: Laptop, color: 'text-[#A855F7] bg-[rgba(168,85,247,0.14)] border-[#A855F7]/30' }
       case 'investment':
         return { label: 'Inversión', icon: TrendingUp, color: 'text-[#3B82F6] bg-[rgba(59,130,246,0.14)] border-[#3B82F6]/30' }
       case 'extra':

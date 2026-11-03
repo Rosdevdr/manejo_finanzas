@@ -5,7 +5,9 @@ import {
   Plus,
   Trash2,
   Pencil,
-  Sparkles,
+  RefreshCw,
+  Activity,
+  Wifi,
   Calendar,
   AlertTriangle,
   CheckCircle2,
@@ -519,7 +521,7 @@ export function CreditCardsView({
           <div className="kpi-header-row">
             <span className="kpi-title-label">Cashback &amp; Recompensas del Ciclo</span>
             <span className="kpi-badge-success">
-              <Sparkles size={12} />
+              <RefreshCw size={12} />
               1.5% Retorno Estimado
             </span>
           </div>
@@ -567,7 +569,7 @@ export function CreditCardsView({
                       <div className="card-product-name">{card.name}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-primary, #ffc174)' }}>
-                      <span className="material-symbols-outlined text-lg">contactless</span>
+                      <Wifi size={16} style={{ transform: 'rotate(90deg)' }} />
                       <span style={{ fontSize: 14, fontWeight: 700 }}>∞</span>
                     </div>
                   </div>
@@ -656,7 +658,7 @@ export function CreditCardsView({
         <div className="sandbox-panel" style={{ padding: '12px 18px', marginBottom: 18 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Sparkles size={16} className="text-gold" />
+              <Activity size={16} className="text-gold" />
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                 Asesor de Ciclo: {activeCard.name} ({activeCard.bank})
               </span>

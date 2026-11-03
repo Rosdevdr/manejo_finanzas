@@ -16,7 +16,6 @@ import {
   Droplets,
   Plus,
   Send,
-  Sparkles,
   TrendingUp,
   TrendingDown,
   ArrowUpRight,
@@ -1460,8 +1459,8 @@ export function SentinelDashboardView({
                 {item.aiConfidence && (
                   <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
                     <span className="sentinel-ai-tag">
-                      <Sparkles className="w-3 h-3" />
-                      <span>{item.aiConfidence}% confianza IA</span>
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>{item.aiConfidence}% verificado</span>
                     </span>
                     {item.categoryTag && (
                       <span className="text-xs sentinel-muted-text font-medium">
