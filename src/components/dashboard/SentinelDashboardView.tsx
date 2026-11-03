@@ -43,6 +43,7 @@ import {
   syncDailyUsdDopRate,
   type DailyExchangeRateState,
 } from '../../utils/currencyConverter'
+import '../ui/ToastContainer.css'
 import { getCurrentSystemPeriod } from '../../utils/calendar'
 import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
 import './SentinelDashboardView.css'
@@ -591,7 +592,12 @@ export function SentinelDashboardView({
     )
 
     const toastMsg = `Factura de "${item.name}" pagada y descontada de tu liquidez. Ahorraste ${item.lateFeeAvoided} en moras.`
-    setCelebrationToast(toastMsg)
+    if (onShowToast) {
+      onShowToast(toastMsg, 'success')
+    } else {
+      setCelebrationToast(toastMsg)
+      setTimeout(() => setCelebrationToast(null), 5000)
+    }
 
     setFeed(prev => [
       {
@@ -604,8 +610,6 @@ export function SentinelDashboardView({
       },
       ...prev,
     ])
-
-    setTimeout(() => setCelebrationToast(null), 5000)
   }
 
   // Simulador de mensaje Telegram conectado al registro real de gastos
@@ -687,6 +691,14 @@ export function SentinelDashboardView({
     setCommitments(prev => [newItem, ...prev])
     setIsModalOpen(false)
 
+    const createToastMsg = `Compromiso "${newBillName.trim()}" registrado en el Radar Centinela (${newItem.amountFormatted}).`
+    if (onShowToast) {
+      onShowToast(createToastMsg, 'success')
+    } else {
+      setCelebrationToast(createToastMsg)
+      setTimeout(() => setCelebrationToast(null), 5000)
+    }
+
     try {
       await apiClient.sentinel.createCommitment({
         name: newBillName,
@@ -718,18 +730,27 @@ export function SentinelDashboardView({
 
   return (
     <div className="sentinel-dashboard-container">
-      {/* Toast de celebración (Portal en document.body) */}
+      {/* Toast de celebración unificado (Portal en document.body) */}
       {celebrationToast && createPortal(
-        <div className="fixed top-20 right-6 z-[10050] bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in backdrop-blur-md">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-          <span className="font-semibold text-sm">{celebrationToast}</span>
-          <button
-            onClick={() => setCelebrationToast(null)}
-            className="text-emerald-400 hover:text-white ml-2"
-            aria-label="Cerrar notificación"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        <div className="aureus-toast-viewport" role="region" aria-label="Notificación Centinela">
+          <div className="aureus-toast-card variant-success" role="alert">
+            <span className="aureus-toast-accent" aria-hidden="true" />
+            <div className="aureus-toast-icon-badge" aria-hidden="true">
+              <CheckCircle2 size={18} strokeWidth={2.3} />
+            </div>
+            <div className="aureus-toast-body">
+              <span className="aureus-toast-title">Operación Confirmada</span>
+              <span className="aureus-toast-message">{celebrationToast}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCelebrationToast(null)}
+              className="aureus-toast-close"
+              aria-label="Cerrar notificación"
+            >
+              <X size={15} strokeWidth={2.2} />
+            </button>
+          </div>
         </div>,
         document.body
       )}

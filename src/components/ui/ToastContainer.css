@@ -1,0 +1,290 @@
+/* ==============================================================================
+   AUREUS · UNIFIED NOTIFICATION STRIP / TOAST SYSTEM (DARK & LIGHT ADAPTIVE)
+   ============================================================================== */
+
+.aureus-toast-viewport {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100050;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: min(430px, calc(100vw - 32px));
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .aureus-toast-viewport {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: calc(100vw - 32px);
+  }
+}
+
+@keyframes aureusToastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.aureus-toast-card {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px !important;
+  border-radius: 14px;
+  background: rgba(20, 24, 33, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 18px 40px -10px rgba(0, 0, 0, 0.65),
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #F8FAFC;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  animation: aureusToastSlideIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.aureus-toast-card.variant-success {
+  border-color: rgba(16, 185, 129, 0.38);
+  box-shadow:
+    0 18px 40px -10px rgba(0, 0, 0, 0.65),
+    0 0 24px rgba(16, 185, 129, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.aureus-toast-card.variant-error {
+  border-color: rgba(239, 68, 68, 0.42);
+  box-shadow:
+    0 18px 40px -10px rgba(0, 0, 0, 0.65),
+    0 0 24px rgba(239, 68, 68, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.aureus-toast-card.variant-warning {
+  border-color: rgba(245, 158, 11, 0.42);
+  box-shadow:
+    0 18px 40px -10px rgba(0, 0, 0, 0.65),
+    0 0 24px rgba(245, 158, 11, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.aureus-toast-card.variant-info {
+  border-color: rgba(200, 169, 98, 0.4);
+  box-shadow:
+    0 18px 40px -10px rgba(0, 0, 0, 0.65),
+    0 0 24px rgba(200, 169, 98, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.aureus-toast-accent-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.aureus-toast-card.variant-success .aureus-toast-accent-bar {
+  background: linear-gradient(180deg, #34D399, #10B981);
+}
+
+.aureus-toast-card.variant-error .aureus-toast-accent-bar {
+  background: linear-gradient(180deg, #F87171, #EF4444);
+}
+
+.aureus-toast-card.variant-warning .aureus-toast-accent-bar {
+  background: linear-gradient(180deg, #FBBF24, #F59E0B);
+}
+
+.aureus-toast-card.variant-info .aureus-toast-accent-bar {
+  background: linear-gradient(180deg, #E5C47A, #C8A962);
+}
+
+.aureus-toast-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.aureus-toast-card.variant-success .aureus-toast-icon-badge {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34D399;
+}
+
+.aureus-toast-card.variant-error .aureus-toast-icon-badge {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #F87171;
+}
+
+.aureus-toast-card.variant-warning .aureus-toast-icon-badge {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #FBBF24;
+}
+
+.aureus-toast-card.variant-info .aureus-toast-icon-badge {
+  background: rgba(200, 169, 98, 0.16);
+  border: 1px solid rgba(200, 169, 98, 0.32);
+  color: #E5C47A;
+}
+
+.aureus-toast-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aureus-toast-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+}
+
+.aureus-toast-card.variant-success .aureus-toast-title { color: #34D399; }
+.aureus-toast-card.variant-error .aureus-toast-title   { color: #F87171; }
+.aureus-toast-card.variant-warning .aureus-toast-title { color: #FBBF24; }
+.aureus-toast-card.variant-info .aureus-toast-title    { color: #E5C47A; }
+
+.aureus-toast-message {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #F1F5F9;
+  word-break: break-word;
+}
+
+.aureus-toast-action-btn {
+  padding: 6px 11px !important;
+  border-radius: 8px;
+  background: rgba(200, 169, 98, 0.16);
+  border: 1px solid rgba(200, 169, 98, 0.35);
+  color: #E5C47A;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.aureus-toast-action-btn:hover {
+  background: rgba(200, 169, 98, 0.26);
+}
+
+.aureus-toast-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94A3B8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.aureus-toast-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+}
+
+/* ==============================================================================
+   MODO CLARO ([data-theme="light"]) — PARIDAD VISUAL TOTAL
+   ============================================================================== */
+[data-theme="light"] .aureus-toast-card {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: #CBD5E1;
+  color: #0F172A;
+  box-shadow:
+    0 16px 36px -8px rgba(15, 23, 42, 0.16),
+    0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .aureus-toast-card.variant-success {
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+[data-theme="light"] .aureus-toast-card.variant-error {
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+[data-theme="light"] .aureus-toast-card.variant-warning {
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+[data-theme="light"] .aureus-toast-card.variant-info {
+  border-color: rgba(180, 138, 46, 0.45);
+}
+
+[data-theme="light"] .aureus-toast-card.variant-success .aureus-toast-icon-badge {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+  color: #059669;
+}
+
+[data-theme="light"] .aureus-toast-card.variant-error .aureus-toast-icon-badge {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #DC2626;
+}
+
+[data-theme="light"] .aureus-toast-card.variant-warning .aureus-toast-icon-badge {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+  color: #D97706;
+}
+
+[data-theme="light"] .aureus-toast-card.variant-info .aureus-toast-icon-badge {
+  background: #FEF9C3;
+  border-color: #FDE047;
+  color: #B45309;
+}
+
+[data-theme="light"] .aureus-toast-card.variant-success .aureus-toast-title { color: #059669; }
+[data-theme="light"] .aureus-toast-card.variant-error .aureus-toast-title   { color: #DC2626; }
+[data-theme="light"] .aureus-toast-card.variant-warning .aureus-toast-title { color: #D97706; }
+[data-theme="light"] .aureus-toast-card.variant-info .aureus-toast-title    { color: #B45309; }
+
+[data-theme="light"] .aureus-toast-message {
+  color: #1E293B;
+}
+
+[data-theme="light"] .aureus-toast-close-btn {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #64748B;
+}
+
+[data-theme="light"] .aureus-toast-close-btn:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+

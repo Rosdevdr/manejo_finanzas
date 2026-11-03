@@ -1,43 +1,33 @@
 import React, { useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { X, CheckCircle2, AlertCircle, AlertTriangle, Info } from 'lucide-react'
 import type { ToastMessage } from '../../hooks/useToast'
+import './ToastContainer.css'
 
 interface ToastContainerProps {
   toasts: ToastMessage[]
   onDismiss: (id: string) => void
 }
 
-const VARIANT_CONFIG: Record<
+const VARIANT_META: Record<
   string,
-  { border: string; bg: string; iconColor: string; icon: React.ReactNode; glow: string }
+  { label: string; icon: React.ReactNode }
 > = {
   success: {
-    border: 'rgba(52, 211, 153, 0.35)',
-    bg: 'rgba(12, 24, 18, 0.95)',
-    iconColor: 'var(--emerald-success)',
-    icon: <CheckCircle2 size={16} />,
-    glow: 'rgba(52, 211, 153, 0.15)',
+    label: 'Operación Exitosa',
+    icon: <CheckCircle2 size={18} />,
   },
   error: {
-    border: 'rgba(248, 113, 113, 0.4)',
-    bg: 'rgba(28, 14, 16, 0.95)',
-    iconColor: 'var(--rose-danger)',
-    icon: <AlertCircle size={16} />,
-    glow: 'rgba(248, 113, 113, 0.18)',
+    label: 'Alerta de Operación',
+    icon: <AlertCircle size={18} />,
   },
   warning: {
-    border: 'rgba(251, 191, 36, 0.4)',
-    bg: 'rgba(28, 22, 12, 0.95)',
-    iconColor: 'var(--amber-warning)',
-    icon: <AlertTriangle size={16} />,
-    glow: 'rgba(251, 191, 36, 0.18)',
+    label: 'Aviso Preventivo',
+    icon: <AlertTriangle size={18} />,
   },
   info: {
-    border: 'rgba(201, 168, 76, 0.35)',
-    bg: 'rgba(22, 20, 14, 0.95)',
-    iconColor: 'var(--gold-hover)',
-    icon: <Info size={16} />,
-    glow: 'rgba(201, 168, 76, 0.15)',
+    label: 'Actualización AUREUS',
+    icon: <Info size={18} />,
   },
 }
 
@@ -52,7 +42,8 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
   const [isDismissing, setIsDismissing] = useState(false)
   const touchStartX = useRef<number | null>(null)
 
-  const config = VARIANT_CONFIG[toast.variant] || VARIANT_CONFIG.info
+  const variantKey = VARIANT_META[toast.variant] ? toast.variant : 'info'
+  const meta = VARIANT_META[variantKey]
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
@@ -62,7 +53,6 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return
     const diff = e.touches[0].clientX - touchStartX.current
-    // Only allow swiping to the right to dismiss
     if (diff > 0) {
       setOffsetX(diff)
     }
@@ -82,117 +72,48 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
   return (
     <div
       role="status"
+      className={`aureus-toast-card variant-${variantKey}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        background: config.bg,
-        border: `1px solid ${config.border}`,
-        borderRadius: 12,
-        padding: '12px 16px',
-        minWidth: 280,
-        maxWidth: 400,
-        boxShadow: `0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px ${config.glow}`,
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        pointerEvents: 'all',
-        transform: `translateX(${offsetX}px)`,
-        opacity: isDismissing ? 0 : Math.max(0.2, 1 - offsetX / 180),
+        transform: offsetX > 0 ? `translateX(${offsetX}px)` : undefined,
+        opacity: isDismissing ? 0 : offsetX > 0 ? Math.max(0.2, 1 - offsetX / 180) : undefined,
         transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease',
-        cursor: 'grab',
-        userSelect: 'none',
       }}
     >
-      {/* Accent Bar */}
-      <div
-        style={{
-          width: 3.5,
-          height: 36,
-          borderRadius: 3,
-          background: config.iconColor,
-          flexShrink: 0,
-        }}
-      />
+      <div className="aureus-toast-accent-bar" />
 
-      {/* Icon */}
-      <span
-        style={{
-          color: config.iconColor,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        {config.icon}
+      <span className="aureus-toast-icon-badge">
+        {meta.icon}
       </span>
 
-      {/* Message */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <span
-          style={{
-            fontSize: 12.5,
-            color: '#F5F5F7',
-            fontFamily: 'Space Grotesk, Inter, sans-serif',
-            lineHeight: 1.45,
-            display: 'block',
-            fontWeight: 500,
-            wordBreak: 'break-word',
-          }}
-        >
-          {toast.message}
-        </span>
+      <div className="aureus-toast-content">
+        <span className="aureus-toast-title">{meta.label}</span>
+        <span className="aureus-toast-message">{toast.message}</span>
       </div>
 
-      {/* Optional Action Button */}
       {toast.action && (
         <button
           type="button"
+          className="aureus-toast-action-btn"
           onClick={() => {
             toast.action?.onClick()
             onDismiss(toast.id)
-          }}
-          style={{
-            background: 'rgba(201, 168, 76, 0.15)',
-            border: '1px solid rgba(201, 168, 76, 0.35)',
-            color: 'var(--gold-hover)',
-            fontSize: 11,
-            fontWeight: 700,
-            padding: '5px 10px',
-            borderRadius: 6,
-            cursor: 'pointer',
-            fontFamily: 'Space Grotesk, sans-serif',
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
           }}
         >
           {toast.action.label}
         </button>
       )}
 
-      {/* Dismiss Button */}
       <button
         type="button"
+        className="aureus-toast-close-btn"
         onClick={() => onDismiss(toast.id)}
         aria-label="Cerrar notificación"
-        style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid var(--border-default)',
-          color: 'var(--text-muted)',
-          cursor: 'pointer',
-          padding: 4,
-          borderRadius: 6,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          transition: 'all 0.15s ease',
-        }}
+        title="Cerrar notificación"
       >
-        <X size={13} />
+        <X size={14} />
       </button>
     </div>
   )
@@ -201,25 +122,17 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
 export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   if (toasts.length === 0) return null
 
-  return (
+  const content = (
     <div
+      className="aureus-toast-viewport"
       aria-live="polite"
       aria-atomic="true"
-      style={{
-        position: 'fixed',
-        bottom: 24,
-        right: 24,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        zIndex: 99999,
-        pointerEvents: 'none',
-        maxWidth: 'calc(100vw - 32px)',
-      }}
     >
       {toasts.map(toast => (
         <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
       ))}
     </div>
   )
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content
 }
