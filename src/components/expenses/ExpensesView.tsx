@@ -25,11 +25,19 @@ import {
   ShieldCheck,
   Check,
 } from 'lucide-react'
-import type { Expense, ExpenseCategory, ExpenseType, PaymentMethod } from '../../types/finance'
+import type {
+  Expense,
+  ExpenseCategory,
+  ExpenseType,
+  PaymentMethod,
+  CreditCard as CreditCardModel,
+  CreditCardTransaction,
+} from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { sanitizeAmount, sanitizeText } from '../../utils/security'
 import { TransactionConfirmationFlow } from '../common/TransactionConfirmationFlow'
 import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
+import { ActionConfirmationModal, type ActionConfirmationDetail } from '../ui/ActionConfirmationModal'
 import './ExpensesView.css'
 
 const CATEGORY_MAP: Record<ExpenseCategory, { label: string; subtitle: string; icon: ReactNode; color: string }> = {
@@ -113,9 +121,12 @@ interface ExpensesViewProps {
   expenses: Expense[]
   currentPeriod: string
   availableBalance?: number
+  creditCards?: CreditCardModel[]
+  creditTransactions?: CreditCardTransaction[]
   onAddExpense: (data: Omit<Expense, 'id'>) => void
   onUpdateExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
+  onAddCardTransaction?: (tx: Omit<CreditCardTransaction, 'id'>) => void
   activeFilter?: ExpenseType | null
   onFilterByType?: (type: ExpenseType | null) => void
 }
@@ -124,16 +135,20 @@ export function ExpensesView({
   expenses,
   currentPeriod,
   availableBalance,
+  creditCards = [],
+  creditTransactions = [],
   onAddExpense,
   onUpdateExpense,
   onDeleteExpense,
+  onAddCardTransaction,
   activeFilter,
 }: ExpensesViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [periodMode, setPeriodMode] = useState<'current' | 'all'>('current')
-  const [pendingConfirmation, setPendingConfirmation] = useState<Omit<Expense, 'id'> | null>(null)
+  const [pendingConfirmation, setPendingConfirmation] = useState<(Omit<Expense, 'id'> & { selectedCardId?: string }) | null>(null)
   const [balanceError, setBalanceError] = useState<string | null>(null)
   const [inlineEditError, setInlineEditError] = useState<string | null>(null)
+  const [selectedCardId, setSelectedCardId] = useState<string>(() => creditCards[0]?.id || '')
   const [form, setForm] = useState({
     description: '',
     amount: '',
@@ -142,6 +157,15 @@ export function ExpensesView({
     paymentMethod: 'debit_card' as PaymentMethod,
     date: new Date().toISOString().slice(0, 10),
   })
+
+  // Estado de aviso de confirmación (Denegar / Aceptar) para Editar y Eliminar
+  const [pendingActionConfirm, setPendingActionConfirm] = useState<{
+    title: string
+    description: string
+    variant: 'gold' | 'emerald' | 'danger'
+    details?: ActionConfirmationDetail[]
+    onConfirm: () => void
+  } | null>(null)
 
   // Inline Edit State
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -173,7 +197,7 @@ export function ExpensesView({
     const cleanDesc = sanitizeText(editDesc, 100)
     if (!cleanDesc || cleanAmount <= 0) return
 
-    if (availableBalance !== undefined) {
+    if (availableBalance !== undefined && editPaymentMethod !== 'credit_card') {
       const maxAllowedForEdit = Math.max(0, availableBalance + exp.amount)
       if (cleanAmount > maxAllowedForEdit) {
         setInlineEditError(
@@ -185,24 +209,91 @@ export function ExpensesView({
 
     setInlineEditError(null)
     const derivedPeriod = editDate && editDate.length >= 7 ? editDate.slice(0, 7) : exp.period
-    onUpdateExpense({
-      ...exp,
-      description: cleanDesc,
-      amount: cleanAmount,
-      category: editCategory,
-      type: editType,
-      paymentMethod: editPaymentMethod,
-      date: editDate,
-      period: derivedPeriod,
+    const catLabel = CATEGORY_MAP[editCategory]?.label || 'Egreso'
+
+    setPendingActionConfirm({
+      title: 'Confirmar Edición de Gasto',
+      description: `¿Deseas guardar los cambios realizados al gasto "${cleanDesc}"?`,
+      variant: 'gold',
+      details: [
+        { label: 'Concepto / Descripción', value: cleanDesc },
+        { label: 'Categoría', value: catLabel },
+        { label: 'Método de Pago', value: PAYMENT_MAP[editPaymentMethod] },
+        { label: 'Fecha', value: editDate },
+        { label: 'Monto Actualizado', value: `-${formatCurrency(cleanAmount)}` },
+      ],
+      onConfirm: () => {
+        setPendingActionConfirm(null)
+        onUpdateExpense({
+          ...exp,
+          description: cleanDesc,
+          amount: cleanAmount,
+          category: editCategory,
+          type: editType,
+          paymentMethod: editPaymentMethod,
+          date: editDate,
+          period: derivedPeriod,
+        })
+        setEditingId(null)
+      },
     })
-    setEditingId(null)
   }
 
+  const handleRequestDeleteExpense = (exp: Expense) => {
+    const catLabel = CATEGORY_MAP[exp.category]?.label || 'Egreso'
+    setPendingActionConfirm({
+      title: 'Eliminar Registro de Gasto',
+      description: `¿Estás seguro de que deseas eliminar el gasto "${exp.description}"? El monto se reintegrará a tu balance.`,
+      variant: 'danger',
+      details: [
+        { label: 'Concepto / Descripción', value: exp.description },
+        { label: 'Categoría', value: catLabel },
+        { label: 'Método de Pago', value: PAYMENT_MAP[exp.paymentMethod] },
+        { label: 'Fecha', value: exp.date },
+        { label: 'Monto a Reintegrar', value: `+${formatCurrency(exp.amount)}` },
+      ],
+      onConfirm: () => {
+        setPendingActionConfirm(null)
+        onDeleteExpense(exp.id)
+      },
+    })
+  }
+
+  // Opciones de tarjetas de crédito activas para cuando paymentMethod === 'credit_card'
+  const effectiveCardId = selectedCardId || creditCards[0]?.id || ''
+  const selectedCard = creditCards.find(c => c.id === effectiveCardId)
+  const selectedCardDebt = selectedCard
+    ? creditTransactions
+        .filter(t => t.cardId === selectedCard.id && !t.isPaid)
+        .reduce((s, t) => s + t.amount, 0)
+    : 0
+  const selectedCardAvailableLimit = selectedCard
+    ? Math.max(0, selectedCard.creditLimit - selectedCardDebt)
+    : 0
+
+  const creditCardOptions: CustomSelectOption<string>[] = creditCards.map(card => {
+    const debt = creditTransactions
+      .filter(t => t.cardId === card.id && !t.isPaid)
+      .reduce((s, t) => s + t.amount, 0)
+    const avail = Math.max(0, card.creditLimit - debt)
+    return {
+      value: card.id,
+      label: card.name,
+      subtitle: `Disponible: ${formatCurrency(avail)}`,
+      icon: <CreditCard size={15} />,
+      accentColor: '#C9A84C',
+    }
+  })
+
   const parsedDraftAmount = sanitizeAmount(form.amount)
+  const isCreditCardPayment = form.paymentMethod === 'credit_card'
+  const effectiveAvailable = isCreditCardPayment
+    ? (selectedCard ? selectedCardAvailableLimit : availableBalance)
+    : availableBalance
   const isOverdraftDraft =
-    availableBalance !== undefined &&
+    effectiveAvailable !== undefined &&
     parsedDraftAmount > 0 &&
-    parsedDraftAmount > Math.max(0, availableBalance)
+    parsedDraftAmount > Math.max(0, effectiveAvailable)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -211,7 +302,14 @@ export function ExpensesView({
     const cleanDesc = sanitizeText(form.description, 100)
     if (!cleanDesc || parsed <= 0) return
 
-    if (availableBalance !== undefined) {
+    if (isCreditCardPayment && selectedCard) {
+      if (parsed > selectedCardAvailableLimit) {
+        setBalanceError(
+          `Límite de crédito insuficiente en ${selectedCard.name}: dispones de ${formatCurrency(selectedCardAvailableLimit)} y no puedes financiar ${formatCurrency(parsed)}.`
+        )
+        return
+      }
+    } else if (availableBalance !== undefined) {
       const safeAvailable = Math.max(0, availableBalance)
       if (parsed > safeAvailable) {
         setBalanceError(
@@ -230,6 +328,7 @@ export function ExpensesView({
       paymentMethod: form.paymentMethod,
       date: form.date,
       period: derivedPeriod,
+      selectedCardId: isCreditCardPayment ? effectiveCardId : undefined,
     })
     setIsModalOpen(false)
   }
@@ -492,7 +591,7 @@ export function ExpensesView({
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', gap: 4, justifyContent: 'flex-end' }}>
                           <button className="obsidian-icon-btn" onClick={() => startEdit(exp)} title="Editar"><Pencil size={14} /></button>
-                          <button className="obsidian-icon-btn danger" onClick={() => onDeleteExpense(exp.id)} title="Eliminar"><Trash2 size={14} /></button>
+                          <button className="obsidian-icon-btn danger" onClick={() => handleRequestDeleteExpense(exp)} title="Eliminar"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -522,24 +621,30 @@ export function ExpensesView({
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {availableBalance !== undefined && (
-                <div className={`aureus-balance-guard-banner ${isOverdraftDraft || availableBalance <= 0 ? 'danger' : 'safe'}`}>
+              {effectiveAvailable !== undefined && (
+                <div className={`aureus-balance-guard-banner ${isOverdraftDraft || effectiveAvailable <= 0 ? 'danger' : 'safe'}`}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700 }}>
-                      {isOverdraftDraft || availableBalance <= 0 ? <AlertTriangle size={14} /> : <ShieldCheck size={14} />}
-                      Saldo Disponible Actual:
+                      {isOverdraftDraft || effectiveAvailable <= 0 ? <AlertTriangle size={14} /> : <ShieldCheck size={14} />}
+                      {isCreditCardPayment && selectedCard
+                        ? `Crédito Disponible (${selectedCard.name}):`
+                        : 'Saldo Disponible Actual:'}
                     </span>
                     <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: 13 }}>
-                      {formatCurrency(Math.max(0, availableBalance))}
+                      {formatCurrency(Math.max(0, effectiveAvailable))}
                     </span>
                   </div>
                   {parsedDraftAmount > 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, marginTop: 4, opacity: 0.9 }}>
-                      <span>Saldo restante tras este gasto:</span>
+                      <span>
+                        {isCreditCardPayment && selectedCard
+                          ? 'Límite restante en tarjeta:'
+                          : 'Saldo restante tras este gasto:'}
+                      </span>
                       <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
                         {isOverdraftDraft
-                          ? 'Excede tu liquidez disponible'
-                          : formatCurrency(Math.max(0, availableBalance - parsedDraftAmount))}
+                          ? 'Excede tu disponibilidad autorizada'
+                          : formatCurrency(Math.max(0, effectiveAvailable - parsedDraftAmount))}
                       </span>
                     </div>
                   )}
@@ -551,7 +656,9 @@ export function ExpensesView({
                   <AlertTriangle size={16} style={{ flexShrink: 0 }} />
                   <span>
                     {balanceError ||
-                      `No puedes registrar un gasto de ${formatCurrency(parsedDraftAmount)} porque supera tu saldo disponible (${formatCurrency(Math.max(0, availableBalance ?? 0))}) y llevaría tu cuenta a negativo.`}
+                      (isCreditCardPayment && selectedCard
+                        ? `No puedes financiar ${formatCurrency(parsedDraftAmount)} porque supera el límite disponible de ${selectedCard.name} (${formatCurrency(selectedCardAvailableLimit)}).`
+                        : `No puedes registrar un gasto de ${formatCurrency(parsedDraftAmount)} porque supera tu saldo disponible (${formatCurrency(Math.max(0, availableBalance ?? 0))}) y llevaría tu cuenta a negativo.`)}
                   </span>
                 </div>
               )}
@@ -575,7 +682,7 @@ export function ExpensesView({
                     type="number"
                     step="0.01"
                     min="0.01"
-                    max={availableBalance !== undefined && availableBalance > 0 ? availableBalance : undefined}
+                    max={effectiveAvailable !== undefined && effectiveAvailable > 0 ? effectiveAvailable : undefined}
                     className="aureus-adaptive-input"
                     placeholder="0.00"
                     value={form.amount}
@@ -612,11 +719,29 @@ export function ExpensesView({
                   <CustomIconSelect
                     options={PAYMENT_METHOD_OPTIONS}
                     value={form.paymentMethod}
-                    onChange={val => setForm(p => ({ ...p, paymentMethod: val }))}
+                    onChange={val => {
+                      setBalanceError(null)
+                      setForm(p => ({ ...p, paymentMethod: val }))
+                    }}
                     ariaLabel="Método Pago"
                   />
                 </div>
               </div>
+
+              {isCreditCardPayment && creditCardOptions.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label className="aureus-field-label">Tarjeta de Crédito a Cargar</label>
+                  <CustomIconSelect
+                    options={creditCardOptions}
+                    value={effectiveCardId}
+                    onChange={val => {
+                      setBalanceError(null)
+                      setSelectedCardId(val)
+                    }}
+                    ariaLabel="Tarjeta de Crédito a Cargar"
+                  />
+                </div>
+              )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label className="aureus-field-label">
@@ -638,7 +763,7 @@ export function ExpensesView({
                 </button>
                 <button
                   type="submit"
-                  disabled={isOverdraftDraft || (availableBalance !== undefined && availableBalance <= 0)}
+                  disabled={isOverdraftDraft || (effectiveAvailable !== undefined && effectiveAvailable <= 0)}
                   style={{
                     background: isOverdraftDraft ? 'rgba(248, 113, 113, 0.25)' : 'var(--gold-primary)',
                     border: 'none',
@@ -668,9 +793,27 @@ export function ExpensesView({
           category={CATEGORY_MAP[pendingConfirmation.category]?.label || 'Egreso'}
           concept={pendingConfirmation.description}
           date={pendingConfirmation.date}
-          paymentMethod={PAYMENT_MAP[pendingConfirmation.paymentMethod] || pendingConfirmation.paymentMethod}
+          paymentMethod={
+            pendingConfirmation.paymentMethod === 'credit_card' && pendingConfirmation.selectedCardId
+              ? `${PAYMENT_MAP.credit_card} · ${creditCards.find(c => c.id === pendingConfirmation.selectedCardId)?.name || ''}`
+              : (PAYMENT_MAP[pendingConfirmation.paymentMethod] || pendingConfirmation.paymentMethod)
+          }
           onConfirm={() => {
-            onAddExpense(pendingConfirmation)
+            const { selectedCardId: targetCardId, ...expenseData } = pendingConfirmation
+            onAddExpense(expenseData)
+            if (expenseData.paymentMethod === 'credit_card' && targetCardId && onAddCardTransaction) {
+              onAddCardTransaction({
+                cardId: targetCardId,
+                period: expenseData.period,
+                description: expenseData.description,
+                amount: expenseData.amount,
+                category: expenseData.category,
+                date: expenseData.date,
+                isPaid: false,
+                installments: 1,
+                currentInstallment: 1,
+              })
+            }
             setPendingConfirmation(null)
             setForm({ description: '', amount: '', category: 'food', type: 'variable', paymentMethod: 'debit_card', date: new Date().toISOString().slice(0, 10) })
           }}
@@ -680,6 +823,19 @@ export function ExpensesView({
         />,
         document.body
       )}
+
+      {/* Aviso de Confirmación (Denegar / Aceptar) para Editar y Eliminar */}
+      <ActionConfirmationModal
+        isOpen={Boolean(pendingActionConfirm)}
+        title={pendingActionConfirm?.title || ''}
+        description={pendingActionConfirm?.description || ''}
+        variant={pendingActionConfirm?.variant || 'gold'}
+        details={pendingActionConfirm?.details}
+        confirmLabel="Aceptar"
+        cancelLabel="Denegar"
+        onConfirm={() => pendingActionConfirm?.onConfirm()}
+        onCancel={() => setPendingActionConfirm(null)}
+      />
     </div>
   )
 }

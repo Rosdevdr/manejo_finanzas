@@ -411,9 +411,14 @@ export function App() {
               currentPeriod={currentPeriod}
               expenses={expenses}
               availableBalance={available}
+              creditCards={creditCards}
+              creditTransactions={creditTransactions}
+              onAddCardTransaction={tx => {
+                void addCreditTransaction(tx)
+              }}
               onAddExpense={async d => {
                 const safeAvailable = Math.max(0, available)
-                if (d.amount > safeAvailable) {
+                if (d.paymentMethod !== 'credit_card' && d.amount > safeAvailable) {
                   showToast(
                     `Saldo insuficiente: dispones de RD$ ${safeAvailable.toLocaleString('es-DO', { minimumFractionDigits: 2 })} y no puedes registrar un gasto que lleve tu cuenta a negativo.`,
                     'error'
@@ -432,7 +437,7 @@ export function App() {
               onUpdateExpense={async u => {
                 const prevExp = expenses.find(e => e.id === u.id)
                 const maxAllowed = Math.max(0, available + (prevExp?.amount || 0))
-                if (u.amount > maxAllowed) {
+                if (u.paymentMethod !== 'credit_card' && u.amount > maxAllowed) {
                   showToast(
                     `Saldo insuficiente: no puedes actualizar este gasto por encima de tu saldo disponible (RD$ ${maxAllowed.toLocaleString('es-DO', { minimumFractionDigits: 2 })}).`,
                     'error'
@@ -531,6 +536,7 @@ export function App() {
               expenses={expenses}
               categoryBudgets={categoryBudgets}
               savingsGoals={savingsGoals}
+              availableBalance={available}
               onSetCategoryBudget={setCategoryBudget}
               onSetMultipleBudgets={setMultipleCategoryBudgets}
               onAddSavingsGoal={addSavingsGoal}

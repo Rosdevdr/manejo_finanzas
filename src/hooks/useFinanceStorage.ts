@@ -361,12 +361,33 @@ const DEFAULT_GOALS: SavingsGoal[] = [
   },
 ]
 
+// Rollover del Modo Demo: si los registros semilla quedaron guardados en un mes anterior,
+// se reubican al período vigente del sistema para que el mes activo nunca inicie en RD$ 0.00.
+function loadDemo<T extends { id: string; period?: string; date?: string }>(
+  key: string,
+  defaults: T[]
+): T[] {
+  const loaded = loadLocal(key, defaults)
+  const defaultMap = new Map(defaults.map(d => [d.id, d]))
+  let changed = false
+  const updated = loaded.map(item => {
+    const def = defaultMap.get(item.id)
+    if (def && def.period && item.period !== def.period) {
+      changed = true
+      return { ...item, period: def.period, date: def.date || item.date }
+    }
+    return item
+  })
+  if (changed) saveLocal(key, updated)
+  return updated
+}
+
 export function useFinanceStorage(user?: User | null) {
-  const [incomes,            setIncomesState]            = useState<Income[]>(() => !user ? loadLocal(getStorageKeys(null).incomes, DEFAULT_INCOMES) : loadLocal(getStorageKeys(user.id).incomes, []))
-  const [expenses,           setExpensesState]           = useState<Expense[]>(() => !user ? loadLocal(getStorageKeys(null).expenses, DEFAULT_EXPENSES) : loadLocal(getStorageKeys(user.id).expenses, []))
-  const [cash,               setCashState]               = useState<CashWithdrawal[]>(() => !user ? loadLocal(getStorageKeys(null).cash, DEFAULT_CASH) : loadLocal(getStorageKeys(user.id).cash, []))
+  const [incomes,            setIncomesState]            = useState<Income[]>(() => !user ? loadDemo(getStorageKeys(null).incomes, DEFAULT_INCOMES) : loadLocal(getStorageKeys(user.id).incomes, []))
+  const [expenses,           setExpensesState]           = useState<Expense[]>(() => !user ? loadDemo(getStorageKeys(null).expenses, DEFAULT_EXPENSES) : loadLocal(getStorageKeys(user.id).expenses, []))
+  const [cash,               setCashState]               = useState<CashWithdrawal[]>(() => !user ? loadDemo(getStorageKeys(null).cash, DEFAULT_CASH) : loadLocal(getStorageKeys(user.id).cash, []))
   const [creditCards,        setCreditCardsState]        = useState<CreditCard[]>(() => !user ? loadLocal(getStorageKeys(null).creditCards, DEFAULT_CARDS) : loadLocal(getStorageKeys(user.id).creditCards, []))
-  const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => !user ? loadLocal(getStorageKeys(null).creditTransactions, DEFAULT_CARD_TRANSACTIONS) : loadLocal(getStorageKeys(user.id).creditTransactions, []))
+  const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => !user ? loadDemo(getStorageKeys(null).creditTransactions, DEFAULT_CARD_TRANSACTIONS) : loadLocal(getStorageKeys(user.id).creditTransactions, []))
   const [categoryBudgets,    setCategoryBudgetsState]    = useState<CategoryBudget[]>(() => !user ? loadLocal(getStorageKeys(null).categoryBudgets, DEFAULT_BUDGETS) : loadLocal(getStorageKeys(user.id).categoryBudgets, []))
   const [savingsGoals,       setSavingsGoalsState]       = useState<SavingsGoal[]>(() => !user ? loadLocal(getStorageKeys(null).savingsGoals, DEFAULT_GOALS) : loadLocal(getStorageKeys(user.id).savingsGoals, []))
 
@@ -384,11 +405,11 @@ export function useFinanceStorage(user?: User | null) {
   useEffect(() => {
     if (!user) {
       const demoKeys = getStorageKeys(null)
-      setIncomesState(loadLocal(demoKeys.incomes, DEFAULT_INCOMES))
-      setExpensesState(loadLocal(demoKeys.expenses, DEFAULT_EXPENSES))
-      setCashState(loadLocal(demoKeys.cash, DEFAULT_CASH))
+      setIncomesState(loadDemo(demoKeys.incomes, DEFAULT_INCOMES))
+      setExpensesState(loadDemo(demoKeys.expenses, DEFAULT_EXPENSES))
+      setCashState(loadDemo(demoKeys.cash, DEFAULT_CASH))
       setCreditCardsState(loadLocal(demoKeys.creditCards, DEFAULT_CARDS))
-      setCreditTransactionsState(loadLocal(demoKeys.creditTransactions, DEFAULT_CARD_TRANSACTIONS))
+      setCreditTransactionsState(loadDemo(demoKeys.creditTransactions, DEFAULT_CARD_TRANSACTIONS))
       setCategoryBudgetsState(loadLocal(demoKeys.categoryBudgets, DEFAULT_BUDGETS))
       setSavingsGoalsState(loadLocal(demoKeys.savingsGoals, DEFAULT_GOALS))
     } else {

@@ -22,6 +22,7 @@ import { formatCurrency } from '../../utils/formatters'
 import { formatPeriodLabel } from '../../utils/calendar'
 import { evaluateCashWithdrawal } from '../../utils/cashAdvisor'
 import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
+import { ActionConfirmationModal, type ActionConfirmationDetail } from '../ui/ActionConfirmationModal'
 import './CashView.css'
 
 interface CashViewProps {
@@ -103,6 +104,15 @@ export function CashView({
   const [editReason, setEditReason] = useState<CashReason>('pocket_money')
   const [editAmount, setEditAmount] = useState('')
 
+  // Estado de aviso de confirmación (Denegar / Aceptar)
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    title: string
+    description: string
+    variant: 'gold' | 'emerald' | 'danger'
+    details?: ActionConfirmationDetail[]
+    onConfirm: () => void
+  } | null>(null)
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setBalanceError(null)
@@ -116,9 +126,26 @@ export function CashView({
     }
 
     const computedPeriod = form.date ? form.date.slice(0, 7) : currentPeriod
-    onAddWithdrawal({ ...form, amount: parsedAmount, period: computedPeriod })
-    setForm({ amount: '', reason: 'pocket_money', note: '', date: new Date().toISOString().slice(0, 10) })
-    setIsModalOpen(false)
+    const reasonLabel = REASON_MAP[form.reason]?.label || 'Bolsillo / Menudeo'
+
+    setPendingConfirm({
+      title: 'Confirmar Retiro de Efectivo',
+      description: `¿Deseas autorizar este retiro de efectivo de tu saldo disponible (${formatCurrency(safeAvailable)})?`,
+      variant: 'gold',
+      details: [
+        { label: 'Destino del Retiro', value: reasonLabel },
+        { label: 'Nota / Cajero', value: form.note.trim() || 'Sin nota' },
+        { label: 'Fecha', value: form.date },
+        { label: 'Monto a Retirar', value: `-${formatCurrency(parsedAmount)}` },
+        { label: 'Saldo Restante', value: formatCurrency(Math.max(0, safeAvailable - parsedAmount)) },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onAddWithdrawal({ ...form, amount: parsedAmount, period: computedPeriod })
+        setForm({ amount: '', reason: 'pocket_money', note: '', date: new Date().toISOString().slice(0, 10) })
+        setIsModalOpen(false)
+      },
+    })
   }
 
   function startEdit(c: CashWithdrawal) {
@@ -133,9 +160,43 @@ export function CashView({
     if (!nextAmt || nextAmt <= 0) return
     const maxForEdit = Math.max(0, availableBalance + c.amount)
     if (nextAmt > maxForEdit) return
-    onDeleteWithdrawal(c.id)
-    onAddWithdrawal({ amount: nextAmt, reason: editReason, note: editNote, date: c.date, period: c.period })
-    setEditingId(null)
+
+    const reasonLabel = REASON_MAP[editReason]?.label || 'Bolsillo / Menudeo'
+    setPendingConfirm({
+      title: 'Confirmar Edición de Retiro',
+      description: '¿Deseas guardar los cambios realizados a este retiro de efectivo?',
+      variant: 'gold',
+      details: [
+        { label: 'Destino del Retiro', value: reasonLabel },
+        { label: 'Nota / Cajero', value: editNote.trim() || 'Sin nota' },
+        { label: 'Monto Actualizado', value: `-${formatCurrency(nextAmt)}` },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onDeleteWithdrawal(c.id)
+        onAddWithdrawal({ amount: nextAmt, reason: editReason, note: editNote, date: c.date, period: c.period })
+        setEditingId(null)
+      },
+    })
+  }
+
+  function handleRequestDeleteWithdrawal(c: CashWithdrawal) {
+    const reasonLabel = REASON_MAP[c.reason]?.label || 'Bolsillo / Menudeo'
+    setPendingConfirm({
+      title: 'Eliminar Retiro de Efectivo',
+      description: '¿Estás seguro de que deseas eliminar este retiro de efectivo? El monto volverá a tu liquidez disponible.',
+      variant: 'danger',
+      details: [
+        { label: 'Destino del Retiro', value: reasonLabel },
+        { label: 'Nota / Cajero', value: c.note || 'Sin nota' },
+        { label: 'Fecha', value: c.date },
+        { label: 'Monto a Reintegrar', value: `+${formatCurrency(c.amount)}` },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onDeleteWithdrawal(c.id)
+      },
+    })
   }
 
   return (
@@ -345,7 +406,7 @@ export function CashView({
                       </td>
                       <td className="action-cell">
                         <button className="obsidian-icon-btn" onClick={() => startEdit(c)} title="Editar"><Pencil size={14} /></button>
-                        <button className="obsidian-icon-btn danger" onClick={() => onDeleteWithdrawal(c.id)} title="Eliminar"><Trash2 size={14} /></button>
+                        <button className="obsidian-icon-btn danger" onClick={() => handleRequestDeleteWithdrawal(c)} title="Eliminar"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   )
@@ -502,6 +563,19 @@ export function CashView({
         </div>,
         document.body
       )}
+
+      {/* Aviso de Confirmación (Denegar / Aceptar) */}
+      <ActionConfirmationModal
+        isOpen={Boolean(pendingConfirm)}
+        title={pendingConfirm?.title || ''}
+        description={pendingConfirm?.description || ''}
+        variant={pendingConfirm?.variant || 'gold'}
+        details={pendingConfirm?.details}
+        confirmLabel="Aceptar"
+        cancelLabel="Denegar"
+        onConfirm={() => pendingConfirm?.onConfirm()}
+        onCancel={() => setPendingConfirm(null)}
+      />
     </div>
   )
 }

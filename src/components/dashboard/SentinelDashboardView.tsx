@@ -48,6 +48,7 @@ import {
 import '../ui/ToastContainer.css'
 import { getCurrentSystemPeriod } from '../../utils/calendar'
 import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
+import { ActionConfirmationModal, type ActionConfirmationDetail } from '../ui/ActionConfirmationModal'
 import './SentinelDashboardView.css'
 
 export interface SentinelDashboardViewProps {
@@ -356,6 +357,15 @@ export function SentinelDashboardView({
   const [newBillAmount, setNewBillAmount] = useState('2000')
   const [newBillLateFee, setNewBillLateFee] = useState('350')
 
+  // Estado de aviso de confirmación (Denegar / Aceptar) para todas las acciones
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    title: string
+    description: string
+    variant: 'gold' | 'emerald' | 'danger'
+    details?: ActionConfirmationDetail[]
+    onConfirm: () => void | Promise<void>
+  } | null>(null)
+
   useEffect(() => {
     if (!isModalOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -577,8 +587,9 @@ export function SentinelDashboardView({
     })
   }, [commitments, filter])
 
-  // Acción rápida: Marcar pagado y descontar del saldo líquido real
-  const handleMarkAsPaid = async (item: CommitmentItem) => {
+  // Acción rápida: Marcar pagado y descontar del saldo líquido real (con confirmación)
+  const executeMarkAsPaid = async (item: CommitmentItem) => {
+    setPendingConfirm(null)
     if (availableBalance !== undefined && item.amountRaw > Math.max(0, availableBalance)) {
       const errMsg = `Saldo líquido insuficiente (${liquidityDop.toLocaleString('es-DO', { minimumFractionDigits: 2 })}) para pagar ${item.name} (${item.amountFormatted}).`
       onShowToast?.(errMsg, 'error')
@@ -624,8 +635,29 @@ export function SentinelDashboardView({
     ])
   }
 
-  // Simulador de mensaje Telegram conectado al registro real de gastos
-  const handleSimulateTelegram = async (e: React.FormEvent) => {
+  const handleMarkAsPaid = (item: CommitmentItem) => {
+    if (availableBalance !== undefined && item.amountRaw > Math.max(0, availableBalance)) {
+      const errMsg = `Saldo líquido insuficiente (${liquidityDop.toLocaleString('es-DO', { minimumFractionDigits: 2 })}) para pagar ${item.name} (${item.amountFormatted}).`
+      onShowToast?.(errMsg, 'error')
+      return
+    }
+
+    setPendingConfirm({
+      title: 'Confirmar Pago de Compromiso',
+      description: `¿Deseas conciliar el pago de "${item.name}" y descontar el monto de tu liquidez disponible?`,
+      variant: 'emerald',
+      details: [
+        { label: 'Servicio / Emisor', value: item.name },
+        { label: 'Referencia', value: item.contractNumber || 'Servicio Recurrente' },
+        { label: 'Monto a Descontar', value: item.amountFormatted },
+        { label: 'Mora Evitada', value: item.lateFeeAvoided },
+      ],
+      onConfirm: () => executeMarkAsPaid(item),
+    })
+  }
+
+  // Simulador de mensaje Telegram conectado al registro real de gastos (con confirmación)
+  const handleSimulateTelegram = (e: React.FormEvent) => {
     e.preventDefault()
     const raw = simText.trim()
     if (!raw) return
@@ -635,43 +667,62 @@ export function SentinelDashboardView({
     const { category, tag } = inferTelegramCategory(raw)
     const cleanDesc = raw.replace(/(\d+(?:[.,]\d+)?)/g, '').replace(/\s+/g, ' ').trim() || 'Gasto Captura Telegram'
 
-    if (parsedAmount > 0 && onAddExpense) {
-      if (availableBalance !== undefined && parsedAmount > Math.max(0, availableBalance)) {
-        onShowToast?.(
-          `Saldo insuficiente para registrar RD$ ${parsedAmount.toLocaleString('es-DO', { minimumFractionDigits: 2 })} vía Telegram Bot.`,
-          'error'
-        )
-        return
-      }
-      const todayIso = new Date().toISOString().slice(0, 10)
-      const res = await onAddExpense({
-        period: activePeriod,
-        description: `${cleanDesc.charAt(0).toUpperCase() + cleanDesc.slice(1)} (Telegram Bot)`,
-        amount: parsedAmount,
-        category,
-        type: 'variable',
-        paymentMethod: 'debit_card',
-        date: todayIso,
-      })
-      if (res && res.success === false) return
-      onShowToast?.(`Gasto de RD$ ${parsedAmount.toLocaleString('es-DO', { minimumFractionDigits: 2 })} conciliado en Egresos`, 'success')
+    if (parsedAmount > 0 && availableBalance !== undefined && parsedAmount > Math.max(0, availableBalance)) {
+      onShowToast?.(
+        `Saldo insuficiente para registrar RD$ ${parsedAmount.toLocaleString('es-DO', { minimumFractionDigits: 2 })} vía Telegram Bot.`,
+        'error'
+      )
+      return
     }
 
-    const newFeedItem: TelegramFeedItem = {
-      id: `sim-${Date.now()}`,
-      sender: 'Mamá',
-      avatarType: 'mama',
-      text: raw,
-      timestamp: 'Justo ahora',
-      aiConfidence: 99,
-      categoryTag: tag,
-      amountTag: parsedAmount > 0
-        ? `RD$ ${parsedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : undefined,
-    }
+    setPendingConfirm({
+      title: 'Confirmar Captura de Gasto (Telegram Bot)',
+      description: '¿Deseas registrar esta captura rápida en el historial del feed familiar y conciliar el egreso?',
+      variant: 'gold',
+      details: [
+        { label: 'Concepto Detectado', value: cleanDesc },
+        { label: 'Categoría Asignada', value: tag },
+        {
+          label: 'Monto a Descontar',
+          value: parsedAmount > 0
+            ? `RD$ ${parsedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : 'Nota informativa (RD$ 0.00)',
+        },
+      ],
+      onConfirm: async () => {
+        setPendingConfirm(null)
+        if (parsedAmount > 0 && onAddExpense) {
+          const todayIso = new Date().toISOString().slice(0, 10)
+          const res = await onAddExpense({
+            period: activePeriod,
+            description: `${cleanDesc.charAt(0).toUpperCase() + cleanDesc.slice(1)} (Telegram Bot)`,
+            amount: parsedAmount,
+            category,
+            type: 'variable',
+            paymentMethod: 'debit_card',
+            date: todayIso,
+          })
+          if (res && res.success === false) return
+          onShowToast?.(`Gasto de RD$ ${parsedAmount.toLocaleString('es-DO', { minimumFractionDigits: 2 })} conciliado en Egresos`, 'success')
+        }
 
-    setFeed(prev => [newFeedItem, ...prev])
-    setSimText('')
+        const newFeedItem: TelegramFeedItem = {
+          id: `sim-${Date.now()}`,
+          sender: 'Mamá',
+          avatarType: 'mama',
+          text: raw,
+          timestamp: 'Justo ahora',
+          aiConfidence: 99,
+          categoryTag: tag,
+          amountTag: parsedAmount > 0
+            ? `RD$ ${parsedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : undefined,
+        }
+
+        setFeed(prev => [newFeedItem, ...prev])
+        setSimText('')
+      },
+    })
   }
 
   // Abrir modal para crear nuevo compromiso
@@ -699,20 +750,33 @@ export function SentinelDashboardView({
     setIsModalOpen(true)
   }
 
-  // Eliminar un compromiso del Radar Centinela
+  // Eliminar un compromiso del Radar Centinela (con confirmación)
   const handleDeleteCommitment = (item: CommitmentItem) => {
-    setCommitments(prev => prev.filter(c => c.id !== item.id))
-    const deleteToastMsg = `Compromiso "${item.name}" eliminado del Radar Centinela.`
-    if (onShowToast) {
-      onShowToast(deleteToastMsg, 'info')
-    } else {
-      setCelebrationToast(deleteToastMsg)
-      setTimeout(() => setCelebrationToast(null), 4000)
-    }
+    setPendingConfirm({
+      title: 'Eliminar Compromiso del Radar',
+      description: `¿Estás seguro de que deseas eliminar el compromiso "${item.name}" del Radar Centinela Anti-Moras?`,
+      variant: 'danger',
+      details: [
+        { label: 'Servicio / Emisor', value: item.name },
+        { label: 'Referencia', value: item.contractNumber || 'Servicio Recurrente' },
+        { label: 'Monto Nominal', value: item.amountFormatted },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        setCommitments(prev => prev.filter(c => c.id !== item.id))
+        const deleteToastMsg = `Compromiso "${item.name}" eliminado del Radar Centinela.`
+        if (onShowToast) {
+          onShowToast(deleteToastMsg, 'info')
+        } else {
+          setCelebrationToast(deleteToastMsg)
+          setTimeout(() => setCelebrationToast(null), 4000)
+        }
+      },
+    })
   }
 
-  // Crear o actualizar compromiso
-  const handleCreateCommitment = async (e: React.FormEvent) => {
+  // Crear o actualizar compromiso (con confirmación)
+  const handleCreateCommitment = (e: React.FormEvent) => {
     e.preventDefault()
     const cleanName = newBillName.trim().slice(0, MAX_COMMITMENT_NAME_LENGTH)
     if (!cleanName) return
@@ -732,80 +796,100 @@ export function SentinelDashboardView({
     const formattedAmount = `RD$ ${amountNum.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
     const formattedLateFee = `RD$ ${lateFeeNum.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
 
-    if (editingCommitmentId) {
-      setCommitments(prev =>
-        prev.map(c =>
-          c.id === editingCommitmentId
-            ? {
-                ...c,
-                name: cleanName,
-                monogram,
-                category: newBillCategory,
-                dueDayOfMonth: dayNum,
-                dueDateStr: `Día ${dayNum} (${activePeriod})`,
-                amountFormatted: formattedAmount,
-                amountRaw: amountNum,
-                lateFeeAvoided: formattedLateFee,
-                contractNumber: cleanContract,
-                daysRemaining: c.status === 'paid' ? 0 : Math.max(1, dayNum - new Date().getDate()),
-              }
-            : c
-        )
-      )
-      setIsModalOpen(false)
-      setEditingCommitmentId(null)
+    const isEditing = Boolean(editingCommitmentId)
+    const targetEditId = editingCommitmentId
 
-      const editToastMsg = `Compromiso "${cleanName}" actualizado en el Radar Centinela (${formattedAmount}).`
-      if (onShowToast) {
-        onShowToast(editToastMsg, 'success')
-      } else {
-        setCelebrationToast(editToastMsg)
-        setTimeout(() => setCelebrationToast(null), 5000)
-      }
-      setNewBillName('')
-      setNewBillContract('')
-      return
-    }
+    setPendingConfirm({
+      title: isEditing ? 'Confirmar Edición de Compromiso' : 'Confirmar Nuevo Compromiso',
+      description: isEditing
+        ? `¿Deseas guardar los cambios realizados al compromiso "${cleanName}"?`
+        : `¿Deseas incorporar "${cleanName}" al monitoreo del Radar Centinela Anti-Moras?`,
+      variant: 'gold',
+      details: [
+        { label: 'Servicio / Compromiso', value: cleanName },
+        { label: 'Referencia / Contrato', value: cleanContract },
+        { label: 'Día de Corte', value: `Día ${dayNum} del ciclo` },
+        { label: 'Monto Nominal', value: formattedAmount },
+        { label: 'Mora Estimada', value: formattedLateFee },
+      ],
+      onConfirm: async () => {
+        setPendingConfirm(null)
+        if (isEditing && targetEditId) {
+          setCommitments(prev =>
+            prev.map(c =>
+              c.id === targetEditId
+                ? {
+                    ...c,
+                    name: cleanName,
+                    monogram,
+                    category: newBillCategory,
+                    dueDayOfMonth: dayNum,
+                    dueDateStr: `Día ${dayNum} (${activePeriod})`,
+                    amountFormatted: formattedAmount,
+                    amountRaw: amountNum,
+                    lateFeeAvoided: formattedLateFee,
+                    contractNumber: cleanContract,
+                    daysRemaining: c.status === 'paid' ? 0 : Math.max(1, dayNum - new Date().getDate()),
+                  }
+                : c
+            )
+          )
+          setIsModalOpen(false)
+          setEditingCommitmentId(null)
 
-    const newItem: CommitmentItem = {
-      id: `comm-${Date.now()}`,
-      name: cleanName,
-      monogram,
-      category: newBillCategory,
-      dueDayOfMonth: dayNum,
-      dueDateStr: `Día ${dayNum} (${activePeriod})`,
-      status: 'pending',
-      amountFormatted: formattedAmount,
-      amountRaw: amountNum,
-      lateFeeAvoided: formattedLateFee,
-      contractNumber: cleanContract,
-      daysRemaining: Math.max(1, dayNum - new Date().getDate()),
-    }
+          const editToastMsg = `Compromiso "${cleanName}" actualizado en el Radar Centinela (${formattedAmount}).`
+          if (onShowToast) {
+            onShowToast(editToastMsg, 'success')
+          } else {
+            setCelebrationToast(editToastMsg)
+            setTimeout(() => setCelebrationToast(null), 5000)
+          }
+          setNewBillName('')
+          setNewBillContract('')
+          return
+        }
 
-    setCommitments(prev => [newItem, ...prev])
-    setIsModalOpen(false)
+        const newItem: CommitmentItem = {
+          id: `comm-${Date.now()}`,
+          name: cleanName,
+          monogram,
+          category: newBillCategory,
+          dueDayOfMonth: dayNum,
+          dueDateStr: `Día ${dayNum} (${activePeriod})`,
+          status: 'pending',
+          amountFormatted: formattedAmount,
+          amountRaw: amountNum,
+          lateFeeAvoided: formattedLateFee,
+          contractNumber: cleanContract,
+          daysRemaining: Math.max(1, dayNum - new Date().getDate()),
+        }
 
-    const createToastMsg = `Compromiso "${cleanName}" registrado en el Radar Centinela (${newItem.amountFormatted}).`
-    if (onShowToast) {
-      onShowToast(createToastMsg, 'success')
-    } else {
-      setCelebrationToast(createToastMsg)
-      setTimeout(() => setCelebrationToast(null), 5000)
-    }
+        setCommitments(prev => [newItem, ...prev])
+        setIsModalOpen(false)
 
-    try {
-      await apiClient.sentinel.createCommitment({
-        name: cleanName,
-        dueDayOfMonth: dayNum,
-        expectedAmount: newBillAmount,
-        estimatedLateFee: newBillLateFee,
-      })
-    } catch {
-      // Manejado optimistamente en UI
-    }
+        const createToastMsg = `Compromiso "${cleanName}" registrado en el Radar Centinela (${newItem.amountFormatted}).`
+        if (onShowToast) {
+          onShowToast(createToastMsg, 'success')
+        } else {
+          setCelebrationToast(createToastMsg)
+          setTimeout(() => setCelebrationToast(null), 5000)
+        }
 
-    setNewBillName('')
-    setNewBillContract('')
+        try {
+          await apiClient.sentinel.createCommitment({
+            name: cleanName,
+            dueDayOfMonth: dayNum,
+            expectedAmount: newBillAmount,
+            estimatedLateFee: newBillLateFee,
+          })
+        } catch {
+          // Manejado optimistamente en UI
+        }
+
+        setNewBillName('')
+        setNewBillContract('')
+      },
+    })
   }
 
   const householdTitle = userEmail
@@ -1800,6 +1884,19 @@ export function SentinelDashboardView({
         </div>,
         document.body
       )}
+
+      {/* Aviso de Confirmación (Denegar / Aceptar) para todas las acciones */}
+      <ActionConfirmationModal
+        isOpen={Boolean(pendingConfirm)}
+        title={pendingConfirm?.title || ''}
+        description={pendingConfirm?.description || ''}
+        variant={pendingConfirm?.variant || 'gold'}
+        details={pendingConfirm?.details}
+        confirmLabel="Aceptar"
+        cancelLabel="Denegar"
+        onConfirm={() => pendingConfirm?.onConfirm()}
+        onCancel={() => setPendingConfirm(null)}
+      />
     </div>
   )
 }

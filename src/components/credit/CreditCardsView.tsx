@@ -35,6 +35,7 @@ import { formatPeriodLabel } from '../../utils/calendar'
 import { evaluateCardHealth, getConsolidatedCreditSummary } from '../../utils/creditAdvisor'
 import { sanitizeCardLastFour } from '../../utils/security'
 import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
+import { ActionConfirmationModal, type ActionConfirmationDetail } from '../ui/ActionConfirmationModal'
 import './CreditCardsView.css'
 
 interface CreditCardsViewProps {
@@ -55,15 +56,15 @@ interface CreditCardsViewProps {
 }
 
 const CATEGORY_MAP: Record<ExpenseCategory, { label: string; subtitle: string; badge: string; icon: ReactNode; color: string }> = {
-  housing:       { label: 'Vivienda',     subtitle: 'Renta, mantenimiento', badge: 'badge-vivienda',     icon: <Home size={14} />,          color: '#60A5FA' },
-  food:          { label: 'Alimentación', subtitle: 'Supermercado, despensa', badge: 'badge-alimentacion', icon: <Utensils size={14} />,    color: '#34D399' },
-  transport:     { label: 'Transporte',   subtitle: 'Combustible, movilidad', badge: 'badge-transporte',   icon: <Car size={14} />,         color: '#FBBF24' },
-  utilities:     { label: 'Servicios',    subtitle: 'Luz, internet, móvil', badge: 'badge-servicios',    icon: <Zap size={14} />,           color: '#38BDF8' },
-  health:        { label: 'Salud',        subtitle: 'Farmacia, consultas', badge: 'badge-salud',        icon: <HeartPulse size={14} />,    color: '#F87171' },
-  entertainment: { label: 'Ocio',         subtitle: 'Restaurantes, salidas', badge: 'badge-ocio',         icon: <Gamepad2 size={14} />,      color: '#A78BFA' },
-  education:     { label: 'Educación',    subtitle: 'Cursos, formación',   badge: 'badge-inversion',    icon: <GraduationCap size={14} />, color: '#C9A84C' },
-  debt:          { label: 'Deudas',       subtitle: 'Cuotas y abonos',     badge: 'badge-fijo',         icon: <CardIcon size={14} />,      color: '#FB7185' },
-  other:         { label: 'Otros',        subtitle: 'Misceláneos',         badge: 'badge-fijo',         icon: <Package size={14} />,       color: '#94A3B8' },
+  housing: { label: 'Vivienda', subtitle: 'Renta, mantenimiento', badge: 'badge-vivienda', icon: <Home size={14} />, color: '#60A5FA' },
+  food: { label: 'Alimentación', subtitle: 'Supermercado, despensa', badge: 'badge-alimentacion', icon: <Utensils size={14} />, color: '#34D399' },
+  transport: { label: 'Transporte', subtitle: 'Combustible, movilidad', badge: 'badge-transporte', icon: <Car size={14} />, color: '#FBBF24' },
+  utilities: { label: 'Servicios', subtitle: 'Luz, internet, móvil', badge: 'badge-servicios', icon: <Zap size={14} />, color: '#38BDF8' },
+  health: { label: 'Salud', subtitle: 'Farmacia, consultas', badge: 'badge-salud', icon: <HeartPulse size={14} />, color: '#F87171' },
+  entertainment: { label: 'Ocio', subtitle: 'Restaurantes, salidas', badge: 'badge-ocio', icon: <Gamepad2 size={14} />, color: '#A78BFA' },
+  education: { label: 'Educación', subtitle: 'Cursos, formación', badge: 'badge-inversion', icon: <GraduationCap size={14} />, color: '#C9A84C' },
+  debt: { label: 'Deudas', subtitle: 'Cuotas y abonos', badge: 'badge-fijo', icon: <CardIcon size={14} />, color: '#FB7185' },
+  other: { label: 'Otros', subtitle: 'Misceláneos', badge: 'badge-fijo', icon: <Package size={14} />, color: '#94A3B8' },
 }
 
 const CREDIT_CATEGORY_OPTIONS: CustomSelectOption<ExpenseCategory>[] = (
@@ -102,6 +103,15 @@ export function CreditCardsView({
   const [customAbonoAmount, setCustomAbonoAmount] = useState<string | null>(null)
   const [abonoConfirmed, setAbonoConfirmed] = useState(false)
   const [abonoError, setAbonoError] = useState<string | null>(null)
+
+  // Estado de aviso de confirmación (Denegar / Aceptar) para todas las acciones
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    title: string
+    description: string
+    variant: 'gold' | 'emerald' | 'danger'
+    details?: ActionConfirmationDetail[]
+    onConfirm: () => void
+  } | null>(null)
 
   const holderName = userEmail
     ? userEmail.split('@')[0].replace(/[._-]/g, ' ').toUpperCase()
@@ -254,31 +264,69 @@ export function CreditCardsView({
     if (!cardForm.name || !cardForm.creditLimit) return
 
     const cleanLastFour = sanitizeCardLastFour(cardForm.lastFourDigits)
-    if (editingCard) {
-      onUpdateCard({
-        ...editingCard,
-        name: cardForm.name,
-        bank: cardForm.bank || 'Banco',
-        lastFourDigits: cleanLastFour,
-        creditLimit: parseFloat(cardForm.creditLimit),
-        cutoffDay: Number(cardForm.cutoffDay),
-        paymentDueDay: Number(cardForm.paymentDueDay),
-        interestRate: cardForm.interestRate ? parseFloat(cardForm.interestRate) : undefined,
-        color: cardForm.color,
-      })
-    } else {
-      onAddCard({
-        name: cardForm.name,
-        bank: cardForm.bank || 'Banco',
-        lastFourDigits: cleanLastFour,
-        creditLimit: parseFloat(cardForm.creditLimit),
-        cutoffDay: Number(cardForm.cutoffDay),
-        paymentDueDay: Number(cardForm.paymentDueDay),
-        interestRate: cardForm.interestRate ? parseFloat(cardForm.interestRate) : undefined,
-        color: cardForm.color,
-      })
-    }
-    setShowCardModal(false)
+    const parsedLimit = parseFloat(cardForm.creditLimit)
+    const isEditing = Boolean(editingCard)
+    const targetCard = editingCard
+
+    setPendingConfirm({
+      title: isEditing ? 'Confirmar Edición de Tarjeta' : 'Confirmar Nueva Tarjeta de Crédito',
+      description: isEditing
+        ? `¿Deseas guardar los cambios en el plástico "${cardForm.name}"?`
+        : `¿Deseas vincular la tarjeta "${cardForm.name}" a tu billetera AUREUS?`,
+      variant: 'gold',
+      details: [
+        { label: 'Producto / Tarjeta', value: cardForm.name },
+        { label: 'Entidad Bancaria', value: cardForm.bank || 'Banco' },
+        { label: 'Terminación', value: `•••• ${cleanLastFour || '0000'}` },
+        { label: 'Límite de Crédito', value: formatCurrency(parsedLimit) },
+        { label: 'Corte / Pago', value: `Día ${cardForm.cutoffDay} / Día ${cardForm.paymentDueDay}` },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        if (isEditing && targetCard) {
+          onUpdateCard({
+            ...targetCard,
+            name: cardForm.name,
+            bank: cardForm.bank || 'Banco',
+            lastFourDigits: cleanLastFour,
+            creditLimit: parsedLimit,
+            cutoffDay: Number(cardForm.cutoffDay),
+            paymentDueDay: Number(cardForm.paymentDueDay),
+            interestRate: cardForm.interestRate ? parseFloat(cardForm.interestRate) : undefined,
+            color: cardForm.color,
+          })
+        } else {
+          onAddCard({
+            name: cardForm.name,
+            bank: cardForm.bank || 'Banco',
+            lastFourDigits: cleanLastFour,
+            creditLimit: parsedLimit,
+            cutoffDay: Number(cardForm.cutoffDay),
+            paymentDueDay: Number(cardForm.paymentDueDay),
+            interestRate: cardForm.interestRate ? parseFloat(cardForm.interestRate) : undefined,
+            color: cardForm.color,
+          })
+        }
+        setShowCardModal(false)
+      },
+    })
+  }
+
+  function handleRequestDeleteCard(card: CreditCard) {
+    setPendingConfirm({
+      title: 'Eliminar Tarjeta de Crédito',
+      description: `¿Estás seguro de que deseas desvincular la tarjeta "${card.name}" (${card.bank}) y sus registros asociados?`,
+      variant: 'danger',
+      details: [
+        { label: 'Tarjeta', value: `${card.name} (•••• ${card.lastFourDigits})` },
+        { label: 'Entidad Bancaria', value: card.bank },
+        { label: 'Límite de Crédito', value: formatCurrency(card.creditLimit) },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onDeleteCard(card.id)
+      },
+    })
   }
 
   function handleAddTx(e: React.FormEvent) {
@@ -299,27 +347,44 @@ export function CreditCardsView({
     }
 
     const computedPeriod = txForm.date ? txForm.date.slice(0, 7) : currentPeriod
-    onAddTransaction({
-      cardId: txForm.cardId,
-      period: computedPeriod,
-      description: txForm.description,
-      amount: parsedAmount,
-      category: txForm.category,
-      date: txForm.date,
-      installments: Number(txForm.installments) || 1,
-      currentInstallment: 1,
-      isPaid: false,
-    })
+    const catLabel = CATEGORY_MAP[txForm.category]?.label || 'Consumo'
 
-    setTxForm(p => ({
-      ...p,
-      description: '',
-      amount: '',
-      category: 'food',
-      date: new Date().toISOString().slice(0, 10),
-      installments: 1,
-    }))
-    setShowTxModal(false)
+    setPendingConfirm({
+      title: 'Confirmar Cargo en Tarjeta',
+      description: `¿Deseas registrar este consumo en ${targetCard?.name || 'tu tarjeta'}?`,
+      variant: 'gold',
+      details: [
+        { label: 'Comercio / Concepto', value: txForm.description },
+        { label: 'Tarjeta', value: targetCard ? `${targetCard.name} (•••• ${targetCard.lastFourDigits})` : 'Tarjeta' },
+        { label: 'Categoría', value: catLabel },
+        { label: 'Cuotas', value: `${Number(txForm.installments) || 1} cuota(s)` },
+        { label: 'Monto del Cargo', value: `-${formatCurrency(parsedAmount)}` },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onAddTransaction({
+          cardId: txForm.cardId,
+          period: computedPeriod,
+          description: txForm.description,
+          amount: parsedAmount,
+          category: txForm.category,
+          date: txForm.date,
+          installments: Number(txForm.installments) || 1,
+          currentInstallment: 1,
+          isPaid: false,
+        })
+
+        setTxForm(p => ({
+          ...p,
+          description: '',
+          amount: '',
+          category: 'food',
+          date: new Date().toISOString().slice(0, 10),
+          installments: 1,
+        }))
+        setShowTxModal(false)
+      },
+    })
   }
 
   function startEditTx(t: CreditCardTransaction) {
@@ -334,17 +399,70 @@ export function CreditCardsView({
   }
 
   function saveEditTx(t: CreditCardTransaction) {
+    const parsedEditAmount = parseFloat(editTxForm.amount)
+    if (!editTxForm.description || !parsedEditAmount || parsedEditAmount <= 0) return
     const computedPeriod = editTxForm.date ? editTxForm.date.slice(0, 7) : t.period
-    onUpdateTransaction({
-      ...t,
-      description: editTxForm.description,
-      amount: parseFloat(editTxForm.amount),
-      category: editTxForm.category,
-      date: editTxForm.date,
-      period: computedPeriod,
-      installments: Number(editTxForm.installments),
+    const catLabel = CATEGORY_MAP[editTxForm.category]?.label || 'Consumo'
+
+    setPendingConfirm({
+      title: 'Confirmar Edición de Consumo',
+      description: `¿Deseas guardar los cambios realizados al consumo "${editTxForm.description}"?`,
+      variant: 'gold',
+      details: [
+        { label: 'Comercio / Concepto', value: editTxForm.description },
+        { label: 'Categoría', value: catLabel },
+        { label: 'Fecha', value: editTxForm.date },
+        { label: 'Monto Actualizado', value: `-${formatCurrency(parsedEditAmount)}` },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onUpdateTransaction({
+          ...t,
+          description: editTxForm.description,
+          amount: parsedEditAmount,
+          category: editTxForm.category,
+          date: editTxForm.date,
+          period: computedPeriod,
+          installments: Number(editTxForm.installments),
+        })
+        setEditingTxId(null)
+      },
     })
-    setEditingTxId(null)
+  }
+
+  function handleRequestDeleteTx(tx: CreditCardTransaction) {
+    setPendingConfirm({
+      title: 'Eliminar Cargo de Tarjeta',
+      description: `¿Estás seguro de que deseas eliminar el cargo "${tx.description}" del historial de consumos?`,
+      variant: 'danger',
+      details: [
+        { label: 'Comercio / Concepto', value: tx.description },
+        { label: 'Fecha', value: tx.date },
+        { label: 'Monto del Cargo', value: formatCurrency(tx.amount) },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onDeleteTransaction(tx.id)
+      },
+    })
+  }
+
+  function handleRequestTogglePaid(tx: CreditCardTransaction) {
+    const nextStateLabel = tx.isPaid ? 'Pendiente de Pago' : 'Saldado'
+    setPendingConfirm({
+      title: tx.isPaid ? 'Marcar Cargo como Pendiente' : 'Confirmar Conciliación de Cargo',
+      description: `¿Deseas cambiar el estado del consumo "${tx.description}" a "${nextStateLabel}"?`,
+      variant: tx.isPaid ? 'gold' : 'emerald',
+      details: [
+        { label: 'Comercio / Concepto', value: tx.description },
+        { label: 'Estado Nuevo', value: nextStateLabel },
+        { label: 'Monto', value: formatCurrency(tx.amount) },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onTogglePaid(tx.id)
+      },
+    })
   }
 
   function handleApplyAbono(e: React.FormEvent) {
@@ -362,38 +480,55 @@ export function CreditCardsView({
     const effectiveAbono = Math.min(abono, cardHealth.totalDebt)
     if (effectiveAbono <= 0) return
 
-    // Ordenar cargos pendientes por antigüedad para saldar primero los más antiguos (o parciales)
-    const pending = creditTransactions
-      .filter(t => t.cardId === activeCard.id && !t.isPaid)
-      .sort((a, b) => a.date.localeCompare(b.date) || b.amount - a.amount)
+    const targetCard = activeCard
+    const currentDebt = cardHealth.totalDebt
 
-    let remaining = effectiveAbono
-    for (const tx of pending) {
-      if (remaining <= 0) break
-      if (tx.amount <= remaining + 0.005) {
-        remaining = Number(Math.max(0, remaining - tx.amount).toFixed(2))
-        onTogglePaid(tx.id)
-      } else {
-        // Abono parcial: reduce el saldo pendiente de esta transacción
-        const newPendingAmount = Number((tx.amount - remaining).toFixed(2))
-        remaining = 0
-        onUpdateTransaction({
-          ...tx,
-          amount: newPendingAmount,
-        })
-      }
-    }
+    setPendingConfirm({
+      title: 'Confirmar Pago / Abono a Tarjeta',
+      description: `¿Deseas aplicar este abono a "${targetCard.name}" y descontar el monto de tu liquidez disponible?`,
+      variant: 'emerald',
+      details: [
+        { label: 'Tarjeta Destino', value: `${targetCard.name} (${targetCard.bank})` },
+        { label: 'Deuda Actual', value: formatCurrency(currentDebt) },
+        { label: 'Monto a Abonar', value: formatCurrency(effectiveAbono) },
+        { label: 'Deuda Restante', value: formatCurrency(Math.max(0, currentDebt - effectiveAbono)) },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        // Ordenar cargos pendientes por antigüedad para saldar primero los más antiguos (o parciales)
+        const pending = creditTransactions
+          .filter(t => t.cardId === targetCard.id && !t.isPaid)
+          .sort((a, b) => a.date.localeCompare(b.date) || b.amount - a.amount)
 
-    // Registrar salida de caja real en Egresos (pago de deuda de tarjeta)
-    onPayCardDebt?.(effectiveAbono, `${activeCard.name} (${activeCard.bank})`)
+        let remaining = effectiveAbono
+        for (const tx of pending) {
+          if (remaining <= 0) break
+          if (tx.amount <= remaining + 0.005) {
+            remaining = Number(Math.max(0, remaining - tx.amount).toFixed(2))
+            onTogglePaid(tx.id)
+          } else {
+            // Abono parcial: reduce el saldo pendiente de esta transacción
+            const newPendingAmount = Number((tx.amount - remaining).toFixed(2))
+            remaining = 0
+            onUpdateTransaction({
+              ...tx,
+              amount: newPendingAmount,
+            })
+          }
+        }
 
-    setAbonoError(null)
-    setAbonoAmount('')
-    setAbonoConfirmed(true)
-    setTimeout(() => {
-      setAbonoConfirmed(false)
-      setShowAbonoModal(false)
-    }, 1500)
+        // Registrar salida de caja real en Egresos (pago de deuda de tarjeta)
+        onPayCardDebt?.(effectiveAbono, `${targetCard.name} (${targetCard.bank})`)
+
+        setAbonoError(null)
+        setAbonoAmount('')
+        setAbonoConfirmed(true)
+        setTimeout(() => {
+          setAbonoConfirmed(false)
+          setShowAbonoModal(false)
+        }, 1500)
+      },
+    })
   }
 
   return (
@@ -640,7 +775,7 @@ export function CreditCardsView({
                       style={{ padding: '4px 8px', fontSize: 11, color: 'var(--color-error, #ffb4ab)' }}
                       onClick={e => {
                         e.stopPropagation()
-                        onDeleteCard(card.id)
+                        handleRequestDeleteCard(card)
                       }}
                     >
                       <Trash2 size={12} /> Eliminar
@@ -833,7 +968,7 @@ export function CreditCardsView({
                       <td>
                         <button
                           type="button"
-                          onClick={() => onTogglePaid(tx.id)}
+                          onClick={() => handleRequestTogglePaid(tx)}
                           className={`sandbox-type-pill ${tx.isPaid ? 'in' : 'out'}`}
                           style={{ cursor: 'pointer' }}
                           title="Clic para alternar estado de pago"
@@ -858,7 +993,7 @@ export function CreditCardsView({
                           <button
                             type="button"
                             className="table-action-btn danger"
-                            onClick={() => onDeleteTransaction(tx.id)}
+                            onClick={() => handleRequestDeleteTx(tx)}
                             title="Eliminar"
                           >
                             <Trash2 size={13} />
@@ -1225,6 +1360,19 @@ export function CreditCardsView({
         </div>,
         document.body
       )}
+
+      {/* Aviso de Confirmación (Denegar / Aceptar) para todas las acciones */}
+      <ActionConfirmationModal
+        isOpen={Boolean(pendingConfirm)}
+        title={pendingConfirm?.title || ''}
+        description={pendingConfirm?.description || ''}
+        variant={pendingConfirm?.variant || 'gold'}
+        details={pendingConfirm?.details}
+        confirmLabel="Aceptar"
+        cancelLabel="Denegar"
+        onConfirm={() => pendingConfirm?.onConfirm()}
+        onCancel={() => setPendingConfirm(null)}
+      />
     </div>
   )
 }

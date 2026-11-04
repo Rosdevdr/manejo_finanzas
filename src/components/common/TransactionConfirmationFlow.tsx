@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ShieldCheck, Check, AlertTriangle, X } from 'lucide-react'
 import { formatCurrency } from '../../utils/formatters'
 import { triggerHaptic } from '../../utils/haptics'
@@ -139,7 +139,7 @@ export const TransactionConfirmationFlow: React.FC<TransactionConfirmationFlowPr
                     className="btn-cancel-transaction"
                     onClick={onCancel}
                   >
-                    Cancelar
+                    Denegar
                   </button>
                   <button
                     type="button"
@@ -148,7 +148,7 @@ export const TransactionConfirmationFlow: React.FC<TransactionConfirmationFlowPr
                     autoFocus
                   >
                     <ShieldCheck size={16} />
-                    <span>Confirmar Autorización</span>
+                    <span>Aceptar y Autorizar</span>
                   </button>
                 </div>
               </div>

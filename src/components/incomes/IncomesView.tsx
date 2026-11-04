@@ -16,6 +16,7 @@ import type { Income, IncomeType } from '../../types/finance'
 import { formatCurrency } from '../../utils/formatters'
 import { sanitizeAmount, sanitizeText } from '../../utils/security'
 import { CustomIconSelect, type CustomSelectOption } from '../ui/CustomIconSelect'
+import { ActionConfirmationModal, type ActionConfirmationDetail } from '../ui/ActionConfirmationModal'
 import './IncomesView.css'
 
 const TYPE_MAP: Record<IncomeType, { label: string; subtitle: string; icon: ReactNode; color: string }> = {
@@ -66,6 +67,15 @@ export function IncomesView({
   const [editType, setEditType] = useState<IncomeType>('salary')
   const [editDate, setEditDate] = useState('')
 
+  // Estado de aviso de confirmación (Denegar / Aceptar)
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    title: string
+    description: string
+    variant: 'gold' | 'emerald' | 'danger'
+    details?: ActionConfirmationDetail[]
+    onConfirm: () => void
+  } | null>(null)
+
   const startEdit = (inc: Income) => {
     setEditingId(inc.id)
     setEditDesc(inc.description)
@@ -82,15 +92,50 @@ export function IncomesView({
     if (!cleanDesc || cleanAmount <= 0) return
 
     const derivedPeriod = editDate && editDate.length >= 7 ? editDate.slice(0, 7) : inc.period
-    onUpdateIncome({
-      ...inc,
-      description: cleanDesc,
-      amount: cleanAmount,
-      type: editType,
-      date: editDate,
-      period: derivedPeriod,
+    const catLabel = TYPE_MAP[editType]?.label || 'Sueldo / Fijo'
+
+    setPendingConfirm({
+      title: 'Confirmar Edición de Ingreso',
+      description: `¿Deseas guardar los cambios realizados al ingreso "${cleanDesc}"?`,
+      variant: 'emerald',
+      details: [
+        { label: 'Concepto / Fuente', value: cleanDesc },
+        { label: 'Categoría', value: catLabel },
+        { label: 'Fecha', value: editDate },
+        { label: 'Monto Actualizado', value: `+${formatCurrency(cleanAmount)}` },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onUpdateIncome({
+          ...inc,
+          description: cleanDesc,
+          amount: cleanAmount,
+          type: editType,
+          date: editDate,
+          period: derivedPeriod,
+        })
+        setEditingId(null)
+      },
     })
-    setEditingId(null)
+  }
+
+  const handleRequestDeleteIncome = (inc: Income) => {
+    const catLabel = TYPE_MAP[inc.type]?.label || 'Sueldo / Fijo'
+    setPendingConfirm({
+      title: 'Eliminar Registro de Ingreso',
+      description: `¿Estás seguro de que deseas eliminar el ingreso "${inc.description}"? Se descontará de tu liquidez disponible.`,
+      variant: 'danger',
+      details: [
+        { label: 'Concepto / Fuente', value: inc.description },
+        { label: 'Categoría', value: catLabel },
+        { label: 'Fecha', value: inc.date },
+        { label: 'Monto a Descontar', value: formatCurrency(inc.amount) },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onDeleteIncome(inc.id)
+      },
+    })
   }
 
   const handleSubmit = (e: FormEvent) => {
@@ -100,15 +145,31 @@ export function IncomesView({
     if (!cleanDesc || parsed <= 0) return
 
     const derivedPeriod = form.date && form.date.length >= 7 ? form.date.slice(0, 7) : currentPeriod
-    onAddIncome({
-      description: cleanDesc,
-      amount: parsed,
-      type: form.type,
-      date: form.date,
-      period: derivedPeriod,
+    const catLabel = TYPE_MAP[form.type]?.label || 'Sueldo / Fijo'
+
+    setPendingConfirm({
+      title: 'Confirmar Nuevo Ingreso',
+      description: `¿Deseas registrar esta entrada de capital y sumarla a tu liquidez disponible del período ${derivedPeriod}?`,
+      variant: 'emerald',
+      details: [
+        { label: 'Concepto / Fuente', value: cleanDesc },
+        { label: 'Categoría', value: catLabel },
+        { label: 'Fecha', value: form.date },
+        { label: 'Monto a Acreditar', value: `+${formatCurrency(parsed)}` },
+      ],
+      onConfirm: () => {
+        setPendingConfirm(null)
+        onAddIncome({
+          description: cleanDesc,
+          amount: parsed,
+          type: form.type,
+          date: form.date,
+          period: derivedPeriod,
+        })
+        setForm({ description: '', amount: '', type: 'salary', date: new Date().toISOString().slice(0, 10) })
+        setIsModalOpen(false)
+      },
     })
-    setForm({ description: '', amount: '', type: 'salary', date: new Date().toISOString().slice(0, 10) })
-    setIsModalOpen(false)
   }
 
   // Filtrado por período (Mes Actual vs Todo el Historial)
@@ -327,7 +388,7 @@ export function IncomesView({
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', gap: 4, justifyContent: 'flex-end' }}>
                           <button className="obsidian-icon-btn" onClick={() => startEdit(inc)} title="Editar"><Pencil size={14} /></button>
-                          <button className="obsidian-icon-btn danger" onClick={() => onDeleteIncome(inc.id)} title="Eliminar"><Trash2 size={14} /></button>
+                          <button className="obsidian-icon-btn danger" onClick={() => handleRequestDeleteIncome(inc)} title="Eliminar"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -421,6 +482,19 @@ export function IncomesView({
         </div>,
         document.body
       )}
+
+      {/* Aviso de Confirmación (Denegar / Aceptar) */}
+      <ActionConfirmationModal
+        isOpen={Boolean(pendingConfirm)}
+        title={pendingConfirm?.title || ''}
+        description={pendingConfirm?.description || ''}
+        variant={pendingConfirm?.variant || 'emerald'}
+        details={pendingConfirm?.details}
+        confirmLabel="Aceptar"
+        cancelLabel="Denegar"
+        onConfirm={() => pendingConfirm?.onConfirm()}
+        onCancel={() => setPendingConfirm(null)}
+      />
     </div>
   )
 }

@@ -1,0 +1,300 @@
+/* ==============================================================================
+   AUREUS · UNIVERSAL ACTION CONFIRMATION MODAL (DARK & LIGHT PARITY)
+   ============================================================================== */
+
+.aureus-confirm-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  background: rgba(6, 8, 14, 0.72) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  z-index: 10200 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: clamp(14px, 3vw, 24px) !important;
+  box-sizing: border-box !important;
+}
+
+.aureus-confirm-card {
+  width: min(100%, 440px) !important;
+  max-width: 440px !important;
+  background: linear-gradient(165deg, rgba(20, 23, 33, 0.98) 0%, rgba(13, 15, 22, 0.99) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 18px !important;
+  padding: 22px 24px 20px !important;
+  box-shadow:
+    0 24px 60px -12px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif !important;
+  color: #F8FAFC !important;
+  position: relative !important;
+  overflow: hidden !important;
+  animation: aureusConfirmPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+@keyframes aureusConfirmPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.aureus-confirm-card.variant-gold {
+  border-color: rgba(200, 169, 98, 0.38) !important;
+}
+
+.aureus-confirm-card.variant-emerald {
+  border-color: rgba(16, 185, 129, 0.38) !important;
+}
+
+.aureus-confirm-card.variant-danger {
+  border-color: rgba(239, 68, 68, 0.42) !important;
+}
+
+.aureus-confirm-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.aureus-confirm-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+
+.aureus-confirm-icon-badge {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.variant-gold .aureus-confirm-icon-badge {
+  background: rgba(200, 169, 98, 0.15) !important;
+  border: 1px solid rgba(200, 169, 98, 0.35) !important;
+  color: #E5C47A !important;
+}
+
+.variant-emerald .aureus-confirm-icon-badge {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #34D399 !important;
+}
+
+.variant-danger .aureus-confirm-icon-badge {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #F87171 !important;
+}
+
+.aureus-confirm-title-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.aureus-confirm-overline {
+  font-family: 'Space Grotesk', 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: #94A3B8 !important;
+}
+
+.aureus-confirm-title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #F8FAFC !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+}
+
+.aureus-confirm-close {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #64748B !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: all 0.15s ease !important;
+}
+
+.aureus-confirm-close:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #F8FAFC !important;
+}
+
+.aureus-confirm-desc {
+  font-size: 13.5px !important;
+  line-height: 1.5 !important;
+  color: #CBD5E1 !important;
+  margin: 0 !important;
+  word-break: break-word !important;
+}
+
+.aureus-confirm-details {
+  background: rgba(9, 11, 16, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.aureus-confirm-detail-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  font-size: 12.5px !important;
+}
+
+.aureus-confirm-detail-label {
+  color: #94A3B8 !important;
+  font-weight: 500 !important;
+}
+
+.aureus-confirm-detail-value {
+  color: #F8FAFC !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums !important;
+  text-align: right !important;
+  max-width: 65% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.aureus-confirm-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  padding-top: 4px !important;
+}
+
+.aureus-confirm-btn {
+  flex: 1 1 0 !important;
+  height: 42px !important;
+  padding: 0 16px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  white-space: nowrap !important;
+}
+
+.aureus-confirm-btn.deny {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #CBD5E1 !important;
+}
+
+.aureus-confirm-btn.deny:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+  color: #FFFFFF !important;
+}
+
+.aureus-confirm-btn.accept.variant-gold {
+  background: linear-gradient(135deg, #E5C47A 0%, #C8A962 100%) !important;
+  border: 1px solid rgba(255, 223, 153, 0.45) !important;
+  color: #090B10 !important;
+  box-shadow: 0 4px 16px rgba(200, 169, 98, 0.28) !important;
+}
+
+.aureus-confirm-btn.accept.variant-emerald {
+  background: linear-gradient(135deg, #34D399 0%, #10B981 100%) !important;
+  border: 1px solid rgba(110, 231, 183, 0.45) !important;
+  color: #042F2E !important;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.28) !important;
+}
+
+.aureus-confirm-btn.accept.variant-danger {
+  background: linear-gradient(135deg, #F87171 0%, #EF4444 100%) !important;
+  border: 1px solid rgba(252, 165, 165, 0.45) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.28) !important;
+}
+
+.aureus-confirm-btn.accept:hover {
+  filter: brightness(1.06) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ── Light Mode Parity ── */
+[data-theme='light'] .aureus-confirm-overlay {
+  background: rgba(15, 23, 42, 0.45) !important;
+}
+
+[data-theme='light'] .aureus-confirm-card {
+  background: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+  box-shadow: 0 24px 50px -12px rgba(15, 23, 42, 0.2) !important;
+}
+
+[data-theme='light'] .aureus-confirm-title {
+  color: #0F172A !important;
+}
+
+[data-theme='light'] .aureus-confirm-desc {
+  color: #475569 !important;
+}
+
+[data-theme='light'] .aureus-confirm-details {
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+[data-theme='light'] .aureus-confirm-detail-label {
+  color: #64748B !important;
+}
+
+[data-theme='light'] .aureus-confirm-detail-value {
+  color: #0F172A !important;
+}
+
+[data-theme='light'] .aureus-confirm-btn.deny {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+  color: #334155 !important;
+}
+
+[data-theme='light'] .aureus-confirm-btn.deny:hover {
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+

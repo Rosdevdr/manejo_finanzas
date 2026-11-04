@@ -45,6 +45,7 @@ import {
 } from '../../utils/budgetAdvisor'
 import { calculateCumulativeBalance } from '../../utils/calendar'
 import { triggerHaptic } from '../../utils/haptics'
+import { ActionConfirmationModal, type ActionConfirmationDetail } from '../ui/ActionConfirmationModal'
 import './BudgetsAndGoalsView.css'
 
 interface BudgetsAndGoalsViewProps {
@@ -53,6 +54,7 @@ interface BudgetsAndGoalsViewProps {
   expenses: Expense[]
   categoryBudgets: CategoryBudget[]
   savingsGoals?: SavingsGoal[]
+  availableBalance?: number
   onSetCategoryBudget: (category: ExpenseCategory, limit: number, period?: string) => Promise<any>
   onSetMultipleBudgets: (budgetsMap: Record<ExpenseCategory, number>, period?: string) => Promise<any>
   onAddSavingsGoal?: (goal: Omit<SavingsGoal, 'id'>) => Promise<any>
@@ -85,6 +87,7 @@ export function BudgetsAndGoalsView({
   expenses,
   categoryBudgets,
   savingsGoals = [],
+  availableBalance,
   onSetCategoryBudget,
   onSetMultipleBudgets,
   onAddSavingsGoal,
@@ -95,6 +98,15 @@ export function BudgetsAndGoalsView({
   const [filterTab, setFilterTab] = useState<'all' | 'alert' | 'over'>('all')
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null)
   const [tempLimit, setTempLimit] = useState<string>('')
+
+  // Estado de aviso de confirmación (Denegar / Aceptar) para todas las acciones
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    title: string
+    description: string
+    variant: 'gold' | 'emerald' | 'danger'
+    details?: ActionConfirmationDetail[]
+    onConfirm: () => void | Promise<void>
+  } | null>(null)
 
   // Modal para crear Meta de Ahorro o abonar a una meta
   const [showGoalModal, setShowGoalModal] = useState(false)
@@ -218,27 +230,57 @@ export function BudgetsAndGoalsView({
     return '25+'
   }, [currentAccumulatedCapital, fireTarget, surplus, netReturn])
 
-  // Handle Edit Limit
-  const handleSaveLimit = async (cat: ExpenseCategory) => {
+  // Handle Edit Limit (con confirmación)
+  const handleSaveLimit = (cat: ExpenseCategory) => {
     const num = parseFloat(tempLimit)
     if (isNaN(num) || num < 0) {
       onShowToast('Ingresa un monto válido', 'error')
       return
     }
-    await onSetCategoryBudget(cat, num, currentPeriod)
-    onShowToast(`Límite de ${CATEGORY_META[cat].label} actualizado a ${formatCurrency(num)}`, 'success')
-    setEditingCategory(null)
+    const catLabel = CATEGORY_META[cat].label
+
+    setPendingConfirm({
+      title: 'Confirmar Ajuste de Presupuesto',
+      description: `¿Deseas actualizar el límite presupuestario mensual para la categoría "${catLabel}"?`,
+      variant: 'gold',
+      details: [
+        { label: 'Categoría', value: catLabel },
+        { label: 'Período Activo', value: currentPeriod },
+        { label: 'Nuevo Límite Asignado', value: formatCurrency(num) },
+      ],
+      onConfirm: async () => {
+        setPendingConfirm(null)
+        await onSetCategoryBudget(cat, num, currentPeriod)
+        onShowToast(`Límite de ${catLabel} actualizado a ${formatCurrency(num)}`, 'success')
+        setEditingCategory(null)
+      },
+    })
   }
 
-  // Auto suggest
-  const handleAutoSuggest = async () => {
-    triggerHaptic('light')
+  // Auto suggest (con confirmación)
+  const handleAutoSuggest = () => {
     const suggestions = suggestCategoryBudgetsFromHistory(expenses, incomes, currentPeriod)
-    await onSetMultipleBudgets(suggestions, currentPeriod)
-    onShowToast('Límites optimizados según tus gastos e ingresos reales', 'success')
+    const totalSuggested = Object.values(suggestions).reduce((s, v) => s + v, 0)
+
+    setPendingConfirm({
+      title: 'Confirmar Aplicación de Regla 50/30/20',
+      description: '¿Deseas ajustar automáticamente los topes de tus 9 categorías según tus ingresos y el modelo 50/30/20?',
+      variant: 'gold',
+      details: [
+        { label: 'Período a Optimizar', value: currentPeriod },
+        { label: 'Partidas Ajustadas', value: '9 categorías operativas' },
+        { label: 'Presupuesto Total Sugerido', value: formatCurrency(totalSuggested) },
+      ],
+      onConfirm: async () => {
+        setPendingConfirm(null)
+        triggerHaptic('light')
+        await onSetMultipleBudgets(suggestions, currentPeriod)
+        onShowToast('Límites optimizados según tus gastos e ingresos reales', 'success')
+      },
+    })
   }
 
-  const handleCreateGoal = async (e: React.FormEvent) => {
+  const handleCreateGoal = (e: React.FormEvent) => {
     e.preventDefault()
     const target = parseFloat(goalForm.targetAmount)
     const current = parseFloat(goalForm.currentAmount) || 0
@@ -247,29 +289,45 @@ export function BudgetsAndGoalsView({
       onShowToast('Completa el nombre y un monto objetivo válido', 'error')
       return
     }
-    if (onAddSavingsGoal) {
-      await onAddSavingsGoal({
-        name: goalForm.name.trim(),
-        targetAmount: target,
-        currentAmount: current,
-        monthlyContribution: monthly > 0 ? monthly : undefined,
-        category: goalForm.category,
-        color: '#34D399',
-        isCompleted: current >= target,
-      })
-      onShowToast(`Meta "${goalForm.name.trim()}" creada correctamente`, 'success')
-    }
-    setGoalForm({
-      name: '',
-      targetAmount: '',
-      currentAmount: '0',
-      monthlyContribution: '',
-      category: 'emergency',
+    const cleanName = goalForm.name.trim()
+
+    setPendingConfirm({
+      title: 'Confirmar Nueva Meta de Ahorro',
+      description: `¿Deseas crear el fondo con propósito "${cleanName}" en tu plan patrimonial?`,
+      variant: 'emerald',
+      details: [
+        { label: 'Nombre de la Meta', value: cleanName },
+        { label: 'Monto Objetivo', value: formatCurrency(target) },
+        { label: 'Ahorro Inicial', value: formatCurrency(current) },
+        { label: 'Aporte Mensual Sugerido', value: monthly > 0 ? formatCurrency(monthly) : 'Flexible' },
+      ],
+      onConfirm: async () => {
+        setPendingConfirm(null)
+        if (onAddSavingsGoal) {
+          await onAddSavingsGoal({
+            name: cleanName,
+            targetAmount: target,
+            currentAmount: current,
+            monthlyContribution: monthly > 0 ? monthly : undefined,
+            category: goalForm.category,
+            color: '#34D399',
+            isCompleted: current >= target,
+          })
+          onShowToast(`Meta "${cleanName}" creada correctamente`, 'success')
+        }
+        setGoalForm({
+          name: '',
+          targetAmount: '',
+          currentAmount: '0',
+          monthlyContribution: '',
+          category: 'emergency',
+        })
+        setShowGoalModal(false)
+      },
     })
-    setShowGoalModal(false)
   }
 
-  const handleDepositSubmit = async (e: React.FormEvent) => {
+  const handleDepositSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!depositGoal || !onDepositToGoal) return
     const amt = parseFloat(depositAmount)
@@ -277,10 +335,54 @@ export function BudgetsAndGoalsView({
       onShowToast('Ingresa un monto de aporte válido', 'error')
       return
     }
-    await onDepositToGoal(depositGoal.id, amt)
-    onShowToast(`Aporte de ${formatCurrency(amt)} sumado a "${depositGoal.name}"`, 'success')
-    setDepositGoal(null)
-    setDepositAmount('')
+
+    const effectiveAvail = availableBalance !== undefined ? Math.max(0, availableBalance) : Math.max(0, cumulative.totalCumulativeBalance)
+    if (amt > effectiveAvail) {
+      onShowToast(
+        `Saldo líquido insuficiente: dispones de ${formatCurrency(effectiveAvail)} y no puedes abonar ${formatCurrency(amt)} a esta meta.`,
+        'error'
+      )
+      return
+    }
+
+    const targetGoal = depositGoal
+    setPendingConfirm({
+      title: 'Confirmar Aporte a Meta de Ahorro',
+      description: `¿Deseas transferir ${formatCurrency(amt)} hacia tu meta "${targetGoal.name}"?`,
+      variant: 'emerald',
+      details: [
+        { label: 'Meta Destino', value: targetGoal.name },
+        { label: 'Acumulado Actual', value: formatCurrency(targetGoal.currentAmount) },
+        { label: 'Monto a Aportar', value: `+${formatCurrency(amt)}` },
+        { label: 'Nuevo Acumulado', value: formatCurrency(targetGoal.currentAmount + amt) },
+      ],
+      onConfirm: async () => {
+        setPendingConfirm(null)
+        await onDepositToGoal(targetGoal.id, amt)
+        onShowToast(`Aporte de ${formatCurrency(amt)} sumado a "${targetGoal.name}"`, 'success')
+        setDepositGoal(null)
+        setDepositAmount('')
+      },
+    })
+  }
+
+  const handleRequestDeleteGoal = (goal: SavingsGoal) => {
+    if (!onDeleteSavingsGoal) return
+    setPendingConfirm({
+      title: 'Eliminar Meta de Ahorro',
+      description: `¿Estás seguro de que deseas eliminar la meta "${goal.name}" de tu plan financiero?`,
+      variant: 'danger',
+      details: [
+        { label: 'Meta de Ahorro', value: goal.name },
+        { label: 'Monto Acumulado', value: formatCurrency(goal.currentAmount) },
+        { label: 'Objetivo Original', value: formatCurrency(goal.targetAmount) },
+      ],
+      onConfirm: async () => {
+        setPendingConfirm(null)
+        await onDeleteSavingsGoal(goal.id)
+        onShowToast(`Meta "${goal.name}" eliminada`, 'info')
+      },
+    })
   }
 
   // Filtered categories
@@ -496,10 +598,7 @@ export function BudgetsAndGoalsView({
                       {onDeleteSavingsGoal && (
                         <button
                           type="button"
-                          onClick={() => {
-                            void onDeleteSavingsGoal(goal.id)
-                            onShowToast(`Meta "${goal.name}" eliminada`, 'info')
-                          }}
+                          onClick={() => handleRequestDeleteGoal(goal)}
                           style={{ background: 'transparent', border: 'none', color: 'var(--color-error, #ffb4ab)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           title="Eliminar meta"
                         >
@@ -1089,6 +1188,19 @@ export function BudgetsAndGoalsView({
         </div>,
         document.body
       )}
+
+      {/* Aviso de Confirmación (Denegar / Aceptar) para todas las acciones */}
+      <ActionConfirmationModal
+        isOpen={Boolean(pendingConfirm)}
+        title={pendingConfirm?.title || ''}
+        description={pendingConfirm?.description || ''}
+        variant={pendingConfirm?.variant || 'gold'}
+        details={pendingConfirm?.details}
+        confirmLabel="Aceptar"
+        cancelLabel="Denegar"
+        onConfirm={() => pendingConfirm?.onConfirm()}
+        onCancel={() => setPendingConfirm(null)}
+      />
     </div>
   )
 }
