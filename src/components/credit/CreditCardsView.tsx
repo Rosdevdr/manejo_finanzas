@@ -817,7 +817,7 @@ export function CreditCardsView({
       )}
 
       {/* ── TABLA DE CONCILIACIÓN & HISTORIAL STITCH ── */}
-      <div className="stitch-card transactions-table-panel" style={{ padding: 0, overflow: 'visible' }}>
+      <div className="stitch-card transactions-table-panel" style={{ padding: 0 }}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(49, 53, 62, 0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--color-on-surface, #dfe2ee)' }}>
@@ -868,7 +868,7 @@ export function CreditCardsView({
             )}
           </div>
         ) : (
-          <div className="stitch-table-container" style={{ overflow: 'visible' }}>
+          <div className="stitch-table-container">
             <table className="stitch-table">
               <thead>
                 <tr>

@@ -237,7 +237,7 @@ export function IncomesView({
       </div>
 
       {/* ── TABLA DE ALTA DENSIDAD (ESTILO STRIPE/LINEAR) ── */}
-      <div className="obsidian-data-grid-container" style={{ overflow: 'visible' }}>
+      <div className="obsidian-data-grid-container">
         <div className="obsidian-data-grid-header" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <div className="obsidian-data-grid-title">Registro de Ingresos</div>
@@ -287,7 +287,7 @@ export function IncomesView({
             No hay ingresos registrados en este período. Haz clic en "+ Añadir Ingreso" para comenzar.
           </div>
         ) : (
-          <div className="obsidian-table-wrapper" style={{ overflow: 'visible' }}>
+          <div className="obsidian-table-wrapper">
             <table className="obsidian-table">
               <thead>
                 <tr>

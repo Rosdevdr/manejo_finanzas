@@ -282,7 +282,7 @@ export function CashView({
       </div>
 
       {/* ── HIGH DENSITY DATA GRID ── */}
-      <div className="obsidian-data-grid-container" style={{ overflow: 'visible' }}>
+      <div className="obsidian-data-grid-container">
         <div className="obsidian-data-grid-header" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div className="obsidian-data-grid-title">
             {showAllPeriods ? 'Registro Histórico de Efectivo' : `Movimientos de ${formatPeriodLabel(currentPeriod)}`}
@@ -312,7 +312,7 @@ export function CashView({
             <div style={{ fontSize: 12, marginTop: 4 }}>Registra un retiro usando el botón superior dorado.</div>
           </div>
         ) : (
-          <div className="obsidian-table-wrapper" style={{ overflow: 'visible' }}>
+          <div className="obsidian-table-wrapper">
             <table className="obsidian-table">
               <thead>
                 <tr>

@@ -248,6 +248,12 @@ const COMMITMENT_CATEGORY_OPTIONS: CustomSelectOption<CommitmentItem['category']
 const MAX_COMMITMENT_NAME_LENGTH = 45
 const MAX_COMMITMENT_CONTRACT_LENGTH = 36
 
+function sanitizeFeedText(text: string): string {
+  if (!text) return ''
+  // Divide cualquier token continuo sin espacios excesivamente largo (> 36 caracteres) para evitar desbordes visuales
+  return text.replace(/[^\s]{36,}/g, token => `${token.slice(0, 32)}…`)
+}
+
 function loadSavedCommitments(): CommitmentItem[] {
   try {
     const raw = localStorage.getItem(COMMITMENTS_STORAGE_KEY)
@@ -269,7 +275,11 @@ function loadSavedFeed(): TelegramFeedItem[] {
     const raw = localStorage.getItem(FEED_STORAGE_KEY)
     if (!raw) return INITIAL_FEED
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_FEED
+    if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_FEED
+    return parsed.map((item: TelegramFeedItem) => ({
+      ...item,
+      text: sanitizeFeedText(String(item.text || '')),
+    }))
   } catch {
     return INITIAL_FEED
   }
@@ -614,7 +624,8 @@ export function SentinelDashboardView({
       prev.map(c => (c.id === item.id ? { ...c, status: 'paid', daysRemaining: 0 } : c))
     )
 
-    const toastMsg = `Factura de "${item.name}" pagada y descontada de tu liquidez. Ahorraste ${item.lateFeeAvoided} en moras.`
+    const safeItemName = item.name.length > 40 ? `${item.name.slice(0, 37)}...` : item.name
+    const toastMsg = `Factura de "${safeItemName}" pagada y descontada de tu liquidez. Ahorraste ${item.lateFeeAvoided} en moras.`
     if (onShowToast) {
       onShowToast(toastMsg, 'success')
     } else {

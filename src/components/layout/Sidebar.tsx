@@ -52,12 +52,12 @@ interface NavItemDef {
 
 const PATRIMONIO_ITEMS: NavItemDef[] = [
   { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-  { id: 'incomes',   icon: <ArrowDownCircle size={18} />, label: 'Ingresos' },
-  { id: 'expenses',  icon: <ArrowUpCircle size={18} />,   label: 'Gastos' },
-  { id: 'budgets',   icon: <Target size={18} />,          label: 'Mi Plan (Presupuesto & FIRE)' },
-  { id: 'credit',    icon: <CreditCard size={18} />,      label: 'Tarjetas & Deudas' },
-  { id: 'cash',      icon: <Banknote size={18} />,        label: 'Efectivo' },
-  { id: 'advisor',   icon: <BrainCircuit size={18} />,    label: 'Análisis IA' },
+  { id: 'incomes', icon: <ArrowDownCircle size={18} />, label: 'Ingresos' },
+  { id: 'expenses', icon: <ArrowUpCircle size={18} />, label: 'Gastos' },
+  { id: 'budgets', icon: <Target size={18} />, label: 'Mi Plan (Presupuesto y FIRE)' },
+  { id: 'credit', icon: <CreditCard size={18} />, label: 'Tarjetas y Deudas' },
+  { id: 'cash', icon: <Banknote size={18} />, label: 'Efectivo' },
+  { id: 'advisor', icon: <BrainCircuit size={18} />, label: 'Análisis IA' },
 ]
 
 export function Sidebar({
@@ -275,8 +275,8 @@ export function Sidebar({
                   type="button"
                   className="action-icon-btn"
                   onClick={onOpenSecurity}
-                  title="Seguridad & 2FA"
-                  aria-label="Seguridad & 2FA"
+                  title="Seguridad y 2FA"
+                  aria-label="Seguridad y 2FA"
                 >
                   <ShieldCheck size={14} />
                 </button>

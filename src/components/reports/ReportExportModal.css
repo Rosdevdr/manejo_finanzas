@@ -3,6 +3,9 @@
 .export-modal-card {
   width: min(94vw, 680px) !important;
   max-width: 680px !important;
+  max-height: calc(100dvh - 32px) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   box-sizing: border-box;
   overflow-x: hidden !important;
   background: var(--bg-card) !important;

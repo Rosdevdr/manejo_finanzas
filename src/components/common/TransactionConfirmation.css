@@ -26,8 +26,10 @@
   max-width: 440px;
   width: 100%;
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.1), 0 0 40px rgba(201, 168, 76, 0.08);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   position: relative;
-  overflow: hidden;
   animation: slideInCard 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 

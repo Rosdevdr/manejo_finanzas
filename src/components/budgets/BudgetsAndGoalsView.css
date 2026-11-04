@@ -252,10 +252,10 @@
 }
 
 .fire-badge-btn.active {
-  background-color: var(--color-primary-container, #f59e0b);
-  color: var(--color-on-primary, #472a00);
-  border-color: transparent;
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* FIRE 2-Cols Grid */
@@ -302,8 +302,8 @@
 .fire-result-box {
   padding: 16px;
   border-radius: 10px;
-  background-color: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -343,12 +343,17 @@
 .btn-rule-animated {
   position: relative;
   overflow: hidden;
-  border-color: rgba(245, 158, 11, 0.5) !important;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05)) !important;
-  color: var(--color-primary, #ffc174) !important;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
-  animation: rulePulseGlow 3s infinite ease-in-out;
-  transition: all 0.25s ease;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--color-on-surface, #dfe2ee) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.btn-rule-animated:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
 }
 
 .btn-rule-animated::after {
@@ -418,3 +423,4 @@
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.08)) !important;
   border-color: rgba(217, 119, 6, 0.6) !important;
 }
+

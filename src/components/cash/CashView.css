@@ -81,10 +81,12 @@
 .obsidian-table-wrapper {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .obsidian-table {
   width: 100%;
+  min-width: 620px;
   border-collapse: collapse;
   text-align: left;
 }

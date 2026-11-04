@@ -38,7 +38,9 @@
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif !important;
   color: #F8FAFC !important;
   position: relative !important;
-  overflow: hidden !important;
+  max-height: calc(100dvh - 28px) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   animation: aureusConfirmPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) both !important;
 }
 
