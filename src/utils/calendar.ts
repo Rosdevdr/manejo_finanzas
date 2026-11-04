@@ -186,7 +186,7 @@ export interface CumulativePeriodSummary {
  */
 export function calculateCumulativeBalance(
   incomes: { period: string; amount: number; date?: string }[],
-  expenses: { period: string; amount: number; date?: string }[],
+  expenses: { period: string; amount: number; date?: string; paymentMethod?: string }[],
   currentPeriod: string,
   cashWithdrawals: { period: string; amount: number; date?: string }[] = []
 ): CumulativePeriodSummary {
@@ -214,6 +214,8 @@ export function calculateCumulativeBalance(
   })
 
   expenses.forEach(e => {
+    // Los gastos con tarjeta de crédito son deuda (no salen de la liquidez hasta que se paga la tarjeta)
+    if (e.paymentMethod === 'credit_card') return
     const p = getP(e)
     if (p < currentPeriod) {
       carriedOverBalance -= e.amount
