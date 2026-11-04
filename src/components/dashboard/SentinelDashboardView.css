@@ -106,10 +106,21 @@
   font-weight: 600;
 }
 
-.sentinel-category-val-1 { color: var(--aur-gold-bright); }
-.sentinel-category-val-2 { color: #818CF8; }
-.sentinel-category-val-3 { color: var(--aur-emerald); }
-.sentinel-category-val-4 { color: #F87171; }
+.sentinel-category-val-1 {
+  color: var(--aur-gold-bright);
+}
+
+.sentinel-category-val-2 {
+  color: #818CF8;
+}
+
+.sentinel-category-val-3 {
+  color: var(--aur-emerald);
+}
+
+.sentinel-category-val-4 {
+  color: #F87171;
+}
 
 .sentinel-modal-header {
   flex-shrink: 0;
@@ -309,9 +320,20 @@
 }
 
 @keyframes pulseGlow {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
 
 /* --- 2. HERO BENTO CARD: REVOLUT ULTRA + CURVA 30 DÍAS --- */
@@ -513,7 +535,7 @@
   min-width: 0;
 }
 
-.sentinel-urgent-left > div:last-child {
+.sentinel-urgent-left>div:last-child {
   min-width: 0;
   flex: 1;
   overflow: hidden;
@@ -652,8 +674,13 @@
   font-weight: 700;
 }
 
-.sentinel-axis-val.emerald { color: var(--aur-emerald); }
-.sentinel-axis-val.gold { color: var(--aur-gold-bright); }
+.sentinel-axis-val.emerald {
+  color: var(--aur-emerald);
+}
+
+.sentinel-axis-val.gold {
+  color: var(--aur-gold-bright);
+}
 
 /* --- 3. Executive KPI 4-Grid (Decoupled Rows) --- */
 .sentinel-kpi-grid {
@@ -662,10 +689,21 @@
   gap: 1.15rem;
 }
 
-.sentinel-kpi-grid > *:nth-child(1) { animation: aureusFadeSlideUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both; }
-.sentinel-kpi-grid > *:nth-child(2) { animation: aureusFadeSlideUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-.sentinel-kpi-grid > *:nth-child(3) { animation: aureusFadeSlideUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
-.sentinel-kpi-grid > *:nth-child(4) { animation: aureusFadeSlideUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both; }
+.sentinel-kpi-grid>*:nth-child(1) {
+  animation: aureusFadeSlideUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
+}
+
+.sentinel-kpi-grid>*:nth-child(2) {
+  animation: aureusFadeSlideUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+.sentinel-kpi-grid>*:nth-child(3) {
+  animation: aureusFadeSlideUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+
+.sentinel-kpi-grid>*:nth-child(4) {
+  animation: aureusFadeSlideUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+}
 
 .sentinel-kpi-card {
   background: var(--aur-surface-card);
@@ -677,8 +715,8 @@
   justify-content: space-between;
   gap: 0.85rem;
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.2s ease;
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease;
   will-change: transform, box-shadow;
   position: relative;
   overflow: hidden;
@@ -749,8 +787,13 @@
   color: var(--aur-text-muted);
 }
 
-.sentinel-kpi-value.gold { color: var(--aur-gold-bright); }
-.sentinel-kpi-value.emerald { color: var(--aur-emerald); }
+.sentinel-kpi-value.gold {
+  color: var(--aur-gold-bright);
+}
+
+.sentinel-kpi-value.emerald {
+  color: var(--aur-emerald);
+}
 
 .sentinel-kpi-footer {
   display: flex;
@@ -787,9 +830,17 @@
   overflow: hidden;
 }
 
-.sentinel-progress-fill.gold { background: var(--aur-gold-primary); }
-.sentinel-progress-fill.emerald { background: var(--aur-emerald); }
-.sentinel-progress-fill.indigo { background: var(--aur-indigo); }
+.sentinel-progress-fill.gold {
+  background: var(--aur-gold-primary);
+}
+
+.sentinel-progress-fill.emerald {
+  background: var(--aur-emerald);
+}
+
+.sentinel-progress-fill.indigo {
+  background: var(--aur-indigo);
+}
 
 /* --- 4. Main 2-Column Dashboard Grid --- */
 .sentinel-main-grid {
@@ -802,7 +853,7 @@
   min-width: 0;
 }
 
-.sentinel-main-grid > * {
+.sentinel-main-grid>* {
   min-width: 0;
   max-width: 100%;
 }
@@ -910,21 +961,25 @@
   .sentinel-ledger-thead {
     display: none;
   }
+
   .sentinel-card {
     padding: 1rem;
     border-radius: 0.95rem;
     gap: 0.85rem;
   }
+
   .sentinel-commitment-item {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
     padding: 0.85rem;
   }
+
   .sentinel-item-left {
     flex: 1 1 100%;
     width: 100%;
   }
+
   .sentinel-item-right {
     width: 100%;
     margin-left: 0;
@@ -932,12 +987,15 @@
     padding-top: 0.6rem;
     border-top: 1px dashed var(--aur-border-subtle);
   }
+
   .sentinel-item-title-text {
     max-width: 100%;
   }
+
   .sentinel-item-contract-text {
     max-width: 100%;
   }
+
   .sentinel-kpi-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
@@ -1079,12 +1137,35 @@
   margin-top: 2px;
 }
 
-.sentinel-item-icon.electric { background: rgba(239, 68, 68, 0.14); color: var(--aur-crimson); }
-.sentinel-item-icon.telecom { background: rgba(200, 169, 98, 0.16); color: var(--aur-gold-bright); }
-.sentinel-item-icon.card { background: rgba(99, 91, 255, 0.16); color: #A5B4FC; }
-.sentinel-item-icon.education { background: rgba(16, 185, 129, 0.14); color: var(--aur-emerald); }
-.sentinel-item-icon.water { background: rgba(14, 165, 233, 0.15); color: #38BDF8; }
-.sentinel-item-icon.other { background: rgba(255, 255, 255, 0.06); color: var(--aur-text-primary); }
+.sentinel-item-icon.electric {
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--aur-crimson);
+}
+
+.sentinel-item-icon.telecom {
+  background: rgba(200, 169, 98, 0.16);
+  color: var(--aur-gold-bright);
+}
+
+.sentinel-item-icon.card {
+  background: rgba(99, 91, 255, 0.16);
+  color: #A5B4FC;
+}
+
+.sentinel-item-icon.education {
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--aur-emerald);
+}
+
+.sentinel-item-icon.water {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38BDF8;
+}
+
+.sentinel-item-icon.other {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--aur-text-primary);
+}
 
 .sentinel-item-name {
   font-weight: 700;
@@ -1260,10 +1341,21 @@
   transition: width 0.5s ease;
 }
 
-.sentinel-composite-segment.c1 { background: var(--aur-gold-primary); }
-.sentinel-composite-segment.c2 { background: var(--aur-indigo); }
-.sentinel-composite-segment.c3 { background: var(--aur-emerald); }
-.sentinel-composite-segment.c4 { background: var(--aur-crimson); }
+.sentinel-composite-segment.c1 {
+  background: var(--aur-gold-primary);
+}
+
+.sentinel-composite-segment.c2 {
+  background: var(--aur-indigo);
+}
+
+.sentinel-composite-segment.c3 {
+  background: var(--aur-emerald);
+}
+
+.sentinel-composite-segment.c4 {
+  background: var(--aur-crimson);
+}
 
 .sentinel-category-grid {
   display: grid;
@@ -1403,9 +1495,17 @@
   flex-shrink: 0;
 }
 
-.sentinel-avatar.mama { background: #EC4899; color: #FFFFFF; }
-.sentinel-avatar.papa { background: #3B82F6; color: #FFFFFF; }
-.sentinel-avatar.bot  {
+.sentinel-avatar.mama {
+  background: #EC4899;
+  color: #FFFFFF;
+}
+
+.sentinel-avatar.papa {
+  background: #3B82F6;
+  color: #FFFFFF;
+}
+
+.sentinel-avatar.bot {
   background: rgba(99, 102, 241, 0.2);
   border: 1px solid rgba(99, 102, 241, 0.35);
   color: #A5B4FC;
@@ -1569,10 +1669,12 @@
   .sentinel-modal-overlay {
     padding: 10px;
   }
+
   .sentinel-modal-card {
     border-radius: 16px;
     max-height: calc(100dvh - 20px);
   }
+
   .sentinel-modal-grid-2 {
     grid-template-columns: 1fr;
     gap: 12px;
