@@ -27,6 +27,8 @@ import {
   Activity,
   PieChart,
   RefreshCw,
+  Pencil,
+  Trash2,
 } from 'lucide-react'
 import type {
   Income,
@@ -242,12 +244,20 @@ const COMMITMENT_CATEGORY_OPTIONS: CustomSelectOption<CommitmentItem['category']
   },
 ]
 
+const MAX_COMMITMENT_NAME_LENGTH = 45
+const MAX_COMMITMENT_CONTRACT_LENGTH = 36
+
 function loadSavedCommitments(): CommitmentItem[] {
   try {
     const raw = localStorage.getItem(COMMITMENTS_STORAGE_KEY)
     if (!raw) return INITIAL_COMMITMENTS
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_COMMITMENTS
+    if (!Array.isArray(parsed)) return INITIAL_COMMITMENTS
+    return parsed.map((c: CommitmentItem) => ({
+      ...c,
+      name: String(c.name || 'Compromiso').trim().slice(0, MAX_COMMITMENT_NAME_LENGTH),
+      contractNumber: String(c.contractNumber || 'Servicio Recurrente').trim().slice(0, MAX_COMMITMENT_CONTRACT_LENGTH),
+    }))
   } catch {
     return INITIAL_COMMITMENTS
   }
@@ -337,8 +347,10 @@ export function SentinelDashboardView({
   )
   const [isSyncingFx, setIsSyncingFx] = useState(false)
 
-  // Formulario nuevo compromiso
+  // Formulario nuevo o edición de compromiso
+  const [editingCommitmentId, setEditingCommitmentId] = useState<string | null>(null)
   const [newBillName, setNewBillName] = useState('')
+  const [newBillContract, setNewBillContract] = useState('')
   const [newBillCategory, setNewBillCategory] = useState<CommitmentItem['category']>('electric')
   const [newBillDay, setNewBillDay] = useState(15)
   const [newBillAmount, setNewBillAmount] = useState('2000')
@@ -662,36 +674,118 @@ export function SentinelDashboardView({
     setSimText('')
   }
 
-  // Crear nuevo compromiso
+  // Abrir modal para crear nuevo compromiso
+  const handleOpenCreateCommitment = () => {
+    setEditingCommitmentId(null)
+    setNewBillName('')
+    setNewBillContract('')
+    setNewBillCategory('electric')
+    setNewBillDay(15)
+    setNewBillAmount('2000')
+    setNewBillLateFee('350')
+    setIsModalOpen(true)
+  }
+
+  // Abrir modal para editar un compromiso existente
+  const handleOpenEditCommitment = (item: CommitmentItem) => {
+    setEditingCommitmentId(item.id)
+    setNewBillName(item.name.slice(0, MAX_COMMITMENT_NAME_LENGTH))
+    setNewBillContract((item.contractNumber || '').slice(0, MAX_COMMITMENT_CONTRACT_LENGTH))
+    setNewBillCategory(item.category)
+    setNewBillDay(item.dueDayOfMonth)
+    setNewBillAmount(String(item.amountRaw))
+    const parsedLateFee = parseFloat(String(item.lateFeeAvoided).replace(/[^0-9.]/g, '')) || 0
+    setNewBillLateFee(String(parsedLateFee))
+    setIsModalOpen(true)
+  }
+
+  // Eliminar un compromiso del Radar Centinela
+  const handleDeleteCommitment = (item: CommitmentItem) => {
+    setCommitments(prev => prev.filter(c => c.id !== item.id))
+    const deleteToastMsg = `Compromiso "${item.name}" eliminado del Radar Centinela.`
+    if (onShowToast) {
+      onShowToast(deleteToastMsg, 'info')
+    } else {
+      setCelebrationToast(deleteToastMsg)
+      setTimeout(() => setCelebrationToast(null), 4000)
+    }
+  }
+
+  // Crear o actualizar compromiso
   const handleCreateCommitment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newBillName.trim()) return
+    const cleanName = newBillName.trim().slice(0, MAX_COMMITMENT_NAME_LENGTH)
+    if (!cleanName) return
 
-    const words = newBillName.trim().split(/\s+/)
+    const cleanContract =
+      newBillContract.trim().slice(0, MAX_COMMITMENT_CONTRACT_LENGTH) || 'Servicio Recurrente'
+
+    const words = cleanName.split(/\s+/)
     const monogram =
       words.length >= 2
         ? `${words[0][0]}${words[1][0]}`.toUpperCase()
-        : newBillName.trim().slice(0, 2).toUpperCase()
+        : cleanName.slice(0, 2).toUpperCase()
+
+    const amountNum = Math.max(0, Number(newBillAmount) || 0)
+    const lateFeeNum = Math.max(0, Number(newBillLateFee) || 0)
+    const dayNum = Math.min(31, Math.max(1, Number(newBillDay) || 15))
+    const formattedAmount = `RD$ ${amountNum.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+    const formattedLateFee = `RD$ ${lateFeeNum.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+
+    if (editingCommitmentId) {
+      setCommitments(prev =>
+        prev.map(c =>
+          c.id === editingCommitmentId
+            ? {
+                ...c,
+                name: cleanName,
+                monogram,
+                category: newBillCategory,
+                dueDayOfMonth: dayNum,
+                dueDateStr: `Día ${dayNum} (${activePeriod})`,
+                amountFormatted: formattedAmount,
+                amountRaw: amountNum,
+                lateFeeAvoided: formattedLateFee,
+                contractNumber: cleanContract,
+                daysRemaining: c.status === 'paid' ? 0 : Math.max(1, dayNum - new Date().getDate()),
+              }
+            : c
+        )
+      )
+      setIsModalOpen(false)
+      setEditingCommitmentId(null)
+
+      const editToastMsg = `Compromiso "${cleanName}" actualizado en el Radar Centinela (${formattedAmount}).`
+      if (onShowToast) {
+        onShowToast(editToastMsg, 'success')
+      } else {
+        setCelebrationToast(editToastMsg)
+        setTimeout(() => setCelebrationToast(null), 5000)
+      }
+      setNewBillName('')
+      setNewBillContract('')
+      return
+    }
 
     const newItem: CommitmentItem = {
       id: `comm-${Date.now()}`,
-      name: newBillName,
+      name: cleanName,
       monogram,
       category: newBillCategory,
-      dueDayOfMonth: Number(newBillDay),
-      dueDateStr: `Día ${newBillDay} (${activePeriod})`,
+      dueDayOfMonth: dayNum,
+      dueDateStr: `Día ${dayNum} (${activePeriod})`,
       status: 'pending',
-      amountFormatted: `RD$ ${Number(newBillAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-      amountRaw: Number(newBillAmount),
-      lateFeeAvoided: `RD$ ${Number(newBillLateFee).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-      contractNumber: 'Servicio Recurrente',
-      daysRemaining: Math.max(1, Number(newBillDay) - new Date().getDate()),
+      amountFormatted: formattedAmount,
+      amountRaw: amountNum,
+      lateFeeAvoided: formattedLateFee,
+      contractNumber: cleanContract,
+      daysRemaining: Math.max(1, dayNum - new Date().getDate()),
     }
 
     setCommitments(prev => [newItem, ...prev])
     setIsModalOpen(false)
 
-    const createToastMsg = `Compromiso "${newBillName.trim()}" registrado en el Radar Centinela (${newItem.amountFormatted}).`
+    const createToastMsg = `Compromiso "${cleanName}" registrado en el Radar Centinela (${newItem.amountFormatted}).`
     if (onShowToast) {
       onShowToast(createToastMsg, 'success')
     } else {
@@ -701,8 +795,8 @@ export function SentinelDashboardView({
 
     try {
       await apiClient.sentinel.createCommitment({
-        name: newBillName,
-        dueDayOfMonth: Number(newBillDay),
+        name: cleanName,
+        dueDayOfMonth: dayNum,
         expectedAmount: newBillAmount,
         estimatedLateFee: newBillLateFee,
       })
@@ -711,6 +805,7 @@ export function SentinelDashboardView({
     }
 
     setNewBillName('')
+    setNewBillContract('')
   }
 
   const householdTitle = userEmail
@@ -781,7 +876,7 @@ export function SentinelDashboardView({
 
           <button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenCreateCommitment}
             className="sentinel-new-commitment-btn"
           >
             <span className="sentinel-new-commitment-icon">
@@ -1195,84 +1290,119 @@ export function SentinelDashboardView({
             </div>
 
             <div className="sentinel-commitment-list">
-              {filteredCommitments.map(c => {
-                const isPaid = c.status === 'paid'
-                const isUrgent = c.status === 'pending' && c.daysRemaining <= 2
+              {filteredCommitments.length === 0 ? (
+                <div className="sentinel-empty-commitments">
+                  <span>No hay compromisos en esta vista.</span>
+                </div>
+              ) : (
+                filteredCommitments.map(c => {
+                  const isPaid = c.status === 'paid'
+                  const isUrgent = c.status === 'pending' && c.daysRemaining <= 2
 
-                return (
-                  <div key={c.id} className="sentinel-commitment-item">
-                    <div className="sentinel-item-left">
-                      <div className={`sentinel-item-icon ${c.category}`}>
-                        <span className="sentinel-item-monogram">{c.monogram}</span>
-                        <span className="sentinel-item-subicon">
-                          {c.category === 'electric' && <Zap className="w-3 h-3" />}
-                          {c.category === 'telecom' && <Wifi className="w-3 h-3" />}
-                          {c.category === 'card' && <CreditCard className="w-3 h-3" />}
-                          {c.category === 'education' && <School className="w-3 h-3" />}
-                          {c.category === 'water' && <Droplets className="w-3 h-3" />}
-                          {c.category === 'other' && <Calendar className="w-3 h-3" />}
-                        </span>
-                      </div>
-
-                      <div>
-                        <div className="sentinel-item-name">
-                          <span>{c.name}</span>
-                          {isPaid ? (
-                            <span className="sentinel-badge paid">
-                              <Check size={11} style={{ marginRight: '4px', display: 'inline' }} />
-                              Conciliado
-                            </span>
-                          ) : isUrgent ? (
-                            <span className="sentinel-badge urgent">
-                              Vence en {Math.max(1, c.daysRemaining) * 24}h
-                            </span>
-                          ) : (
-                            <span className="sentinel-badge pending">
-                              En {c.daysRemaining} días
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="sentinel-item-meta">
-                          <span>{c.contractNumber || 'Servicio Residencial'}</span>
-                          <span>•</span>
-                          <span>Corte: {c.dueDateStr}</span>
-                          <span>•</span>
-                          <span className="sentinel-item-savings tabular-nums">
-                            Mora evitada: +{c.lateFeeAvoided}
+                  return (
+                    <div key={c.id} className="sentinel-commitment-item">
+                      <div className="sentinel-item-left">
+                        <div className={`sentinel-item-icon ${c.category}`}>
+                          <span className="sentinel-item-monogram">{c.monogram}</span>
+                          <span className="sentinel-item-subicon">
+                            {c.category === 'electric' && <Zap className="w-3 h-3" />}
+                            {c.category === 'telecom' && <Wifi className="w-3 h-3" />}
+                            {c.category === 'card' && <CreditCard className="w-3 h-3" />}
+                            {c.category === 'education' && <School className="w-3 h-3" />}
+                            {c.category === 'water' && <Droplets className="w-3 h-3" />}
+                            {c.category === 'other' && <Calendar className="w-3 h-3" />}
                           </span>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="sentinel-item-right">
-                      <div className="text-right">
-                        <div className={`sentinel-item-amount tabular-nums ${isPaid ? 'paid' : ''}`}>
-                          {c.amountFormatted}
+                        <div className="sentinel-item-info">
+                          <div className="sentinel-item-name">
+                            <span className="sentinel-item-title-text" title={c.name}>
+                              {c.name}
+                            </span>
+                            {isPaid ? (
+                              <span className="sentinel-badge paid">
+                                <Check size={11} style={{ marginRight: '4px', display: 'inline' }} />
+                                Conciliado
+                              </span>
+                            ) : isUrgent ? (
+                              <span className="sentinel-badge urgent">
+                                Vence en {Math.max(1, c.daysRemaining) * 24}h
+                              </span>
+                            ) : (
+                              <span className="sentinel-badge pending">
+                                En {c.daysRemaining} días
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="sentinel-item-meta">
+                            <span
+                              className="sentinel-item-contract-text"
+                              title={c.contractNumber || 'Servicio Residencial'}
+                            >
+                              {c.contractNumber || 'Servicio Residencial'}
+                            </span>
+                            <span>•</span>
+                            <span>Corte: {c.dueDateStr}</span>
+                            <span>•</span>
+                            <span className="sentinel-item-savings tabular-nums">
+                              Mora evitada: +{c.lateFeeAvoided}
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-xs sentinel-muted-text">
-                          {isPaid ? 'Débito ejecutado' : isUrgent ? 'Urgente Pago' : 'Fondos Garantizados'}
-                        </span>
                       </div>
 
-                      {!isPaid ? (
-                        <button
-                          type="button"
-                          onClick={() => void handleMarkAsPaid(c)}
-                          className={`sentinel-item-pay-btn ${isUrgent ? 'urgent' : ''}`}
-                        >
-                          Pagar
-                        </button>
-                      ) : (
-                        <span className="sentinel-item-paid-pill">
-                          <Check size={13} />
-                          <span>Al día</span>
-                        </span>
-                      )}
+                      <div className="sentinel-item-right">
+                        <div className="text-right">
+                          <div className={`sentinel-item-amount tabular-nums ${isPaid ? 'paid' : ''}`}>
+                            {c.amountFormatted}
+                          </div>
+                          <span className="text-xs sentinel-muted-text">
+                            {isPaid ? 'Débito ejecutado' : isUrgent ? 'Urgente Pago' : 'Fondos Garantizados'}
+                          </span>
+                        </div>
+
+                        <div className="sentinel-item-actions">
+                          {!isPaid ? (
+                            <button
+                              type="button"
+                              onClick={() => void handleMarkAsPaid(c)}
+                              className={`sentinel-item-pay-btn ${isUrgent ? 'urgent' : ''}`}
+                            >
+                              Pagar
+                            </button>
+                          ) : (
+                            <span className="sentinel-item-paid-pill">
+                              <Check size={13} />
+                              <span>Al día</span>
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditCommitment(c)}
+                            className="sentinel-item-action-btn edit"
+                            title={`Editar ${c.name}`}
+                            aria-label={`Editar ${c.name}`}
+                          >
+                            <Pencil size={14} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCommitment(c)}
+                            className="sentinel-item-action-btn delete"
+                            title={`Eliminar ${c.name}`}
+                            aria-label={`Eliminar ${c.name}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
           </div>
 
@@ -1511,11 +1641,14 @@ export function SentinelDashboardView({
         </div>
       </div>
 
-      {/* Modal: Nuevo Compromiso Recurrente (Portal en document.body con scroll solo en el contenido) */}
+      {/* Modal: Nuevo / Editar Compromiso Recurrente (Portal en document.body con scroll solo en el contenido) */}
       {isModalOpen && createPortal(
         <div
           className="sentinel-modal-overlay"
-          onClick={() => setIsModalOpen(false)}
+          onClick={() => {
+            setIsModalOpen(false)
+            setEditingCommitmentId(null)
+          }}
         >
           <div
             className="sentinel-modal-card"
@@ -1524,11 +1657,16 @@ export function SentinelDashboardView({
             <div className="sentinel-modal-header">
               <h3 className="font-bold sentinel-title-text text-base sm:text-lg flex items-center gap-2.5 m-0">
                 <Shield className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                <span>Nuevo Compromiso Recurrente</span>
+                <span>
+                  {editingCommitmentId ? 'Editar Compromiso Recurrente' : 'Nuevo Compromiso Recurrente'}
+                </span>
               </h3>
               <button
                 type="button"
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false)
+                  setEditingCommitmentId(null)
+                }}
                 className="sentinel-modal-close-btn"
                 title="Cerrar modal"
                 aria-label="Cerrar modal"
@@ -1539,14 +1677,45 @@ export function SentinelDashboardView({
 
             <form onSubmit={handleCreateCommitment} className="sentinel-modal-body">
               <div className="sentinel-form-group">
-                <label className="sentinel-form-label">Nombre del Servicio / Compromiso</label>
+                <div className="sentinel-form-label-row">
+                  <label className="sentinel-form-label">Nombre del Servicio / Compromiso</label>
+                  <span
+                    className={`sentinel-char-counter tabular-nums ${
+                      newBillName.length >= MAX_COMMITMENT_NAME_LENGTH - 5 ? 'near-limit' : ''
+                    }`}
+                  >
+                    {newBillName.length}/{MAX_COMMITMENT_NAME_LENGTH}
+                  </span>
+                </div>
                 <input
                   type="text"
                   required
                   autoFocus
+                  maxLength={MAX_COMMITMENT_NAME_LENGTH}
                   placeholder="ej: Luz Edesur, Internet Claro, Tarjeta..."
                   value={newBillName}
-                  onChange={e => setNewBillName(e.target.value)}
+                  onChange={e => setNewBillName(e.target.value.slice(0, MAX_COMMITMENT_NAME_LENGTH))}
+                  className="sentinel-form-input"
+                />
+              </div>
+
+              <div className="sentinel-form-group">
+                <div className="sentinel-form-label-row">
+                  <label className="sentinel-form-label">Referencia o Contrato (Opcional)</label>
+                  <span
+                    className={`sentinel-char-counter tabular-nums ${
+                      newBillContract.length >= MAX_COMMITMENT_CONTRACT_LENGTH - 5 ? 'near-limit' : ''
+                    }`}
+                  >
+                    {newBillContract.length}/{MAX_COMMITMENT_CONTRACT_LENGTH}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  maxLength={MAX_COMMITMENT_CONTRACT_LENGTH}
+                  placeholder="ej: Suministro #49102-1, Fibra 300 Mbps..."
+                  value={newBillContract}
+                  onChange={e => setNewBillContract(e.target.value.slice(0, MAX_COMMITMENT_CONTRACT_LENGTH))}
                   className="sentinel-form-input"
                 />
               </div>
@@ -1610,7 +1779,10 @@ export function SentinelDashboardView({
               <div className="sentinel-modal-actions">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false)
+                    setEditingCommitmentId(null)
+                  }}
                   className="sentinel-modal-cancel-btn"
                 >
                   Cancelar
@@ -1619,8 +1791,8 @@ export function SentinelDashboardView({
                   type="submit"
                   className="sentinel-modal-submit-btn"
                 >
-                  <Plus size={15} />
-                  <span>Guardar Compromiso</span>
+                  {editingCommitmentId ? <Check size={15} /> : <Plus size={15} />}
+                  <span>{editingCommitmentId ? 'Guardar Cambios' : 'Guardar Compromiso'}</span>
                 </button>
               </div>
             </form>
