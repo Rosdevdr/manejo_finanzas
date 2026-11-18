@@ -114,7 +114,9 @@ export function App() {
     addCreditCard, updateCreditCard, deleteCreditCard,
     addCreditTransaction, updateCreditTransaction, deleteCreditTransaction, toggleTransactionPaid,
     setCategoryBudget, setMultipleCategoryBudgets,
+    sentinelCommitments,
     addSavingsGoal, updateSavingsGoal, depositToGoal, deleteSavingsGoal,
+    addSentinelCommitment, updateSentinelCommitment, paySentinelCommitment, deleteSentinelCommitment,
     purgeAllUserData,
   } = useFinanceStorage(user)
 
@@ -357,7 +359,13 @@ export function App() {
               creditCards={creditCards}
               creditTransactions={creditTransactions}
               categoryBudgets={categoryBudgets}
+              userId={user?.id}
               userEmail={user?.email}
+              sentinelCommitments={sentinelCommitments}
+              onAddCommitment={addSentinelCommitment}
+              onUpdateCommitment={updateSentinelCommitment}
+              onPayCommitment={paySentinelCommitment}
+              onDeleteCommitment={deleteSentinelCommitment}
               dashboardSummary={dashboardSummary}
               onNavigateTab={handleTabChange}
               onOpenTerms={() => setShowTermsModal(true)}

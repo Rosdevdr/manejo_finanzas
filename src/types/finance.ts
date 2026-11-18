@@ -173,6 +173,30 @@ export interface Rule503020Breakdown {
   savingsPercent: number;
 }
 
+export type SentinelCommitmentCategory =
+  | 'electric'
+  | 'telecom'
+  | 'card'
+  | 'education'
+  | 'water'
+  | 'other'
+
+export type SentinelCommitmentStatus = 'pending' | 'paid' | 'urgent'
+
+export interface SentinelCommitment {
+  id: string
+  name: string
+  contractNumber: string
+  category: SentinelCommitmentCategory
+  amount: number
+  lateFeeAvoided: number
+  dueDay: number
+  dueDateStr: string
+  status: SentinelCommitmentStatus
+  paidPeriod?: string | null
+  createdAt?: string
+}
+
 // Estructura completa de un mes para la persistencia
 export interface MonthData {
   period: string;
@@ -182,4 +206,5 @@ export interface MonthData {
   creditTransactions?: CreditCardTransaction[];
   categoryBudgets?: CategoryBudget[];
   savingsGoals?: SavingsGoal[];
+  sentinelCommitments?: SentinelCommitment[];
 }

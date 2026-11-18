@@ -38,6 +38,7 @@ import type {
   CreditCardTransaction,
   CategoryBudget,
   ExpenseCategory,
+  SentinelCommitment,
 } from '../../types/finance'
 import { apiClient } from '../../services/apiClient'
 import {
@@ -60,7 +61,13 @@ export interface SentinelDashboardViewProps {
   creditTransactions?: CreditCardTransaction[]
   categoryBudgets?: CategoryBudget[]
   availableBalance?: number
+  userId?: string | null
   userEmail?: string | null
+  sentinelCommitments?: SentinelCommitment[]
+  onAddCommitment?: (item: Omit<SentinelCommitment, 'id'>) => Promise<{ success: boolean; error?: string }>
+  onUpdateCommitment?: (item: SentinelCommitment) => Promise<{ success: boolean; error?: string }>
+  onPayCommitment?: (id: string, paidPeriod?: string) => Promise<void>
+  onDeleteCommitment?: (id: string) => Promise<void>
   onAddExpense?: (expense: Omit<Expense, 'id'>) => Promise<{ success: boolean } | void>
   onShowToast?: (msg: string, type?: 'success' | 'error' | 'info') => void
 }
@@ -270,9 +277,37 @@ function loadSavedCommitments(): CommitmentItem[] {
   }
 }
 
-function loadSavedFeed(): TelegramFeedItem[] {
+function toCommitmentItem(sc: SentinelCommitment, activePeriod: string): CommitmentItem {
+  const cleanName = String(sc.name || 'Compromiso').trim().slice(0, MAX_COMMITMENT_NAME_LENGTH)
+  const words = cleanName.split(/\s+/)
+  const monogram =
+    words.length >= 2
+      ? `${words[0][0]}${words[1][0]}`.toUpperCase()
+      : cleanName.slice(0, 2).toUpperCase()
+  const isPaidForPeriod = sc.status === 'paid' && (!sc.paidPeriod || sc.paidPeriod === activePeriod)
+  const todayDay = new Date().getDate()
+  const daysRemaining = isPaidForPeriod ? 0 : Math.max(1, sc.dueDay - todayDay)
+
+  return {
+    id: sc.id,
+    name: cleanName,
+    monogram,
+    category: sc.category,
+    dueDateStr: sc.dueDateStr || `${String(sc.dueDay).padStart(2, '0')} del mes`,
+    dueDayOfMonth: sc.dueDay,
+    status: isPaidForPeriod ? 'paid' : 'pending',
+    amountFormatted: `RD$ ${sc.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+    amountRaw: sc.amount,
+    lateFeeAvoided: `RD$ ${sc.lateFeeAvoided.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+    contractNumber: sc.contractNumber,
+    daysRemaining,
+  }
+}
+
+function loadSavedFeed(userId?: string | null): TelegramFeedItem[] {
   try {
-    const raw = localStorage.getItem(FEED_STORAGE_KEY)
+    const key = userId ? `aureus_sentinel_feed_${userId}` : FEED_STORAGE_KEY
+    const raw = localStorage.getItem(key)
     if (!raw) return INITIAL_FEED
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_FEED
@@ -327,30 +362,49 @@ export function SentinelDashboardView({
   creditTransactions = [],
   categoryBudgets = [],
   availableBalance,
+  userId,
   userEmail,
+  sentinelCommitments,
+  onAddCommitment,
+  onUpdateCommitment,
+  onPayCommitment,
+  onDeleteCommitment,
   onAddExpense,
   onShowToast,
 }: SentinelDashboardViewProps = {}) {
   const activePeriod = currentPeriod || getCurrentSystemPeriod()
-  const [commitments, setCommitments] = useState<CommitmentItem[]>(() => loadSavedCommitments())
-  const [feed, setFeed] = useState<TelegramFeedItem[]>(() => loadSavedFeed())
+  const isStoreControlled = Array.isArray(sentinelCommitments)
+  const [localCommitments, setLocalCommitments] = useState<CommitmentItem[]>(() => loadSavedCommitments())
+  const commitments = useMemo(() => {
+    if (isStoreControlled && sentinelCommitments) {
+      return sentinelCommitments.map(sc => toCommitmentItem(sc, activePeriod))
+    }
+    return localCommitments
+  }, [isStoreControlled, sentinelCommitments, localCommitments, activePeriod])
+  const feedStorageKey = userId ? `aureus_sentinel_feed_${userId}` : FEED_STORAGE_KEY
+  const [feed, setFeed] = useState<TelegramFeedItem[]>(() => loadSavedFeed(userId))
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'urgent'>('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [simText, setSimText] = useState('')
   const [celebrationToast, setCelebrationToast] = useState<string | null>(null)
 
-  // Persistir compromisos y feed en localStorage
   useEffect(() => {
+    setFeed(loadSavedFeed(userId))
+  }, [userId])
+
+  // Persistir compromisos locales (solo en modo standalone sin store) y feed aislado por usuario
+  useEffect(() => {
+    if (isStoreControlled) return
     try {
-      localStorage.setItem(COMMITMENTS_STORAGE_KEY, JSON.stringify(commitments))
+      localStorage.setItem(COMMITMENTS_STORAGE_KEY, JSON.stringify(localCommitments))
     } catch { }
-  }, [commitments])
+  }, [isStoreControlled, localCommitments])
 
   useEffect(() => {
     try {
-      localStorage.setItem(FEED_STORAGE_KEY, JSON.stringify(feed))
+      localStorage.setItem(feedStorageKey, JSON.stringify(feed))
     } catch { }
-  }, [feed])
+  }, [feed, feedStorageKey])
 
   // Estado de la Tasa de Cambio Diaria (USD -> DOP) con respaldo automático a la tasa anterior
   const [fxState, setFxState] = useState<DailyExchangeRateState>(() =>
@@ -433,6 +487,7 @@ export function SentinelDashboardView({
 
   // Carga inicial del backend
   useEffect(() => {
+    if (isStoreControlled) return
     let isMounted = true
     apiClient.sentinel
       .getCommitments()
@@ -467,7 +522,7 @@ export function SentinelDashboardView({
             ),
           }
         })
-        setCommitments(mapped)
+        setLocalCommitments(mapped)
       })
       .catch(() => {
         // Si el backend no responde, conserva los datos persistidos localmente
@@ -476,7 +531,7 @@ export function SentinelDashboardView({
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [isStoreControlled])
 
   // Métricas reales calculadas a partir del período activo
   const metrics = useMemo(() => {
@@ -620,9 +675,13 @@ export function SentinelDashboardView({
       if (res && res.success === false) return
     }
 
-    setCommitments(prev =>
-      prev.map(c => (c.id === item.id ? { ...c, status: 'paid', daysRemaining: 0 } : c))
-    )
+    if (isStoreControlled && onPayCommitment) {
+      await onPayCommitment(item.id, activePeriod)
+    } else {
+      setLocalCommitments(prev =>
+        prev.map(c => (c.id === item.id ? { ...c, status: 'paid', daysRemaining: 0 } : c))
+      )
+    }
 
     const safeItemName = item.name.length > 40 ? `${item.name.slice(0, 37)}...` : item.name
     const toastMsg = `Factura de "${safeItemName}" pagada y descontada de tu liquidez. Ahorraste ${item.lateFeeAvoided} en moras.`
@@ -772,9 +831,13 @@ export function SentinelDashboardView({
         { label: 'Referencia', value: item.contractNumber || 'Servicio Recurrente' },
         { label: 'Monto Nominal', value: item.amountFormatted },
       ],
-      onConfirm: () => {
+      onConfirm: async () => {
         setPendingConfirm(null)
-        setCommitments(prev => prev.filter(c => c.id !== item.id))
+        if (isStoreControlled && onDeleteCommitment) {
+          await onDeleteCommitment(item.id)
+        } else {
+          setLocalCommitments(prev => prev.filter(c => c.id !== item.id))
+        }
         const deleteToastMsg = `Compromiso "${item.name}" eliminado del Radar Centinela.`
         if (onShowToast) {
           onShowToast(deleteToastMsg, 'info')
@@ -826,7 +889,22 @@ export function SentinelDashboardView({
       onConfirm: async () => {
         setPendingConfirm(null)
         if (isEditing && targetEditId) {
-          setCommitments(prev =>
+          if (isStoreControlled && onUpdateCommitment) {
+            const existing = sentinelCommitments?.find(c => c.id === targetEditId)
+            await onUpdateCommitment({
+              id: targetEditId,
+              name: cleanName,
+              contractNumber: cleanContract,
+              category: newBillCategory,
+              amount: amountNum,
+              lateFeeAvoided: lateFeeNum,
+              dueDay: dayNum,
+              dueDateStr: `Día ${dayNum} (${activePeriod})`,
+              status: existing?.status || 'pending',
+              paidPeriod: existing?.paidPeriod ?? null,
+            })
+          } else {
+          setLocalCommitments(prev =>
             prev.map(c =>
               c.id === targetEditId
                 ? {
@@ -845,6 +923,7 @@ export function SentinelDashboardView({
                 : c
             )
           )
+          }
           setIsModalOpen(false)
           setEditingCommitmentId(null)
 
@@ -875,7 +954,20 @@ export function SentinelDashboardView({
           daysRemaining: Math.max(1, dayNum - new Date().getDate()),
         }
 
-        setCommitments(prev => [newItem, ...prev])
+        if (isStoreControlled && onAddCommitment) {
+          await onAddCommitment({
+            name: cleanName,
+            contractNumber: cleanContract,
+            category: newBillCategory,
+            amount: amountNum,
+            lateFeeAvoided: lateFeeNum,
+            dueDay: dayNum,
+            dueDateStr: `Día ${dayNum} (${activePeriod})`,
+            status: 'pending',
+          })
+        } else {
+          setLocalCommitments(prev => [newItem, ...prev])
+        }
         setIsModalOpen(false)
 
         const createToastMsg = `Compromiso "${cleanName}" registrado en el Radar Centinela (${newItem.amountFormatted}).`

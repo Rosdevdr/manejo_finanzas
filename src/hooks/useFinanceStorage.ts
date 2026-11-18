@@ -8,6 +8,9 @@ import type {
   CreditCardTransaction,
   CategoryBudget,
   SavingsGoal,
+  SentinelCommitment,
+  SentinelCommitmentCategory,
+  SentinelCommitmentStatus,
   IncomeType,
   ExpenseCategory,
   ExpenseType,
@@ -38,8 +41,9 @@ export function getStorageKeys(userId?: string | null) {
     cash:               `${prefix}_cash`,
     creditCards:        `${prefix}_credit_cards`,
     creditTransactions: `${prefix}_credit_transactions`,
-    categoryBudgets:    `${prefix}_category_budgets`,
-    savingsGoals:       `${prefix}_savings_goals`,
+    categoryBudgets:     `${prefix}_category_budgets`,
+    savingsGoals:        `${prefix}_savings_goals`,
+    sentinelCommitments: `${prefix}_sentinel_commitments`,
   }
 }
 
@@ -52,6 +56,7 @@ function cleanLegacyStorage() {
     'aureus_credit_transactions',
     'aureus_category_budgets',
     'aureus_savings_goals',
+    'aureus_sentinel_commitments',
   ]
   legacy.forEach(k => {
     try { localStorage.removeItem(k) } catch {}
@@ -361,6 +366,32 @@ const DEFAULT_GOALS: SavingsGoal[] = [
   },
 ]
 
+const DEFAULT_SENTINEL_COMMITMENTS: SentinelCommitment[] = [
+  { id: 'c-1', name: 'Luz Edesur (Hogar Principal)', contractNumber: 'Contrato 884210', category: 'electric', amount: 4200, lateFeeAvoided: 350, dueDay: 24, dueDateStr: '24 del mes', status: 'urgent' },
+  { id: 'c-2', name: 'Internet Fibra Claro 300MB', contractNumber: 'NIC 4429-01', category: 'telecom', amount: 2450, lateFeeAvoided: 200, dueDay: 28, dueDateStr: '28 del mes', status: 'pending' },
+  { id: 'c-3', name: 'Visa Infinite Popular (Corte)', contractNumber: 'Terminación •• 8842', category: 'card', amount: 18500, lateFeeAvoided: 1200, dueDay: 29, dueDateStr: '29 del mes', status: 'pending' },
+  { id: 'c-4', name: 'Colegio San Judas Tadeo', contractNumber: 'Matrícula #2026-B', category: 'education', amount: 14500, lateFeeAvoided: 725, dueDay: 5, dueDateStr: '05 del mes', status: 'paid' },
+  { id: 'c-5', name: 'Agua CAASD + Mantenimiento', contractNumber: 'Apto 4B · Torre A', category: 'water', amount: 1800, lateFeeAvoided: 150, dueDay: 10, dueDateStr: '10 del mes', status: 'paid' },
+  { id: 'c-6', name: 'Plan Móvil Postpago Familia', contractNumber: '3 Líneas Activas', category: 'telecom', amount: 3490, lateFeeAvoided: 250, dueDay: 12, dueDateStr: '12 del mes', status: 'paid' },
+]
+
+function mapSentinelRow(row: any): SentinelCommitment {
+  const dueDay = Number(row.due_day ?? row.dueDay ?? 15)
+  return {
+    id: row.id,
+    name: String(row.name || 'Compromiso').trim().slice(0, 45),
+    contractNumber: String(row.contract_number || row.contractNumber || 'Servicio Recurrente').trim().slice(0, 36),
+    category: (row.category || 'other') as SentinelCommitmentCategory,
+    amount: Number(row.amount || 0),
+    lateFeeAvoided: Number(row.late_fee_avoided ?? row.lateFeeAvoided ?? 0),
+    dueDay,
+    dueDateStr: String(row.due_date_str || row.dueDateStr || `${String(dueDay).padStart(2, '0')} del mes`),
+    status: (row.status || 'pending') as SentinelCommitmentStatus,
+    paidPeriod: row.paid_period ?? row.paidPeriod ?? null,
+    createdAt: row.created_at ?? row.createdAt,
+  }
+}
+
 // Rollover del Modo Demo: si los registros semilla quedaron guardados en un mes anterior,
 // se reubican al período vigente del sistema para que el mes activo nunca inicie en RD$ 0.00.
 function loadDemo<T extends { id: string; period?: string; date?: string }>(
@@ -389,12 +420,14 @@ export function useFinanceStorage(user?: User | null) {
   const [creditCards,        setCreditCardsState]        = useState<CreditCard[]>(() => !user ? loadLocal(getStorageKeys(null).creditCards, DEFAULT_CARDS) : loadLocal(getStorageKeys(user.id).creditCards, []))
   const [creditTransactions, setCreditTransactionsState] = useState<CreditCardTransaction[]>(() => !user ? loadDemo(getStorageKeys(null).creditTransactions, DEFAULT_CARD_TRANSACTIONS) : loadLocal(getStorageKeys(user.id).creditTransactions, []))
   const [categoryBudgets,    setCategoryBudgetsState]    = useState<CategoryBudget[]>(() => !user ? loadLocal(getStorageKeys(null).categoryBudgets, DEFAULT_BUDGETS) : loadLocal(getStorageKeys(user.id).categoryBudgets, []))
-  const [savingsGoals,       setSavingsGoalsState]       = useState<SavingsGoal[]>(() => !user ? loadLocal(getStorageKeys(null).savingsGoals, DEFAULT_GOALS) : loadLocal(getStorageKeys(user.id).savingsGoals, []))
+  const [savingsGoals,        setSavingsGoalsState]        = useState<SavingsGoal[]>(() => !user ? loadLocal(getStorageKeys(null).savingsGoals, DEFAULT_GOALS) : loadLocal(getStorageKeys(user.id).savingsGoals, []))
+  const [sentinelCommitments, setSentinelCommitmentsState] = useState<SentinelCommitment[]>(() => !user ? loadLocal(getStorageKeys(null).sentinelCommitments, DEFAULT_SENTINEL_COMMITMENTS) : loadLocal(getStorageKeys(user.id).sentinelCommitments, []))
 
   const isMountedRef = useRef(true)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const budgetsTableAvailableRef = useRef(true)
   const goalsTableAvailableRef = useRef(true)
+  const sentinelTableAvailableRef = useRef(true)
 
   // Limpiar claves legadas compartidas para evitar contaminación
   useEffect(() => {
@@ -412,6 +445,7 @@ export function useFinanceStorage(user?: User | null) {
       setCreditTransactionsState(loadDemo(demoKeys.creditTransactions, DEFAULT_CARD_TRANSACTIONS))
       setCategoryBudgetsState(loadLocal(demoKeys.categoryBudgets, DEFAULT_BUDGETS))
       setSavingsGoalsState(loadLocal(demoKeys.savingsGoals, DEFAULT_GOALS))
+      setSentinelCommitmentsState(loadLocal(demoKeys.sentinelCommitments, DEFAULT_SENTINEL_COMMITMENTS))
     } else {
       const userKeys = getStorageKeys(user.id)
       setIncomesState(loadLocal(userKeys.incomes, []))
@@ -421,6 +455,7 @@ export function useFinanceStorage(user?: User | null) {
       setCreditTransactionsState(loadLocal(userKeys.creditTransactions, []))
       setCategoryBudgetsState(loadLocal(userKeys.categoryBudgets, []))
       setSavingsGoalsState(loadLocal(userKeys.savingsGoals, []))
+      setSentinelCommitmentsState(loadLocal(userKeys.sentinelCommitments, []))
     }
   }, [user])
 
@@ -432,7 +467,7 @@ export function useFinanceStorage(user?: User | null) {
 
     if (navigator.onLine) {
       try {
-        const [apiIncomes, apiExpenses, apiCash, apiCards, apiCtx, apiBudgets, apiGoals] = await Promise.all([
+        const [apiIncomes, apiExpenses, apiCash, apiCards, apiCtx, apiBudgets, apiGoals, apiSentinel] = await Promise.all([
           apiClient.incomes.list(),
           apiClient.expenses.list(),
           apiClient.cash.list(),
@@ -440,6 +475,7 @@ export function useFinanceStorage(user?: User | null) {
           apiClient.credit.listTransactions(),
           apiClient.budgets.list(new Date().toISOString().slice(0, 7)),
           apiClient.goals.list(),
+          apiClient.sentinel.listUserCommitments().catch(() => null),
         ])
 
         if (!isMountedRef.current) return
@@ -543,6 +579,12 @@ export function useFinanceStorage(user?: User | null) {
           }))
           setSavingsGoalsState(mapped)
           saveLocal(userKeys.savingsGoals, mapped)
+        }
+
+        if (apiSentinel && Array.isArray(apiSentinel.data)) {
+          const mapped = apiSentinel.data.map(mapSentinelRow)
+          setSentinelCommitmentsState(mapped)
+          saveLocal(userKeys.sentinelCommitments, mapped)
         }
 
         return
@@ -687,6 +729,28 @@ export function useFinanceStorage(user?: User | null) {
           }
         } catch {
           goalsTableAvailableRef.current = false
+        }
+      }
+
+      // 4. Compromisos del Radar Centinela (solo consultar si la tabla existe en Supabase)
+      if (sentinelTableAvailableRef.current) {
+        try {
+          const sentRes = await supabase
+            .from('sentinel_commitments')
+            .select('*')
+            .eq('user_id', userId)
+            .order('due_day', { ascending: true })
+          if (sentRes.error) {
+            if (sentRes.status === 404 || sentRes.error.code === '42P01' || sentRes.error.message?.includes('relation') || sentRes.error.message?.includes('not found')) {
+              sentinelTableAvailableRef.current = false
+            }
+          } else if (sentRes.data) {
+            const mapped = sentRes.data.map(mapSentinelRow)
+            setSentinelCommitmentsState(mapped)
+            saveLocal(userKeys.sentinelCommitments, mapped)
+          }
+        } catch {
+          sentinelTableAvailableRef.current = false
         }
       }
     } catch (err) {
@@ -1679,6 +1743,250 @@ export function useFinanceStorage(user?: User | null) {
     }
   }
 
+  // --- Compromisos Radar Centinela ---
+  const addSentinelCommitment = async (
+    item: Omit<SentinelCommitment, 'id'>
+  ): Promise<{ success: boolean; error?: string; item?: SentinelCommitment }> => {
+    const cleanName = String(item.name || '').trim().slice(0, 45)
+    const cleanContract = String(item.contractNumber || 'Servicio Recurrente').trim().slice(0, 36)
+    const cleanAmount = sanitizeAmount(item.amount)
+    const cleanLateFee = Math.max(0, sanitizeAmount(item.lateFeeAvoided))
+    const cleanDueDay = Math.min(31, Math.max(1, Math.round(Number(item.dueDay) || 15)))
+    if (!cleanName || cleanAmount <= 0) {
+      return { success: false, error: 'Nombre y monto válido son requeridos' }
+    }
+
+    const keys = getStorageKeys(user?.id)
+    const newId = `sent-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+    const newItem: SentinelCommitment = {
+      ...item,
+      id: newId,
+      name: cleanName,
+      contractNumber: cleanContract,
+      amount: cleanAmount,
+      lateFeeAvoided: cleanLateFee,
+      dueDay: cleanDueDay,
+      dueDateStr: item.dueDateStr || `${String(cleanDueDay).padStart(2, '0')} del mes`,
+      status: item.status || 'pending',
+    }
+
+    setSentinelCommitmentsState(prev => {
+      const next = [newItem, ...prev]
+      saveLocal(keys.sentinelCommitments, next)
+      return next
+    })
+
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.sentinel.createUserCommitment({
+          id: newItem.id,
+          name: newItem.name,
+          contract_number: newItem.contractNumber,
+          category: newItem.category,
+          amount: newItem.amount,
+          late_fee_avoided: newItem.lateFeeAvoided,
+          due_day: newItem.dueDay,
+          due_date_str: newItem.dueDateStr,
+          status: newItem.status,
+          paid_period: newItem.paidPeriod ?? null,
+        })
+        notifyMutation('sentinel_commitments')
+        void loadData()
+      } catch {
+        if (supabase && isSupabaseConfigured && user && sentinelTableAvailableRef.current) {
+          try {
+            const res = await supabase.from('sentinel_commitments').insert({
+              id: newItem.id,
+              user_id: user.id,
+              name: newItem.name,
+              contract_number: newItem.contractNumber,
+              category: newItem.category,
+              amount: newItem.amount,
+              late_fee_avoided: newItem.lateFeeAvoided,
+              due_day: newItem.dueDay,
+              due_date_str: newItem.dueDateStr,
+              status: newItem.status,
+              paid_period: newItem.paidPeriod ?? null,
+            })
+            if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+              sentinelTableAvailableRef.current = false
+            } else {
+              notifyMutation('sentinel_commitments')
+              void loadData()
+            }
+          } catch {
+            sentinelTableAvailableRef.current = false
+          }
+        }
+      }
+    }
+
+    return { success: true, item: newItem }
+  }
+
+  const updateSentinelCommitment = async (
+    updated: SentinelCommitment
+  ): Promise<{ success: boolean; error?: string }> => {
+    const cleanName = String(updated.name || '').trim().slice(0, 45)
+    const cleanContract = String(updated.contractNumber || 'Servicio Recurrente').trim().slice(0, 36)
+    const cleanAmount = sanitizeAmount(updated.amount)
+    const cleanLateFee = Math.max(0, sanitizeAmount(updated.lateFeeAvoided))
+    const cleanDueDay = Math.min(31, Math.max(1, Math.round(Number(updated.dueDay) || 15)))
+    if (!cleanName || cleanAmount <= 0) {
+      return { success: false, error: 'Nombre y monto válido son requeridos' }
+    }
+
+    const keys = getStorageKeys(user?.id)
+    const cleanItem: SentinelCommitment = {
+      ...updated,
+      name: cleanName,
+      contractNumber: cleanContract,
+      amount: cleanAmount,
+      lateFeeAvoided: cleanLateFee,
+      dueDay: cleanDueDay,
+      dueDateStr: updated.dueDateStr || `${String(cleanDueDay).padStart(2, '0')} del mes`,
+    }
+
+    setSentinelCommitmentsState(prev => {
+      const next = prev.map(c => (c.id === cleanItem.id ? cleanItem : c))
+      saveLocal(keys.sentinelCommitments, next)
+      return next
+    })
+
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.sentinel.updateUserCommitment(cleanItem.id, {
+          name: cleanItem.name,
+          contract_number: cleanItem.contractNumber,
+          category: cleanItem.category,
+          amount: cleanItem.amount,
+          late_fee_avoided: cleanItem.lateFeeAvoided,
+          due_day: cleanItem.dueDay,
+          due_date_str: cleanItem.dueDateStr,
+          status: cleanItem.status,
+          paid_period: cleanItem.paidPeriod ?? null,
+        })
+        notifyMutation('sentinel_commitments')
+        void loadData()
+      } catch {
+        if (supabase && isSupabaseConfigured && user && sentinelTableAvailableRef.current) {
+          try {
+            const res = await supabase
+              .from('sentinel_commitments')
+              .update({
+                name: cleanItem.name,
+                contract_number: cleanItem.contractNumber,
+                category: cleanItem.category,
+                amount: cleanItem.amount,
+                late_fee_avoided: cleanItem.lateFeeAvoided,
+                due_day: cleanItem.dueDay,
+                due_date_str: cleanItem.dueDateStr,
+                status: cleanItem.status,
+                paid_period: cleanItem.paidPeriod ?? null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', cleanItem.id)
+              .eq('user_id', user.id)
+            if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+              sentinelTableAvailableRef.current = false
+            } else {
+              notifyMutation('sentinel_commitments')
+              void loadData()
+            }
+          } catch {
+            sentinelTableAvailableRef.current = false
+          }
+        }
+      }
+    }
+
+    return { success: true }
+  }
+
+  const paySentinelCommitment = async (id: string, paidPeriod?: string) => {
+    const target = sentinelCommitments.find(c => c.id === id)
+    if (!target) return
+    const period = paidPeriod || getCurrentSystemPeriod()
+    const keys = getStorageKeys(user?.id)
+
+    setSentinelCommitmentsState(prev => {
+      const next = prev.map(c =>
+        c.id === id ? { ...c, status: 'paid' as const, paidPeriod: period } : c
+      )
+      saveLocal(keys.sentinelCommitments, next)
+      return next
+    })
+
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.sentinel.payUserCommitment(id, period)
+        notifyMutation('sentinel_commitments')
+        void loadData()
+      } catch {
+        if (supabase && isSupabaseConfigured && user && sentinelTableAvailableRef.current) {
+          try {
+            const res = await supabase
+              .from('sentinel_commitments')
+              .update({
+                status: 'paid',
+                paid_period: period,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', id)
+              .eq('user_id', user.id)
+            if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+              sentinelTableAvailableRef.current = false
+            } else {
+              notifyMutation('sentinel_commitments')
+              void loadData()
+            }
+          } catch {
+            sentinelTableAvailableRef.current = false
+          }
+        }
+      }
+    }
+  }
+
+  const deleteSentinelCommitment = async (id: string) => {
+    const keys = getStorageKeys(user?.id)
+    setSentinelCommitmentsState(prev => {
+      const next = prev.filter(c => c.id !== id)
+      saveLocal(keys.sentinelCommitments, next)
+      return next
+    })
+
+    const isOnline = Boolean(user && navigator.onLine)
+    if (isOnline) {
+      try {
+        await apiClient.sentinel.deleteUserCommitment(id)
+        notifyMutation('sentinel_commitments')
+        void loadData()
+      } catch {
+        if (supabase && isSupabaseConfigured && user && sentinelTableAvailableRef.current) {
+          try {
+            const res = await supabase
+              .from('sentinel_commitments')
+              .delete()
+              .eq('id', id)
+              .eq('user_id', user.id)
+            if (res.error && (res.status === 404 || res.error.code === '42P01')) {
+              sentinelTableAvailableRef.current = false
+            } else {
+              notifyMutation('sentinel_commitments')
+              void loadData()
+            }
+          } catch {
+            sentinelTableAvailableRef.current = false
+          }
+        }
+      }
+    }
+  }
+
   /**
    * Derecho al Olvido (Ley 172-13 RD / Art. 17 GDPR):
    * Elimina completamente todas las filas de la base de datos y memoria local del usuario.
@@ -1694,6 +2002,7 @@ export function useFinanceStorage(user?: User | null) {
     setCreditTransactionsState([])
     setCategoryBudgetsState([])
     setSavingsGoalsState([])
+    setSentinelCommitmentsState([])
     setDashboardSummary(null)
 
     // 2. Limpiar llaves locales de usuario
@@ -1728,6 +2037,7 @@ export function useFinanceStorage(user?: User | null) {
           supabase.from('cash_withdrawals').delete().eq('user_id', userId),
           supabase.from('category_budgets').delete().eq('user_id', userId),
           supabase.from('savings_goals').delete().eq('user_id', userId),
+          supabase.from('sentinel_commitments').delete().eq('user_id', userId),
         ])
       } catch (err: any) {
         console.error('Error durante la purga en Supabase:', err)
@@ -1739,7 +2049,7 @@ export function useFinanceStorage(user?: User | null) {
   }
 
   return {
-    incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals,
+    incomes, expenses, cash, creditCards, creditTransactions, categoryBudgets, savingsGoals, sentinelCommitments,
     dashboardSummary,
     fetchDashboardSummary,
     refreshData: loadData,
@@ -1750,6 +2060,7 @@ export function useFinanceStorage(user?: User | null) {
     addCreditTransaction, updateCreditTransaction, deleteCreditTransaction, toggleTransactionPaid,
     setCategoryBudget, setMultipleCategoryBudgets,
     addSavingsGoal, updateSavingsGoal, depositToGoal, deleteSavingsGoal,
+    addSentinelCommitment, updateSentinelCommitment, paySentinelCommitment, deleteSentinelCommitment,
     purgeAllUserData,
   }
 }

@@ -326,6 +326,38 @@ class ApiClient {
       this.request<{ status: string; data: any }>('/api/sentinel/scan', {
         method: 'POST',
       }),
+    listUserCommitments: () =>
+      this.request<{ status: string; data: any[] }>('/api/sentinel/user/commitments'),
+    createUserCommitment: (data: {
+      id?: string
+      name: string
+      contract_number?: string
+      category: string
+      amount: number
+      late_fee_avoided: number
+      due_day: number
+      due_date_str?: string
+      status?: string
+      paid_period?: string | null
+    }) =>
+      this.request<{ status: string; data: any }>('/api/sentinel/user/commitments', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    updateUserCommitment: (id: string, data: Record<string, unknown>) =>
+      this.request<{ status: string; data: any }>(`/api/sentinel/user/commitments/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    payUserCommitment: (id: string, paidPeriod?: string) =>
+      this.request<{ status: string; data: any }>(`/api/sentinel/user/commitments/${id}/pay`, {
+        method: 'POST',
+        body: JSON.stringify({ paid_period: paidPeriod }),
+      }),
+    deleteUserCommitment: (id: string) =>
+      this.request<{ status: string; message: string }>(`/api/sentinel/user/commitments/${id}`, {
+        method: 'DELETE',
+      }),
   }
 }
 

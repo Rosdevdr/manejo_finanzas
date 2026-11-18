@@ -32,6 +32,7 @@ import type {
   CreditCardTransaction,
   CashWithdrawal,
   CategoryBudget,
+  SentinelCommitment,
 } from '../../types/finance'
 import type { TabType } from '../../types/navigation'
 import type { DashboardSummaryData } from '../../services/apiClient'
@@ -54,7 +55,13 @@ interface DashboardViewProps {
   creditCards?: CreditCardType[]
   creditTransactions?: CreditCardTransaction[]
   categoryBudgets?: CategoryBudget[]
+  userId?: string | null
   userEmail?: string | null
+  sentinelCommitments?: SentinelCommitment[]
+  onAddCommitment?: (item: Omit<SentinelCommitment, 'id'>) => Promise<{ success: boolean; error?: string }>
+  onUpdateCommitment?: (item: SentinelCommitment) => Promise<{ success: boolean; error?: string }>
+  onPayCommitment?: (id: string, paidPeriod?: string) => Promise<void>
+  onDeleteCommitment?: (id: string) => Promise<void>
   dashboardSummary?: DashboardSummaryData | null
   onNavigateTab?: (t: TabType) => void
   onOpenTerms?: () => void
@@ -109,7 +116,13 @@ export function DashboardView({
   creditCards = [],
   creditTransactions = [],
   categoryBudgets = [],
+  userId,
   userEmail,
+  sentinelCommitments,
+  onAddCommitment,
+  onUpdateCommitment,
+  onPayCommitment,
+  onDeleteCommitment,
   dashboardSummary,
   onNavigateTab,
   onOpenFireCalculator,
@@ -321,7 +334,13 @@ export function DashboardView({
           creditTransactions={creditTransactions}
           categoryBudgets={categoryBudgets}
           availableBalance={totalLiquid}
+          userId={userId}
           userEmail={userEmail}
+          sentinelCommitments={sentinelCommitments}
+          onAddCommitment={onAddCommitment}
+          onUpdateCommitment={onUpdateCommitment}
+          onPayCommitment={onPayCommitment}
+          onDeleteCommitment={onDeleteCommitment}
           onAddExpense={onAddExpense}
           onShowToast={onShowToast}
         />
